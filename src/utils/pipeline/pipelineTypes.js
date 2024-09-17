@@ -193,6 +193,22 @@ export const AVAILABLE_NODES = {
     }
   },
 
+  node_redact: {
+    id: 'node_redact',
+    nameKey: 'tab_redact',
+    defaultName: 'Redact Content',
+    descKey: 'node_redact_desc',
+    defaultDesc: 'Batch black out keywords or PII patterns (ID, phone, bank card, email) at stream level',
+    category: 'security',
+    inputs: [DATA_TYPES.PDF_DOCS],
+    outputs: [DATA_TYPES.PDF_DOCS],
+    topology: TOPOLOGY_MODES.MAP,
+    defaultParams: {
+      rules: [],
+      style: 'black'
+    }
+  },
+
   node_organize: {
     id: 'node_organize',
     nameKey: 'tab_organize',

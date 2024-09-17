@@ -1225,6 +1225,97 @@
             </label>
           </div>
 
+          <!-- Redact Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_redact'" class="space-y-3">
+            <!-- Boundary note: rules cannot cover image-based pages -->
+            <div class="flex items-start space-x-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 leading-relaxed">
+              <Info class="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+              <span>{{ t('node_redact_boundary_note') }}</span>
+            </div>
+
+            <!-- PII Preset Chips -->
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="preset in REDACT_PRESETS"
+                :key="preset.id"
+                type="button"
+                @click="addRedactPreset(preset)"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-bold border border-slate-300 text-slate-600 bg-white hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer"
+              >
+                + {{ t(preset.labelKey) }}
+              </button>
+            </div>
+
+            <!-- Rule List Editor -->
+            <div class="space-y-2">
+              <div
+                v-for="(rule, ri) in editingStepDraft.rules"
+                :key="ri"
+                class="p-3 rounded-xl border border-slate-200 space-y-2"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3 text-[11px] font-bold">
+                    <label class="inline-flex items-center space-x-1 cursor-pointer">
+                      <input type="radio" :name="`redact_type_${ri}`" value="keyword" v-model="rule.type" class="text-indigo-600 w-3.5 h-3.5" />
+                      <span class="text-slate-600">{{ t('node_redact_rule_keyword') }}</span>
+                    </label>
+                    <label class="inline-flex items-center space-x-1 cursor-pointer">
+                      <input type="radio" :name="`redact_type_${ri}`" value="regex" v-model="rule.type" class="text-indigo-600 w-3.5 h-3.5" />
+                      <span class="text-slate-600">{{ t('node_redact_rule_regex') }}</span>
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    @click="removeRedactRule(ri)"
+                    class="text-slate-300 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                  >
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  v-model="rule.value"
+                  :placeholder="rule.type === 'regex' ? '\\d{16,19}' : 'Secret'"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 font-mono"
+                />
+                <label class="inline-flex items-center space-x-1.5 text-[11px] text-slate-500 cursor-pointer">
+                  <input type="checkbox" v-model="rule.caseSensitive" class="rounded text-indigo-600 w-3.5 h-3.5" />
+                  <span>{{ t('node_redact_case_sensitive') }}</span>
+                </label>
+              </div>
+
+              <button
+                type="button"
+                @click="addRedactRule"
+                class="w-full py-2 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 text-xs font-bold transition cursor-pointer flex items-center justify-center space-x-1"
+              >
+                <Plus class="w-3.5 h-3.5" />
+                <span>{{ t('node_redact_rules_add') }}</span>
+              </button>
+            </div>
+
+            <!-- Mask Style -->
+            <div class="p-4 rounded-xl border border-slate-200 space-y-2.5">
+              <span class="text-slate-800 font-bold block text-xs">{{ t('redact_confirm_style') }}</span>
+              <div class="grid grid-cols-3 gap-2">
+                <button
+                  v-for="s in ['black', 'white', 'stamp']"
+                  :key="s"
+                  type="button"
+                  @click="editingStepDraft.style = s"
+                  :class="[
+                    'py-2 rounded-lg border text-[11px] font-bold transition cursor-pointer',
+                    editingStepDraft.style === s
+                      ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
+                      : 'border-slate-200 text-slate-500 hover:bg-slate-50'
+                  ]"
+                >
+                  {{ t('redact_style_' + s) }}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- 4. Img2Pdf Parameters -->
           <div v-else-if="currentEditingStepNodeId === 'node_img2pdf'" class="space-y-3.5">
             <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium">
@@ -2455,6 +2546,7 @@ import {
 } from 'lucide-vue-next';
 import { PRESET_PIPELINES } from '../utils/pipeline/presetPipelines';
 import { AVAILABLE_NODES } from '../utils/pipeline/pipelineTypes';
+import { PII_PRESETS as REDACT_PRESETS } from '../utils/redaction/ruleMatcher';
 import { runPipeline } from '../utils/pipeline/pipelineRunner';
 import { validateStepParameters } from '../utils/pipeline/pipelinePolicy';
 import { loadUserPipelines, saveUserPipeline, deleteUserPipeline } from '../utils/pipeline/userPipelines';
@@ -2733,11 +2825,46 @@ function getEffectiveProtectSummary(draft) {
   }
 }
 
+// --- Node Redact: rule list editing helpers ---
+function addRedactRule() {
+  if (!editingStepDraft.value) return;
+  if (!Array.isArray(editingStepDraft.value.rules)) {
+    editingStepDraft.value.rules = [];
+  }
+  editingStepDraft.value.rules.push({ type: 'keyword', value: '', caseSensitive: false });
+}
+
+function removeRedactRule(ri) {
+  if (!editingStepDraft.value || !Array.isArray(editingStepDraft.value.rules)) return;
+  editingStepDraft.value.rules.splice(ri, 1);
+}
+
+function addRedactPreset(preset) {
+  if (!editingStepDraft.value) return;
+  if (!Array.isArray(editingStepDraft.value.rules)) {
+    editingStepDraft.value.rules = [];
+  }
+  editingStepDraft.value.rules.push({
+    type: preset.type,
+    value: preset.value,
+    caseSensitive: Boolean(preset.caseSensitive)
+  });
+}
+
 function openStepConfigModal(idx) {
   editingStepIndex.value = idx;
   const step = activeWorkflowSteps.value[idx];
   editingStepDraft.value = JSON.parse(JSON.stringify(step.params || {}));
   signPreviewOrientation.value = 'portrait';
+
+  if (step.nodeId === 'node_redact') {
+    if (!Array.isArray(editingStepDraft.value.rules)) {
+      editingStepDraft.value.rules = [];
+    }
+    if (!editingStepDraft.value.style) {
+      editingStepDraft.value.style = 'black';
+    }
+  }
 
   if (step.nodeId === 'node_sign') {
     if (!editingStepDraft.value.position) {
@@ -2885,6 +3012,19 @@ function getStepSummary(step) {
       if (step.params.stripAnnots) parts.push(t('pipe_san_annots', 'Remove annots'));
       return parts.length > 0 ? parts.join(' + ') : t('pipe_san_basic', 'Sanitize');
     }
+    case 'node_redact': {
+      const rules = Array.isArray(step.params?.rules) ? step.params.rules.filter((r) => r?.value?.trim()) : [];
+      if (!rules.length) {
+        return `⚠️ ${t('node_redact_rules_add')}`;
+      }
+      const styleMap = {
+        black: t('redact_style_black'),
+        white: t('redact_style_white'),
+        stamp: t('redact_style_stamp')
+      };
+      const styleTxt = styleMap[step.params.style] || styleMap.black;
+      return `${t('node_redact_rules_count', '{count} rule(s)', { count: rules.length })} · ${styleTxt}`;
+    }
     case 'node_img2pdf': {
       const merge = step.params.mergeIntoOne ? t('pipe_merge_one', 'Merged') : t('pipe_merge_split', '1 Page/Img');
       const sz = step.params.pageSize === 'a4' ? 'A4' : t('pipe_sz_fit', 'Original');
@@ -2957,6 +3097,10 @@ function getStepTagClass(nodeId, step) {
       return 'bg-blue-50 text-blue-700 border-blue-200/80';
     case 'node_sanitize':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+    case 'node_redact':
+      return !step?.params?.rules?.some((r) => r?.value?.trim())
+        ? 'bg-amber-50 text-amber-700 border-amber-300 font-semibold'
+        : 'bg-slate-50 text-slate-700 border-slate-200/80';
     case 'node_img2pdf':
       return 'bg-purple-50 text-purple-700 border-purple-200/80';
     case 'node_pdf2img':
