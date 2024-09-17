@@ -100,114 +100,53 @@
             <span>{{ t('rendering_pages') }}...</span>
           </div>
 
-          <div v-else class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 my-2.5 min-h-0">
-            <!-- Left: Stage -->
-            <div class="lg:col-span-8 flex flex-col min-h-0 bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80">
-              <!-- Stage Bar -->
-              <div class="flex items-center justify-between flex-wrap gap-2 mb-2.5 shrink-0">
-                <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
-                  <button
-                    @click="goPage(-1)"
-                    :disabled="pageIndex === 0"
-                    class="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:border-slate-400 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <ChevronLeft class="w-3.5 h-3.5" />
-                  </button>
-                  <span class="tabular-nums">{{ t('redact_page_label', 'Page {current} / {total}', { current: pageIndex + 1, total: totalPages }) }}</span>
-                  <button
-                    @click="goPage(1)"
-                    :disabled="pageIndex >= totalPages - 1"
-                    class="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:border-slate-400 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <ChevronRight class="w-3.5 h-3.5" />
-                  </button>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button
-                    @click="snapToText = !snapToText"
-                    :class="[
-                      'text-[11px] font-bold rounded-lg px-2.5 py-1.5 border transition flex items-center gap-1.5 cursor-pointer',
-                      snapToText ? 'bg-blue-50 text-blue-700 border-blue-300' : 'bg-white text-slate-500 border-slate-200'
-                    ]"
-                  >
-                    <Magnet class="w-3.5 h-3.5" />
-                    <span>{{ t('redact_snap_toggle') }}</span>
-                  </button>
-                  <button
-                    @click="clearPage"
-                    :disabled="!currentRects.length"
-                    class="text-[11px] font-bold rounded-lg px-2.5 py-1.5 border border-slate-200 bg-white text-slate-500 hover:text-rose-600 hover:border-rose-200 transition flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <Trash2 class="w-3.5 h-3.5" />
-                    <span>{{ t('redact_clear_page') }}</span>
-                  </button>
-                </div>
-              </div>
+          <!-- Part 1: Editor control bar (page nav · draw options) -->
+          <div class="flex items-center justify-between flex-wrap gap-2 pt-1 pb-2.5 border-b border-slate-100 shrink-0">
+            <div class="flex items-center gap-2 text-xs font-bold text-slate-600">
+              <button
+                @click="goPage(-1)"
+                :disabled="pageIndex === 0"
+                class="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:border-slate-400 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronLeft class="w-3.5 h-3.5" />
+              </button>
+              <span class="tabular-nums">{{ t('redact_page_label', 'Page {current} / {total}', { current: pageIndex + 1, total: totalPages }) }}</span>
+              <button
+                @click="goPage(1)"
+                :disabled="pageIndex >= totalPages - 1"
+                class="w-7 h-7 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:border-slate-400 transition disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <ChevronRight class="w-3.5 h-3.5" />
+              </button>
+            </div>
+            <div class="flex items-center gap-2">
+              <button
+                @click="snapToText = !snapToText"
+                :class="[
+                  'text-[11px] font-bold rounded-lg px-2.5 py-1.5 border transition flex items-center gap-1.5 cursor-pointer',
+                  snapToText ? 'bg-blue-50 text-blue-700 border-blue-300' : 'bg-white text-slate-500 border-slate-200'
+                ]"
+              >
+                <Magnet class="w-3.5 h-3.5" />
+                <span>{{ t('redact_snap_toggle') }}</span>
+              </button>
+              <button
+                @click="clearPage"
+                :disabled="!currentRects.length"
+                class="text-[11px] font-bold rounded-lg px-2.5 py-1.5 border border-slate-200 bg-white text-slate-500 hover:text-rose-600 hover:border-rose-200 transition flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <Trash2 class="w-3.5 h-3.5" />
+                <span>{{ t('redact_clear_page') }}</span>
+              </button>
+            </div>
+          </div>
 
-              <!-- Page Canvas + Overlay -->
-              <div class="flex-1 min-h-0 flex items-center justify-center">
-                <div
-                  ref="stageBoxRef"
-                  class="relative bg-white rounded-lg shadow-md overflow-hidden"
-                  :style="{ width: '100%', maxWidth: (currentViewport ? currentViewport.width / currentViewport.height : 0.707) * 100 + '%' }"
-                >
-                  <div class="w-full" :style="{ aspectRatio: currentViewport ? `${currentViewport.width} / ${currentViewport.height}` : '210 / 297' }">
-                    <canvas ref="pageCanvasRef" class="w-full h-full block select-none" />
-                    <!-- Interaction overlay: rects stored in user space, rendered as % of viewport -->
-                    <div
-                      ref="overlayRef"
-                      class="absolute inset-0 cursor-crosshair touch-none"
-                      data-testid="redact-overlay"
-                      @pointerdown="onPointerDown"
-                      @pointermove="onPointerMove"
-                      @pointerup="onPointerUp"
-                      @pointercancel="onPointerUp"
-                    >
-                      <!-- Draft rect while drawing -->
-                      <div
-                        v-if="draftRect"
-                        class="absolute bg-slate-900/70 border border-slate-900 rounded-[2px]"
-                        :style="rectStyle(draftRect)"
-                      />
-                      <!-- Committed rects -->
-                      <div
-                        v-for="r in currentRects"
-                        :key="r.id"
-                        :class="[
-                          'absolute bg-slate-900/90 rounded-[2px]',
-                          selectedRectId === r.id ? 'outline-2 outline-dashed outline-blue-500 outline-offset-2' : ''
-                        ]"
-                        :style="rectStyle(r.canvas)"
-                        @pointerdown.stop
-                      >
-                        <template v-if="selectedRectId === r.id">
-                          <span
-                            v-for="h in ['nw','ne','sw','se']"
-                            :key="h"
-                            class="absolute w-2 h-2 bg-white border-2 border-blue-500 rounded-[2px] cursor-nwse-resize"
-                            :class="handlePos[h]"
-                            @pointerdown.stop.prevent="onHandleDown($event, r.id, h)"
-                          />
-                          <span
-                            v-if="r.snapped"
-                            class="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap max-w-[240px] truncate pointer-events-none"
-                          >{{ r.snapped }}</span>
-                        </template>
-                      </div>
-                      <!-- Draw hint -->
-                      <div
-                        v-if="!currentRects.length && !draftRect"
-                        class="absolute bottom-2.5 left-1/2 -translate-x-1/2 text-[10.5px] text-slate-400 bg-white/90 border border-slate-200 px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none"
-                      >
-                        {{ t('redact_snap_hint', 'Drag to draw · release to snap to text · {key} deletes selection', { key: 'Del' }) }}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
+          <!-- Part 2: Workspace — config left · preview right (fit one screen, no page scroll) -->
+          <div class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 my-2.5 min-h-0 overflow-hidden">
+            <!-- Left: Config (mask style · redaction list · summary) -->
+            <div class="lg:col-span-4 flex flex-col gap-3 min-h-0">
               <!-- Mask Style Cards -->
-              <div class="mt-3 flex gap-2 shrink-0">
+              <div class="flex gap-2 shrink-0">
                 <button
                   v-for="opt in styleOptions"
                   :key="opt.value"
@@ -227,24 +166,6 @@
                 </button>
               </div>
 
-              <!-- Actions -->
-              <div class="mt-3 pt-2.5 border-t border-slate-200/70 flex items-center justify-between flex-wrap gap-2.5 shrink-0">
-                <span class="text-[11px] text-slate-400">{{ t('redact_privacy_note') }}</span>
-                <button
-                  @click="openConfirm"
-                  :disabled="!totalRects"
-                  :title="!totalRects ? t('redact_err_no_rects') : ''"
-                  data-testid="redact-burn-btn"
-                  class="bg-red-600 hover:bg-red-700 active:scale-98 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-red-600/25 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer"
-                >
-                  <Flame class="w-4 h-4" />
-                  <span>{{ t('redact_btn_burn', 'Burn Redaction ({count} marks)', { count: totalRects }) }}</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Right: Panel (List + Summary) -->
-            <div class="lg:col-span-4 flex flex-col gap-3 min-h-0">
               <!-- Redaction List -->
               <div class="border border-slate-200 rounded-2xl p-3 flex flex-col min-h-0 flex-1">
                 <h5 class="text-xs font-extrabold text-slate-700 mb-2 flex items-center justify-between shrink-0">
@@ -302,6 +223,83 @@
                 </div>
               </div>
             </div>
+
+            <!-- Right: Preview (page canvas + interaction overlay) -->
+            <div class="lg:col-span-8 flex flex-col bg-slate-50/80 rounded-2xl p-3.5 border border-slate-200/80 min-h-[380px] lg:min-h-0">
+              <div ref="stageAreaRef" class="flex-1 min-h-0 flex items-center justify-center">
+                <div
+                  ref="stageBoxRef"
+                  class="relative bg-white rounded-lg shadow-md overflow-hidden"
+                  :style="stageBoxStyle"
+                >
+                  <canvas ref="pageCanvasRef" class="w-full h-full block select-none" />
+                  <!-- Interaction overlay: rects stored in user space, rendered as % of viewport -->
+                  <div
+                    ref="overlayRef"
+                    class="absolute inset-0 cursor-crosshair touch-none"
+                    data-testid="redact-overlay"
+                    @pointerdown="onPointerDown"
+                    @pointermove="onPointerMove"
+                    @pointerup="onPointerUp"
+                    @pointercancel="onPointerUp"
+                  >
+                    <!-- Draft rect while drawing -->
+                    <div
+                      v-if="draftRect"
+                      class="absolute bg-slate-900/70 border border-slate-900 rounded-[2px]"
+                      :style="rectStyle(draftRect)"
+                    />
+                    <!-- Committed rects -->
+                    <div
+                      v-for="r in currentRects"
+                      :key="r.id"
+                      :class="[
+                        'absolute bg-slate-900/90 rounded-[2px]',
+                        selectedRectId === r.id ? 'outline-2 outline-dashed outline-blue-500 outline-offset-2' : ''
+                      ]"
+                      :style="rectStyle(r.canvas)"
+                      @pointerdown.stop
+                    >
+                      <template v-if="selectedRectId === r.id">
+                        <span
+                          v-for="h in ['nw','ne','sw','se']"
+                          :key="h"
+                          class="absolute w-2 h-2 bg-white border-2 border-blue-500 rounded-[2px] cursor-nwse-resize"
+                          :class="handlePos[h]"
+                          @pointerdown.stop.prevent="onHandleDown($event, r.id, h)"
+                        />
+                        <span
+                          v-if="r.snapped"
+                          class="absolute -top-6 left-0 bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md whitespace-nowrap max-w-[240px] truncate pointer-events-none"
+                        >{{ r.snapped }}</span>
+                      </template>
+                    </div>
+                    <!-- Draw hint -->
+                    <div
+                      v-if="!currentRects.length && !draftRect"
+                      class="absolute bottom-2.5 left-1/2 -translate-x-1/2 text-[10.5px] text-slate-400 bg-white/90 border border-slate-200 px-2.5 py-1 rounded-lg whitespace-nowrap pointer-events-none"
+                    >
+                      {{ t('redact_snap_hint', 'Drag to draw · release to snap to text · {key} deletes selection', { key: 'Del' }) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Part 3: Execution bar (privacy note · burn) -->
+          <div class="pt-2.5 border-t border-slate-200/70 flex items-center justify-between flex-wrap gap-2.5 shrink-0">
+            <span class="text-[11px] text-slate-400">{{ t('redact_privacy_note') }}</span>
+            <button
+              @click="openConfirm"
+              :disabled="!totalRects"
+              :title="!totalRects ? t('redact_err_no_rects') : ''"
+              data-testid="redact-burn-btn"
+              class="bg-red-600 hover:bg-red-700 active:scale-98 text-white text-xs font-extrabold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-red-600/25 disabled:bg-slate-100 disabled:text-slate-400 disabled:shadow-none disabled:cursor-not-allowed cursor-pointer"
+            >
+              <Flame class="w-4 h-4" />
+              <span>{{ t('redact_btn_burn', 'Burn Redaction ({count} marks)', { count: totalRects }) }}</span>
+            </button>
           </div>
         </div>
       </div>
@@ -402,6 +400,42 @@ const unlockedPassword = ref('');
 let pdfjsDoc = null; // pdf.js document proxy (preview only, never fed to the engine)
 let currentViewport = null; // pdf.js viewport @ scale 1.5 (canvas pixel space)
 const viewportTick = ref(0); // forces canvas-space recomputes after render
+
+// ---------- Stage fit-to-area (one screen, no page scroll) ----------
+const stageAreaRef = ref(null);
+const stageBoxSize = ref({ w: 0, h: 0 });
+
+const stageBoxStyle = computed(() => {
+  if (stageBoxSize.value.w && stageBoxSize.value.h) {
+    return { width: `${stageBoxSize.value.w}px`, height: `${stageBoxSize.value.h}px` };
+  }
+  void viewportTick.value; // fallback before first measurement: fill width by page ratio
+  const ratio = currentViewport ? currentViewport.width / currentViewport.height : 0.707;
+  return {
+    width: '100%',
+    maxWidth: `${ratio * 100}%`,
+    aspectRatio: currentViewport ? `${currentViewport.width} / ${currentViewport.height}` : '210 / 297'
+  };
+});
+
+function fitStageBox() {
+  const el = stageAreaRef.value;
+  if (!el || !currentViewport || !el.clientWidth || !el.clientHeight) return;
+  const scale = Math.min(el.clientWidth / currentViewport.width, el.clientHeight / currentViewport.height);
+  stageBoxSize.value = { w: Math.floor(currentViewport.width * scale), h: Math.floor(currentViewport.height * scale) };
+}
+
+let stageRO = null;
+watch(stageAreaRef, (el) => {
+  stageRO?.disconnect();
+  stageRO = null;
+  if (el) {
+    stageRO = new ResizeObserver(fitStageBox);
+    stageRO.observe(el);
+  }
+  fitStageBox();
+});
+
 
 watch(() => Boolean(docBytes.value), (active) => {
   workspaceState?.setActiveFile(active);
@@ -550,6 +584,7 @@ async function renderPage() {
     const page = await pdfjsDoc.getPage(pageIndex.value + 1);
     const viewport = page.getViewport({ scale: 1.5 });
     currentViewport = viewport;
+    fitStageBox();
     const canvas = pageCanvasRef.value;
     canvas.width = Math.ceil(viewport.width);
     canvas.height = Math.ceil(viewport.height);
@@ -1007,6 +1042,7 @@ onMounted(() => {
 });
 onActivated(checkIncomingFile);
 onUnmounted(() => {
+  stageRO?.disconnect();
   window.removeEventListener('keydown', onKeydown);
   if (pdfjsDoc) { try { pdfjsDoc.destroy()?.catch(() => {}); } catch (e) {} }
   pdfjsDoc = null;
