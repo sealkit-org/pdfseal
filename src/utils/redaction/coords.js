@@ -66,9 +66,9 @@ export function userRectToCanvas(rect, viewport) {
  * @param {import('pdfjs-dist').PageViewport} viewport
  */
 export function canvasRectToUser(rect, viewport) {
-  const [x1, y1, x2, y2] = viewport.convertToPdfRectangle([
-    rect.x, rect.y, rect.x + rect.w, rect.y + rect.h
-  ]);
+  // pdf.js viewport 只提供 convertToPdfPoint（无 Rectangle 版本），两角转换后归一化
+  const [x1, y1] = viewport.convertToPdfPoint(rect.x, rect.y);
+  const [x2, y2] = viewport.convertToPdfPoint(rect.x + rect.w, rect.y + rect.h);
   return {
     x: Math.min(x1, x2),
     y: Math.min(y1, y2),

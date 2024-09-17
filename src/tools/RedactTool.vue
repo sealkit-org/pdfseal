@@ -484,6 +484,27 @@ const currentRects = computed(() => {
 const totalRects = computed(() =>
   Object.values(rectsByPage.value).reduce((n, list) => n + (list?.length || 0), 0)
 );
+
+/** 选中标记四角 resize 手柄的定位 class */
+const handlePos = {
+  nw: '-top-1 -left-1',
+  ne: '-top-1 -right-1',
+  sw: '-bottom-1 -left-1',
+  se: '-bottom-1 -right-1'
+};
+
+/** canvas 像素 rect → overlay 内的绝对定位百分比样式（canvas 与 overlay 同区域） */
+function rectStyle(c) {
+  if (!currentViewport || !c) return {};
+  void viewportTick.value; // viewport 变更时重算
+  return {
+    left: `${(c.x / currentViewport.width) * 100}%`,
+    top: `${(c.y / currentViewport.height) * 100}%`,
+    width: `${(c.w / currentViewport.width) * 100}%`,
+    height: `${(c.h / currentViewport.height) * 100}%`
+  };
+}
+
 const markedPageIndexes = computed(() =>
   Object.keys(rectsByPage.value).filter((k) => rectsByPage.value[k]?.length > 0).map(Number)
 );
@@ -647,7 +668,7 @@ async function onPointerUp() {
   if (!drag) return;
   const d = drag;
   drag = null;
-  overlayRef.value?.releasePointerCapture?.(d.mode);
+  // pointer capture 由浏览器在 pointerup 隐式释放，无需显式 release
 
   if (d.mode === 'new') {
     const dr = draftRect.value;

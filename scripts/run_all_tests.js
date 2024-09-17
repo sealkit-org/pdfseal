@@ -15,6 +15,7 @@ const testSuites = [
   { id: 'unlock', name: 'E2E Business: PDF Unlock (密码验证/密码显隐/彻底解密)', cmd: 'node', args: ['scripts/e2e_unlock_test.js'] },
   { id: 'watermark', name: 'E2E Business: PDF Watermark (角度/颜色/防篡改锁)', cmd: 'node', args: ['scripts/e2e_watermark_test.js'] },
   { id: 'sanitize', name: 'E2E Business: PDF Sanitize (敏感指纹/XMP流/脱敏)', cmd: 'node', args: ['scripts/e2e_sanitize_test.js'] },
+  { id: 'redact', name: 'E2E Business: PDF Redact (内容涂黑/框选烧录/规则批处理)', cmd: 'node', args: ['scripts/e2e_redact_test.js'] },
   { id: 'pipeline', name: 'E2E Business: Automation Pipeline (流水线批量编排与执行)', cmd: 'node', args: ['scripts/e2e_pipeline_test.js'] },
   { id: 'deep', name: 'E2E Deep Integration (流水线/商用模拟/设置/日志)', cmd: 'node', args: ['scripts/e2e_deep_test.js'] },
 ];
