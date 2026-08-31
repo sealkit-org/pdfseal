@@ -8,10 +8,16 @@
         <div>
           <div class="flex items-center space-x-2">
             <span class="font-extrabold text-xl text-slate-900 tracking-tight">PDFSeal</span>
-            <span class="text-[11px] bg-emerald-100 text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded-full font-semibold flex items-center">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-ping"></span>
-              {{ t('local_badge') }}
-            </span>
+            <!-- Interactive Privacy Guarantee Badge -->
+            <button 
+              @click.stop="$emit('open-privacy')"
+              class="text-[11px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full font-semibold flex items-center cursor-pointer transition shadow-2xs group"
+              title="Click to view Privacy & Security Guarantee"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-ping"></span>
+              <span>{{ t('local_badge') }}</span>
+              <ShieldCheck class="w-3 h-3 ml-1 text-emerald-700 opacity-70 group-hover:opacity-100" />
+            </button>
           </div>
           <p class="text-[11px] text-slate-500 hidden sm:block">{{ t('brand_subtitle') }}</p>
         </div>
@@ -68,23 +74,35 @@
       </div>
     </div>
 
-    <!-- Tool Navigation Tab Bar -->
+    <!-- Tool Navigation Tab Bar with Sleek Micro Trust Strip -->
     <div class="bg-slate-100/90 border-t border-slate-200/80 px-4 overflow-x-auto no-scrollbar">
-      <div class="max-w-7xl mx-auto flex items-center space-x-1 sm:space-x-2 py-2">
-        <button 
-          v-for="tool in tools" 
-          :key="tool.id"
-          @click="$emit('switch-tab', tool.id)"
-          :class="[
-            'flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition whitespace-nowrap',
-            activeTab === tool.id 
-              ? 'bg-white text-blue-600 shadow-xs font-semibold' 
-              : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium'
-          ]"
+      <div class="max-w-7xl mx-auto flex items-center justify-between py-2">
+        <div class="flex items-center space-x-1 sm:space-x-2">
+          <button 
+            v-for="tool in tools" 
+            :key="tool.id"
+            @click="$emit('switch-tab', tool.id)"
+            :class="[
+              'flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition whitespace-nowrap',
+              activeTab === tool.id 
+                ? 'bg-white text-blue-600 shadow-xs font-semibold' 
+                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium'
+            ]"
+          >
+            <component :is="tool.icon" class="w-4 h-4" />
+            <span>{{ t(tool.labelKey) }}</span>
+          </button>
+        </div>
+
+        <!-- Right Side Micro-Trust Ribbon -->
+        <div 
+          @click="$emit('open-privacy')"
+          class="hidden lg:flex items-center space-x-3 text-[11px] text-slate-500 hover:text-emerald-700 cursor-pointer transition font-medium px-2 py-1 rounded-lg hover:bg-white/60"
         >
-          <component :is="tool.icon" class="w-4 h-4" />
-          <span>{{ t(tool.labelKey) }}</span>
-        </button>
+          <span class="flex items-center"><Zap class="w-3.5 h-3.5 text-blue-500 mr-1" /> 0.2s Local Speed</span>
+          <span class="text-slate-300">•</span>
+          <span class="flex items-center"><Lock class="w-3.5 h-3.5 text-emerald-600 mr-1" /> 0 Bytes Uploaded</span>
+        </div>
       </div>
     </div>
   </header>
@@ -99,7 +117,9 @@ import {
   LayoutGrid, 
   Scissors, 
   Stamp, 
-  ShieldCheck 
+  ShieldCheck,
+  Zap,
+  Lock
 } from 'lucide-vue-next';
 import { currentLang, setLanguage, t } from '../i18n';
 
@@ -110,7 +130,7 @@ defineProps({
   }
 });
 
-defineEmits(['switch-tab', 'open-feedback']);
+defineEmits(['switch-tab', 'open-feedback', 'open-privacy']);
 
 const tools = [
   { id: 'merge', labelKey: 'tab_merge', icon: Layers },

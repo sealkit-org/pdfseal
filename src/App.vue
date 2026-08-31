@@ -13,25 +13,32 @@
       :active-tab="activeTab" 
       @switch-tab="switchTool" 
       @open-feedback="isFeedbackOpen = true" 
+      @open-privacy="isPrivacyOpen = true"
     />
 
-    <!-- Main Workspace (Expanded Max Width) -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Main Workspace (Clean, Uncluttered, 100% Focused) -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col">
       <KeepAlive>
         <component :is="activeToolComponent" />
       </KeepAlive>
-
-      <!-- Trust Bar Highlighting Privacy & Speed Advantages -->
-      <TrustBar />
     </main>
 
     <!-- Ultra-Slim Minimalist Footer -->
-    <Footer @open-feedback="isFeedbackOpen = true" />
+    <Footer 
+      @open-feedback="isFeedbackOpen = true" 
+      @open-privacy="isPrivacyOpen = true"
+    />
 
     <!-- Feedback Modal -->
     <FeedbackModal 
       :is-open="isFeedbackOpen" 
       @close="isFeedbackOpen = false" 
+    />
+
+    <!-- Privacy & Speed Guarantee Manifesto Modal -->
+    <PrivacyModal 
+      :is-open="isPrivacyOpen" 
+      @close="isPrivacyOpen = false" 
     />
   </div>
 </template>
@@ -41,7 +48,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
 import FeedbackModal from './components/FeedbackModal.vue';
-import TrustBar from './components/TrustBar.vue';
+import PrivacyModal from './components/PrivacyModal.vue';
 
 import MergeTool from './tools/MergeTool.vue';
 import OrganizeTool from './tools/OrganizeTool.vue';
@@ -67,6 +74,7 @@ function getInitialTab() {
 
 const activeTab = ref(getInitialTab());
 const isFeedbackOpen = ref(false);
+const isPrivacyOpen = ref(false);
 const isOnline = ref(navigator.onLine);
 
 const activeToolComponent = computed(() => toolComponents[activeTab.value] || MergeTool);

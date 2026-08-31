@@ -5,11 +5,17 @@
         <span class="text-base">🦭</span>
         <span class="font-bold text-slate-800">PDFSeal</span>
         <span class="text-slate-400">|</span>
-        <span class="text-slate-500">{{ t('brand_footer_claim') }}</span>
+        <button 
+          @click="$emit('open-privacy')" 
+          class="text-slate-500 hover:text-emerald-700 font-medium transition cursor-pointer hover:underline"
+        >
+          {{ t('brand_footer_claim') }}
+        </button>
       </div>
 
       <div class="flex items-center space-x-4 text-xs">
         <span class="text-slate-400 text-[11px]">MIT License</span>
+        <button @click="$emit('open-privacy')" class="text-slate-500 hover:text-slate-900 transition">Privacy</button>
         <a href="https://github.com/gzz727007/pdfseal" target="_blank" class="text-slate-500 hover:text-slate-900 transition">GitHub</a>
         <a href="https://ko-fi.com/muffin27" target="_blank" class="text-amber-700 hover:text-amber-900 font-medium transition flex items-center space-x-1">
           <span>{{ t('footer_feed_seal') }}</span>
@@ -22,5 +28,5 @@
 
 <script setup>
 import { t } from '../i18n';
-defineEmits(['open-feedback']);
+defineEmits(['open-feedback', 'open-privacy']);
 </script>
