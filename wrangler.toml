@@ -1,9 +1,6 @@
 name = "pdfseal"
 compatibility_date = "2024-09-23"
+assets = { directory = "./dist" }
 
-# Cloudflare Wrangler automatically builds Vite before deployment
 [build]
 command = "npm run build"
-
-# Host static assets built by Vite
-assets = { directory = "dist" }
