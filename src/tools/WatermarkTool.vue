@@ -144,7 +144,7 @@
 
           <div class="pt-3 border-t border-slate-100">
             <button 
-              :disabled="isProcessing"
+              :disabled="isProcessing || isLoading"
               @click="executeWatermark"
               class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-3.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 active:scale-98"
             >
@@ -192,6 +192,8 @@ const wmAngle = ref(-45);
 const wmColor = ref('#dc2626');
 const colorPresets = ['#dc2626', '#475569', '#2563eb', '#059669'];
 
+const isLoading = ref(false);
+
 let page1Canvas = null;
 
 function onFileSelected(e) {
@@ -207,9 +209,12 @@ function onDrop(e) {
 }
 
 async function loadFile(file) {
-  docBytes.value = await file.arrayBuffer();
+  isLoading.value = true;
+  const rawBuffer = await file.arrayBuffer();
+  docBytes.value = new Uint8Array(rawBuffer);
   try {
-    const pdf = await pdfjsLib.getDocument({ data: docBytes.value }).promise;
+    const pdfDataForViewer = new Uint8Array(rawBuffer.slice(0));
+    const pdf = await pdfjsLib.getDocument({ data: pdfDataForViewer }).promise;
     const page1 = await pdf.getPage(1);
     const viewport = page1.getViewport({ scale: 1.2 });
 
@@ -222,6 +227,8 @@ async function loadFile(file) {
     renderPreview();
   } catch (err) {
     alert('Failed to load PDF: ' + err.message);
+  } finally {
+    isLoading.value = false;
   }
 }
 

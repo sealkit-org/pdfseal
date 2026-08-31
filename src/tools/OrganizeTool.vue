@@ -111,12 +111,15 @@
       </div>
 
       <!-- Floating Bottom Export Bar -->
-      <div class="sticky bottom-6 mt-8 max-w-md mx-auto bg-slate-900/95 backdrop-blur-md text-white rounded-2xl p-4 shadow-2xl border border-slate-800 flex items-center justify-between z-30">
+      <div 
+        v-if="!isLoading && pages.length > 0"
+        class="sticky bottom-6 mt-8 max-w-md mx-auto bg-slate-900/95 backdrop-blur-md text-white rounded-2xl p-4 shadow-2xl border border-slate-800 flex items-center justify-between z-30 animate-in fade-in slide-in-from-bottom-4 duration-300"
+      >
         <div class="text-xs text-slate-300">
           <span>{{ t('ready_to_save') }}</span>
         </div>
         <button 
-          :disabled="isProcessing"
+          :disabled="isProcessing || isLoading"
           @click="executeExport" 
           class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md disabled:opacity-50"
         >
@@ -164,10 +167,13 @@ function onDrop(e) {
 async function loadFile(file) {
   filename.value = file.name;
   isLoading.value = true;
-  docBytes.value = await file.arrayBuffer();
+  const rawBuffer = await file.arrayBuffer();
+  docBytes.value = new Uint8Array(rawBuffer);
 
   try {
-    const pdf = await pdfjsLib.getDocument({ data: docBytes.value }).promise;
+    // Pass a cloned slice so Web Worker transfer does not detach docBytes
+    const pdfDataForViewer = new Uint8Array(rawBuffer.slice(0));
+    const pdf = await pdfjsLib.getDocument({ data: pdfDataForViewer }).promise;
     pages.value = [];
 
     for (let i = 1; i <= pdf.numPages; i++) {

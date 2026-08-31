@@ -110,12 +110,15 @@
       </div>
 
       <!-- Bottom Export Bar -->
-      <div class="sticky bottom-6 mt-8 max-w-md mx-auto bg-slate-900/95 backdrop-blur-md text-white rounded-2xl p-4 shadow-2xl border border-slate-800 flex items-center justify-between z-30">
+      <div 
+        v-if="!isLoading && pages.length > 0"
+        class="sticky bottom-6 mt-8 max-w-md mx-auto bg-slate-900/95 backdrop-blur-md text-white rounded-2xl p-4 shadow-2xl border border-slate-800 flex items-center justify-between z-30 animate-in fade-in slide-in-from-bottom-4 duration-300"
+      >
         <div class="text-xs text-slate-300">
           <span>{{ selectedIndices.size }} {{ t('pages_label') }} {{ t('selected_label') }}</span>
         </div>
         <button 
-          :disabled="isProcessing || selectedIndices.size === 0"
+          :disabled="isProcessing || isLoading || selectedIndices.size === 0"
           @click="executeSplit" 
           class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md disabled:opacity-50"
         >
@@ -161,12 +164,14 @@ function onDrop(e) {
 
 async function loadFile(file) {
   isLoading.value = true;
-  docBytes.value = await file.arrayBuffer();
+  const rawBuffer = await file.arrayBuffer();
+  docBytes.value = new Uint8Array(rawBuffer);
   selectedIndices.value.clear();
   rangeInput.value = '';
 
   try {
-    const pdf = await pdfjsLib.getDocument({ data: docBytes.value }).promise;
+    const pdfDataForViewer = new Uint8Array(rawBuffer.slice(0));
+    const pdf = await pdfjsLib.getDocument({ data: pdfDataForViewer }).promise;
     totalPages.value = pdf.numPages;
     pages.value = [];
 
