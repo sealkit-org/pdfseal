@@ -145,7 +145,7 @@ async function executeSanitize() {
     pdfDoc.setProducer('');
     pdfDoc.setCreator('');
 
-    const outBytes = await pdfDoc.save();
+    const outBytes = await pdfDoc.save({ updateMetadata: false });
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), `PDFSeal_Sanitized_${Date.now()}.pdf`);
   } catch (err) {
     alert('Failed to sanitize PDF: ' + err.message);
