@@ -77,5 +77,12 @@
   "btn_github_issue": "在 GitHub 提 Issue",
   "btn_kofi_message": "在 Ko-fi 上留言",
   "brand_footer_claim": "— 100% 纯本地、无数据上传的隐私 PDF 工具箱。",
-  "footer_feed_seal": "☕ 给小海豹喂鱼"
+  "footer_feed_seal": "☕ 给小海豹喂鱼",
+  "trust_title_privacy": "100% 纯本地、无数据上传",
+  "trust_desc_privacy": "文件全程在您的浏览器内存中运行，物理上零数据上传，彻底杜绝隐私泄露风险。",
+  "trust_title_speed": "0.2 秒级本地极速运算",
+  "trust_desc_speed": "无需耗时上传和下载大文件，几十兆文档在内存中瞬间秒级完成。",
+  "trust_title_honest": "无套路、无日处理限额",
+  "trust_desc_honest": "没有每天只能处理2次的付费拦截，无需注册账号，纯净免打扰。",
+  "trust_badge_offline": "支持完全断网使用"
 }

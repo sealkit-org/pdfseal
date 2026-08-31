@@ -20,6 +20,9 @@
       <KeepAlive>
         <component :is="activeToolComponent" />
       </KeepAlive>
+
+      <!-- Trust Bar Highlighting Privacy & Speed Advantages -->
+      <TrustBar />
     </main>
 
     <!-- Ultra-Slim Minimalist Footer -->
@@ -38,6 +41,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
 import FeedbackModal from './components/FeedbackModal.vue';
+import TrustBar from './components/TrustBar.vue';
 
 import MergeTool from './tools/MergeTool.vue';
 import OrganizeTool from './tools/OrganizeTool.vue';

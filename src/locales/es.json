@@ -77,5 +77,12 @@
   "btn_github_issue": "Abrir un Issue en GitHub",
   "btn_kofi_message": "Mensaje en Ko-fi",
   "brand_footer_claim": "— Herramientas PDF 100% privadas y locales.",
-  "footer_feed_seal": "☕ Alimentar a la foca"
+  "footer_feed_seal": "☕ Alimentar a la foca",
+  "trust_title_privacy": "100% Privado y Local en Memoria",
+  "trust_desc_privacy": "Los archivos nunca salen de su navegador. Literalmente NO tenemos servidores que puedan ver sus datos.",
+  "trust_title_speed": "Velocidad Instantánea (0.2s)",
+  "trust_desc_speed": "Sin colas de subida. Archivos pesados se procesan en milisegundos en la memoria de su navegador.",
+  "trust_title_honest": "Sin Límites ni Muros de Pago",
+  "trust_desc_honest": "Sin límite diario de 2 archivos, sin registros obligatorios y sin suscripciones forzadas.",
+  "trust_badge_offline": "Funciona 100% sin conexión"
 }
