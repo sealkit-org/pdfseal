@@ -47,6 +47,9 @@
             {{ pages.length }} {{ t('pages_total') }}
           </span>
           <span class="text-xs font-medium text-slate-600 truncate max-w-md">{{ filename }}</span>
+          <span v-if="unlockedPassword" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
+            🔒 Unlocked
+          </span>
         </div>
 
         <div class="flex items-center space-x-2">
@@ -130,6 +133,16 @@
         </button>
       </div>
     </div>
+
+    <!-- Password Unlock Modal -->
+    <PasswordModal 
+      :is-open="isPasswordOpen"
+      :filename="pendingFileName"
+      :error-message="passwordError"
+      :is-unlocking="isUnlocking"
+      @submit="handlePasswordSubmit"
+      @cancel="handlePasswordCancel"
+    />
   </section>
 </template>
 
@@ -141,6 +154,7 @@ import { PDFDocument, degrees } from 'pdf-lib';
 import Sortable from 'sortablejs';
 import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
 const gridRef = ref(null);
@@ -150,6 +164,15 @@ const pages = ref([]);
 const isDragOver = ref(false);
 const isLoading = ref(false);
 const isProcessing = ref(false);
+
+// Password Unlock State
+const isPasswordOpen = ref(false);
+const passwordError = ref('');
+const isUnlocking = ref(false);
+const pendingFileName = ref('');
+let pendingFileObj = null;
+let unlockedPassword = '';
+
 let sortableInstance = null;
 
 function onFileSelected(e) {
@@ -164,17 +187,26 @@ function onDrop(e) {
   if (file && file.type === 'application/pdf') loadFile(file);
 }
 
-async function loadFile(file) {
+async function loadFile(file, password = '') {
   filename.value = file.name;
+  pendingFileName.value = file.name;
+  pendingFileObj = file;
   isLoading.value = true;
   const rawBuffer = await file.arrayBuffer();
   docBytes.value = new Uint8Array(rawBuffer);
 
   try {
-    // Pass a cloned slice so Web Worker transfer does not detach docBytes
     const pdfDataForViewer = new Uint8Array(rawBuffer.slice(0));
-    const pdf = await pdfjsLib.getDocument({ data: pdfDataForViewer }).promise;
+    const loadingTask = pdfjsLib.getDocument({ 
+      data: pdfDataForViewer,
+      password: password || undefined
+    });
+    
+    const pdf = await loadingTask.promise;
     pages.value = [];
+    unlockedPassword = password;
+    isPasswordOpen.value = false;
+    passwordError.value = '';
 
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
@@ -205,10 +237,32 @@ async function loadFile(file) {
       }
     });
   } catch (err) {
-    alert('Failed to load PDF: ' + err.message);
+    if (err.name === 'PasswordException' || err.message?.toLowerCase().includes('password')) {
+      docBytes.value = null; // Clear until unlocked
+      isPasswordOpen.value = true;
+      if (password) {
+        passwordError.value = t('pwd_error_wrong');
+      }
+    } else {
+      alert('Failed to load PDF: ' + err.message);
+    }
   } finally {
     isLoading.value = false;
+    isUnlocking.value = false;
   }
+}
+
+async function handlePasswordSubmit(pwd) {
+  if (!pendingFileObj) return;
+  isUnlocking.value = true;
+  await loadFile(pendingFileObj, pwd);
+}
+
+function handlePasswordCancel() {
+  isPasswordOpen.value = false;
+  passwordError.value = '';
+  pendingFileObj = null;
+  reset();
 }
 
 function rotatePage(idx, deg) {
@@ -230,6 +284,7 @@ function deletePage(idx) {
 function reset() {
   docBytes.value = null;
   pages.value = [];
+  unlockedPassword = '';
   if (sortableInstance) sortableInstance.destroy();
 }
 
@@ -237,7 +292,10 @@ async function executeExport() {
   if (!docBytes.value || pages.value.length === 0) return;
   isProcessing.value = true;
   try {
-    const srcPdf = await PDFDocument.load(docBytes.value);
+    const srcPdf = await PDFDocument.load(docBytes.value, { 
+      password: unlockedPassword || undefined,
+      ignoreEncryption: !unlockedPassword
+    });
     const newPdf = await PDFDocument.create();
 
     for (const item of pages.value) {

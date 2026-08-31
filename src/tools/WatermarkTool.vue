@@ -38,136 +38,153 @@
       </button>
     </div>
 
-    <!-- Workspace (Expanded Grid) -->
-    <div v-else class="w-full">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        <!-- Left Controls (4 cols on lg) -->
-        <div class="lg:col-span-4 bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
-            <h4 class="font-bold text-slate-900 text-sm flex items-center space-x-1.5">
-              <Sliders class="w-4 h-4 text-amber-600" />
-              <span>{{ t('wm_controls') }}</span>
-            </h4>
-            <button @click="reset" class="text-xs text-slate-400 hover:text-rose-600 font-medium">
-              {{ t('btn_reset_file') }}
-            </button>
+    <!-- Workspace (Expanded Grid on Large Screens) -->
+    <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full">
+      <!-- Left Controls (4 cols on lg) -->
+      <div class="lg:col-span-4 bg-white rounded-3xl p-6 border border-slate-200 shadow-xs space-y-5">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center space-x-2 font-bold text-slate-800 text-sm">
+            <Sliders class="w-4 h-4 text-amber-600" />
+            <span>{{ t('wm_controls') }}</span>
+            <span v-if="unlockedPassword" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
+              🔒 Unlocked
+            </span>
           </div>
+          <button @click="reset" class="text-xs text-rose-600 hover:underline">
+            {{ t('btn_reset_file') }}
+          </button>
+        </div>
 
+        <!-- Watermark Text Input -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">{{ t('wm_text_label') }}</label>
+          <input 
+            v-model="wmText" 
+            @input="renderPreview"
+            type="text" 
+            placeholder="e.g. CONFIDENTIAL"
+            class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-hidden font-medium"
+          >
+        </div>
+
+        <!-- Size & Opacity -->
+        <div class="grid grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">{{ t('wm_text_label') }}</label>
+            <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+              <span>{{ t('wm_size_label') }}</span>
+              <span class="text-slate-500">{{ wmSize }}px</span>
+            </div>
             <input 
-              type="text" 
-              v-model="wmText" 
+              v-model.number="wmSize" 
               @input="renderPreview"
-              class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2.5 focus:ring-2 focus:ring-amber-500 outline-hidden font-bold"
+              type="range" 
+              min="16" 
+              max="96" 
+              class="w-full accent-amber-600"
             >
           </div>
-
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">{{ t('wm_size_label') }} ({{ wmSize }}px)</label>
-              <input 
-                type="range" 
-                min="16" 
-                max="100" 
-                v-model.number="wmSize" 
-                @input="renderPreview"
-                class="w-full accent-amber-600"
-              >
-            </div>
-            <div>
-              <label class="block text-xs font-semibold text-slate-700 mb-1">{{ t('wm_opacity_label') }} ({{ wmOpacity }}%)</label>
-              <input 
-                type="range" 
-                min="5" 
-                max="90" 
-                v-model.number="wmOpacity" 
-                @input="renderPreview"
-                class="w-full accent-amber-600"
-              >
-            </div>
-          </div>
-
           <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">{{ t('wm_rotation_label') }}</label>
-            <div class="grid grid-cols-3 gap-2 text-xs">
-              <button 
-                type="button" 
-                @click="setAngle(-45)"
-                :class="[
-                  'py-2 rounded-lg font-medium transition',
-                  wmAngle === -45 ? 'bg-amber-50 text-amber-800 border border-amber-300 shadow-xs' : 'bg-slate-100 text-slate-700'
-                ]"
-              >
-                {{ t('wm_angle_diag_neg') }}
-              </button>
-              <button 
-                type="button" 
-                @click="setAngle(0)"
-                :class="[
-                  'py-2 rounded-lg font-medium transition',
-                  wmAngle === 0 ? 'bg-amber-50 text-amber-800 border border-amber-300 shadow-xs' : 'bg-slate-100 text-slate-700'
-                ]"
-              >
-                {{ t('wm_angle_horiz') }}
-              </button>
-              <button 
-                type="button" 
-                @click="setAngle(45)"
-                :class="[
-                  'py-2 rounded-lg font-medium transition',
-                  wmAngle === 45 ? 'bg-amber-50 text-amber-800 border border-amber-300 shadow-xs' : 'bg-slate-100 text-slate-700'
-                ]"
-              >
-                {{ t('wm_angle_diag_pos') }}
-              </button>
+            <div class="flex justify-between text-xs font-semibold text-slate-700 mb-1">
+              <span>{{ t('wm_opacity_label') }}</span>
+              <span class="text-slate-500">{{ wmOpacity }}%</span>
             </div>
+            <input 
+              v-model.number="wmOpacity" 
+              @input="renderPreview"
+              type="range" 
+              min="5" 
+              max="90" 
+              class="w-full accent-amber-600"
+            >
           </div>
+        </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-slate-700 mb-1">{{ t('wm_color_preset') }}</label>
-            <div class="flex items-center space-x-3 pt-1">
-              <button 
-                v-for="color in colorPresets" 
-                :key="color"
-                type="button"
-                @click="setColor(color)"
-                :style="{ backgroundColor: color }"
-                :class="[
-                  'w-8 h-8 rounded-full ring-2 ring-offset-2 transition',
-                  wmColor === color ? 'ring-slate-900 scale-110' : 'ring-transparent'
-                ]"
-              ></button>
-            </div>
-          </div>
-
-          <div class="pt-3 border-t border-slate-100">
+        <!-- Rotation Angle Presets -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">{{ t('wm_rotation_label') }}</label>
+          <div class="grid grid-cols-3 gap-2">
             <button 
-              :disabled="isProcessing || isLoading"
-              @click="executeWatermark"
-              class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-3.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 active:scale-98"
+              @click="setAngle(-45)"
+              :class="[
+                'text-xs py-2 rounded-xl border transition font-medium',
+                wmAngle === -45 ? 'border-amber-500 bg-amber-50 text-amber-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              ]"
             >
-              <span v-if="!isProcessing">{{ t('stamp_and_download') }}</span>
-              <span v-else>Stamping...</span>
-              <Download v-if="!isProcessing" class="w-4 h-4" />
-              <Loader2 v-else class="w-4 h-4 animate-spin" />
+              {{ t('wm_angle_diag_neg') }}
+            </button>
+            <button 
+              @click="setAngle(0)"
+              :class="[
+                'text-xs py-2 rounded-xl border transition font-medium',
+                wmAngle === 0 ? 'border-amber-500 bg-amber-50 text-amber-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              ]"
+            >
+              {{ t('wm_angle_horiz') }}
+            </button>
+            <button 
+              @click="setAngle(45)"
+              :class="[
+                'text-xs py-2 rounded-xl border transition font-medium',
+                wmAngle === 45 ? 'border-amber-500 bg-amber-50 text-amber-800' : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+              ]"
+            >
+              {{ t('wm_angle_diag_pos') }}
             </button>
           </div>
         </div>
 
-        <!-- Right Live Canvas Preview (8 cols on lg) -->
-        <div class="lg:col-span-8 bg-slate-200/70 rounded-3xl p-6 sm:p-8 border border-slate-300/80 flex flex-col items-center justify-center min-h-[550px]">
-          <span class="text-xs font-semibold text-slate-500 mb-4 bg-white/70 px-3 py-1 rounded-full border border-slate-200/80 shadow-2xs">
-            {{ t('live_preview') }}
-          </span>
-          <div class="relative bg-white shadow-xl rounded-xl overflow-hidden border border-slate-300/80 flex items-center justify-center">
-            <canvas ref="previewCanvasRef" class="max-w-full max-h-[620px] object-contain block"></canvas>
+        <!-- Color Palette -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1.5">{{ t('wm_color_preset') }}</label>
+          <div class="flex items-center space-x-3">
+            <button 
+              v-for="color in colorPresets" 
+              :key="color"
+              @click="setColor(color)"
+              :style="{ backgroundColor: color }"
+              :class="[
+                'w-8 h-8 rounded-full ring-2 ring-offset-2 transition',
+                wmColor === color ? 'ring-slate-900 scale-110' : 'ring-transparent'
+              ]"
+            ></button>
           </div>
         </div>
 
+        <div class="pt-3 border-t border-slate-100">
+          <button 
+            :disabled="isProcessing || isLoading"
+            @click="executeWatermark"
+            class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-3.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 active:scale-98"
+          >
+            <span v-if="!isProcessing">{{ t('stamp_and_download') }}</span>
+            <span v-else>Stamping...</span>
+            <Download v-if="!isProcessing" class="w-4 h-4" />
+            <Loader2 v-else class="w-4 h-4 animate-spin" />
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Live Canvas Preview (8 cols on lg) -->
+      <div class="lg:col-span-8 bg-slate-200/70 rounded-3xl p-6 sm:p-8 border border-slate-300/80 flex flex-col items-center justify-center min-h-[550px]">
+        <div class="flex items-center space-x-2 text-xs font-bold text-slate-600 mb-4 self-start">
+          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+          <span>{{ t('live_preview') }}</span>
+        </div>
+        <div class="bg-white p-2 rounded-2xl shadow-xl border border-slate-200/90 max-w-full overflow-hidden flex items-center justify-center">
+          <canvas ref="previewCanvasRef" class="max-h-[620px] max-w-full object-contain rounded-lg"></canvas>
+        </div>
       </div>
     </div>
+
+    <!-- Password Unlock Modal -->
+    <PasswordModal 
+      :is-open="isPasswordOpen"
+      :filename="pendingFileName"
+      :error-message="passwordError"
+      :is-unlocking="isUnlocking"
+      @submit="handlePasswordSubmit"
+      @cancel="handlePasswordCancel"
+    />
   </section>
 </template>
 
@@ -178,6 +195,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
 const previewCanvasRef = ref(null);
@@ -194,6 +212,14 @@ const colorPresets = ['#dc2626', '#475569', '#2563eb', '#059669'];
 
 const isLoading = ref(false);
 
+// Password State
+const isPasswordOpen = ref(false);
+const passwordError = ref('');
+const isUnlocking = ref(false);
+const pendingFileName = ref('');
+let pendingFileObj = null;
+let unlockedPassword = '';
+
 let page1Canvas = null;
 
 function onFileSelected(e) {
@@ -208,13 +234,21 @@ function onDrop(e) {
   if (file && file.type === 'application/pdf') loadFile(file);
 }
 
-async function loadFile(file) {
+async function loadFile(file, password = '') {
   isLoading.value = true;
+  pendingFileName.value = file.name;
+  pendingFileObj = file;
   const rawBuffer = await file.arrayBuffer();
   docBytes.value = new Uint8Array(rawBuffer);
+
   try {
     const pdfDataForViewer = new Uint8Array(rawBuffer.slice(0));
-    const pdf = await pdfjsLib.getDocument({ data: pdfDataForViewer }).promise;
+    const loadingTask = pdfjsLib.getDocument({ 
+      data: pdfDataForViewer,
+      password: password || undefined
+    });
+    
+    const pdf = await loadingTask.promise;
     const page1 = await pdf.getPage(1);
     const viewport = page1.getViewport({ scale: 1.2 });
 
@@ -224,12 +258,38 @@ async function loadFile(file) {
     page1Canvas.height = viewport.height;
     await page1.render({ canvasContext: ctx, viewport }).promise;
 
+    unlockedPassword = password;
+    isPasswordOpen.value = false;
+    passwordError.value = '';
+
     renderPreview();
   } catch (err) {
-    alert('Failed to load PDF: ' + err.message);
+    if (err.name === 'PasswordException' || err.message?.toLowerCase().includes('password')) {
+      docBytes.value = null;
+      isPasswordOpen.value = true;
+      if (password) {
+        passwordError.value = t('pwd_error_wrong');
+      }
+    } else {
+      alert('Failed to load PDF: ' + err.message);
+    }
   } finally {
     isLoading.value = false;
+    isUnlocking.value = false;
   }
+}
+
+async function handlePasswordSubmit(pwd) {
+  if (!pendingFileObj) return;
+  isUnlocking.value = true;
+  await loadFile(pendingFileObj, pwd);
+}
+
+function handlePasswordCancel() {
+  isPasswordOpen.value = false;
+  passwordError.value = '';
+  pendingFileObj = null;
+  reset();
 }
 
 function setAngle(deg) {
@@ -242,60 +302,72 @@ function setColor(hex) {
   renderPreview();
 }
 
-function reset() {
-  docBytes.value = null;
-  page1Canvas = null;
-}
-
 function renderPreview() {
   if (!page1Canvas || !previewCanvasRef.value) return;
+
   const canvas = previewCanvasRef.value;
   const ctx = canvas.getContext('2d');
   canvas.width = page1Canvas.width;
   canvas.height = page1Canvas.height;
 
-  // Draw background page
+  // 1. Draw page 1 original content
   ctx.drawImage(page1Canvas, 0, 0);
 
-  // Draw watermark
-  const opacity = wmOpacity.value / 100;
+  // 2. Draw watermark layer on top
+  if (!wmText.value.trim()) return;
+
   ctx.save();
   ctx.translate(canvas.width / 2, canvas.height / 2);
   ctx.rotate((wmAngle.value * Math.PI) / 180);
-  ctx.globalAlpha = opacity;
+  ctx.font = `bold ${wmSize.value * 1.2}px sans-serif`;
   ctx.fillStyle = wmColor.value;
-  ctx.font = `bold ${wmSize.value * 1.5}px sans-serif`;
+  ctx.globalAlpha = wmOpacity.value / 100;
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText(wmText.value || 'CONFIDENTIAL', 0, 0);
+  ctx.fillText(wmText.value, 0, 0);
   ctx.restore();
+}
+
+function reset() {
+  docBytes.value = null;
+  page1Canvas = null;
+  unlockedPassword = '';
+}
+
+function hexToRgb01(hex) {
+  const num = parseInt(hex.replace('#', ''), 16);
+  return {
+    r: ((num >> 16) & 255) / 255,
+    g: ((num >> 8) & 255) / 255,
+    b: (num & 255) / 255
+  };
 }
 
 async function executeWatermark() {
   if (!docBytes.value) return;
   isProcessing.value = true;
   try {
-    const pdfDoc = await PDFDocument.load(docBytes.value);
-    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    const text = wmText.value || 'CONFIDENTIAL';
-    const size = wmSize.value;
-    const opacity = wmOpacity.value / 100;
-
-    const r = parseInt(wmColor.value.slice(1, 3), 16) / 255;
-    const g = parseInt(wmColor.value.slice(3, 5), 16) / 255;
-    const b = parseInt(wmColor.value.slice(5, 7), 16) / 255;
-
+    const pdfDoc = await PDFDocument.load(docBytes.value, {
+      password: unlockedPassword || undefined,
+      ignoreEncryption: !unlockedPassword
+    });
+    const helveticaFont = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const pages = pdfDoc.getPages();
+    const color = hexToRgb01(wmColor.value);
+
     for (const page of pages) {
       const { width, height } = page.getSize();
-      page.drawText(text, {
-        x: width / 2 - (font.widthOfTextAtSize(text, size) / 2) * Math.cos((wmAngle.value * Math.PI) / 180),
-        y: height / 2 - (size / 2) * Math.sin((wmAngle.value * Math.PI) / 180),
-        size: size,
-        font: font,
-        color: rgb(r, g, b),
-        opacity: opacity,
-        rotate: degrees(wmAngle.value),
+      const textWidth = helveticaFont.widthOfTextAtSize(wmText.value, wmSize.value);
+      const textHeight = helveticaFont.heightAtSize(wmSize.value);
+
+      page.drawText(wmText.value, {
+        x: width / 2 - textWidth / 2,
+        y: height / 2 - textHeight / 2,
+        size: wmSize.value,
+        font: helveticaFont,
+        color: rgb(color.r, color.g, color.b),
+        opacity: wmOpacity.value / 100,
+        rotate: degrees(wmAngle.value)
       });
     }
 

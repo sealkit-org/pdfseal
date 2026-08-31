@@ -84,5 +84,11 @@
   "trust_desc_speed": "Zero waiting in upload queues. Heavy files are processed in milliseconds in your browser RAM.",
   "trust_title_honest": "No Paywalls or Limits",
   "trust_desc_honest": "No 2-files daily limit, no account sign-up traps, and zero forced $12/month subscriptions.",
-  "trust_badge_offline": "Works 100% Offline"
+  "trust_badge_offline": "Works 100% Offline",
+  "pwd_modal_title": "Password Protected PDF",
+  "pwd_modal_desc": "This document is encrypted. Enter the password to unlock and process it locally in your browser.",
+  "pwd_modal_privacy_hint": "🔒 Your password stays in local memory and is never sent to any server.",
+  "pwd_input_placeholder": "Enter PDF password",
+  "btn_unlock_pdf": "🦭 Unlock Document",
+  "pwd_error_wrong": "Incorrect password. Please verify and try again."
 }

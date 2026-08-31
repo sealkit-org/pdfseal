@@ -38,73 +38,101 @@
       </button>
     </div>
 
-    <!-- Split Workspace -->
+    <!-- Workspace -->
     <div v-else class="w-full">
-      <div class="bg-white rounded-2xl border border-slate-200 p-5 mb-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div class="flex-1 w-full">
-          <label class="block text-xs font-bold text-slate-700 mb-1">{{ t('custom_page_range') }}</label>
-          <div class="flex items-center space-x-2">
-            <input 
-              type="text" 
-              v-model="rangeInput" 
-              :placeholder="t('range_placeholder')" 
-              @input="onRangeChange"
-              class="text-xs bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 w-full max-w-xs focus:ring-2 focus:ring-emerald-500 outline-hidden"
-            >
-            <button 
-              @click="selectAll(true)" 
-              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-2 rounded-xl transition whitespace-nowrap"
-            >
-              {{ t('btn_select_all') }}
-            </button>
-            <button 
-              @click="selectAll(false)" 
-              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3 py-2 rounded-xl transition whitespace-nowrap"
-            >
-              {{ t('btn_deselect_all') }}
-            </button>
-          </div>
-        </div>
-
-        <div class="text-right">
-          <span class="text-xs text-slate-500">
-            {{ t('selected_label') }} 
-            <strong class="text-emerald-600 font-bold">{{ selectedIndices.size }}</strong> / {{ totalPages }} {{ t('pages_label') }}
+      <!-- Top Control Bar -->
+      <div class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 shadow-xs flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <span class="text-xs bg-emerald-50 text-emerald-700 font-bold px-3 py-1.5 rounded-lg border border-emerald-200">
+            {{ totalPages }} {{ t('pages_total') }}
+          </span>
+          <span class="text-xs font-semibold text-slate-700">
+            {{ selectedIndices.size }} {{ t('pages_label') }} {{ t('selected_label') }}
+          </span>
+          <span v-if="unlockedPassword" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
+            🔒 Unlocked
           </span>
         </div>
+
+        <div class="flex items-center space-x-2">
+          <button 
+            @click="selectAll" 
+            class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3.5 py-2 rounded-xl transition shadow-xs"
+          >
+            {{ t('select_all') }}
+          </button>
+          <button 
+            @click="clearAll" 
+            class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3.5 py-2 rounded-xl transition shadow-xs"
+          >
+            {{ t('clear_selection') }}
+          </button>
+          <button 
+            @click="reset" 
+            class="text-xs text-rose-600 hover:bg-rose-50 font-medium px-3.5 py-2 rounded-xl transition"
+          >
+            {{ t('btn_reset_file') }}
+          </button>
+        </div>
       </div>
 
-      <!-- Thumbnail Grid -->
+      <!-- Quick Range Selector -->
+      <div class="bg-slate-100/80 rounded-2xl p-3.5 mb-6 border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center space-x-2 flex-1 min-w-[280px]">
+          <span class="font-bold text-slate-700">{{ t('page_range_label') }}:</span>
+          <input 
+            v-model="rangeInput" 
+            @keyup.enter="applyRange"
+            type="text" 
+            placeholder="e.g. 1-3, 5, 8-10" 
+            class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden flex-1 font-mono"
+          >
+          <button 
+            @click="applyRange" 
+            class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-4 py-1.5 rounded-xl transition shadow-xs"
+          >
+            {{ t('apply_range') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Loading State -->
       <div v-if="isLoading" class="py-20 text-center text-xs text-slate-500 font-medium">
         <Loader2 class="w-7 h-7 animate-spin mx-auto mb-3 text-emerald-600" />
-        <span>Generating previews...</span>
+        <span>Rendering page cards...</span>
       </div>
 
-      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-4">
+      <!-- Visual Select Grid -->
+      <div v-else class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-4 min-h-[250px]">
         <div 
-          v-for="page in pages" 
-          :key="page.index"
-          @click="toggleSelection(page.index)"
+          v-for="p in pages" 
+          :key="p.index"
+          @click="toggleSelection(p.index)"
           :class="[
-            'bg-white rounded-2xl border-2 p-3 shadow-xs flex flex-col items-center relative cursor-pointer transition select-none',
-            selectedIndices.has(page.index) ? 'border-emerald-500 bg-emerald-50/30' : 'border-slate-200 hover:border-emerald-400'
+            'rounded-2xl border p-3 flex flex-col items-center relative cursor-pointer transition select-none',
+            selectedIndices.has(p.index) 
+              ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20 shadow-md' 
+              : 'border-slate-200 bg-white hover:border-slate-300 shadow-xs'
           ]"
         >
           <div class="w-full flex items-center justify-between mb-2">
-            <span class="text-[11px] font-bold text-slate-700">
-              {{ currentLang === 'zh' ? `第 ${page.index + 1} 页` : `Page ${page.index + 1}` }}
+            <span :class="[
+              'text-[11px] font-extrabold px-2 py-0.5 rounded-md',
+              selectedIndices.has(p.index) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'
+            ]">
+              {{ currentLang === 'zh' ? `第 ${p.index + 1} 页` : `Page ${p.index + 1}` }}
             </span>
             <div 
               :class="[
-                'w-4 h-4 rounded-md border flex items-center justify-center text-xs font-bold transition',
-                selectedIndices.has(page.index) ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white'
+                'w-4 h-4 rounded-full border flex items-center justify-center text-[10px] font-bold transition',
+                selectedIndices.has(p.index) ? 'bg-emerald-600 border-emerald-600 text-white' : 'border-slate-300 bg-white text-transparent'
               ]"
             >
-              <span v-if="selectedIndices.has(page.index)">✓</span>
+              ✓
             </div>
           </div>
-          <div class="overflow-hidden rounded-lg border border-slate-100 flex items-center justify-center bg-slate-50 w-full h-44 pointer-events-none">
-            <img :src="page.dataUrl" class="max-h-full max-w-full object-contain">
+          <div class="overflow-hidden rounded-lg border border-slate-100 flex items-center justify-center bg-slate-50 w-full h-44">
+            <img :src="p.dataUrl" class="max-h-full max-w-full object-contain pointer-events-none">
           </div>
         </div>
       </div>
@@ -129,6 +157,16 @@
         </button>
       </div>
     </div>
+
+    <!-- Password Unlock Modal -->
+    <PasswordModal 
+      :is-open="isPasswordOpen"
+      :filename="pendingFileName"
+      :error-message="passwordError"
+      :is-unlocking="isUnlocking"
+      @submit="handlePasswordSubmit"
+      @cancel="handlePasswordCancel"
+    />
   </section>
 </template>
 
@@ -139,6 +177,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
 import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
@@ -149,6 +188,14 @@ const rangeInput = ref('');
 const isDragOver = ref(false);
 const isLoading = ref(false);
 const isProcessing = ref(false);
+
+// Password State
+const isPasswordOpen = ref(false);
+const passwordError = ref('');
+const isUnlocking = ref(false);
+const pendingFileName = ref('');
+let pendingFileObj = null;
+let unlockedPassword = '';
 
 function onFileSelected(e) {
   const file = e.target.files[0];
@@ -162,8 +209,10 @@ function onDrop(e) {
   if (file && file.type === 'application/pdf') loadFile(file);
 }
 
-async function loadFile(file) {
+async function loadFile(file, password = '') {
   isLoading.value = true;
+  pendingFileName.value = file.name;
+  pendingFileObj = file;
   const rawBuffer = await file.arrayBuffer();
   docBytes.value = new Uint8Array(rawBuffer);
   selectedIndices.value.clear();
@@ -171,9 +220,17 @@ async function loadFile(file) {
 
   try {
     const pdfDataForViewer = new Uint8Array(rawBuffer.slice(0));
-    const pdf = await pdfjsLib.getDocument({ data: pdfDataForViewer }).promise;
+    const loadingTask = pdfjsLib.getDocument({ 
+      data: pdfDataForViewer,
+      password: password || undefined
+    });
+    
+    const pdf = await loadingTask.promise;
     totalPages.value = pdf.numPages;
     pages.value = [];
+    unlockedPassword = password;
+    isPasswordOpen.value = false;
+    passwordError.value = '';
 
     for (let i = 1; i <= totalPages.value; i++) {
       const page = await pdf.getPage(i);
@@ -190,10 +247,32 @@ async function loadFile(file) {
       });
     }
   } catch (err) {
-    alert('Failed to load PDF: ' + err.message);
+    if (err.name === 'PasswordException' || err.message?.toLowerCase().includes('password')) {
+      docBytes.value = null;
+      isPasswordOpen.value = true;
+      if (password) {
+        passwordError.value = t('pwd_error_wrong');
+      }
+    } else {
+      alert('Failed to load PDF: ' + err.message);
+    }
   } finally {
     isLoading.value = false;
+    isUnlocking.value = false;
   }
+}
+
+async function handlePasswordSubmit(pwd) {
+  if (!pendingFileObj) return;
+  isUnlocking.value = true;
+  await loadFile(pendingFileObj, pwd);
+}
+
+function handlePasswordCancel() {
+  isPasswordOpen.value = false;
+  passwordError.value = '';
+  pendingFileObj = null;
+  reset();
 }
 
 function toggleSelection(idx) {
@@ -204,50 +283,61 @@ function toggleSelection(idx) {
   }
 }
 
-function selectAll(select) {
-  if (select) {
-    for (let i = 0; i < totalPages.value; i++) selectedIndices.value.add(i);
-  } else {
-    selectedIndices.value.clear();
-  }
+function selectAll() {
+  pages.value.forEach(p => selectedIndices.value.add(p.index));
 }
 
-function onRangeChange() {
+function clearAll() {
   selectedIndices.value.clear();
-  if (!rangeInput.value.trim()) return;
+}
 
+function applyRange() {
+  if (!rangeInput.value.trim()) return;
+  selectedIndices.value.clear();
   const parts = rangeInput.value.split(',');
-  for (const p of parts) {
-    const range = p.trim().split('-');
-    if (range.length === 1) {
-      const num = parseInt(range[0]);
-      if (!isNaN(num) && num >= 1 && num <= totalPages.value) {
-        selectedIndices.value.add(num - 1);
-      }
-    } else if (range.length === 2) {
-      const start = parseInt(range[0]);
-      const end = parseInt(range[1]);
+  parts.forEach(part => {
+    const trimmed = part.trim();
+    if (trimmed.includes('-')) {
+      const [start, end] = trimmed.split('-').map(n => parseInt(n, 10));
       if (!isNaN(start) && !isNaN(end)) {
         for (let i = Math.min(start, end); i <= Math.max(start, end); i++) {
           if (i >= 1 && i <= totalPages.value) selectedIndices.value.add(i - 1);
         }
       }
+    } else {
+      const num = parseInt(trimmed, 10);
+      if (!isNaN(num) && num >= 1 && num <= totalPages.value) {
+        selectedIndices.value.add(num - 1);
+      }
     }
-  }
+  });
+}
+
+function reset() {
+  docBytes.value = null;
+  pages.value = [];
+  selectedIndices.value.clear();
+  rangeInput.value = '';
+  totalPages.value = 0;
+  unlockedPassword = '';
 }
 
 async function executeSplit() {
-  if (selectedIndices.value.size === 0) return;
+  if (!docBytes.value || selectedIndices.value.size === 0) return;
   isProcessing.value = true;
   try {
-    const srcPdf = await PDFDocument.load(docBytes.value);
+    const srcPdf = await PDFDocument.load(docBytes.value, {
+      password: unlockedPassword || undefined,
+      ignoreEncryption: !unlockedPassword
+    });
     const newPdf = await PDFDocument.create();
-    const indices = Array.from(selectedIndices.value).sort((a, b) => a - b);
-    const copied = await newPdf.copyPages(srcPdf, indices);
-    copied.forEach(p => newPdf.addPage(p));
+
+    const sortedIndices = Array.from(selectedIndices.value).sort((a, b) => a - b);
+    const copiedPages = await newPdf.copyPages(srcPdf, sortedIndices);
+    copiedPages.forEach(p => newPdf.addPage(p));
 
     const outBytes = await newPdf.save();
-    triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), `PDFSeal_Extracted_${Date.now()}.pdf`);
+    triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), `PDFSeal_Split_${Date.now()}.pdf`);
   } catch (err) {
     alert('Failed to split PDF: ' + err.message);
   } finally {

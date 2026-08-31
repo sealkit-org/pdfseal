@@ -84,5 +84,11 @@
   "trust_desc_speed": "Keine Upload-Warteschlangen. Große Dokumente werden direkt im RAM in Millisekunden verarbeitet.",
   "trust_title_honest": "Keine Paywalls & Keine Limits",
   "trust_desc_honest": "Kein 2-Dateien-Tageslimit, keine Registrierungspflicht und keine versteckten Abos.",
-  "trust_badge_offline": "Funktioniert 100% Offline"
+  "trust_badge_offline": "Funktioniert 100% Offline",
+  "pwd_modal_title": "Passwortgeschützte PDF",
+  "pwd_modal_desc": "Dieses Dokument ist verschlüsselt. Geben Sie das Passwort ein, um es lokal im Browser zu entsperren.",
+  "pwd_modal_privacy_hint": "🔒 Ihr Passwort verbleibt im lokalen Speicher und wird an keinen Server gesendet.",
+  "pwd_input_placeholder": "PDF-Passwort eingeben",
+  "btn_unlock_pdf": "🦭 Dokument entsperren",
+  "pwd_error_wrong": "Falsches Passwort. Bitte überprüfen und erneut versuchen."
 }

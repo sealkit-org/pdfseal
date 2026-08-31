@@ -1,18 +1,18 @@
 <template>
-  <section class="tool-panel">
-    <div class="mb-6 text-center max-w-xl mx-auto">
+  <section class="tool-panel max-w-4xl mx-auto">
+    <div class="mb-5 text-center max-w-xl mx-auto">
       <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ t('merge_title') }}</h2>
       <p class="text-sm text-slate-600 mt-1">{{ t('merge_desc') }}</p>
     </div>
 
-    <!-- Dropzone -->
+    <!-- Dropzone Area -->
     <div 
       v-if="files.length === 0"
       @dragover.prevent="isDragOver = true"
       @dragleave.prevent="isDragOver = false"
       @drop.prevent="onDrop"
       :class="[
-        'border-2 border-dashed rounded-3xl p-10 text-center transition cursor-pointer shadow-xs max-w-2xl mx-auto bg-white',
+        'border-2 border-dashed rounded-3xl p-12 text-center transition cursor-pointer shadow-xs bg-white',
         isDragOver ? 'border-blue-500 bg-blue-50/50' : 'border-slate-300 hover:border-blue-500'
       ]"
       @click="fileInputRef.click()"
@@ -32,58 +32,66 @@
       <p class="text-xs text-slate-500 mt-1">{{ t('merge_drop_subtitle') }}</p>
       <button 
         type="button" 
-        class="mt-4 inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm"
+        class="mt-4 inline-flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-sm"
       >
         <Plus class="w-4 h-4" />
         <span>{{ t('btn_choose_files') }}</span>
       </button>
     </div>
 
-    <!-- Workspace -->
-    <div v-else class="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-        <div>
-          <h4 class="font-bold text-slate-800 text-sm">
-            {{ t('merge_selected_title') }} ({{ files.length }})
-          </h4>
-          <p class="text-xs text-slate-500">{{ t('merge_selected_hint') }}</p>
+    <!-- File List Workspace -->
+    <div v-else class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <span class="font-bold text-slate-800 text-sm">{{ t('selected_files_count') }} ({{ files.length }})</span>
+          <span class="text-[11px] text-slate-400 font-normal">{{ t('drag_to_reorder_hint') }}</span>
         </div>
         <div class="flex items-center space-x-2">
           <button 
             @click="fileInputRef.click()" 
-            class="text-xs text-blue-600 hover:text-blue-700 font-semibold px-2.5 py-1 rounded-lg hover:bg-blue-50 transition"
+            class="text-xs text-blue-600 hover:text-blue-700 font-semibold px-3 py-1.5 rounded-lg hover:bg-blue-50 transition flex items-center space-x-1"
           >
-            {{ t('btn_add_more') }}
+            <Plus class="w-3.5 h-3.5" />
+            <span>{{ t('btn_add_more') }}</span>
           </button>
-          <input 
-            ref="fileInputRef" 
-            type="file" 
-            multiple 
-            accept="application/pdf" 
-            class="hidden" 
-            @change="onFileSelected"
-          >
           <button 
-            @click="files = []" 
-            class="text-xs text-rose-500 hover:text-rose-700 font-medium px-2.5 py-1 rounded-lg hover:bg-rose-50 transition"
+            @click="files = []; filePasswords = {};" 
+            class="text-xs text-rose-600 hover:bg-rose-50 px-3 py-1.5 rounded-lg transition"
           >
             {{ t('btn_clear_all') }}
           </button>
         </div>
       </div>
 
-      <ul ref="listRef" class="divide-y divide-slate-100 my-4 max-h-96 overflow-y-auto pr-1">
+      <input 
+        ref="fileInputRef" 
+        type="file" 
+        multiple 
+        accept="application/pdf" 
+        class="hidden" 
+        @change="onFileSelected"
+      >
+
+      <!-- Sortable List -->
+      <ul ref="listRef" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
         <li 
-          v-for="(file, idx) in files" 
-          :key="file.name + idx"
-          class="py-3 px-3 flex items-center justify-between hover:bg-slate-50 rounded-xl transition cursor-grab active:cursor-grabbing"
+          v-for="(f, idx) in files" 
+          :key="f.name + idx"
+          class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:border-slate-300 transition cursor-grab active:cursor-grabbing group shadow-2xs"
         >
           <div class="flex items-center space-x-3 truncate">
-            <GripVertical class="w-4 h-4 text-slate-400" />
-            <FileText class="w-5 h-5 text-blue-500 shrink-0" />
+            <GripVertical class="w-4 h-4 text-slate-400 group-hover:text-slate-600 shrink-0" />
+            <div class="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs shrink-0">
+              {{ idx + 1 }}
+            </div>
             <div class="truncate">
-              <p class="text-xs font-bold text-slate-800 truncate">{{ file.name }}</p>
-              <p class="text-[10px] text-slate-400">{{ (file.size / (1024 * 1024)).toFixed(2) }} MB</p>
+              <p class="text-xs font-semibold text-slate-800 truncate">{{ f.name }}</p>
+              <p class="text-[11px] text-slate-500 flex items-center space-x-2">
+                <span>{{ (f.size / 1024 / 1024).toFixed(2) }} MB</span>
+                <span v-if="filePasswords[f.name]" class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-bold">
+                  🔒 Password Set
+                </span>
+              </p>
             </div>
           </div>
           <button 
@@ -102,7 +110,7 @@
           <span>{{ t('processed_locally') }}</span>
         </div>
         <button 
-          :disabled="isProcessing"
+          :disabled="isProcessing || files.length < 2"
           @click="executeMerge" 
           class="bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-blue-500/25 disabled:opacity-50"
         >
@@ -113,23 +121,42 @@
         </button>
       </div>
     </div>
+
+    <!-- Password Unlock Modal -->
+    <PasswordModal 
+      :is-open="isPasswordOpen"
+      :filename="pendingFileName"
+      :error-message="passwordError"
+      :is-unlocking="isUnlocking"
+      @submit="handlePasswordSubmit"
+      @cancel="handlePasswordCancel"
+    />
   </section>
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted } from 'vue';
-import { Files, Plus, GripVertical, FileText, Trash2, Lock, Download, Loader2 } from 'lucide-vue-next';
+import { ref, watch, nextTick } from 'vue';
+import { Files, Plus, GripVertical, Trash2, Lock, Download, Loader2 } from 'lucide-vue-next';
 import { PDFDocument } from 'pdf-lib';
 import Sortable from 'sortablejs';
 import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
 const listRef = ref(null);
 const files = ref([]);
+const filePasswords = ref({});
 const isDragOver = ref(false);
 const isProcessing = ref(false);
 let sortableInstance = null;
+
+// Password Modal State
+const isPasswordOpen = ref(false);
+const passwordError = ref('');
+const isUnlocking = ref(false);
+const pendingFileName = ref('');
+let pendingFileObj = null;
 
 function onFileSelected(e) {
   addFiles(e.target.files);
@@ -150,7 +177,10 @@ function addFiles(newFiles) {
 }
 
 function removeFile(index) {
-  files.value.splice(index, 1);
+  const removed = files.value.splice(index, 1)[0];
+  if (removed && filePasswords.value[removed.name]) {
+    delete filePasswords.value[removed.name];
+  }
 }
 
 watch(files, () => {
@@ -179,7 +209,23 @@ async function executeMerge() {
     const mergedPdf = await PDFDocument.create();
     for (const file of files.value) {
       const arrayBuffer = await file.arrayBuffer();
-      const pdf = await PDFDocument.load(arrayBuffer);
+      const pwd = filePasswords.value[file.name];
+      let pdf = null;
+      try {
+        pdf = await PDFDocument.load(arrayBuffer, {
+          password: pwd || undefined,
+          ignoreEncryption: !pwd
+        });
+      } catch (loadErr) {
+        if (loadErr.message?.toLowerCase().includes('password') || loadErr.message?.toLowerCase().includes('encrypt')) {
+          pendingFileName.value = file.name;
+          pendingFileObj = file;
+          isPasswordOpen.value = true;
+          isProcessing.value = false;
+          return;
+        }
+        throw loadErr;
+      }
       const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
       copiedPages.forEach(p => mergedPdf.addPage(p));
     }
@@ -191,5 +237,31 @@ async function executeMerge() {
   } finally {
     isProcessing.value = false;
   }
+}
+
+async function handlePasswordSubmit(pwd) {
+  if (!pendingFileObj) return;
+  isUnlocking.value = true;
+  try {
+    const bytes = await pendingFileObj.arrayBuffer();
+    await PDFDocument.load(bytes, { password: pwd });
+    filePasswords.value[pendingFileObj.name] = pwd;
+    isPasswordOpen.value = false;
+    passwordError.value = '';
+    pendingFileObj = null;
+    isUnlocking.value = false;
+    // Resume merging
+    executeMerge();
+  } catch (err) {
+    passwordError.value = t('pwd_error_wrong');
+    isUnlocking.value = false;
+  }
+}
+
+function handlePasswordCancel() {
+  isPasswordOpen.value = false;
+  passwordError.value = '';
+  pendingFileObj = null;
+  isProcessing.value = false;
 }
 </script>

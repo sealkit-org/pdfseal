@@ -84,5 +84,11 @@
   "trust_desc_speed": "Sin colas de subida. Archivos pesados se procesan en milisegundos en la memoria de su navegador.",
   "trust_title_honest": "Sin Límites ni Muros de Pago",
   "trust_desc_honest": "Sin límite diario de 2 archivos, sin registros obligatorios y sin suscripciones forzadas.",
-  "trust_badge_offline": "Funciona 100% sin conexión"
+  "trust_badge_offline": "Funciona 100% sin conexión",
+  "pwd_modal_title": "PDF Protegido con Contraseña",
+  "pwd_modal_desc": "Este documento está cifrado. Ingrese la contraseña para desbloquearlo localmente en su navegador.",
+  "pwd_modal_privacy_hint": "🔒 Su contraseña permanece en la memoria local y nunca se envía a ningún servidor.",
+  "pwd_input_placeholder": "Ingrese la contraseña del PDF",
+  "btn_unlock_pdf": "🦭 Desbloquear Documento",
+  "pwd_error_wrong": "Contraseña incorrecta. Por favor, verifíquela e intente nuevamente."
 }

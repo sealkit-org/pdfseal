@@ -1,6 +1,6 @@
 <template>
-  <section class="tool-panel">
-    <div class="mb-6 text-center max-w-xl mx-auto">
+  <section class="tool-panel max-w-4xl mx-auto">
+    <div class="mb-5 text-center max-w-xl mx-auto">
       <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">{{ t('sanitize_title') }}</h2>
       <p class="text-sm text-slate-600 mt-1">{{ t('sanitize_desc') }}</p>
     </div>
@@ -12,8 +12,8 @@
       @dragleave.prevent="isDragOver = false"
       @drop.prevent="onDrop"
       :class="[
-        'border-2 border-dashed rounded-3xl p-10 text-center transition cursor-pointer shadow-xs max-w-2xl mx-auto bg-white',
-        isDragOver ? 'border-teal-500 bg-teal-50/50' : 'border-slate-300 hover:border-teal-500'
+        'border-2 border-dashed rounded-3xl p-12 text-center transition cursor-pointer shadow-xs bg-white',
+        isDragOver ? 'border-cyan-500 bg-cyan-50/50' : 'border-slate-300 hover:border-cyan-500'
       ]"
       @click="fileInputRef.click()"
     >
@@ -24,56 +24,72 @@
         class="hidden" 
         @change="onFileSelected"
       >
-      <div class="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+      <div class="w-16 h-16 bg-cyan-50 text-cyan-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
         <ShieldCheck class="w-8 h-8" />
       </div>
       <h3 class="text-base font-bold text-slate-800">{{ t('sanitize_drop_title') }}</h3>
       <p class="text-xs text-slate-500 mt-1">{{ t('sanitize_drop_subtitle') }}</p>
       <button 
         type="button" 
-        class="mt-4 inline-flex items-center space-x-2 bg-teal-600 hover:bg-teal-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow-sm"
+        class="mt-4 inline-flex items-center space-x-2 bg-cyan-600 hover:bg-cyan-700 text-white text-xs font-semibold px-5 py-2.5 rounded-xl transition shadow-sm"
       >
         <FileUp class="w-4 h-4" />
         <span>{{ t('btn_choose_pdf') }}</span>
       </button>
     </div>
 
-    <!-- Workspace -->
-    <div v-else class="max-w-4xl mx-auto bg-white rounded-3xl border border-slate-200 p-6 shadow-sm">
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
-        <div>
-          <h4 class="font-bold text-slate-900 text-sm">{{ t('detected_metadata') }}</h4>
-          <p class="text-xs text-slate-500">{{ t('detected_subtitle') }}</p>
+    <!-- Metadata Inspector & Action -->
+    <div v-else class="space-y-6">
+      <div class="bg-white rounded-3xl p-6 border border-slate-200 shadow-xs">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+          <div>
+            <h3 class="font-bold text-slate-800 text-sm flex items-center space-x-2">
+              <span>{{ t('detected_metadata') }}</span>
+              <span v-if="unlockedPassword" class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full font-bold">
+                🔒 Unlocked
+              </span>
+            </h3>
+            <p class="text-xs text-slate-500">{{ t('detected_subtitle') }}</p>
+          </div>
+          <span class="text-xs bg-amber-50 text-amber-800 border border-amber-200 px-2.5 py-1 rounded-full font-medium">
+            {{ t('has_metadata_badge') }}
+          </span>
         </div>
-        <span class="text-xs bg-rose-100 text-rose-700 font-semibold px-2.5 py-1 rounded-full">{{ t('has_metadata_badge') }}</span>
+
+        <!-- Detected Attributes Table -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+          <div 
+            v-for="(val, key) in metadata" 
+            :key="key"
+            class="p-3 bg-slate-50 rounded-xl border border-slate-100 flex flex-col justify-center"
+          >
+            <span class="text-slate-400 font-semibold text-[10px] uppercase tracking-wider mb-0.5">{{ key }}</span>
+            <span class="text-slate-800 font-mono break-all font-medium select-all">{{ val }}</span>
+          </div>
+        </div>
+
+        <!-- Privacy Stripping Warning -->
+        <div class="mt-6 p-4 bg-cyan-50/70 border border-cyan-200/80 rounded-2xl text-xs text-cyan-900 space-y-1">
+          <p class="font-bold">{{ t('what_will_be_stripped') }}</p>
+          <p class="text-cyan-800">{{ t('strip_item_1') }}</p>
+          <p class="text-cyan-800">{{ t('strip_item_2') }}</p>
+          <p class="text-cyan-800">{{ t('strip_item_3') }}</p>
+        </div>
       </div>
 
-      <div class="my-6 space-y-2.5 font-mono text-xs">
-        <div 
-          v-for="(val, key) in metadata" 
-          :key="key"
-          class="flex justify-between py-2 px-3 bg-slate-50 rounded-xl border border-slate-100"
+      <!-- Actions -->
+      <div class="flex items-center justify-between">
+        <button 
+          @click="docBytes = null; unlockedPassword = '';" 
+          class="text-xs text-slate-500 hover:text-slate-800 transition font-medium"
         >
-          <span class="text-slate-500 font-medium font-sans">{{ key }}:</span>
-          <span :class="val !== noneText ? 'text-rose-600 font-bold' : 'text-slate-400'" class="truncate max-w-xs">{{ val }}</span>
-        </div>
-      </div>
-
-      <div class="bg-slate-50 rounded-2xl p-4 border border-slate-200 text-xs text-slate-600 mb-6 space-y-1">
-        <p class="font-semibold text-slate-800">{{ t('what_will_be_stripped') }}</p>
-        <p>{{ t('strip_item_1') }}</p>
-        <p>{{ t('strip_item_2') }}</p>
-        <p>{{ t('strip_item_3') }}</p>
-      </div>
-
-      <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-        <button @click="docBytes = null" class="text-xs text-slate-500 hover:text-slate-800 font-medium">
           {{ t('btn_choose_another') }}
         </button>
+
         <button 
           :disabled="isProcessing"
           @click="executeSanitize"
-          class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-6 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md disabled:opacity-50"
+          class="bg-cyan-600 hover:bg-cyan-500 active:scale-98 text-white font-bold text-xs px-6 py-3 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-cyan-600/25 disabled:opacity-50"
         >
           <span v-if="!isProcessing">{{ t('sanitize_and_download') }}</span>
           <span v-else>Sanitizing...</span>
@@ -82,6 +98,16 @@
         </button>
       </div>
     </div>
+
+    <!-- Password Unlock Modal -->
+    <PasswordModal 
+      :is-open="isPasswordOpen"
+      :filename="pendingFileName"
+      :error-message="passwordError"
+      :is-unlocking="isUnlocking"
+      @submit="handlePasswordSubmit"
+      @cancel="handlePasswordCancel"
+    />
   </section>
 </template>
 
@@ -91,12 +117,21 @@ import { ShieldCheck, FileUp, Download, Loader2 } from 'lucide-vue-next';
 import { PDFDocument } from 'pdf-lib';
 import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
 const metadata = ref({});
 const isDragOver = ref(false);
 const isProcessing = ref(false);
+
+// Password State
+const isPasswordOpen = ref(false);
+const passwordError = ref('');
+const isUnlocking = ref(false);
+const pendingFileName = ref('');
+let pendingFileObj = null;
+let unlockedPassword = '';
 
 const noneText = computed(() => currentLang.value === 'zh' ? '无' : 'None');
 
@@ -112,12 +147,23 @@ function onDrop(e) {
   if (file && file.type === 'application/pdf') loadFile(file);
 }
 
-async function loadFile(file) {
-  docBytes.value = await file.arrayBuffer();
-  try {
-    const pdfDoc = await PDFDocument.load(docBytes.value);
-    const n = noneText.value;
+async function loadFile(file, password = '') {
+  pendingFileName.value = file.name;
+  pendingFileObj = file;
+  const rawBytes = await file.arrayBuffer();
 
+  try {
+    const pdfDoc = await PDFDocument.load(rawBytes, {
+      password: password || undefined,
+      ignoreEncryption: !password
+    });
+    
+    docBytes.value = new Uint8Array(rawBytes);
+    unlockedPassword = password;
+    isPasswordOpen.value = false;
+    passwordError.value = '';
+
+    const n = noneText.value;
     metadata.value = {
       'Title': pdfDoc.getTitle() || n,
       'Author': pdfDoc.getAuthor() || n,
@@ -129,15 +175,42 @@ async function loadFile(file) {
       'Modification Date': pdfDoc.getModificationDate() ? pdfDoc.getModificationDate().toISOString() : n
     };
   } catch (err) {
-    alert('Failed to inspect metadata: ' + err.message);
+    if (err.message?.toLowerCase().includes('password') || err.message?.toLowerCase().includes('encrypt')) {
+      docBytes.value = null;
+      isPasswordOpen.value = true;
+      if (password) {
+        passwordError.value = t('pwd_error_wrong');
+      }
+    } else {
+      alert('Failed to inspect metadata: ' + err.message);
+    }
+  } finally {
+    isUnlocking.value = false;
   }
+}
+
+async function handlePasswordSubmit(pwd) {
+  if (!pendingFileObj) return;
+  isUnlocking.value = true;
+  await loadFile(pendingFileObj, pwd);
+}
+
+function handlePasswordCancel() {
+  isPasswordOpen.value = false;
+  passwordError.value = '';
+  pendingFileObj = null;
+  docBytes.value = null;
+  unlockedPassword = '';
 }
 
 async function executeSanitize() {
   if (!docBytes.value) return;
   isProcessing.value = true;
   try {
-    const pdfDoc = await PDFDocument.load(docBytes.value);
+    const pdfDoc = await PDFDocument.load(docBytes.value, {
+      password: unlockedPassword || undefined,
+      ignoreEncryption: !unlockedPassword
+    });
     pdfDoc.setTitle('');
     pdfDoc.setAuthor('');
     pdfDoc.setSubject('');

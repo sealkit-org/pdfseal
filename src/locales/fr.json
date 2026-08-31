@@ -84,5 +84,11 @@
   "trust_desc_speed": "Aucune file d'attente. Les documents volumineux sont traités en millisecondes dans votre RAM.",
   "trust_title_honest": "Sans Limites ni Paywall",
   "trust_desc_honest": "Aucune limite de 2 fichiers par jour, aucune inscription requise et zéro abonnement caché.",
-  "trust_badge_offline": "Fonctionne 100% Hors Ligne"
+  "trust_badge_offline": "Fonctionne 100% Hors Ligne",
+  "pwd_modal_title": "PDF Protégé par Mot de Passe",
+  "pwd_modal_desc": "Ce document est chiffré. Entrez le mot de passe pour le déverrouiller localement dans votre navigateur.",
+  "pwd_modal_privacy_hint": "🔒 Votre mot de passe reste dans la mémoire locale et n'est jamais envoyé à aucun serveur.",
+  "pwd_input_placeholder": "Entrez le mot de passe du PDF",
+  "btn_unlock_pdf": "🦭 Déverrouiller le Document",
+  "pwd_error_wrong": "Mot de passe incorrect. Veuillez vérifier et réessayer."
 }
