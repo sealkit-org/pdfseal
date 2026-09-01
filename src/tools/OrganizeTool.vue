@@ -72,7 +72,7 @@
       <!-- Loading State -->
       <div v-if="isLoading" class="py-20 text-center text-xs text-slate-500 font-medium">
         <Loader2 class="w-7 h-7 animate-spin mx-auto mb-3 text-indigo-600" />
-        <span>Rendering page thumbnails...</span>
+        <span>{{ t('rendering_pages') }}</span>
       </div>
 
       <!-- Thumbnail Grid (Wide Responsive Columns) -->
@@ -84,7 +84,7 @@
         >
           <div class="w-full flex items-center justify-between mb-2">
             <span class="text-[11px] font-extrabold bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md">
-              {{ currentLang === 'zh' ? `第 ${idx + 1} 页` : `Page ${idx + 1}` }}
+              {{ t('page_card_prefix') }} {{ idx + 1 }}{{ t('page_card_suffix') }}
             </span>
             <div class="flex items-center space-x-1">
               <button 
@@ -127,7 +127,7 @@
           class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md disabled:opacity-50"
         >
           <span v-if="!isProcessing">{{ t('seal_and_download') }}</span>
-          <span v-else>Sealing...</span>
+          <span v-else>{{ t('sealing_state') }}</span>
           <Download v-if="!isProcessing" class="w-4 h-4" />
           <Loader2 v-else class="w-4 h-4 animate-spin" />
         </button>
@@ -154,6 +154,7 @@ import { PDFDocument, degrees } from 'pdf-lib';
 import Sortable from 'sortablejs';
 import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { verifyPdfSecurity } from '../utils/pdfSecurity';
 import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
@@ -193,6 +194,20 @@ async function loadFile(file, password = '') {
   pendingFileObj = file;
   isLoading.value = true;
   const rawBuffer = await file.arrayBuffer();
+
+  // Strict encryption detection & validation
+  const security = await verifyPdfSecurity(rawBuffer, password);
+  if (security.isEncrypted && !security.isValid) {
+    isLoading.value = false;
+    isUnlocking.value = false;
+    docBytes.value = null;
+    isPasswordOpen.value = true;
+    if (password) {
+      passwordError.value = t('pwd_error_wrong');
+    }
+    return;
+  }
+
   docBytes.value = new Uint8Array(rawBuffer);
 
   try {
@@ -275,7 +290,7 @@ function rotateAllPages(deg) {
 
 function deletePage(idx) {
   if (pages.value.length <= 1) {
-    alert(currentLang.value === 'zh' ? '不能删除仅剩的一页。' : 'Cannot delete the only remaining page.');
+    alert(t('alert_cannot_delete_last_page'));
     return;
   }
   pages.value.splice(idx, 1);

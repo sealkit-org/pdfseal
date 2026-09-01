@@ -59,13 +59,13 @@
             @click="selectAll" 
             class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3.5 py-2 rounded-xl transition shadow-xs"
           >
-            {{ t('select_all') }}
+            {{ t('btn_select_all') }}
           </button>
           <button 
             @click="clearAll" 
             class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-3.5 py-2 rounded-xl transition shadow-xs"
           >
-            {{ t('clear_selection') }}
+            {{ t('btn_deselect_all') }}
           </button>
           <button 
             @click="reset" 
@@ -79,12 +79,12 @@
       <!-- Quick Range Selector -->
       <div class="bg-slate-100/80 rounded-2xl p-3.5 mb-6 border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs">
         <div class="flex items-center space-x-2 flex-1 min-w-[280px]">
-          <span class="font-bold text-slate-700">{{ t('page_range_label') }}:</span>
+          <span class="font-bold text-slate-700">{{ t('custom_page_range') }}</span>
           <input 
             v-model="rangeInput" 
             @keyup.enter="applyRange"
             type="text" 
-            placeholder="e.g. 1-3, 5, 8-10" 
+            :placeholder="t('range_placeholder')" 
             class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden flex-1 font-mono"
           >
           <button 
@@ -99,7 +99,7 @@
       <!-- Loading State -->
       <div v-if="isLoading" class="py-20 text-center text-xs text-slate-500 font-medium">
         <Loader2 class="w-7 h-7 animate-spin mx-auto mb-3 text-emerald-600" />
-        <span>Rendering page cards...</span>
+        <span>{{ t('rendering_pages') }}</span>
       </div>
 
       <!-- Visual Select Grid -->
@@ -120,7 +120,7 @@
               'text-[11px] font-extrabold px-2 py-0.5 rounded-md',
               selectedIndices.has(p.index) ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700'
             ]">
-              {{ currentLang === 'zh' ? `第 ${p.index + 1} 页` : `Page ${p.index + 1}` }}
+              {{ t('page_card_prefix') }} {{ p.index + 1 }}{{ t('page_card_suffix') }}
             </span>
             <div 
               :class="[
@@ -151,7 +151,7 @@
           class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md disabled:opacity-50"
         >
           <span v-if="!isProcessing">{{ t('extract_selected') }}</span>
-          <span v-else>Extracting...</span>
+          <span v-else>{{ t('extracting_state') }}</span>
           <Download v-if="!isProcessing" class="w-4 h-4" />
           <Loader2 v-else class="w-4 h-4 animate-spin" />
         </button>
@@ -177,6 +177,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
 import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { verifyPdfSecurity } from '../utils/pdfSecurity';
 import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
@@ -214,6 +215,20 @@ async function loadFile(file, password = '') {
   pendingFileName.value = file.name;
   pendingFileObj = file;
   const rawBuffer = await file.arrayBuffer();
+
+  // Strict encryption detection & validation
+  const security = await verifyPdfSecurity(rawBuffer, password);
+  if (security.isEncrypted && !security.isValid) {
+    isLoading.value = false;
+    isUnlocking.value = false;
+    docBytes.value = null;
+    isPasswordOpen.value = true;
+    if (password) {
+      passwordError.value = t('pwd_error_wrong');
+    }
+    return;
+  }
+
   docBytes.value = new Uint8Array(rawBuffer);
   selectedIndices.value.clear();
   rangeInput.value = '';

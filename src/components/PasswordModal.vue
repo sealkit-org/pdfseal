@@ -4,28 +4,28 @@
     class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 sm:p-6"
     @click.self="$emit('cancel')"
   >
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in-95 duration-200">
-      <!-- Close Button -->
+    <div class="bg-white rounded-3xl max-w-[420px] w-full p-6 shadow-2xl border border-slate-100 relative animate-in fade-in zoom-in-95 duration-200">
+      <!-- Top Right Close Button -->
       <button 
         @click="$emit('cancel')" 
-        class="absolute top-5 right-5 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition"
+        class="absolute top-4 right-4 text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition"
       >
-        <X class="w-5 h-5" />
+        <X class="w-4 h-4" />
       </button>
 
       <!-- Lock Header -->
       <div class="flex items-center space-x-3 mb-4 pb-3 border-b border-slate-100">
-        <div class="w-12 h-12 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shrink-0 shadow-xs">
-          <LockKeyhole class="w-6 h-6" />
+        <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 border border-amber-200 flex items-center justify-center shrink-0 shadow-2xs">
+          <LockKeyhole class="w-5 h-5" />
         </div>
-        <div class="truncate">
-          <h3 class="font-extrabold text-slate-900 text-base sm:text-lg truncate">{{ t('pwd_modal_title') }}</h3>
-          <p class="text-xs text-slate-500 truncate font-mono">{{ filename }}</p>
+        <div class="truncate pr-6">
+          <h3 class="font-extrabold text-slate-900 text-base truncate">{{ t('pwd_modal_title') }}</h3>
+          <p class="text-[11px] text-slate-400 truncate font-mono mt-0.5">{{ filename }}</p>
         </div>
       </div>
 
       <!-- Description & Form -->
-      <form @submit.prevent="handleSubmit" class="space-y-4">
+      <form @submit.prevent="handleSubmit" class="space-y-3.5">
         <p class="text-xs text-slate-600 leading-relaxed">
           {{ t('pwd_modal_desc') }}
         </p>
@@ -37,13 +37,13 @@
             :type="showPassword ? 'text' : 'password'" 
             v-model="password" 
             :placeholder="t('pwd_input_placeholder')"
-            class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl pl-3 pr-10 py-3 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-hidden font-medium transition"
+            class="w-full text-xs bg-slate-50 border border-slate-300 rounded-xl pl-3 pr-10 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:bg-white outline-hidden font-medium transition"
             autofocus
           >
           <button 
             type="button" 
             @click="showPassword = !showPassword"
-            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600"
+            class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
           >
             <EyeOff v-if="showPassword" class="w-4 h-4" />
             <Eye v-else class="w-4 h-4" />
@@ -61,24 +61,24 @@
           <span>{{ t('pwd_modal_privacy_hint') }}</span>
         </div>
 
-        <!-- Action Buttons -->
-        <div class="pt-2 flex items-center space-x-2.5">
+        <!-- Action Buttons (Refined Proportions) -->
+        <div class="pt-2 flex items-center justify-end space-x-2.5">
           <button 
             type="button" 
             @click="$emit('cancel')" 
-            class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold py-3 rounded-xl transition"
+            class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-4 py-2 rounded-xl hover:bg-slate-100 transition cursor-pointer"
           >
-            Cancel
+            {{ t('btn_cancel') }}
           </button>
           <button 
             type="submit" 
             :disabled="!password || isUnlocking"
-            class="flex-2 bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs font-bold py-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-md hover:shadow-amber-600/25 disabled:opacity-50"
+            class="bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-md hover:shadow-blue-600/25 disabled:opacity-50 cursor-pointer"
           >
             <span v-if="!isUnlocking">{{ t('btn_unlock_pdf') }}</span>
-            <span v-else>Unlocking...</span>
-            <Unlock v-if="!isUnlocking" class="w-4 h-4" />
-            <Loader2 v-else class="w-4 h-4 animate-spin" />
+            <span v-else>{{ t('unlocking_state') }}</span>
+            <Unlock v-if="!isUnlocking" class="w-3.5 h-3.5" />
+            <Loader2 v-else class="w-3.5 h-3.5 animate-spin" />
           </button>
         </div>
       </form>

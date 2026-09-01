@@ -71,13 +71,13 @@
           class="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center space-x-1"
         >
           <Github class="w-4 h-4" />
-          <span>Audit Source Code</span>
+          <span>{{ t('btn_audit_code') }}</span>
         </a>
         <button 
           @click="$emit('close')" 
           class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition shadow-sm"
         >
-          Got it
+          {{ t('btn_got_it') }}
         </button>
       </div>
     </div>

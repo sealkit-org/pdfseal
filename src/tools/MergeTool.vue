@@ -43,8 +43,8 @@
     <div v-else class="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4">
       <div class="flex items-center justify-between border-b border-slate-100 pb-3">
         <div class="flex items-center space-x-2">
-          <span class="font-bold text-slate-800 text-sm">{{ t('selected_files_count') }} ({{ files.length }})</span>
-          <span class="text-[11px] text-slate-400 font-normal">{{ t('drag_to_reorder_hint') }}</span>
+          <span class="font-bold text-slate-800 text-sm">{{ t('merge_selected_title') }} ({{ files.length }})</span>
+          <span class="text-[11px] text-slate-400 font-normal">{{ t('merge_selected_hint') }}</span>
         </div>
         <div class="flex items-center space-x-2">
           <button 
@@ -88,8 +88,16 @@
               <p class="text-xs font-semibold text-slate-800 truncate">{{ f.name }}</p>
               <p class="text-[11px] text-slate-500 flex items-center space-x-2">
                 <span>{{ (f.size / 1024 / 1024).toFixed(2) }} MB</span>
-                <span v-if="filePasswords[f.name]" class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded-full font-bold">
-                  🔒 Password Set
+                <button 
+                  type="button"
+                  v-if="encryptedFiles.has(f.name) && !filePasswords[f.name]" 
+                  @click.stop="openUnlockForFile(f)"
+                  class="text-[10px] bg-rose-100 text-rose-800 hover:bg-rose-200 px-2 py-0.5 rounded-full font-bold cursor-pointer transition flex items-center"
+                >
+                  🔒 {{ t('badge_pwd_required') }}
+                </button>
+                <span v-else-if="filePasswords[f.name]" class="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+                  ✓ {{ t('badge_unlocked') }}
                 </span>
               </p>
             </div>
@@ -141,12 +149,14 @@ import { PDFDocument } from 'pdf-lib';
 import Sortable from 'sortablejs';
 import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { verifyPdfSecurity } from '../utils/pdfSecurity';
 import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
 const listRef = ref(null);
 const files = ref([]);
 const filePasswords = ref({});
+const encryptedFiles = ref(new Set());
 const isDragOver = ref(false);
 const isProcessing = ref(false);
 let sortableInstance = null;
@@ -168,10 +178,15 @@ function onDrop(e) {
   addFiles(e.dataTransfer.files);
 }
 
-function addFiles(newFiles) {
+async function addFiles(newFiles) {
   for (const f of newFiles) {
     if (f.type === 'application/pdf' || f.name.endsWith('.pdf')) {
       files.value.push(f);
+      const buffer = await f.arrayBuffer();
+      const security = await verifyPdfSecurity(buffer);
+      if (security.isEncrypted) {
+        encryptedFiles.value.add(f.name);
+      }
     }
   }
 }
@@ -198,9 +213,16 @@ watch(files, () => {
   });
 }, { deep: true });
 
+function openUnlockForFile(file) {
+  pendingFileName.value = file.name;
+  pendingFileObj = file;
+  passwordError.value = '';
+  isPasswordOpen.value = true;
+}
+
 async function executeMerge() {
   if (files.value.length < 2) {
-    alert(currentLang.value === 'zh' ? '请至少选择 2 个 PDF 文件进行合并。' : 'Please select at least 2 PDF files to merge.');
+    alert(t('alert_min_2_files'));
     return;
   }
 
@@ -209,23 +231,21 @@ async function executeMerge() {
     const mergedPdf = await PDFDocument.create();
     for (const file of files.value) {
       const arrayBuffer = await file.arrayBuffer();
-      const pwd = filePasswords.value[file.name];
-      let pdf = null;
-      try {
-        pdf = await PDFDocument.load(arrayBuffer, {
-          password: pwd || undefined,
-          ignoreEncryption: !pwd
-        });
-      } catch (loadErr) {
-        if (loadErr.message?.toLowerCase().includes('password') || loadErr.message?.toLowerCase().includes('encrypt')) {
-          pendingFileName.value = file.name;
-          pendingFileObj = file;
-          isPasswordOpen.value = true;
-          isProcessing.value = false;
-          return;
-        }
-        throw loadErr;
+      const pwd = filePasswords.value[file.name] || '';
+
+      const security = await verifyPdfSecurity(arrayBuffer, pwd);
+      if (security.isEncrypted && !security.isValid) {
+        pendingFileName.value = file.name;
+        pendingFileObj = file;
+        isPasswordOpen.value = true;
+        isProcessing.value = false;
+        return;
       }
+
+      const pdf = await PDFDocument.load(arrayBuffer, {
+        password: pwd || undefined,
+        ignoreEncryption: true
+      });
       const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
       copiedPages.forEach(p => mergedPdf.addPage(p));
     }
@@ -244,14 +264,18 @@ async function handlePasswordSubmit(pwd) {
   isUnlocking.value = true;
   try {
     const bytes = await pendingFileObj.arrayBuffer();
-    await PDFDocument.load(bytes, { password: pwd });
+    const security = await verifyPdfSecurity(bytes, pwd);
+    if (!security.isValid) {
+      passwordError.value = t('pwd_error_wrong');
+      isUnlocking.value = false;
+      return;
+    }
+
     filePasswords.value[pendingFileObj.name] = pwd;
     isPasswordOpen.value = false;
     passwordError.value = '';
     pendingFileObj = null;
     isUnlocking.value = false;
-    // Resume merging
-    executeMerge();
   } catch (err) {
     passwordError.value = t('pwd_error_wrong');
     isUnlocking.value = false;

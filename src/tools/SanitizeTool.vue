@@ -92,7 +92,7 @@
           class="bg-cyan-600 hover:bg-cyan-500 active:scale-98 text-white font-bold text-xs px-6 py-3 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-cyan-600/25 disabled:opacity-50"
         >
           <span v-if="!isProcessing">{{ t('sanitize_and_download') }}</span>
-          <span v-else>Sanitizing...</span>
+          <span v-else>{{ t('sealing_state') }}</span>
           <Download v-if="!isProcessing" class="w-4 h-4" />
           <Loader2 v-else class="w-4 h-4 animate-spin" />
         </button>
@@ -117,6 +117,7 @@ import { ShieldCheck, FileUp, Download, Loader2 } from 'lucide-vue-next';
 import { PDFDocument } from 'pdf-lib';
 import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { verifyPdfSecurity } from '../utils/pdfSecurity';
 import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
@@ -133,7 +134,7 @@ const pendingFileName = ref('');
 let pendingFileObj = null;
 let unlockedPassword = '';
 
-const noneText = computed(() => currentLang.value === 'zh' ? '无' : 'None');
+const noneText = computed(() => t('none_value'));
 
 function onFileSelected(e) {
   const file = e.target.files[0];
@@ -152,10 +153,22 @@ async function loadFile(file, password = '') {
   pendingFileObj = file;
   const rawBytes = await file.arrayBuffer();
 
+  // Strict encryption check
+  const security = await verifyPdfSecurity(rawBytes, password);
+  if (security.isEncrypted && !security.isValid) {
+    isUnlocking.value = false;
+    docBytes.value = null;
+    isPasswordOpen.value = true;
+    if (password) {
+      passwordError.value = t('pwd_error_wrong');
+    }
+    return;
+  }
+
   try {
     const pdfDoc = await PDFDocument.load(rawBytes, {
       password: password || undefined,
-      ignoreEncryption: !password
+      ignoreEncryption: true
     });
     
     docBytes.value = new Uint8Array(rawBytes);

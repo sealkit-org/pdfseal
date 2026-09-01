@@ -157,7 +157,7 @@
             class="w-full bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs py-3.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 active:scale-98"
           >
             <span v-if="!isProcessing">{{ t('stamp_and_download') }}</span>
-            <span v-else>Stamping...</span>
+            <span v-else>{{ t('stamping_state') }}</span>
             <Download v-if="!isProcessing" class="w-4 h-4" />
             <Loader2 v-else class="w-4 h-4 animate-spin" />
           </button>
@@ -195,6 +195,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, StandardFonts, rgb, degrees } from 'pdf-lib';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { verifyPdfSecurity } from '../utils/pdfSecurity';
 import PasswordModal from '../components/PasswordModal.vue';
 
 const fileInputRef = ref(null);
@@ -239,6 +240,20 @@ async function loadFile(file, password = '') {
   pendingFileName.value = file.name;
   pendingFileObj = file;
   const rawBuffer = await file.arrayBuffer();
+
+  // Strict encryption detection & validation
+  const security = await verifyPdfSecurity(rawBuffer, password);
+  if (security.isEncrypted && !security.isValid) {
+    isLoading.value = false;
+    isUnlocking.value = false;
+    docBytes.value = null;
+    isPasswordOpen.value = true;
+    if (password) {
+      passwordError.value = t('pwd_error_wrong');
+    }
+    return;
+  }
+
   docBytes.value = new Uint8Array(rawBuffer);
 
   try {

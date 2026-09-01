@@ -99,9 +99,9 @@
           @click="$emit('open-privacy')"
           class="hidden lg:flex items-center space-x-3 text-[11px] text-slate-500 hover:text-emerald-700 cursor-pointer transition font-medium px-2 py-1 rounded-lg hover:bg-white/60"
         >
-          <span class="flex items-center"><Zap class="w-3.5 h-3.5 text-blue-500 mr-1" /> 0.2s Local Speed</span>
+          <span class="flex items-center"><Zap class="w-3.5 h-3.5 text-blue-500 mr-1" /> {{ t('ribbon_speed') }}</span>
           <span class="text-slate-300">•</span>
-          <span class="flex items-center"><Lock class="w-3.5 h-3.5 text-emerald-600 mr-1" /> 0 Bytes Uploaded</span>
+          <span class="flex items-center"><Lock class="w-3.5 h-3.5 text-emerald-600 mr-1" /> {{ t('ribbon_zero_upload') }}</span>
         </div>
       </div>
     </div>
