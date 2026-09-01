@@ -66,7 +66,7 @@
       <!-- Action -->
       <div class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
         <a 
-          href="https://github.com/gzz727007/pdfseal" 
+          href="https://github.com/sealkit-org/pdfseal" 
           target="_blank" 
           class="text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center space-x-1"
         >

@@ -43,7 +43,7 @@
         <span class="text-[11px] text-slate-400">Prefer GitHub or Ko-fi?</span>
         <div class="flex items-center space-x-3 font-medium">
           <a 
-            href="https://github.com/gzz727007/pdfseal/issues/new" 
+            href="https://github.com/sealkit-org/pdfseal/issues/new" 
             target="_blank" 
             class="text-slate-600 hover:text-slate-900 transition hover:underline"
           >

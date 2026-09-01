@@ -64,7 +64,7 @@
 
         <!-- GitHub -->
         <a 
-          href="https://github.com/gzz727007/pdfseal" 
+          href="https://github.com/sealkit-org/pdfseal" 
           target="_blank" 
           title="View GitHub Repository" 
           class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
