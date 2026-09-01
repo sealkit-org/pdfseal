@@ -43,6 +43,26 @@
           </div>
         </div>
 
+        <!-- Global Settings Button -->
+        <button 
+          @click="$emit('open-settings')" 
+          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 transition font-semibold cursor-pointer"
+          :title="t('settings_modal_title') || '全局偏好设置'"
+        >
+          <Settings class="w-4 h-4 text-slate-600" />
+          <span class="hidden lg:inline">{{ t('settings_btn_label') || '设置' }}</span>
+        </button>
+
+        <!-- Diagnostic Log Button -->
+        <button 
+          @click="$emit('open-logs')" 
+          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 transition font-semibold cursor-pointer"
+          :title="t('log_modal_title') || '实时诊断日志'"
+        >
+          <Terminal class="w-4 h-4 text-slate-600" />
+          <span class="hidden lg:inline">{{ t('log_btn_label') || '日志' }}</span>
+        </button>
+
         <!-- Ko-fi -->
         <a 
           href="https://ko-fi.com/muffin27" 
@@ -94,14 +114,20 @@
           </button>
         </div>
 
-        <!-- Right Side Micro-Trust Ribbon -->
-        <div 
-          @click="$emit('open-privacy')"
-          class="hidden lg:flex items-center space-x-3 text-[11px] text-slate-500 hover:text-emerald-700 cursor-pointer transition font-medium px-2 py-1 rounded-lg hover:bg-white/60"
-        >
-          <span class="flex items-center"><Zap class="w-3.5 h-3.5 text-blue-500 mr-1" /> {{ t('ribbon_speed') }}</span>
-          <span class="text-slate-300">•</span>
-          <span class="flex items-center"><Lock class="w-3.5 h-3.5 text-emerald-600 mr-1" /> {{ t('ribbon_zero_upload') }}</span>
+        <!-- Right Side Dedicated Vault Capsule Hub -->
+        <div class="flex items-center pl-2">
+          <button 
+            @click="$emit('switch-tab', 'vault')"
+            :class="[
+              'flex items-center space-x-2 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer',
+              activeTab === 'vault' 
+                ? 'bg-blue-600 text-white shadow-xs font-semibold' 
+                : 'bg-white/80 hover:bg-white text-slate-700 hover:text-blue-600 border border-slate-200/80 shadow-2xs font-semibold'
+            ]"
+          >
+            <FolderLock class="w-4 h-4" :class="activeTab === 'vault' ? 'text-white' : 'text-blue-600'" />
+            <span>{{ t('tab_vault') }}</span>
+          </button>
         </div>
       </div>
     </div>
@@ -118,10 +144,15 @@ import {
   Scissors, 
   Stamp, 
   ShieldCheck,
+  FolderLock,
   Zap,
-  Lock
+  Lock,
+  Settings,
+  Terminal
 } from 'lucide-vue-next';
+import { computed } from 'vue';
 import { currentLang, setLanguage, t } from '../i18n';
+import { getRankedTools } from '../utils/usageTracker';
 
 defineProps({
   activeTab: {
@@ -130,13 +161,15 @@ defineProps({
   }
 });
 
-defineEmits(['switch-tab', 'open-feedback', 'open-privacy']);
+defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-logs']);
 
-const tools = [
+const rawTools = [
   { id: 'merge', labelKey: 'tab_merge', icon: Layers },
   { id: 'organize', labelKey: 'tab_organize', icon: LayoutGrid },
   { id: 'split', labelKey: 'tab_split', icon: Scissors },
   { id: 'watermark', labelKey: 'tab_watermark', icon: Stamp },
   { id: 'sanitize', labelKey: 'tab_sanitize', icon: ShieldCheck },
 ];
+
+const tools = computed(() => getRankedTools(rawTools));
 </script>

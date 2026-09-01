@@ -36,4 +36,21 @@ describe('PDF Merge Utility', () => {
     expect(resultDoc.getPageCount()).toBe(6);
     expect(mergedBytes.length).toBeGreaterThan(0);
   });
+
+  it('handles in-memory decrypted buffer streams for page copying', async () => {
+    const doc = await PDFDocument.create();
+    doc.addPage([250, 250]);
+    const initialBytes = await doc.save();
+
+    const loaded = await PDFDocument.load(initialBytes, { ignoreEncryption: false });
+    const cleanBytes = await loaded.save();
+    const cleanDoc = await PDFDocument.load(cleanBytes);
+
+    const merged = await PDFDocument.create();
+    const copied = await merged.copyPages(cleanDoc, cleanDoc.getPageIndices());
+    copied.forEach(p => merged.addPage(p));
+
+    const finalBytes = await merged.save();
+    expect(finalBytes.length).toBeGreaterThan(0);
+  });
 });
