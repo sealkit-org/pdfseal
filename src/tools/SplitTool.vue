@@ -252,7 +252,7 @@
           <button 
             :disabled="isProcessing || isLoading || selectedIndices.size === 0"
             @click="executeSplit" 
-            class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25 disabled:opacity-50 cursor-pointer"
+            class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
             <span v-if="!isProcessing">
               {{ t('extract_selected') || '提取所选页面' }} ({{ selectedIndices.size }})
@@ -499,27 +499,36 @@ function reset() {
   unlockedPassword = '';
 }
 
+async function generateSplitBytes() {
+  if (!docBytes.value || selectedIndices.value.size === 0) return null;
+  const preserveWatermarks = userSettings.preserveWatermarks !== false;
+  const cleanDoc = await loadCleanPdfDocument(docBytes.value, {
+    password: unlockedPassword || undefined,
+    preserveWatermarks
+  });
+
+  const newPdf = await PDFDocument.create();
+  const sortedIndices = Array.from(selectedIndices.value).sort((a, b) => a - b);
+  const copiedPages = await newPdf.copyPages(cleanDoc, sortedIndices);
+  copiedPages.forEach(p => newPdf.addPage(p));
+
+  const outBytes = await newPdf.save();
+  
+  let outName = (customOutputBaseName.value.trim() || `PDFSeal_Split_${Date.now()}`);
+  if (!outName.toLowerCase().endsWith('.pdf')) {
+    outName += '.pdf';
+  }
+
+  return { outBytes, outName, pageCount: sortedIndices.length };
+}
+
 async function executeSplit() {
   if (!docBytes.value || selectedIndices.value.size === 0) return;
   isProcessing.value = true;
   try {
-    const preserveWatermarks = userSettings.preserveWatermarks !== false;
-    const cleanDoc = await loadCleanPdfDocument(docBytes.value, {
-      password: unlockedPassword || undefined,
-      preserveWatermarks
-    });
-
-    const newPdf = await PDFDocument.create();
-    const sortedIndices = Array.from(selectedIndices.value).sort((a, b) => a - b);
-    const copiedPages = await newPdf.copyPages(cleanDoc, sortedIndices);
-    copiedPages.forEach(p => newPdf.addPage(p));
-
-    const outBytes = await newPdf.save();
-    
-    let outName = (customOutputBaseName.value.trim() || `PDFSeal_Split_${Date.now()}`);
-    if (!outName.toLowerCase().endsWith('.pdf')) {
-      outName += '.pdf';
-    }
+    const result = await generateSplitBytes();
+    if (!result) return;
+    const { outBytes, outName, pageCount } = result;
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
 
@@ -530,7 +539,7 @@ async function executeSplit() {
         arrayBuffer: outBytes,
         folderId: 'default',
         category: 'export',
-        pageCount: sortedIndices.length
+        pageCount
       });
       logger.info('VAULT', `Extracted split result auto-saved to Vault: ${outName}`);
     }

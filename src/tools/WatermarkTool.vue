@@ -322,7 +322,7 @@
           <button 
             :disabled="isProcessing || isLoading"
             @click="executeWatermark" 
-            class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 cursor-pointer"
+            class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
             <span v-if="!isProcessing">{{ t('stamp_and_download') || '盖章并下载 PDF' }}</span>
             <span v-else>{{ t('loading') || '盖章处理中...' }}</span>
@@ -598,59 +598,68 @@ function reset() {
   enableTamperProtection.value = true;
 }
 
+async function generateWatermarkedBytes() {
+  if (!docBytes.value) return null;
+  const preserveWatermarks = userSettings.preserveWatermarks !== false;
+  const pdfDoc = await loadCleanPdfDocument(docBytes.value, {
+    password: unlockedPassword || undefined,
+    preserveWatermarks
+  });
+
+  const pages = pdfDoc.getPages();
+  const text = wmText.value.trim();
+  if (text) {
+    for (const page of pages) {
+      const { width, height } = page.getSize();
+      
+      // High-DPI transparent canvas watermark layer supporting all languages (Chinese, English, etc.)
+      const scale = 2;
+      const stampCanvas = document.createElement('canvas');
+      stampCanvas.width = width * scale;
+      stampCanvas.height = height * scale;
+      const sctx = stampCanvas.getContext('2d');
+
+      sctx.save();
+      sctx.scale(scale, scale);
+      sctx.translate(width / 2, height / 2);
+      sctx.rotate((wmAngle.value * Math.PI) / 180);
+      sctx.font = `bold ${wmSize.value}px "PingFang SC", "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif`;
+      sctx.fillStyle = wmColor.value;
+      sctx.globalAlpha = wmOpacity.value / 100;
+      sctx.textAlign = 'center';
+      sctx.textBaseline = 'middle';
+      sctx.fillText(text, 0, 0);
+      sctx.restore();
+
+      const pngBlob = await new Promise(resolve => stampCanvas.toBlob(resolve, 'image/png'));
+      const pngBuffer = await pngBlob.arrayBuffer();
+      const pngImage = await pdfDoc.embedPng(pngBuffer);
+
+      page.drawImage(pngImage, {
+        x: 0,
+        y: 0,
+        width,
+        height
+      });
+    }
+  }
+
+  const outBytes = await pdfDoc.save();
+  let outName = (customOutputBaseName.value.trim() || `PDFSeal_Watermarked_${Date.now()}`);
+  if (!outName.toLowerCase().endsWith('.pdf')) {
+    outName += '.pdf';
+  }
+
+  return { outBytes, outName, pageCount: pages.length };
+}
+
 async function executeWatermark() {
   if (!docBytes.value) return;
   isProcessing.value = true;
   try {
-    const preserveWatermarks = userSettings.preserveWatermarks !== false;
-    const pdfDoc = await loadCleanPdfDocument(docBytes.value, {
-      password: unlockedPassword || undefined,
-      preserveWatermarks
-    });
-
-    const pages = pdfDoc.getPages();
-    const text = wmText.value.trim();
-    if (text) {
-      for (const page of pages) {
-        const { width, height } = page.getSize();
-        
-        // High-DPI transparent canvas watermark layer supporting all languages (Chinese, English, etc.)
-        const scale = 2;
-        const stampCanvas = document.createElement('canvas');
-        stampCanvas.width = width * scale;
-        stampCanvas.height = height * scale;
-        const sctx = stampCanvas.getContext('2d');
-
-        sctx.save();
-        sctx.scale(scale, scale);
-        sctx.translate(width / 2, height / 2);
-        sctx.rotate((wmAngle.value * Math.PI) / 180);
-        sctx.font = `bold ${wmSize.value}px "PingFang SC", "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif`;
-        sctx.fillStyle = wmColor.value;
-        sctx.globalAlpha = wmOpacity.value / 100;
-        sctx.textAlign = 'center';
-        sctx.textBaseline = 'middle';
-        sctx.fillText(text, 0, 0);
-        sctx.restore();
-
-        const pngBlob = await new Promise(resolve => stampCanvas.toBlob(resolve, 'image/png'));
-        const pngBuffer = await pngBlob.arrayBuffer();
-        const pngImage = await pdfDoc.embedPng(pngBuffer);
-
-        page.drawImage(pngImage, {
-          x: 0,
-          y: 0,
-          width,
-          height
-        });
-      }
-    }
-
-    const outBytes = await pdfDoc.save();
-    let outName = (customOutputBaseName.value.trim() || `PDFSeal_Watermarked_${Date.now()}`);
-    if (!outName.toLowerCase().endsWith('.pdf')) {
-      outName += '.pdf';
-    }
+    const result = await generateWatermarkedBytes();
+    if (!result) return;
+    const { outBytes, outName, pageCount } = result;
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
 
@@ -665,7 +674,7 @@ async function executeWatermark() {
         arrayBuffer: outBytes,
         folderId: 'default',
         category: 'export',
-        pageCount: pages.length
+        pageCount
       });
       logger.info('VAULT', `Watermarked result auto-saved to Vault: ${outName}`);
     }

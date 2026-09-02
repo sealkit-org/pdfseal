@@ -1,0 +1,13 @@
+﻿name = "pdfseal-send"
+main = "worker.js"
+compatibility_date = "2024-09-01"
+
+# 1. Cloudflare R2 Bucket Binding (10 GB Free tier, 0 egress fee)
+[[r2_buckets]]
+binding = "PDFSEAL_BUCKET"
+bucket_name = "pdfseal-bucket"
+
+# 2. Cloudflare KV Namespace Binding (Metadata TTL & auto-purge)
+[[kv_namespaces]]
+binding = "PDFSEAL_KV"
+id = "YOUR_KV_NAMESPACE_ID"

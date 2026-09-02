@@ -280,7 +280,8 @@
     <!-- Vault File Picker Modal -->
     <VaultFilePickerModal 
       :is-open="isVaultPickerOpen"
-      @select-files="onVaultFilesSelected"
+      :multiple="true"
+      @select-files="handleVaultFilesSelected"
       @close="isVaultPickerOpen = false"
     />
 
@@ -348,8 +349,11 @@ function onDrop(e) {
   addFiles(e.dataTransfer.files, 'local');
 }
 
-function onVaultFilesSelected(vaultFiles) {
-  addFiles(vaultFiles, 'vault');
+function handleVaultFilesSelected(vaultFiles) {
+  isVaultPickerOpen.value = false;
+  if (vaultFiles && vaultFiles.length > 0) {
+    addFiles(vaultFiles, 'vault');
+  }
 }
 
 async function addFiles(newFiles, defaultSource = 'local') {
@@ -423,6 +427,47 @@ function openUnlockForFile(file) {
   isPasswordOpen.value = true;
 }
 
+async function generateMergedBytes() {
+  if (files.value.length < 2) {
+    alert(t('alert_min_2_files'));
+    return null;
+  }
+
+  // 1. Phase 1: Security Pre-validation (Prompt password if needed)
+  for (const file of files.value) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pwd = filePasswords.value[file.name] || '';
+    const security = await verifyPdfSecurity(arrayBuffer, pwd);
+
+    if (security.isEncrypted && (!security.isValid || (security.isOpenPasswordRequired && !pwd))) {
+      logger.info('MERGE_SECURITY', `Prompting password for encrypted file: ${file.name}`);
+      pendingFileName.value = file.name;
+      pendingFileObj = file;
+      passwordError.value = '';
+      isAwaitingPasswordForMerge = true;
+      isPasswordOpen.value = true;
+      return null;
+    }
+  }
+
+  // 2. Phase 2: In-Memory Infallible Decryption & Page Assembly
+  const mergedPdf = await PDFDocument.create();
+  for (const file of files.value) {
+    const arrayBuffer = await file.arrayBuffer();
+    const pwd = filePasswords.value[file.name] || '';
+
+    const cleanDoc = await loadCleanPdfDocument(arrayBuffer, pwd);
+    const copiedPages = await mergedPdf.copyPages(cleanDoc, cleanDoc.getPageIndices());
+    copiedPages.forEach(p => mergedPdf.addPage(p));
+  }
+
+  const mergedBytes = await mergedPdf.save();
+  const cleanBase = (customOutputBaseName.value?.trim() || `PDFSeal_Merged_${Date.now()}`).replace(/\.pdf$/i, '');
+  const finalName = `${cleanBase}.pdf`;
+
+  return { mergedBytes, finalName, pageCount: mergedPdf.getPageCount() };
+}
+
 async function executeMerge() {
   if (files.value.length < 2) {
     alert(t('alert_min_2_files'));
@@ -435,43 +480,13 @@ async function executeMerge() {
   });
 
   try {
-    // 1. Phase 1: Security Pre-validation (Prompt password if needed)
-    for (const file of files.value) {
-      const arrayBuffer = await file.arrayBuffer();
-      const pwd = filePasswords.value[file.name] || '';
-      const security = await verifyPdfSecurity(arrayBuffer, pwd);
+    const result = await generateMergedBytes();
+    if (!result) return;
+    const { mergedBytes, finalName, pageCount } = result;
 
-      if (security.isEncrypted && (!security.isValid || (security.isOpenPasswordRequired && !pwd))) {
-        logger.info('MERGE_SECURITY', `Prompting password for encrypted file: ${file.name}`);
-        pendingFileName.value = file.name;
-        pendingFileObj = file;
-        passwordError.value = '';
-        isAwaitingPasswordForMerge = true;
-        isPasswordOpen.value = true;
-        isProcessing.value = false;
-        return;
-      }
-    }
-
-    // 2. Phase 2: In-Memory Infallible Decryption & Page Assembly
-    const mergedPdf = await PDFDocument.create();
-    for (const file of files.value) {
-      const arrayBuffer = await file.arrayBuffer();
-      const pwd = filePasswords.value[file.name] || '';
-
-      const cleanDoc = await loadCleanPdfDocument(arrayBuffer, pwd);
-      const copiedPages = await mergedPdf.copyPages(cleanDoc, cleanDoc.getPageIndices());
-      copiedPages.forEach(p => mergedPdf.addPage(p));
-    }
-
-    const mergedBytes = await mergedPdf.save();
-    const cleanBase = (customOutputBaseName.value?.trim() || `PDFSeal_Merged_${Date.now()}`).replace(/\.pdf$/i, '');
-    const finalName = `${cleanBase}.pdf`;
-    
     // Download merged result
     triggerDownload(new Blob([mergedBytes], { type: 'application/pdf' }), finalName);
-
-    logger.info('MERGE_SUCCESS', `Merged PDF generated: ${finalName} (${(mergedBytes.byteLength / 1024).toFixed(1)} KB, ${mergedPdf.getPageCount()} pages)`);
+    logger.info('MERGE_SUCCESS', `Merged PDF generated: ${finalName} (${(mergedBytes.byteLength / 1024).toFixed(1)} KB, ${pageCount} pages)`);
 
     // Auto-archive in Vault if enabled
     if (autoSaveToVault.value) {
@@ -480,7 +495,7 @@ async function executeMerge() {
         arrayBuffer: mergedBytes,
         folderId: 'default',
         category: 'export',
-        pageCount: mergedPdf.getPageCount()
+        pageCount
       });
       logger.info('VAULT', `Merged result auto-saved to Vault: ${finalName}`);
     }

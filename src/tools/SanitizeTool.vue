@@ -507,72 +507,80 @@ function reset() {
   pendingFileObj = null;
 }
 
+async function generateSanitizedBytes() {
+  if (!docBytes.value) return null;
+  const pdfDoc = await PDFDocument.load(docBytes.value, {
+    password: unlockedPassword || undefined,
+    ignoreEncryption: !unlockedPassword,
+    updateMetadata: false
+  });
+  pdfDoc.updateMetadata = false;
+
+  // 1. Physically delete all fields from Info dictionary and remove from context
+  try {
+    const infoRef = pdfDoc.context.trailerInfo?.Info;
+    if (infoRef) {
+      const infoDict = pdfDoc.context.lookup(infoRef);
+      if (infoDict && infoDict.delete) {
+        infoDict.delete(PDFName.of('Title'));
+        infoDict.delete(PDFName.of('Author'));
+        infoDict.delete(PDFName.of('Subject'));
+        infoDict.delete(PDFName.of('Keywords'));
+        infoDict.delete(PDFName.of('Creator'));
+        infoDict.delete(PDFName.of('Producer'));
+        infoDict.delete(PDFName.of('CreationDate'));
+        infoDict.delete(PDFName.of('ModDate'));
+        infoDict.delete(PDFName.of('Trapped'));
+        infoDict.delete(PDFName.of('PTEX.Fullbanner'));
+        infoDict.delete(PDFName.of('GTS_PDFXVersion'));
+      }
+      pdfDoc.context.delete(infoRef);
+    }
+    if (pdfDoc.context.trailerInfo) {
+      delete pdfDoc.context.trailerInfo.Info;
+    }
+  } catch (infoErr) {
+    console.warn('Info dict strip warning:', infoErr);
+  }
+
+  // 2. Clear standard document information getters/setters
+  pdfDoc.setTitle('');
+  pdfDoc.setAuthor('');
+  pdfDoc.setSubject('');
+  pdfDoc.setKeywords([]);
+  pdfDoc.setProducer('');
+  pdfDoc.setCreator('');
+
+  // 3. Strip deep XMP metadata streams and piece info from Catalog
+  try {
+    const catalog = pdfDoc.catalog;
+    const metadataKey = PDFName.of('Metadata');
+    if (catalog && catalog.has(metadataKey)) {
+      catalog.delete(metadataKey);
+    }
+    const pieceInfoKey = PDFName.of('PieceInfo');
+    if (catalog && catalog.has(pieceInfoKey)) {
+      catalog.delete(pieceInfoKey);
+    }
+  } catch (xmpErr) {
+    console.warn('XMP metadata stream strip notice:', xmpErr);
+  }
+
+  const outBytes = await pdfDoc.save();
+  let outName = (customOutputBaseName.value.trim() || `PDFSeal_Sanitized_${Date.now()}`);
+  if (!outName.toLowerCase().endsWith('.pdf')) {
+    outName += '.pdf';
+  }
+  return { outBytes, outName, pageCount: totalPages.value };
+}
+
 async function executeSanitize() {
   if (!docBytes.value) return;
   isProcessing.value = true;
   try {
-    const pdfDoc = await PDFDocument.load(docBytes.value, {
-      password: unlockedPassword || undefined,
-      ignoreEncryption: !unlockedPassword,
-      updateMetadata: false
-    });
-    pdfDoc.updateMetadata = false;
-
-    // 1. Physically delete all fields from Info dictionary and remove from context
-    try {
-      const infoRef = pdfDoc.context.trailerInfo?.Info;
-      if (infoRef) {
-        const infoDict = pdfDoc.context.lookup(infoRef);
-        if (infoDict && infoDict.delete) {
-          infoDict.delete(PDFName.of('Title'));
-          infoDict.delete(PDFName.of('Author'));
-          infoDict.delete(PDFName.of('Subject'));
-          infoDict.delete(PDFName.of('Keywords'));
-          infoDict.delete(PDFName.of('Creator'));
-          infoDict.delete(PDFName.of('Producer'));
-          infoDict.delete(PDFName.of('CreationDate'));
-          infoDict.delete(PDFName.of('ModDate'));
-          infoDict.delete(PDFName.of('Trapped'));
-          infoDict.delete(PDFName.of('PTEX.Fullbanner'));
-          infoDict.delete(PDFName.of('GTS_PDFXVersion'));
-        }
-        pdfDoc.context.delete(infoRef);
-      }
-      if (pdfDoc.context.trailerInfo) {
-        delete pdfDoc.context.trailerInfo.Info;
-      }
-    } catch (infoErr) {
-      console.warn('Info dict strip warning:', infoErr);
-    }
-
-    // 2. Clear standard document information getters/setters
-    pdfDoc.setTitle('');
-    pdfDoc.setAuthor('');
-    pdfDoc.setSubject('');
-    pdfDoc.setKeywords([]);
-    pdfDoc.setProducer('');
-    pdfDoc.setCreator('');
-
-    // 3. Strip deep XMP metadata streams and piece info from Catalog
-    try {
-      const catalog = pdfDoc.catalog;
-      const metadataKey = PDFName.of('Metadata');
-      if (catalog && catalog.has(metadataKey)) {
-        catalog.delete(metadataKey);
-      }
-      const pieceInfoKey = PDFName.of('PieceInfo');
-      if (catalog && catalog.has(pieceInfoKey)) {
-        catalog.delete(pieceInfoKey);
-      }
-    } catch (xmpErr) {
-      console.warn('XMP metadata stream strip notice:', xmpErr);
-    }
-
-    const outBytes = await pdfDoc.save();
-    let outName = (customOutputBaseName.value.trim() || `PDFSeal_Sanitized_${Date.now()}`);
-    if (!outName.toLowerCase().endsWith('.pdf')) {
-      outName += '.pdf';
-    }
+    const result = await generateSanitizedBytes();
+    if (!result) return;
+    const { outBytes, outName, pageCount } = result;
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
     logger.info('SANITIZE', `PDF sanitized and downloaded: ${outName}`);
@@ -584,7 +592,7 @@ async function executeSanitize() {
         arrayBuffer: outBytes,
         folderId: 'default',
         category: 'export',
-        pageCount: totalPages.value
+        pageCount
       });
       logger.info('VAULT', `Sanitized result auto-saved to Vault: ${outName}`);
     }

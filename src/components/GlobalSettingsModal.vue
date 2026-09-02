@@ -187,6 +187,34 @@
             </div>
           </div>
         </div>
+
+        <!-- 5. 零知识加密外发服务 (Seal Send Endpoint) -->
+        <div class="space-y-3">
+          <div class="flex items-center space-x-2 text-xs font-bold text-slate-900 uppercase tracking-wider">
+            <Send class="w-4 h-4 text-blue-600" />
+            <span>{{ t('settings_group_send') || '加密外发中转端点' }}</span>
+          </div>
+
+          <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 space-y-3">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <p class="text-xs font-bold text-slate-800">
+                  {{ t('settings_custom_worker_title') || '自定义 Cloudflare Worker URL' }}
+                </p>
+                <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed">
+                  {{ t('settings_custom_worker_desc') || '填入您部署在 Cloudflare 的专属 Worker 域名；留空则使用本地调试会话或默认安全中转。' }}
+                </p>
+              </div>
+
+              <input 
+                type="text" 
+                v-model="userSettings.customWorkerUrl" 
+                placeholder="https://your-worker.workers.dev"
+                class="text-xs bg-white border border-slate-200 rounded-xl px-3 py-1.5 font-mono focus:ring-2 focus:ring-blue-500 outline-hidden w-full sm:w-56"
+              >
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- Footer Actions -->
@@ -215,7 +243,7 @@
 <script setup>
 import { 
   Settings, X, Layers, FolderLock, Tag, ShieldCheck, 
-  RotateCcw, LayoutGrid, List 
+  RotateCcw, LayoutGrid, List, Send 
 } from 'lucide-vue-next';
 import { userSettings, resetSettings } from '../utils/userSettings';
 import { t } from '../i18n';

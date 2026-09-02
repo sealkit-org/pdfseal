@@ -394,6 +394,14 @@
                         <Files class="w-4 h-4 text-blue-600" />
                         <span>{{ t('tab_merge') }}</span>
                       </button>
+
+                      <button 
+                        @click="openSendModalForFile(file)"
+                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
+                      >
+                        <Send class="w-4 h-4 text-blue-600" />
+                        <span>{{ t('vault_action_send_e2ee') || '🚀 加密外发 / 阅后即焚' }}</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -560,6 +568,14 @@
                                 <Files class="w-4 h-4 text-blue-600" />
                                 <span>{{ t('tab_merge') }}</span>
                               </button>
+
+                              <button 
+                                @click="openSendModalForFile(file)"
+                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
+                              >
+                                <Send class="w-4 h-4 text-blue-600" />
+                                <span>{{ t('vault_action_send_e2ee') || '🚀 加密外发 / 阅后即焚' }}</span>
+                              </button>
                             </div>
                           </div>
 
@@ -644,16 +660,23 @@
       @submit="handlePasswordSubmit"
       @cancel="handlePasswordCancel"
     />
+
+    <!-- Seal Send E2EE Sharing Modal -->
+    <SealSendModal 
+      :is-open="isSendModalOpen"
+      :file-data="sendTargetFile"
+      @close="isSendModalOpen = false"
+    />
   </section>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, onActivated } from 'vue';
 import { 
   FolderLock, Search, Plus, Folder, FolderOpen, Inbox, FileCheck, 
   ChevronDown, ArrowDownNarrowWide, ArrowUpNarrowWide, Eye, Download, 
   Trash2, Pencil, Lock, Unlock, Key, X, Layers, Scissors, Stamp, ShieldCheck, Files,
-  LayoutGrid, List
+  LayoutGrid, List, Send
 } from 'lucide-vue-next';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
@@ -668,6 +691,7 @@ import {
 import DuplicateModal from '../components/DuplicateModal.vue';
 import VaultPreviewModal from '../components/VaultPreviewModal.vue';
 import PasswordModal from '../components/PasswordModal.vue';
+import SealSendModal from '../components/SealSendModal.vue';
 
 import { userSettings } from '../utils/userSettings';
 
@@ -716,7 +740,32 @@ const passwordError = ref('');
 const isUnlocking = ref(false);
 let pendingEncryptedFile = null;
 
+// Seal Send E2EE Sharing Modal State
+const isSendModalOpen = ref(false);
+const sendTargetFile = ref(null);
+
+async function openSendModalForFile(file) {
+  activeToolMenuId.value = null;
+  let arrayBuffer = file.arrayBuffer;
+  if (!arrayBuffer && file.blob) {
+    try {
+      arrayBuffer = await file.blob.arrayBuffer();
+    } catch (e) {}
+  }
+  sendTargetFile.value = {
+    name: file.name,
+    arrayBuffer,
+    size: file.size,
+    pageCount: file.pageCount || 1
+  };
+  isSendModalOpen.value = true;
+}
+
 onMounted(async () => {
+  await refreshVault();
+});
+
+onActivated(async () => {
   await refreshVault();
 });
 

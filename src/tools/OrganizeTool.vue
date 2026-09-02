@@ -226,7 +226,7 @@
           <button 
             :disabled="isProcessing || isLoading || pages.length === 0"
             @click="executeExport" 
-            class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-indigo-600/25 disabled:opacity-50 cursor-pointer"
+            class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-indigo-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
             <span v-if="!isProcessing">{{ t('seal_and_download') || '🦭 封印并导出 PDF' }}</span>
             <span v-else>{{ t('sealing_state') || '处理中...' }}</span>
@@ -470,27 +470,35 @@ function reset() {
   }
 }
 
+async function generateOrganizedBytes() {
+  if (!docBytes.value || pages.value.length === 0) return null;
+  const cleanDoc = await loadCleanPdfDocument(docBytes.value, unlockedPassword);
+  const newPdf = await PDFDocument.create();
+
+  for (const item of pages.value) {
+    const [copied] = await newPdf.copyPages(cleanDoc, [item.pageIndex]);
+    const currentRot = copied.getRotation().angle;
+    copied.setRotation(degrees(currentRot + item.rotation));
+    newPdf.addPage(copied);
+  }
+
+  const outBytes = await newPdf.save();
+  const cleanBase = (customOutputBaseName.value?.trim() || `PDFSeal_Organized_${Date.now()}`).replace(/\.pdf$/i, '');
+  const outName = `${cleanBase}.pdf`;
+
+  return { outBytes, outName, pageCount: pages.value.length };
+}
+
 async function executeExport() {
   if (!docBytes.value || pages.value.length === 0) return;
   isProcessing.value = true;
   try {
-    const cleanDoc = await loadCleanPdfDocument(docBytes.value, unlockedPassword);
-    const newPdf = await PDFDocument.create();
-
-    for (const item of pages.value) {
-      const [copied] = await newPdf.copyPages(cleanDoc, [item.pageIndex]);
-      const currentRot = copied.getRotation().angle;
-      copied.setRotation(degrees(currentRot + item.rotation));
-      newPdf.addPage(copied);
-    }
-
-    const outBytes = await newPdf.save();
-    const cleanBase = (customOutputBaseName.value?.trim() || `PDFSeal_Organized_${Date.now()}`).replace(/\.pdf$/i, '');
-    const outName = `${cleanBase}.pdf`;
+    const result = await generateOrganizedBytes();
+    if (!result) return;
+    const { outBytes, outName, pageCount } = result;
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
-
-    logger.info('ORGANIZE', `Exported organized PDF: ${outName} (${(outBytes.byteLength / 1024).toFixed(1)} KB, ${pages.value.length} pages)`);
+    logger.info('ORGANIZE', `Exported organized PDF: ${outName} (${(outBytes.byteLength / 1024).toFixed(1)} KB, ${pageCount} pages)`);
 
     // Auto-archive in Vault if enabled
     if (autoSaveToVault.value) {
@@ -499,7 +507,7 @@ async function executeExport() {
         arrayBuffer: outBytes,
         folderId: 'default',
         category: 'export',
-        pageCount: pages.value.length
+        pageCount
       });
       logger.info('VAULT', `Organized result auto-saved to Vault: ${outName}`);
     }

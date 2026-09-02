@@ -11,7 +11,9 @@ const DEFAULT_SETTINGS = {
   // Export Naming
   defaultExportPrefix: 'PDFSeal',
   // Security & Session
-  rememberSessionPasswords: true
+  rememberSessionPasswords: true,
+  // Seal Send Cloudflare Worker Endpoint
+  customWorkerUrl: ''
 };
 
 function loadSettings() {
