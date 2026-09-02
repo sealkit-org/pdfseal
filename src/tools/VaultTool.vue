@@ -345,7 +345,7 @@
                   </span>
 
                   <!-- Send to Tool Trigger Menu -->
-                  <div class="relative" @click.stop>
+                  <div class="relative tool-dispatch-dropdown" @click.stop>
                     <button 
                       @click="activeToolMenuId = activeToolMenuId === file.id ? null : file.id"
                       class="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 text-[11px] font-bold px-2.5 py-0.5 rounded-lg transition flex items-center space-x-1 cursor-pointer shadow-2xs"
@@ -357,7 +357,7 @@
                     <!-- Tool Dispatch Menu -->
                     <div 
                       v-if="activeToolMenuId === file.id" 
-                      class="absolute right-0 bottom-8 z-20 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150"
+                      class="absolute right-0 bottom-8 z-50 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150"
                     >
                       <button 
                         @click="sendToTool('organize', file)"
@@ -409,20 +409,20 @@
             </div>
 
             <!-- 2. LIST VIEW (Desktop High-Density Table) -->
-            <div v-else class="border border-slate-200/80 rounded-2xl overflow-hidden bg-white shadow-2xs">
+            <div v-else class="border border-slate-200/80 rounded-2xl bg-white shadow-2xs relative">
               <table class="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr class="bg-slate-50/80 border-b border-slate-200 text-slate-500 font-semibold">
-                    <th class="py-2 px-3.5">{{ t('dup_field_name') }}</th>
+                    <th class="py-2 px-3.5 rounded-tl-2xl">{{ t('dup_field_name') }}</th>
                     <th class="py-2 px-3 hidden sm:table-cell">{{ t('dup_field_folder') }}</th>
                     <th class="py-2 px-3 hidden md:table-cell">{{ t('dup_field_size') }}</th>
                     <th class="py-2 px-3 hidden lg:table-cell">{{ t('vault_sort_date') }}</th>
-                    <th class="py-2 px-3 text-right">{{ t('vault_action_send_to') }} / {{ t('btn_delete') }}</th>
+                    <th class="py-2 px-3 text-right rounded-tr-2xl">{{ t('vault_action_send_to') }} / {{ t('btn_delete') }}</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
                   <tr 
-                    v-for="file in paginatedFiles" 
+                    v-for="(file, fileIndex) in paginatedFiles" 
                     :key="file.id"
                     class="hover:bg-slate-50/80 transition group"
                   >
@@ -520,7 +520,7 @@
                           </button>
 
                           <!-- Send To Dropdown -->
-                          <div class="relative inline-block" @click.stop>
+                          <div class="relative inline-block tool-dispatch-dropdown" @click.stop>
                             <button 
                               @click="activeToolMenuId = activeToolMenuId === file.id ? null : file.id"
                               class="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 text-[11px] font-bold px-2 py-1 rounded-lg transition flex items-center space-x-1 cursor-pointer shadow-2xs"
@@ -531,7 +531,10 @@
                             <!-- Tool Dispatch Menu -->
                             <div 
                               v-if="activeToolMenuId === file.id" 
-                              class="absolute right-0 top-full mt-1 z-30 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left"
+                              :class="[
+                                'absolute right-0 z-50 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left',
+                                fileIndex >= Math.max(1, paginatedFiles.length - 2) ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+                              ]"
                             >
                               <button 
                                 @click="sendToTool('organize', file)"
@@ -671,7 +674,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, onMounted, onActivated, onUnmounted } from 'vue';
 import { 
   FolderLock, Search, Plus, Folder, FolderOpen, Inbox, FileCheck, 
   ChevronDown, ArrowDownNarrowWide, ArrowUpNarrowWide, Eye, Download, 
@@ -761,8 +764,19 @@ async function openSendModalForFile(file) {
   isSendModalOpen.value = true;
 }
 
+function closeToolMenuOnClickOutside(e) {
+  if (activeToolMenuId.value && !e.target.closest('.tool-dispatch-dropdown')) {
+    activeToolMenuId.value = null;
+  }
+}
+
 onMounted(async () => {
+  window.addEventListener('click', closeToolMenuOnClickOutside);
   await refreshVault();
+});
+
+onUnmounted(() => {
+  window.removeEventListener('click', closeToolMenuOnClickOutside);
 });
 
 onActivated(async () => {

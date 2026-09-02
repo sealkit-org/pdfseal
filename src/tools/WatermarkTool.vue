@@ -602,7 +602,7 @@ async function generateWatermarkedBytes() {
   if (!docBytes.value) return null;
   const preserveWatermarks = userSettings.preserveWatermarks !== false;
   const pdfDoc = await loadCleanPdfDocument(docBytes.value, {
-    password: unlockedPassword || undefined,
+    password: unlockedPassword || '',
     preserveWatermarks
   });
 
@@ -690,7 +690,7 @@ function checkIncomingFile() {
   const incoming = consumePendingFile('watermark');
   if (incoming) {
     const file = new File([incoming.arrayBuffer], incoming.name, { type: 'application/pdf' });
-    loadFile(file);
+    loadFile(file, incoming.password || '');
   }
 }
 

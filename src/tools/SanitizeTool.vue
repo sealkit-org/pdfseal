@@ -608,7 +608,7 @@ function checkIncomingFile() {
   const incoming = consumePendingFile('sanitize');
   if (incoming) {
     const file = new File([incoming.arrayBuffer], incoming.name, { type: 'application/pdf' });
-    loadFile(file);
+    loadFile(file, incoming.password || '');
   }
 }
 

@@ -503,7 +503,7 @@ async function generateSplitBytes() {
   if (!docBytes.value || selectedIndices.value.size === 0) return null;
   const preserveWatermarks = userSettings.preserveWatermarks !== false;
   const cleanDoc = await loadCleanPdfDocument(docBytes.value, {
-    password: unlockedPassword || undefined,
+    password: unlockedPassword || '',
     preserveWatermarks
   });
 
@@ -555,7 +555,7 @@ function checkIncomingFile() {
   const incoming = consumePendingFile('split');
   if (incoming) {
     const file = new File([incoming.arrayBuffer], incoming.name, { type: 'application/pdf' });
-    loadFile(file);
+    loadFile(file, incoming.password || '');
   }
 }
 

@@ -523,7 +523,7 @@ function checkIncomingFile() {
   const incoming = consumePendingFile('organize');
   if (incoming) {
     const file = new File([incoming.arrayBuffer], incoming.name, { type: 'application/pdf' });
-    loadFile(file);
+    loadFile(file, incoming.password || '');
   }
 }
 

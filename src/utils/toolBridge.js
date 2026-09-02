@@ -9,6 +9,7 @@ export function dispatchToTool(toolId, fileObj) {
     name: fileObj.name,
     arrayBuffer: fileObj.arrayBuffer,
     size: fileObj.size,
+    password: fileObj.password || '',
     timestamp: Date.now()
   };
 }

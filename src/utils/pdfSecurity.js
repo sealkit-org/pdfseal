@@ -122,8 +122,19 @@ import { logger } from './logger';
  * @param {string} password 
  * @returns {Promise<PDFDocument>}
  */
-export async function loadCleanPdfDocument(arrayBuffer, password = '') {
-  const shouldPreserve = Boolean(userSettings.preserveWatermarks);
+export async function loadCleanPdfDocument(arrayBuffer, passwordOrOptions = '') {
+  let password = '';
+  let shouldPreserve = Boolean(userSettings.preserveWatermarks);
+
+  if (typeof passwordOrOptions === 'object' && passwordOrOptions !== null) {
+    password = typeof passwordOrOptions.password === 'string' ? passwordOrOptions.password : '';
+    if (typeof passwordOrOptions.preserveWatermarks === 'boolean') {
+      shouldPreserve = passwordOrOptions.preserveWatermarks;
+    }
+  } else if (typeof passwordOrOptions === 'string') {
+    password = passwordOrOptions;
+  }
+
   const sizeKb = (arrayBuffer.byteLength / 1024).toFixed(1);
   logger.info('PDF_PIPELINE', `[loadCleanPdfDocument] Processing document (${sizeKb} KB, preserveWatermarks=${shouldPreserve}, hasPassword=${Boolean(password)})`);
 
@@ -144,7 +155,17 @@ export async function loadCleanPdfDocument(arrayBuffer, password = '') {
       logger.info('PDF_PIPELINE', `[Tier 1 Native] Decrypted & stripped encryption successfully (${cleanDoc.getPageCount()} pages)`);
       return cleanDoc;
     } catch (err1) {
-      logger.warn('PDF_PIPELINE', `[Tier 1 Native] Native load failed (${err1.message}), falling back to Tier 2 (pdf.js decryptor with full watermark/OCG fusion)`);
+      // If native load failed, attempt owner-permission ignore load if no password is required to open
+      try {
+        const docOwner = await PDFDocument.load(arrayBuffer, {
+          password: password || undefined,
+          ignoreEncryption: true
+        });
+        logger.info('PDF_PIPELINE', `[Tier 1 Native] Owner-restricted document loaded directly (${docOwner.getPageCount()} pages)`);
+        return docOwner;
+      } catch (errOwner) {
+        logger.warn('PDF_PIPELINE', `[Tier 1 Native] Native load failed (${err1.message}), falling back to Tier 2 (pdf.js decryptor with full watermark/OCG fusion)`);
+      }
     }
 
     // Tier 2 Fallback for encrypted PDFs (with full watermark, CMap, and OCG preservation)
