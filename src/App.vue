@@ -19,7 +19,7 @@
     />
 
     <!-- Main Workspace (Clean, Uncluttered, 100% Focused) -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-3.5 flex flex-col">
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-2 sm:py-2.5 flex flex-col">
       <KeepAlive>
         <component 
           :is="activeToolComponent" 
@@ -73,8 +73,12 @@ import GlobalSettingsModal from './components/GlobalSettingsModal.vue';
 import DiagnosticLogModal from './components/DiagnosticLogModal.vue';
 
 import MergeTool from './tools/MergeTool.vue';
+import CompressTool from './tools/CompressTool.vue';
 import OrganizeTool from './tools/OrganizeTool.vue';
 import SplitTool from './tools/SplitTool.vue';
+import SignTool from './tools/SignTool.vue';
+import ImageToPdfTool from './tools/ImageToPdfTool.vue';
+import UnlockTool from './tools/UnlockTool.vue';
 import WatermarkTool from './tools/WatermarkTool.vue';
 import SanitizeTool from './tools/SanitizeTool.vue';
 import VaultTool from './tools/VaultTool.vue';
@@ -84,8 +88,12 @@ import { t } from './i18n';
 const toolComponents = {
   vault: VaultTool,
   merge: MergeTool,
+  compress: CompressTool,
   organize: OrganizeTool,
   split: SplitTool,
+  sign: SignTool,
+  image_to_pdf: ImageToPdfTool,
+  unlock: UnlockTool,
   watermark: WatermarkTool,
   sanitize: SanitizeTool,
   receive: ShareReceiveTool

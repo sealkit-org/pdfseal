@@ -95,15 +95,16 @@
     </div>
 
     <!-- Tool Navigation Tab Bar with Sleek Micro Trust Strip -->
-    <div class="bg-slate-100/90 border-t border-slate-200/80 px-4 overflow-x-auto no-scrollbar">
-      <div class="max-w-7xl mx-auto flex items-center justify-between py-2">
+    <div class="bg-slate-100/90 border-t border-slate-200/80 overflow-x-auto sm:overflow-visible no-scrollbar relative z-30">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-2">
         <div class="flex items-center space-x-1 sm:space-x-2">
+          <!-- Primary Core Tools (Top 5 Ranked) -->
           <button 
-            v-for="tool in tools" 
+            v-for="tool in primaryTools" 
             :key="tool.id"
-            @click="$emit('switch-tab', tool.id)"
+            @click="selectPrimaryTool(tool.id)"
             :class="[
-              'flex items-center space-x-2 px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition whitespace-nowrap',
+              'flex items-center space-x-2 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition whitespace-nowrap cursor-pointer',
               activeTab === tool.id 
                 ? 'bg-white text-blue-600 shadow-xs font-semibold' 
                 : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium'
@@ -112,6 +113,44 @@
             <component :is="tool.icon" class="w-4 h-4" />
             <span>{{ t(tool.labelKey) }}</span>
           </button>
+
+          <!-- More Tools Dropdown Menu -->
+          <div class="relative" ref="moreMenuRef">
+            <button 
+              @click.stop="isMoreOpen = !isMoreOpen"
+              :class="[
+                'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm transition whitespace-nowrap cursor-pointer select-none',
+                isMoreActive
+                  ? 'bg-white text-blue-600 shadow-xs font-semibold' 
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium'
+              ]"
+            >
+              <component :is="activeMoreIcon || Sparkles" class="w-3.5 h-3.5" :class="isMoreActive ? 'text-blue-600' : 'text-slate-500'" />
+              <span>{{ activeMoreToolName || t('tab_more') }}</span>
+              <ChevronDown class="w-3.5 h-3.5 transition-transform duration-150" :class="{ 'rotate-180': isMoreOpen }" />
+            </button>
+
+            <!-- Dropdown Popover -->
+            <div 
+              v-if="isMoreOpen"
+              class="absolute left-0 top-full mt-1.5 z-50 w-44 bg-white rounded-2xl shadow-xl border border-slate-200/90 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left"
+            >
+              <button 
+                v-for="tool in moreTools"
+                :key="tool.id"
+                @click="selectMoreTool(tool.id)"
+                :class="[
+                  'w-full text-left px-3 py-2 rounded-xl transition flex items-center space-x-2 cursor-pointer',
+                  activeTab === tool.id 
+                    ? 'bg-blue-50 text-blue-700 font-bold' 
+                    : 'hover:bg-slate-50 hover:text-slate-900 text-slate-700'
+                ]"
+              >
+                <component :is="tool.icon" class="w-4 h-4" :class="tool.color" />
+                <span>{{ t(tool.labelKey) }}</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Right Side Dedicated Vault Capsule Hub -->
@@ -140,6 +179,7 @@ import {
   MessageSquare, 
   Github, 
   Layers, 
+  Minimize2,
   LayoutGrid, 
   Scissors, 
   Stamp, 
@@ -148,28 +188,73 @@ import {
   Zap,
   Lock,
   Settings,
-  Terminal
+  Terminal, 
+  Sparkles,
+  PenTool,
+  Unlock,
+  Images
 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { currentLang, setLanguage, t } from '../i18n';
-import { getRankedTools } from '../utils/usageTracker';
+import { toolUsageCounts, DEFAULT_WEIGHTS, recordToolUsage } from '../utils/usageTracker';
 
-defineProps({
+const props = defineProps({
   activeTab: {
     type: String,
     required: true
   }
 });
 
-defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-logs']);
+const emit = defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-logs']);
 
-const rawTools = [
+// Primary Core Tools (Strictly fixed 5 pillars for predictable muscle memory)
+const primaryTools = [
   { id: 'merge', labelKey: 'tab_merge', icon: Layers },
+  { id: 'compress', labelKey: 'tab_compress', icon: Minimize2 },
   { id: 'organize', labelKey: 'tab_organize', icon: LayoutGrid },
   { id: 'split', labelKey: 'tab_split', icon: Scissors },
-  { id: 'watermark', labelKey: 'tab_watermark', icon: Stamp },
-  { id: 'sanitize', labelKey: 'tab_sanitize', icon: ShieldCheck },
+  { id: 'sign', labelKey: 'tab_sign', icon: PenTool }
 ];
 
-const tools = computed(() => getRankedTools(rawTools));
+// More Secondary Tools Dropdown (Fixed & predictable)
+const moreTools = [
+  { id: 'image_to_pdf', labelKey: 'tab_image_to_pdf', icon: Images, color: 'text-violet-600' },
+  { id: 'unlock', labelKey: 'tab_unlock', icon: Unlock, color: 'text-emerald-600' },
+  { id: 'watermark', labelKey: 'tab_watermark', icon: Stamp, color: 'text-amber-600' },
+  { id: 'sanitize', labelKey: 'tab_sanitize', icon: ShieldCheck, color: 'text-blue-600' }
+];
+
+const isMoreOpen = ref(false);
+const moreMenuRef = ref(null);
+
+const isMoreActive = computed(() => moreTools.some(t => t.id === props.activeTab));
+
+const activeMoreTool = computed(() => moreTools.find(t => t.id === props.activeTab));
+const activeMoreToolName = computed(() => activeMoreTool.value ? t(activeMoreTool.value.labelKey) : null);
+const activeMoreIcon = computed(() => activeMoreTool.value ? activeMoreTool.value.icon : null);
+
+function selectPrimaryTool(id) {
+  recordToolUsage(id);
+  emit('switch-tab', id);
+}
+
+function selectMoreTool(id) {
+  isMoreOpen.value = false;
+  recordToolUsage(id);
+  emit('switch-tab', id);
+}
+
+function handleOutsideClick(e) {
+  if (moreMenuRef.value && !moreMenuRef.value.contains(e.target)) {
+    isMoreOpen.value = false;
+  }
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleOutsideClick);
+});
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleOutsideClick);
+});
 </script>

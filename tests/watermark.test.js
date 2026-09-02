@@ -32,4 +32,21 @@ describe('PDF Watermark & Stamp Utility', () => {
     expect(resultDoc.getPageCount()).toBe(2);
     expect(outBytes.length).toBeGreaterThan(0);
   });
+
+  it('should encrypt output bytes with owner password protection', async () => {
+    const doc = await PDFDocument.create();
+    doc.addPage([200, 200]);
+    const rawBytes = await doc.save();
+
+    const { encryptPDF } = await import('@pdfsmaller/pdf-encrypt');
+    const encryptedBytes = await encryptPDF(rawBytes, '', {
+      ownerPassword: 'owner_test_password',
+      algorithm: 'RC4'
+    });
+
+    const { verifyPdfSecurity } = await import('../src/utils/pdfSecurity.js');
+    const sec = await verifyPdfSecurity(encryptedBytes.buffer, '');
+    expect(sec.isEncrypted).toBe(true);
+    expect(sec.isOpenPasswordRequired).toBe(false);
+  });
 });

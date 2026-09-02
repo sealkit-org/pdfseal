@@ -1,5 +1,5 @@
 <template>
-  <section class="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+  <section class="w-full flex-1 flex flex-col">
     <!-- Main Card Container matching Merge & Organize tools -->
     <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Integrated Header with Badge -->
@@ -226,15 +226,18 @@
         </div>
 
         <!-- Assembly Bottom Action & Export Configuration Bar -->
-        <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+        <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Left: Output Filename & Auto-save Checkbox -->
-          <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1">
-            <div class="relative min-w-0 sm:max-w-xs w-full">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center space-x-1.5">
+              <label class="text-xs text-slate-500 font-semibold shrink-0">
+                {{ t('vault_field_name') }}:
+              </label>
               <input 
                 v-model="customOutputBaseName"
                 type="text" 
                 :placeholder="t('vault_filename_placeholder') || '自定义导出文件名 (可选)'"
-                class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-emerald-500 focus:bg-white outline-hidden font-medium transition placeholder:text-slate-400"
+                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
               >
             </div>
 
@@ -244,7 +247,7 @@
                 v-model="autoSaveToVault" 
                 class="w-4 h-4 text-emerald-600 rounded-md border-slate-300 focus:ring-emerald-500 cursor-pointer"
               >
-              <span>{{ t('vault_autosave_checkbox') || '处理后自动保存至收纳箱' }}</span>
+              <span>{{ t('vault_autosave_checkbox') }}</span>
             </label>
           </div>
 

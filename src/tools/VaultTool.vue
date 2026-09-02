@@ -1,5 +1,5 @@
 <template>
-  <section class="max-w-6xl mx-auto w-full flex-1 flex flex-col">
+  <section class="w-full flex-1 flex flex-col">
     <!-- Main Container (Compact Desktop Viewport Fitting) -->
     <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-lg sm:shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Unified Compact Header & Toolbar -->
@@ -360,6 +360,13 @@
                       class="absolute right-0 bottom-8 z-50 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150"
                     >
                       <button 
+                        @click="sendToTool('compress', file)"
+                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
+                      >
+                        <Minimize2 class="w-4 h-4 text-amber-600" />
+                        <span>{{ t('tab_compress') }}</span>
+                      </button>
+                      <button 
                         @click="sendToTool('organize', file)"
                         class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
                       >
@@ -372,6 +379,20 @@
                       >
                         <Scissors class="w-4 h-4 text-emerald-600" />
                         <span>{{ t('tab_split') }}</span>
+                      </button>
+                      <button 
+                        @click="sendToTool('sign', file)"
+                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
+                      >
+                        <PenTool class="w-4 h-4 text-indigo-600" />
+                        <span>{{ t('tab_sign') }}</span>
+                      </button>
+                      <button 
+                        @click="sendToTool('unlock', file)"
+                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
+                      >
+                        <Unlock class="w-4 h-4 text-emerald-600" />
+                        <span>{{ t('tab_unlock') }}</span>
                       </button>
                       <button 
                         @click="sendToTool('watermark', file)"
@@ -400,7 +421,7 @@
                         class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
                       >
                         <Send class="w-4 h-4 text-blue-600" />
-                        <span>{{ t('vault_action_send_e2ee') || '🚀 加密外发 / 阅后即焚' }}</span>
+                        <span>{{ t('vault_action_send_e2ee') || '🚀 加密外发' }}</span>
                       </button>
                     </div>
                   </div>
@@ -537,6 +558,13 @@
                               ]"
                             >
                               <button 
+                                @click="sendToTool('compress', file)"
+                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
+                              >
+                                <Minimize2 class="w-4 h-4 text-amber-600" />
+                                <span>{{ t('tab_compress') }}</span>
+                              </button>
+                              <button 
                                 @click="sendToTool('organize', file)"
                                 class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
                               >
@@ -549,6 +577,20 @@
                               >
                                 <Scissors class="w-4 h-4 text-emerald-600" />
                                 <span>{{ t('tab_split') }}</span>
+                              </button>
+                              <button 
+                                @click="sendToTool('sign', file)"
+                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
+                              >
+                                <PenTool class="w-4 h-4 text-indigo-600" />
+                                <span>{{ t('tab_sign') }}</span>
+                              </button>
+                              <button 
+                                @click="sendToTool('unlock', file)"
+                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
+                              >
+                                <Unlock class="w-4 h-4 text-emerald-600" />
+                                <span>{{ t('tab_unlock') }}</span>
                               </button>
                               <button 
                                 @click="sendToTool('watermark', file)"
@@ -577,7 +619,7 @@
                                 class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
                               >
                                 <Send class="w-4 h-4 text-blue-600" />
-                                <span>{{ t('vault_action_send_e2ee') || '🚀 加密外发 / 阅后即焚' }}</span>
+                                <span>{{ t('vault_action_send_e2ee') || '🚀 加密外发' }}</span>
                               </button>
                             </div>
                           </div>
@@ -679,7 +721,7 @@ import {
   FolderLock, Search, Plus, Folder, FolderOpen, Inbox, FileCheck, 
   ChevronDown, ArrowDownNarrowWide, ArrowUpNarrowWide, Eye, Download, 
   Trash2, Pencil, Lock, Unlock, Key, X, Layers, Scissors, Stamp, ShieldCheck, Files,
-  LayoutGrid, List, Send
+  LayoutGrid, List, Send, Minimize2, PenTool
 } from 'lucide-vue-next';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';

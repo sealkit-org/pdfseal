@@ -2,11 +2,16 @@ import { ref } from 'vue';
 
 const STORAGE_KEY = 'pdfseal_tool_usage_v1';
 
-// Initial default weights for first-time visitors
-const DEFAULT_WEIGHTS = {
-  merge: 50,
-  organize: 40,
-  split: 30,
+// Initial default weights reflecting European/American top search popularity
+export const DEFAULT_WEIGHTS = {
+  merge: 100,
+  compress: 90,
+  image_to_pdf: 80,
+  sign: 70,
+  split: 60,
+  organize: 50,
+  unlock: 40,
+  dewatermark: 30,
   watermark: 20,
   sanitize: 10
 };
@@ -57,8 +62,8 @@ export function getRankedTools(toolList) {
   const otherTools = toolList.filter(t => t.id !== 'vault');
 
   otherTools.sort((a, b) => {
-    const countA = toolUsageCounts.value[a.id] || 0;
-    const countB = toolUsageCounts.value[b.id] || 0;
+    const countA = toolUsageCounts.value[a.id] ?? (DEFAULT_WEIGHTS[a.id] || 0);
+    const countB = toolUsageCounts.value[b.id] ?? (DEFAULT_WEIGHTS[b.id] || 0);
     return countB - countA;
   });
 

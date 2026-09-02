@@ -1,5 +1,5 @@
 <template>
-  <section class="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+  <section class="w-full flex-1 flex flex-col">
     <!-- Main Card Container matching Merge, Organize, and Split tools -->
     <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Integrated Header with Badge -->
@@ -280,6 +280,18 @@
                 </div>
                 <span class="text-[10px] text-slate-400 font-medium">{{ t('wm_protection_hint') || '可直接阅读，禁止修改' }}</span>
               </label>
+
+              <!-- Optional custom modify password input -->
+              <div v-if="enableTamperProtection" class="mt-2 flex items-center space-x-2 animate-in fade-in duration-150">
+                <div class="relative flex-1">
+                  <input 
+                    v-model="protectionPassword"
+                    type="text"
+                    :placeholder="t('wm_protection_placeholder') || '设置修改保护密码 (留空则自动加锁)'"
+                    class="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden text-slate-700 font-mono shadow-2xs"
+                  >
+                </div>
+              </div>
             </div>
           </div>
 
@@ -296,15 +308,18 @@
         </div>
 
         <!-- Assembly Bottom Action & Export Configuration Bar -->
-        <div class="pt-2.5 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 shrink-0">
+        <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Left: Output Filename & Auto-save Checkbox -->
-          <div class="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-1">
-            <div class="relative min-w-0 sm:max-w-xs w-full">
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center space-x-1.5">
+              <label class="text-xs text-slate-500 font-semibold shrink-0">
+                {{ t('vault_field_name') }}:
+              </label>
               <input 
                 v-model="customOutputBaseName"
                 type="text" 
                 :placeholder="t('vault_filename_placeholder') || '自定义导出文件名 (可选)'"
-                class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-hidden font-medium transition placeholder:text-slate-400"
+                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
               >
             </div>
 
@@ -314,7 +329,7 @@
                 v-model="autoSaveToVault" 
                 class="w-4 h-4 text-amber-600 rounded-md border-slate-300 focus:ring-amber-500 cursor-pointer"
               >
-              <span>{{ t('vault_autosave_checkbox') || '处理后自动保存至收纳箱' }}</span>
+              <span>{{ t('vault_autosave_checkbox') }}</span>
             </label>
           </div>
 
@@ -369,6 +384,7 @@ import {
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, rgb, degrees } from 'pdf-lib';
+import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
@@ -395,6 +411,7 @@ const wmOpacity = ref(30);
 const wmAngle = ref(-45);
 const wmColor = ref('#dc2626');
 const enableTamperProtection = ref(true);
+const protectionPassword = ref('');
 const colorPresets = [
   '#dc2626', // 印章红
   '#e11d48', // 玫瑰红
@@ -596,6 +613,7 @@ function reset() {
   page1Canvas = null;
   unlockedPassword = '';
   enableTamperProtection.value = true;
+  protectionPassword.value = '';
 }
 
 async function generateWatermarkedBytes() {
@@ -644,7 +662,22 @@ async function generateWatermarkedBytes() {
     }
   }
 
-  const outBytes = await pdfDoc.save();
+  let outBytes = await pdfDoc.save();
+
+  // Apply real ISO 32000-1 PDF Permissions & Owner Lock if Tamper Protection is enabled
+  if (enableTamperProtection.value) {
+    try {
+      const ownerSecret = protectionPassword.value?.trim() || `seal_owner_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+      outBytes = await encryptPDF(outBytes, '', {
+        ownerPassword: ownerSecret,
+        algorithm: 'RC4'
+      });
+      logger.info('WATERMARK', `Watermark result protected with automatic Owner Security Lock (Read-only, Disallow Modify)`);
+    } catch (encErr) {
+      logger.warn('WATERMARK', `Owner encryption warning: ${encErr.message}`);
+    }
+  }
+
   let outName = (customOutputBaseName.value.trim() || `PDFSeal_Watermarked_${Date.now()}`);
   if (!outName.toLowerCase().endsWith('.pdf')) {
     outName += '.pdf';
@@ -664,7 +697,7 @@ async function executeWatermark() {
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
 
     if (enableTamperProtection.value) {
-      logger.info('WATERMARK', `Watermark result protected with automatic Owner Security Lock (Read-only, Disallow Modify): ${outName}`);
+      logger.info('WATERMARK', `Watermark result protected with automatic Owner Security Lock: ${outName}`);
     }
 
     // Auto-save to Vault if checked
@@ -674,9 +707,10 @@ async function executeWatermark() {
         arrayBuffer: outBytes,
         folderId: 'default',
         category: 'export',
-        pageCount
+        pageCount,
+        isEncrypted: Boolean(enableTamperProtection.value)
       });
-      logger.info('VAULT', `Watermarked result auto-saved to Vault: ${outName}`);
+      logger.info('VAULT', `Watermarked result auto-saved to Vault: ${outName} (isEncrypted=${Boolean(enableTamperProtection.value)})`);
     }
   } catch (err) {
     logger.error('WATERMARK', `Watermark execution failed: ${err.message}`);

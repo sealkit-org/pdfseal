@@ -1,5 +1,5 @@
 <template>
-  <section class="max-w-5xl mx-auto w-full flex-1 flex flex-col">
+  <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
     <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->

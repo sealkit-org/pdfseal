@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "license": "AGPL-3.0-only",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
@@ -11,6 +12,7 @@
     "deploy": "npm run build && wrangler deploy"
   },
   "dependencies": {
+    "@pdfsmaller/pdf-encrypt": "^1.2.0",
     "canvas-confetti": "^1.9.4",
     "lucide-vue-next": "^0.460.0",
     "pdf-lib": "^1.17.1",

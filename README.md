@@ -5,7 +5,7 @@
 **100% Private, Fast, and In-Browser PDF Toolkit.**  
 *Sealed locally in your browser. No servers. No tracking. No subscriptions.*
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](LICENSE)
 [![Privacy: 100% Client-Side](https://img.shields.io/badge/Privacy-100%25%20Local-green.svg)](#privacy-guarantee)
 [![Ko-fi](https://img.shields.io/badge/Buy%20a%20Fish-Ko--fi-ff5f5f.svg)](https://ko-fi.com/muffin27)
 [![Website](https://img.shields.io/badge/Live%20Demo-pdf.sealkit.org-6366f1.svg)](https://pdf.sealkit.org)
@@ -61,5 +61,11 @@ Your support helps keep PDFSeal ad-free, independent, and continuously updated!
 
 ---
 
-## 📄 License
-This project is open source under the [MIT License](LICENSE).
+## 📄 License & Commercial Dual-Licensing
+
+PDFSeal is free software licensed under the **[GNU Affero General Public License v3.0 (AGPLv3)](LICENSE)**.
+
+### 🏢 Enterprise & Commercial Licensing
+If you wish to use PDFSeal in a commercial environment, proprietary intranet deployment, or integrate its source code into proprietary commercial products without the copyleft obligations of the AGPLv3, an **Enterprise Commercial License** is required.
+
+To inquire about commercial licensing, private deployment, or custom enterprise solutions, please reach out via [pdf.sealkit.org](https://pdf.sealkit.org).

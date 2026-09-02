@@ -161,7 +161,18 @@ export async function loadCleanPdfDocument(arrayBuffer, passwordOrOptions = '') 
           password: password || undefined,
           ignoreEncryption: true
         });
-        logger.info('PDF_PIPELINE', `[Tier 1 Native] Owner-restricted document loaded directly (${docOwner.getPageCount()} pages)`);
+
+        // Strip the /Encrypt dictionary from document trailer so the exported document is 100% clean & unencrypted
+        if (docOwner.context && docOwner.context.trailerInfo) {
+          const encRef = docOwner.context.trailerInfo.Encrypt;
+          if (encRef) {
+            docOwner.context.delete(encRef);
+            delete docOwner.context.trailerInfo.Encrypt;
+          }
+        }
+        docOwner.isEncrypted = false;
+
+        logger.info('PDF_PIPELINE', `[Tier 1 Native] Document loaded and encryption stripped (${docOwner.getPageCount()} pages)`);
         return docOwner;
       } catch (errOwner) {
         logger.warn('PDF_PIPELINE', `[Tier 1 Native] Native load failed (${err1.message}), falling back to Tier 2 (pdf.js decryptor with full watermark/OCG fusion)`);
