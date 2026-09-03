@@ -97,7 +97,7 @@
   "ribbon_speed": "0.2 秒级本地运算",
   "ribbon_zero_upload": "0 字节上传",
   "footer_privacy": "隐私说明",
-  "footer_license": "MIT 开源协议",
+  "footer_license": "AGPL-3.0 开源协议",
   "btn_audit_code": "开源代码审计",
   "btn_got_it": "我知道了",
   "btn_cancel": "取消",

@@ -97,7 +97,7 @@
   "ribbon_speed": "0.2s Local Speed",
   "ribbon_zero_upload": "0 Bytes Uploaded",
   "footer_privacy": "Privacy",
-  "footer_license": "MIT License",
+  "footer_license": "AGPL-3.0 License",
   "btn_audit_code": "Audit Source Code",
   "btn_got_it": "Got it",
   "btn_cancel": "Cancel",
