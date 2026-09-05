@@ -18,10 +18,6 @@
           </div>
         </div>
 
-        <div class="text-xs text-slate-400 font-mono hidden md:flex items-center space-x-1.5">
-          <Lock class="w-3.5 h-3.5 text-emerald-600" />
-          <span>{{ t('processed_locally') }}</span>
-        </div>
       </div>
 
       <!-- 1. EMPTY STATE DROPZONE (Spacious with Dual-Source Import) -->
@@ -62,7 +58,7 @@
             class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-emerald-600/25 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>{{ t('merge_btn_from_local') || '选择本地 PDF 文件' }}</span>
+            <span>{{ t('merge_btn_from_local') || 'Add from Computer' }}</span>
           </button>
 
           <!-- From Local Vault -->
@@ -72,7 +68,7 @@
             class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 hover:border-slate-400 text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-2xs cursor-pointer"
           >
             <FolderLock class="w-4 h-4 text-emerald-600" />
-            <span>{{ t('merge_btn_from_vault') || '从海豹收纳箱中选取' }}</span>
+            <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
           </button>
         </div>
       </div>
@@ -93,7 +89,7 @@
                 <div class="flex items-center space-x-2 text-[11px] text-slate-400 font-mono mt-0.5">
                   <span class="font-bold text-slate-600">{{ originalSizeMb }} MB</span>
                   <span>•</span>
-                  <span>{{ totalPages }} {{ t('pages_label') || '页' }}</span>
+                  <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
                 </div>
               </div>
             </div>
@@ -103,7 +99,7 @@
               @click="reset" 
               class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2.5 py-1.5 rounded-xl hover:bg-slate-200/60 transition cursor-pointer"
             >
-              {{ t('btn_reset_file') || '更换文件' }}
+              {{ t('btn_reset_file') || 'Reset / Change File' }}
             </button>
           </div>
 
@@ -125,7 +121,7 @@
             <div v-else class="space-y-2">
               <div class="flex items-center space-x-2 text-xs font-bold text-amber-800">
                 <Lock class="w-4 h-4 text-amber-600 shrink-0" />
-                <span>该文档受打开密码保护，请输入密码以彻底解除限制：</span>
+                <span>{{ t('unlock_prompt_full', 'This document is protected by an open password. Please enter the password to completely remove restrictions:') }}</span>
               </div>
               <div class="relative">
                 <input 
@@ -137,6 +133,8 @@
                 >
                 <button 
                   type="button"
+                  data-testid="toggle-pwd-btn"
+                  title="Toggle password visibility"
                   @click="showPassword = !showPassword"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
@@ -330,6 +328,12 @@ async function executeUnlock() {
 
   try {
     const pwd = inputPassword.value || '';
+    if (!isOwnerOnly.value) {
+      const sec = await verifyPdfSecurity(docBytes.value, pwd);
+      if (sec.isOpenPasswordRequired && !sec.isValid) {
+        throw new Error('Incorrect password');
+      }
+    }
     const cleanDoc = await loadCleanPdfDocument(docBytes.value, pwd);
     const unlockedBytes = await cleanDoc.save({ useObjectStreams: true });
 
@@ -355,7 +359,7 @@ async function executeUnlock() {
     }
   } catch (err) {
     logger.error('UNLOCK', `Unlock failed: ${err.message}`);
-    unlockError.value = t('pwd_error_wrong') || '密码不正确，请重新输入';
+    unlockError.value = t('pwd_error_wrong') || 'Incorrect password. Please verify and try again.';
   } finally {
     isProcessing.value = false;
   }

@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0f9ff"/>
+      <stop offset="100%" stop-color="#e0f2fe"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#0369a1" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <!-- Squircle Background -->
+  <rect x="24" y="24" width="464" height="464" rx="112" fill="url(#bgGrad)" stroke="#bae6fd" stroke-width="8" filter="url(#shadow)"/>
+  <!-- Sammy the Seal -->
+  <text x="256" y="325" font-family="'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif" font-size="260" text-anchor="middle">🦭</text>
+  <!-- Brand Badge Pill -->
+  <rect x="136" y="392" width="240" height="60" rx="30" fill="#0284c7" filter="url(#shadow)"/>
+  <text x="256" y="434" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="900" fill="#ffffff" text-anchor="middle" letter-spacing="2">PDFSEAL</text>
+</svg>

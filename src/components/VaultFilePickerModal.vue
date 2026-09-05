@@ -14,10 +14,10 @@
           </div>
           <div>
             <h3 class="font-extrabold text-slate-900 text-sm sm:text-base leading-tight">
-              {{ multiple ? (t('picker_modal_title') || '从海豹收纳箱挑选文件') : (t('picker_modal_title_single') || '从海豹收纳箱选择文件') }}
+              {{ multiple ? (t('picker_modal_title') || 'Pick Files from Local Vault') : (t('picker_modal_title_single') || 'Select File from Vault') }}
             </h3>
             <p class="text-[11px] text-slate-400 font-medium hidden sm:block">
-              {{ multiple ? (t('picker_modal_desc') || '选择已保存在浏览器本地收纳箱中的 PDF 加入装配台') : (t('picker_modal_desc_single') || '选择已保存在收纳箱中的单个 PDF 进行操作') }}
+              {{ multiple ? (t('picker_modal_desc') || 'Select PDFs stored in your local browser vault to add to the assembly board') : (t('picker_modal_desc_single') || 'Select a PDF saved in your local Vault') }}
             </p>
           </div>
         </div>
@@ -55,11 +55,11 @@
             :disabled="filteredFiles.length === 0"
             class="text-xs font-semibold text-blue-600 hover:bg-blue-50 disabled:opacity-40 disabled:hover:bg-transparent px-3 py-1.5 rounded-xl border border-blue-200/60 transition cursor-pointer"
           >
-            {{ isAllCurrentPageSelected ? (t('btn_deselect_all') || '取消本页全选') : (t('btn_select_all') || '全选本页') }}
+            {{ isAllCurrentPageSelected ? (t('btn_deselect_all') || 'Deselect All') : (t('btn_select_all') || 'Select All') }}
           </button>
         </div>
         <div v-else class="text-[11px] text-slate-400 font-medium hidden sm:flex items-center space-x-1">
-          <span>{{ t('picker_single_hint') || '单选模式：点击选中，双击可直接导入' }}</span>
+          <span>{{ t('picker_single_hint') || 'Single-select mode: Click to select, double-click to import' }}</span>
         </div>
       </div>
 
@@ -245,17 +245,17 @@
       <div class="pt-3.5 border-t border-slate-100 flex items-center justify-between shrink-0 gap-3">
         <span class="text-xs text-slate-500">
           <template v-if="multiple">
-            {{ t('picker_selected_count') || '已选择' }} 
+            {{ t('picker_selected_count') || 'Selected' }} 
             <strong class="text-blue-600 font-mono font-bold">{{ selectedCount }}</strong> 
-            {{ t('page_items') || '个文件' }}
-            <span v-if="selectedCount > 0" class="text-[11px] text-slate-400 ml-1">(支持跨页累加)</span>
+            {{ t('page_items') || 'files' }}
+            <span v-if="selectedCount > 0" class="text-[11px] text-slate-400 ml-1">{{ t('picker_multi_page_accumulate') }}</span>
           </template>
           <template v-else>
             <span v-if="selectedCount === 1" class="text-slate-700 font-medium truncate max-w-xs inline-block align-bottom">
-              已选: <strong class="text-blue-600">{{ Object.values(selectedMap)[0]?.name }}</strong>
+              {{ t('picker_selected_prefix') }} <strong class="text-blue-600">{{ Object.values(selectedMap)[0]?.name }}</strong>
             </span>
             <span v-else class="text-slate-400">
-              {{ t('picker_please_select_one') || '请点击选择一个 PDF 文件' }}
+              {{ t('picker_please_select_one') || 'Please select a PDF file' }}
             </span>
           </template>
         </span>
@@ -275,9 +275,9 @@
             class="bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md hover:shadow-blue-600/25 disabled:opacity-50 cursor-pointer"
           >
             <span v-if="!isImporting">
-              {{ multiple ? `${t('picker_btn_confirm') || '确认导入已选'} (${selectedCount})` : (t('picker_btn_confirm_single') || '确认导入此文件') }}
+              {{ multiple ? `${t('picker_btn_confirm') || 'Import Selected Files'} (${selectedCount})` : (t('picker_btn_confirm_single') || 'Import Selected File') }}
             </span>
-            <span v-else>{{ t('loading') || '导入中...' }}</span>
+            <span v-else>{{ t('loading') || 'Processing...' }}</span>
             <Check v-if="!isImporting" class="w-3.5 h-3.5" />
             <Loader2 v-else class="w-3.5 h-3.5 animate-spin" />
           </button>

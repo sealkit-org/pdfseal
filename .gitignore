@@ -13,3 +13,7 @@ Thumbs.db
 node_modules/
 dist/
 build/
+
+# Private Issuer Cryptographic Keys (DO NOT COMMIT)
+.keys/
+*.private.json

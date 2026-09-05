@@ -7,12 +7,17 @@ import fr from './locales/fr.json';
 
 const dictionaries = { en, zh, de, es, fr };
 
-// Determine initial language
+// Force Vite HMR reload for JSON locales
+// Determine initial language safely for both browser and test/SSR environments
 function getInitialLang() {
-  const saved = localStorage.getItem('pdfseal_lang');
-  if (saved && dictionaries[saved]) return saved;
+  if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+    try {
+      const saved = localStorage.getItem('pdfseal_lang');
+      if (saved && dictionaries[saved]) return saved;
+    } catch (e) {}
+  }
 
-  const nav = (navigator.language || navigator.userLanguage || 'en').toLowerCase();
+  const nav = (typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage || 'en') : 'en').toLowerCase();
   if (nav.startsWith('zh')) return 'zh';
   if (nav.startsWith('de')) return 'de';
   if (nav.startsWith('es')) return 'es';
@@ -25,19 +30,39 @@ export const currentLang = ref(getInitialLang());
 export function setLanguage(lang) {
   if (dictionaries[lang]) {
     currentLang.value = lang;
-    localStorage.setItem('pdfseal_lang', lang);
+    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+      try {
+        localStorage.setItem('pdfseal_lang', lang);
+      } catch (e) {}
+    }
     updateTitle();
   }
 }
 
-export function t(key) {
+export function t(key, fallbackOrParams = null, fallback = null) {
+  let str = null;
   const dict = dictionaries[currentLang.value] || dictionaries.en;
-  return dict[key] || dictionaries.en[key] || key;
+  if (dict && dict[key] !== undefined) str = dict[key];
+  else if (dictionaries.en && dictionaries.en[key] !== undefined) str = dictionaries.en[key];
+  else if (typeof fallbackOrParams === 'string') str = fallbackOrParams;
+  else if (fallback !== null && fallback !== undefined) str = fallback;
+  else str = key;
+
+  if (fallbackOrParams && typeof fallbackOrParams === 'object') {
+    Object.keys(fallbackOrParams).forEach(k => {
+      str = String(str).replaceAll('{' + k + '}', fallbackOrParams[k]);
+    });
+  }
+  return str;
 }
 
 export function updateTitle() {
-  document.title = t('page_title');
+  if (typeof document !== 'undefined') {
+    document.title = t('page_title');
+  }
 }
 
-// Initialize title on load
-updateTitle();
+// Initialize title on load if document exists
+if (typeof document !== 'undefined') {
+  updateTitle();
+}

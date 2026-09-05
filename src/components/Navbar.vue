@@ -46,48 +46,80 @@
         <!-- Global Settings Button -->
         <button 
           @click="$emit('open-settings')" 
-          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 transition font-semibold cursor-pointer"
-          :title="t('settings_modal_title') || '全局偏好设置'"
+          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 transition font-semibold cursor-pointer whitespace-nowrap shrink-0"
+          :title="t('settings_modal_title') || 'Global Preferences'"
         >
-          <Settings class="w-4 h-4 text-slate-600" />
-          <span class="hidden lg:inline">{{ t('settings_btn_label') || '设置' }}</span>
+          <Settings class="w-4 h-4 text-slate-600 shrink-0" />
+          <span class="hidden lg:inline whitespace-nowrap">{{ t('settings_btn_label') || 'Settings' }}</span>
         </button>
 
         <!-- Diagnostic Log Button -->
         <button 
           @click="$emit('open-logs')" 
-          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 transition font-semibold cursor-pointer"
-          :title="t('log_modal_title') || '实时诊断日志'"
+          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 transition font-semibold cursor-pointer whitespace-nowrap shrink-0"
+          :title="t('log_modal_title') || 'Diagnostic Logs Console'"
         >
-          <Terminal class="w-4 h-4 text-slate-600" />
-          <span class="hidden lg:inline">{{ t('log_btn_label') || '日志' }}</span>
+          <Terminal class="w-4 h-4 text-slate-600 shrink-0" />
+          <span class="hidden lg:inline whitespace-nowrap">{{ t('log_btn_label') || 'Logs' }}</span>
         </button>
 
-        <!-- Ko-fi -->
-        <a 
-          href="https://ko-fi.com/muffin27" 
-          target="_blank" 
-          class="flex items-center space-x-1.5 text-xs sm:text-sm bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-3 py-1.5 rounded-xl transition font-semibold shadow-xs"
+        <!-- PWA Install Button -->
+        <button 
+          v-if="canInstallPwa"
+          @click="installPwa"
+          class="flex items-center space-x-1.5 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 sm:px-3 py-1.5 rounded-xl transition font-semibold cursor-pointer shadow-2xs animate-in fade-in whitespace-nowrap shrink-0"
+          :title="t('install_app_btn') || 'Install App'"
         >
-          <span>{{ t('support_coffee') }}</span>
-          <span class="hidden md:inline text-amber-700">{{ t('support_fish') }}</span>
+          <DownloadCloud class="w-4 h-4 text-emerald-600 shrink-0" />
+          <span class="hidden sm:inline whitespace-nowrap">{{ t('install_app_btn') || 'Install App' }}</span>
+        </button>
+
+        <!-- Enterprise & Pro Commercial Portal Button -->
+        <button 
+          v-if="siteConfig.features.enableEnterprisePortal"
+          @click="isProSupporter ? $emit('open-settings') : $emit('open-enterprise')" 
+          :class="[
+            'flex items-center space-x-1.5 text-xs px-2.5 sm:px-3 py-1.5 rounded-xl border transition font-bold cursor-pointer shadow-2xs whitespace-nowrap shrink-0',
+            isProSupporter 
+              ? 'bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-indigo-500/10 hover:from-amber-500/20 hover:to-emerald-500/20 text-slate-800 border-amber-300/80 shadow-amber-500/10' 
+              : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200/80'
+          ]"
+          :title="isProSupporter ? `${activeTierLabel} (${activeCert?.name || t('enterprise_active_title')}) · ${t('nav_active_tooltip_hint')}` : (t('nav_enterprise_btn') || 'Commercial / Pro')"
+        >
+          <Crown v-if="isProSupporter" class="w-3.5 h-3.5 text-amber-500 shrink-0" />
+          <Building2 v-else class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+          <span class="hidden md:inline whitespace-nowrap">{{ isProSupporter ? activeTierLabel : (t('nav_enterprise_btn') || 'Commercial / Pro') }}</span>
+          <span v-if="isProSupporter" class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+        </button>
+
+        <!-- Ko-fi (Controlled via siteConfig) -->
+        <a 
+          v-if="siteConfig.features.enableDonations"
+          :href="siteConfig.kofiUrl" 
+          target="_blank" 
+          class="flex items-center space-x-1.5 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-2.5 sm:px-3 py-1.5 rounded-xl transition font-semibold shadow-xs whitespace-nowrap shrink-0"
+        >
+          <span class="whitespace-nowrap">{{ t('support_coffee') }}</span>
+          <span class="hidden xl:inline text-amber-700 whitespace-nowrap">{{ t('support_fish') }}</span>
         </a>
 
-        <!-- Feedback Modal -->
+        <!-- Feedback Modal (Controlled via siteConfig) -->
         <button 
+          v-if="siteConfig.features.enableFeedback"
           @click="$emit('open-feedback')" 
-          class="flex items-center space-x-1 text-xs sm:text-sm bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-xl transition font-medium"
+          class="flex items-center space-x-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl transition font-medium whitespace-nowrap shrink-0"
         >
-          <MessageSquare class="w-4 h-4 text-slate-500" />
-          <span class="hidden sm:inline">{{ t('feedback_btn') }}</span>
+          <MessageSquare class="w-4 h-4 text-slate-500 shrink-0" />
+          <span class="hidden sm:inline whitespace-nowrap">{{ t('feedback_btn') }}</span>
         </button>
 
         <!-- GitHub -->
         <a 
-          href="https://github.com/sealkit-org/pdfseal" 
+          v-if="siteConfig.githubRepoUrl"
+          :href="siteConfig.githubRepoUrl" 
           target="_blank" 
           title="View GitHub Repository" 
-          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition"
+          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition shrink-0"
         >
           <Github class="w-5 h-5" />
         </a>
@@ -153,8 +185,21 @@
           </div>
         </div>
 
-        <!-- Right Side Dedicated Vault Capsule Hub -->
-        <div class="flex items-center pl-2">
+        <!-- Right Side Dedicated Pipeline & Vault Hub -->
+        <div class="flex items-center space-x-2 pl-2">
+          <button 
+            @click="$emit('switch-tab', 'pipeline')"
+            :class="[
+              'flex items-center space-x-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer',
+              activeTab === 'pipeline' 
+                ? 'bg-indigo-600 text-white shadow-xs font-semibold' 
+                : 'bg-indigo-50/80 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 shadow-2xs font-semibold'
+            ]"
+          >
+            <Zap class="w-4 h-4" :class="activeTab === 'pipeline' ? 'text-white' : 'text-indigo-600'" />
+            <span>{{ t('tab_pipeline') || 'Pipeline' }}</span>
+          </button>
+
           <button 
             @click="$emit('switch-tab', 'vault')"
             :class="[
@@ -192,11 +237,16 @@ import {
   Sparkles,
   PenTool,
   Unlock,
-  Images
+  Images,
+  DownloadCloud,
+  Building2,
+  Crown
 } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { currentLang, setLanguage, t } from '../i18n';
 import { toolUsageCounts, DEFAULT_WEIGHTS, recordToolUsage } from '../utils/usageTracker';
+import { siteConfig } from '../config/siteConfig';
+import { isProSupporter, activeTierLabel, activeCert } from '../utils/security/certificateStore';
 
 const props = defineProps({
   activeTab: {
@@ -205,7 +255,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-logs']);
+const emit = defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-logs', 'open-enterprise']);
 
 // Primary Core Tools (Strictly fixed 5 pillars for predictable muscle memory)
 const primaryTools = [
@@ -250,11 +300,37 @@ function handleOutsideClick(e) {
   }
 }
 
+// PWA Install State & Logic
+const deferredInstallPrompt = ref(null);
+const canInstallPwa = computed(() => !!deferredInstallPrompt.value);
+
+function handleBeforeInstallPrompt(e) {
+  e.preventDefault();
+  deferredInstallPrompt.value = e;
+}
+
+function handleAppInstalled() {
+  deferredInstallPrompt.value = null;
+}
+
+async function installPwa() {
+  if (!deferredInstallPrompt.value) return;
+  deferredInstallPrompt.value.prompt();
+  const { outcome } = await deferredInstallPrompt.value.userChoice;
+  if (outcome === 'accepted') {
+    deferredInstallPrompt.value = null;
+  }
+}
+
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick);
+  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  window.addEventListener('appinstalled', handleAppInstalled);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleOutsideClick);
+  window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  window.removeEventListener('appinstalled', handleAppInstalled);
 });
 </script>

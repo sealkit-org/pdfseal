@@ -14,11 +14,11 @@
           </div>
           <div>
             <h3 class="font-extrabold text-slate-900 text-sm sm:text-base leading-tight flex items-center space-x-1.5">
-              <span>{{ t('send_modal_title') || '海豹端到端加密外发' }}</span>
+              <span>{{ t('send_modal_title') || 'Seal End-to-End Encrypted Send' }}</span>
               <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-600 border border-blue-200/60 uppercase">E2EE</span>
             </h3>
             <p class="text-[11px] text-slate-400 font-medium mt-0.5">
-              {{ t('send_modal_desc') || '零知识端到端加密 · 阅后即焚安全递送' }}
+              {{ t('send_modal_desc') || 'Zero-Knowledge E2EE · Burn-after-Reading Secure Transfer' }}
             </p>
           </div>
         </div>
@@ -44,12 +44,12 @@
                 {{ fileData?.name || 'Document.pdf' }}
               </p>
               <p class="text-[10px] text-slate-400 font-medium mt-0.5">
-                {{ formatBytes(fileData?.size || fileData?.arrayBuffer?.byteLength || 0) }} · {{ fileData?.pageCount || 1 }} {{ t('page_unit') || '页' }}
+                {{ formatBytes(fileData?.size || fileData?.arrayBuffer?.byteLength || 0) }} · {{ fileData?.pageCount || 1 }} {{ t('page_unit') || 'pages' }}
               </p>
             </div>
           </div>
           <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200 shrink-0">
-            {{ t('send_state_ready') || '就绪' }}
+            {{ t('send_state_ready') || 'Ready' }}
           </span>
         </div>
 
@@ -57,10 +57,10 @@
         <div class="bg-blue-50/70 border border-blue-200/60 rounded-2xl p-3 text-[11px] text-blue-900 leading-relaxed space-y-1">
           <div class="flex items-center space-x-1.5 font-bold text-blue-700">
             <ShieldCheck class="w-3.5 h-3.5 shrink-0" />
-            <span>{{ t('send_privacy_banner_title') || '零知识安全承诺' }}</span>
+            <span>{{ t('send_privacy_banner_title') || 'Zero-Knowledge Security Guarantee' }}</span>
           </div>
           <p class="text-blue-800/80 text-[10.5px]">
-            {{ t('send_privacy_banner_desc') || '文件离开当前浏览器前，已在本地使用 AES-256 加密为乱码。解密密钥仅嵌入在生成的分享链接中，服务器物理上绝无可能解密原件。' }}
+            {{ t('send_privacy_banner_desc') || 'Files are encrypted locally with AES-256 before leaving your browser. Decryption keys live solely in the generated link, making cloud decryption impossible.' }}
           </p>
         </div>
 
@@ -68,9 +68,9 @@
         <div v-if="isFileSizeOverLimit" class="bg-rose-50 border border-rose-200 rounded-2xl p-3 flex items-start space-x-2.5 text-rose-800 text-xs animate-in fade-in duration-150">
           <AlertTriangle class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
           <div>
-            <p class="font-bold">文件体积超过 10 MB 限制</p>
+            <p class="font-bold">{{ t('send_err_size', 'File size exceeds 10 MB limit') }}</p>
             <p class="text-[10.5px] text-rose-700/80 mt-0.5">
-              当前文件大小为 {{ formatBytes(fileSize) }}。为保障零知识端到端加密极速中转与存储安全，单文件上限为 10 MB。建议先使用「页面拆分」或「脱敏」工具精简后再分享。
+              {{ t('send_err_size_desc', 'Current size is {size}. To ensure high-speed E2EE transfer and storage safety, the limit is 10 MB. Please use Split or Sanitize tools first.', {size: formatBytes(fileSize)}) }}
             </p>
           </div>
         </div>
@@ -79,7 +79,7 @@
         <div v-if="serviceWatermark === 'high_85'" class="bg-amber-50 border border-amber-200 rounded-2xl p-3 flex items-center space-x-2 text-amber-900 text-xs font-medium animate-in fade-in duration-150">
           <Flame class="w-4 h-4 text-amber-600 shrink-0" />
           <p class="text-[11px]">
-            当前中转存储池水位已达 85%，进入<strong>快速周转保护模式</strong>，仅允许选择 10 分钟极速时效。
+            {{ t('send_warn_pool_85', 'Relay storage pool is over 85%. Entered Fast Turnover Protection Mode. Only 10-minute expiry is allowed.') }}
           </p>
         </div>
 
@@ -87,9 +87,9 @@
         <div v-if="serviceWatermark === 'critical_95'" class="bg-rose-50 border border-rose-200 rounded-2xl p-3 flex items-start space-x-2.5 text-rose-800 text-xs animate-in fade-in duration-150">
           <AlertTriangle class="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
           <div>
-            <p class="font-bold">中转存储池容量饱和（95%+）</p>
+            <p class="font-bold">{{ t('send_err_pool_95', 'Relay storage pool saturated (95%+)') }}</p>
             <p class="text-[10.5px] text-rose-700/80 mt-0.5">
-              当前临时存储池已达保护上限，已暂时停止接收新外发。请等待现有文件到期或被提取自毁后，额度将自动恢复。
+              {{ t('send_err_pool_95_desc', 'Temporary storage pool has reached its limit. No new files can be sent. Please wait for existing files to expire or self-destruct.') }}
             </p>
           </div>
         </div>
@@ -101,9 +101,9 @@
             <label class="block text-xs font-bold text-slate-700 mb-1.5 flex items-center justify-between">
               <span class="flex items-center space-x-1">
                 <Clock class="w-3.5 h-3.5 text-blue-600" />
-                <span>{{ t('send_expiration_title') || '有效时长' }}</span>
+                <span>{{ t('send_expiration_title') || 'Expiration Period' }}</span>
               </span>
-              <span class="text-[10px] text-slate-400 font-normal">{{ t('send_auto_purge') || '到期自动物理抹除' }}</span>
+              <span class="text-[10px] text-slate-400 font-normal">{{ t('send_auto_purge') || 'Auto-purged after expiration' }}</span>
             </label>
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button 
@@ -118,7 +118,7 @@
                     ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/20'
                     : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                 ]"
-                :title="serviceWatermark === 'high_85' && opt.seconds > 600 ? '存储池水位超 85%，已限制为 10 分钟' : ''"
+                :title="serviceWatermark === 'high_85' && opt.seconds > 600 ? t('send_pool_limit_hint', 'Pool over 85%, limited to 10 mins') : ''"
               >
                 <span>{{ opt.label }}</span>
                 <span :class="['text-[9px] font-normal mt-0.5', selectedExpiration === opt.seconds ? 'text-blue-100' : 'text-slate-400']">
@@ -136,11 +136,11 @@
               </div>
               <div>
                 <div class="flex items-center space-x-1.5">
-                  <span class="text-xs font-bold text-slate-800">{{ t('send_burn_title') || '开启「阅后即焚」' }}</span>
-                  <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-700">推荐</span>
+                  <span class="text-xs font-bold text-slate-800">{{ t('send_burn_title') || 'Enable Burn-after-Reading' }}</span>
+                  <span class="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-amber-100 text-amber-700">{{ t('send_badge_recommended', 'Recommended') }}</span>
                 </div>
                 <p class="text-[10.5px] text-slate-500 mt-0.5 leading-relaxed">
-                  {{ t('send_burn_desc') || '接收方下载 1 次后，服务器立即物理销毁密文，即使有效期未到也将失效。' }}
+                  {{ t('send_burn_desc') || 'The file is physically destroyed after the recipient downloads it once.' }}
                 </p>
               </div>
             </div>
@@ -159,17 +159,17 @@
             <div class="flex items-center justify-between">
               <label class="flex items-center space-x-1.5 text-xs font-bold text-slate-800">
                 <Lock class="w-3.5 h-3.5 text-blue-600" />
-                <span>{{ t('send_pin_label') || '提取密码 (必填安全锁)' }}</span>
-                <span class="text-[10px] text-rose-500 font-bold">*必填</span>
+                <span>{{ t('send_pin_label') || 'PIN / Access Password (Required)' }}</span>
+                <span class="text-[10px] text-rose-500 font-bold">{{ t('send_badge_required', '*Required') }}</span>
               </label>
               <button 
                 type="button" 
                 @click="generateRandomPin" 
                 class="text-[11px] text-blue-600 hover:text-blue-700 font-bold hover:underline cursor-pointer flex items-center space-x-1"
-                title="随机生成一个新的6位提取码"
+                :title="t('send_action_random_pin', 'Generate a random 6-digit PIN')"
               >
                 <Sparkles class="w-3 h-3" />
-                <span>{{ t('send_btn_random_pin') || '随机生成' }}</span>
+                <span>{{ t('send_btn_random_pin') || 'Random PIN' }}</span>
               </button>
             </div>
 
@@ -178,12 +178,12 @@
                 v-model="pinCode" 
                 type="text" 
                 maxlength="16"
-                :placeholder="t('send_pin_placeholder') || '输入 4~16 位提取密码'"
+                :placeholder="t('send_pin_placeholder') || 'Enter 4-16 digit PIN/password'"
                 class="w-full text-xs font-mono font-bold bg-white border border-slate-200 rounded-xl px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-hidden tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-slate-400"
               >
             </div>
             <div class="flex items-center justify-between text-[10px] text-slate-400">
-              <span>{{ t('send_pin_tip') || '接收方输入正确提取码后才可在本地解密' }}</span>
+              <span>{{ t('send_pin_tip') || 'Recipient must enter this PIN to decrypt locally' }}</span>
               <span class="font-mono" :class="isPinValid ? 'text-emerald-600 font-bold' : 'text-slate-400'">
                 {{ pinCode.trim().length }}/16
               </span>
@@ -196,7 +196,7 @@
           <Loader2 class="w-8 h-8 text-blue-600 animate-spin" />
           <div>
             <p class="text-xs font-bold text-slate-800">{{ encryptStatusText }}</p>
-            <p class="text-[10px] text-slate-400 mt-0.5">本地 Web Crypto 硬件加速处理中</p>
+            <p class="text-[10px] text-slate-400 mt-0.5">{{ t('send_status_hardware', 'Local Web Crypto hardware acceleration in progress') }}</p>
           </div>
         </div>
 
@@ -205,15 +205,15 @@
           <div class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3 flex items-center space-x-2.5 text-emerald-800">
             <CheckCircle2 class="w-5 h-5 text-emerald-600 shrink-0" />
             <div>
-              <p class="text-xs font-bold">{{ t('send_success_title') || '加密完成！专属分享卡片已生成' }}</p>
-              <p class="text-[10.5px] text-emerald-700/80 mt-0.5">密钥已嵌入在链接末尾，任何人均无法绕过密钥查看原件</p>
+              <p class="text-xs font-bold">{{ t('send_success_title') || 'Encrypted! Secure Share Card Ready' }}</p>
+              <p class="text-[10.5px] text-emerald-700/80 mt-0.5">{{ t('send_status_secure_link', 'The key is embedded in the link. No one can view the original file without it.') }}</p>
             </div>
           </div>
 
           <!-- Share Link Display & Quick Copy -->
           <div>
             <label class="block text-[11px] font-bold text-slate-700 mb-1">
-              {{ t('send_share_link_label') || '零知识端到端加密链接' }}
+              {{ t('send_share_link_label') || 'Zero-Knowledge Encrypted Link' }}
             </label>
             <div class="flex items-center space-x-1.5">
               <input 
@@ -228,7 +228,7 @@
                 class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition flex items-center space-x-1 shrink-0 cursor-pointer shadow-md hover:shadow-blue-600/25"
               >
                 <Copy class="w-3.5 h-3.5" />
-                <span>{{ isCopied ? (t('copied') || '已复制') : (t('copy') || '复制') }}</span>
+                <span>{{ isCopied ? (t('copied') || 'Copied!') : (t('copy') || 'Copy') }}</span>
               </button>
             </div>
           </div>
@@ -238,26 +238,26 @@
             <!-- QR Canvas -->
             <div class="flex flex-col items-center shrink-0">
               <canvas ref="qrCanvasRef" class="w-24 h-24 rounded-lg bg-white p-1 border border-slate-200/80"></canvas>
-              <span class="text-[9px] text-slate-400 font-medium mt-1">手机扫码极速提取</span>
+              <span class="text-[9px] text-slate-400 font-medium mt-1">{{ t('send_qr_hint', 'Scan to open on mobile') }}</span>
             </div>
 
             <!-- Parameters Summary List -->
             <div class="flex-1 min-w-0 space-y-1.5 text-[11px]">
               <div class="flex items-center justify-between text-slate-600">
-                <span class="text-slate-400">{{ t('send_summary_strategy') || '销毁策略' }}:</span>
+                <span class="text-slate-400">{{ t('send_summary_strategy') || 'Destruction' }}:</span>
                 <span class="font-bold text-slate-800 text-right">
                   {{ formatExpiresLabel(shareResult.expiresAt) }}
-                  <span v-if="shareResult.burnAfterRead" class="block text-[10px] text-amber-600">🔥 阅后即焚</span>
+                  <span v-if="shareResult.burnAfterRead" class="block text-[10px] text-amber-600">🔥 {{ t('send_burn_badge', 'Burn After Read') }}</span>
                 </span>
               </div>
               <div class="flex items-center justify-between text-slate-600">
-                <span class="text-slate-400">{{ t('send_summary_pin') || '提取密码' }}:</span>
+                <span class="text-slate-400">{{ t('send_summary_pin') || 'Access PIN' }}:</span>
                 <span class="font-mono font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-md border border-blue-200">
                   {{ shareResult.pin }}
                 </span>
               </div>
               <div class="flex items-center justify-between text-slate-600">
-                <span class="text-slate-400">{{ t('send_summary_mode') || '加密协议' }}:</span>
+                <span class="text-slate-400">{{ t('send_summary_mode') || 'Encryption' }}:</span>
                 <span class="font-bold text-slate-800">AES-256 + PBKDF2</span>
               </div>
             </div>
@@ -272,14 +272,14 @@
           @click="resetModal"
           class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
         >
-          {{ t('send_btn_new') || '重新生成' }}
+          {{ t('send_btn_new') || 'Generate New' }}
         </button>
         <button 
           v-else
           @click="handleClose"
           class="px-3.5 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition cursor-pointer"
         >
-          {{ t('btn_cancel') || '取消' }}
+          {{ t('btn_cancel') || 'Cancel' }}
         </button>
 
         <div class="flex items-center space-x-2">
@@ -292,7 +292,7 @@
           >
             <Loader2 v-if="isEncrypting" class="w-4 h-4 animate-spin" />
             <Sparkles v-else class="w-4 h-4" />
-            <span>{{ isEncrypting ? '正在本地加密...' : (t('send_btn_generate') || '本地加密并生成外发链接') }}</span>
+            <span>{{ isEncrypting ? t('send_btn_encrypting', 'Encrypting Locally...') : (t('send_btn_generate') || 'Encrypt Locally & Generate Link') }}</span>
           </button>
 
           <!-- Primary Action Button for STEP 3 (Copy Full Card) -->
@@ -302,7 +302,7 @@
             class="bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md hover:shadow-blue-600/25 cursor-pointer"
           >
             <ClipboardCheck class="w-4 h-4" />
-            <span>{{ isFullCardCopied ? (t('copied_full_card') || '完整卡片已复制！') : (t('send_btn_copy_card') || '复制完整分享卡片') }}</span>
+            <span>{{ isFullCardCopied ? (t('copied_full_card') || 'Full card copied!') : (t('send_btn_copy_card') || 'Copy Full Share Card') }}</span>
           </button>
         </div>
       </div>
@@ -338,10 +338,10 @@ const emit = defineEmits(['close']);
 
 // Expiration TTL Options
 const expirationOptions = [
-  { label: '⏱️ 10 分钟', sub: '短效极速', seconds: 600 },
-  { label: '⏱️ 1 小时', sub: '临时查阅', seconds: 3600 },
-  { label: '⏱️ 24 小时', sub: '日常办公', seconds: 86400 },
-  { label: '⏱️ 7 天', sub: '最长保质期', seconds: 604800 }
+  { label: t('send_time_10m', '⏱️ 10 Mins'), sub: t('send_time_10m_sub', 'Short-lived'), seconds: 600 },
+  { label: t('send_time_1h', '⏱️ 1 Hour'), sub: t('send_time_1h_sub', 'Temporary'), seconds: 3600 },
+  { label: t('send_time_24h', '⏱️ 24 Hours'), sub: t('send_time_24h_sub', 'Daily Work'), seconds: 86400 },
+  { label: t('send_time_7d', '⏱️ 7 Days'), sub: t('send_time_7d_sub', 'Maximum'), seconds: 604800 }
 ];
 
 const selectedExpiration = ref(3600);
@@ -424,19 +424,19 @@ async function executeGenerateShare() {
   }
 
   if (!isPinValid.value) {
-    alert('请输入 4~16 位的提取密码。');
+    alert(t('send_alert_pin', 'Please enter a 4-16 digit PIN.'));
     return;
   }
 
   isEncrypting.value = true;
-  encryptStatusText.value = '正在本地生成 256 位 AES-GCM 密钥...';
+  encryptStatusText.value = t('send_status_key', 'Generating 256-bit AES-GCM key locally...');
 
   try {
     // 1. Generate master key
     const masterKey = await generateSendKey();
     const keyUrlSafe = await exportKeyUrlSafe(masterKey);
 
-    encryptStatusText.value = '正在本地加密 PDF 二进制数据 (AES-GCM + PBKDF2)...';
+    encryptStatusText.value = t('send_status_enc', 'Encrypting PDF binary data locally (AES-GCM + PBKDF2)...');
     await new Promise(r => setTimeout(r, 80));
 
     // 2. Encrypt locally in browser RAM with mandatory PIN
@@ -450,7 +450,7 @@ async function executeGenerateShare() {
       pinCode.value.trim()
     );
 
-    encryptStatusText.value = '正在推送密文至加密中转盲盒...';
+    encryptStatusText.value = t('send_status_push', 'Pushing ciphertext to relay endpoint...');
     
     // 3. Upload blind ciphertext to Cloudflare Worker / R2
     const uploadRes = await uploadEncryptedPayload({
@@ -513,9 +513,9 @@ async function copyFullShareCard() {
   if (!shareResult.value?.fullUrl) return;
   const fileName = props.fileData?.name || 'Document.pdf';
   const expLabel = formatExpiresLabel(shareResult.value.expiresAt);
-  const burnLabel = shareResult.value.burnAfterRead ? '（🔥 已开启阅后即焚，下载1次即销毁）' : '';
+  const burnLabel = shareResult.value.burnAfterRead ? t('send_burn_label', '(🔥 Burn after read enabled)') : '';
 
-  const fullText = `【🦭 PDFSeal 端到端加密文件分享】\n📄 文件名: ${fileName}\n⏱️ 有效期: ${expLabel} ${burnLabel}\n🔑 提取密码: ${shareResult.value.pin}\n🔗 安全提取链接:\n${shareResult.value.fullUrl}\n\n💡 提示: 本文件全程使用零知识端到端加密（E2EE），密码与密钥仅在您的设备之间流转，请妥善保管提取码。`;
+  const fullText = t('send_copy_text', '【🦭 PDFSeal E2EE File Share】\n📄 File: {fileName}\n⏱️ Expiry: {expLabel} {burnLabel}\n🔑 PIN: {pin}\n🔗 Secure Link:\n{fullUrl}\n\n💡 Note: This file uses End-to-End Encryption (E2EE). The PIN and Key never leave your device. Keep them safe.', {fileName, expLabel, burnLabel, pin: shareResult.value.pin, fullUrl: shareResult.value.fullUrl});
 
   try {
     await navigator.clipboard.writeText(fullText);
@@ -533,11 +533,11 @@ function formatBytes(bytes) {
 }
 
 function formatExpiresLabel(timestamp) {
-  if (!timestamp) return '24 小时';
+  if (!timestamp) return t('send_exp_24h', '24 Hours');
   const diffHours = Math.round((timestamp - Date.now()) / (1000 * 3600));
-  if (diffHours <= 1) return '约 1 小时内';
-  if (diffHours < 24) return `${diffHours} 小时内`;
+  if (diffHours <= 1) return t('send_exp_1h', 'Within 1 hour');
+  if (diffHours < 24) return t('send_exp_h', '{h} hours', {h: diffHours});
   const diffDays = Math.round(diffHours / 24);
-  return `${diffDays} 天内`;
+  return t('send_exp_d', '{d} days', {d: diffDays});
 }
 </script>

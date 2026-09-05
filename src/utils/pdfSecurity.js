@@ -105,8 +105,8 @@ export async function verifyPdfSecurity(arrayBuffer, password = '') {
   };
 }
 
-import { userSettings } from './userSettings';
-import { logger } from './logger';
+import { userSettings } from './userSettings.js';
+import { logger } from './logger.js';
 
 /**
  * Loads any PDF into a clean, unencrypted PDFDocument ready for page copying and manipulation.
@@ -316,6 +316,10 @@ export async function loadCleanPdfDocument(arrayBuffer, passwordOrOptions = '') 
     logger.info('PDF_PIPELINE', `[Clean Mode] Completed clean rendering with floating annotations stripped (${pdf.numPages} pages)`);
     return cleanDoc;
   } catch (cleanErr) {
+    if (cleanErr.name === 'PasswordException' || cleanErr.message?.toLowerCase().includes('password')) {
+      logger.error('PDF_PIPELINE', `[Clean Mode] Password check failed: ${cleanErr.message}`);
+      throw cleanErr;
+    }
     logger.warn('PDF_PIPELINE', `[Clean Mode] Clean render failed (${cleanErr.message}), falling back to direct load`);
     return await PDFDocument.load(arrayBuffer, { password: password || undefined, ignoreEncryption: true });
   }

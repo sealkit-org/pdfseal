@@ -18,10 +18,6 @@
           </div>
         </div>
 
-        <div class="hidden sm:flex items-center space-x-1.5 text-xs text-emerald-600 font-semibold bg-emerald-50/80 px-3 py-1.5 rounded-full border border-emerald-100 shadow-2xs">
-          <Lock class="w-3.5 h-3.5" />
-          <span>{{ t('processed_locally') || '纯浏览器本地内存处理' }}</span>
-        </div>
       </div>
 
       <!-- State A: Empty State (Dual Source Dropzone: Local & Vault) -->
@@ -58,7 +54,7 @@
             class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-emerald-600/25 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>{{ t('merge_btn_from_local') || '从电脑本地添加' }}</span>
+            <span>{{ t('merge_btn_from_local') || 'Add from Computer' }}</span>
           </button>
           
           <button 
@@ -67,7 +63,7 @@
             class="bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center space-x-2 border border-slate-200 shadow-2xs hover:border-slate-300 cursor-pointer"
           >
             <FolderLock class="w-4 h-4 text-emerald-600" />
-            <span>{{ t('merge_btn_from_vault') || '从海豹收纳箱挑选' }}</span>
+            <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
           </button>
         </div>
       </div>
@@ -78,7 +74,7 @@
         <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 shrink-0">
           <div class="flex items-center space-x-2 min-w-0 flex-1">
             <span class="text-xs bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-1 rounded-lg border border-emerald-200 shrink-0">
-              {{ totalPages }} {{ t('pages_label') || '页' }}
+              {{ totalPages }} {{ t('pages_label') || 'pages' }}
             </span>
             <span class="text-xs bg-blue-50 text-blue-700 font-extrabold px-2.5 py-1 rounded-lg border border-blue-200 shrink-0">
               {{ selectedIndices.size }} {{ t('pages_label') }} {{ t('selected_label') }}
@@ -91,7 +87,7 @@
               class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold flex items-center shrink-0"
             >
               <Unlock class="w-3 h-3 mr-0.5" />
-              {{ t('badge_unlocked') || '已解密' }}
+              {{ t('badge_unlocked') || 'Unlocked' }}
             </span>
           </div>
 
@@ -103,7 +99,7 @@
               class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer"
             >
               <CheckSquare class="w-3.5 h-3.5 text-slate-600" />
-              <span>{{ t('btn_select_all') || '全选' }}</span>
+              <span>{{ t('btn_select_all') || 'Select All' }}</span>
             </button>
 
             <!-- Deselect All -->
@@ -112,7 +108,7 @@
               class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer"
             >
               <Square class="w-3.5 h-3.5 text-slate-600" />
-              <span>{{ t('btn_deselect_all') || '取消全选' }}</span>
+              <span>{{ t('btn_deselect_all') || 'Deselect All' }}</span>
             </button>
 
             <!-- Choose Another Local File -->
@@ -121,7 +117,7 @@
               class="text-xs text-emerald-600 hover:bg-emerald-50 font-semibold px-2.5 py-1.5 rounded-xl border border-emerald-200 transition flex items-center space-x-1 cursor-pointer"
             >
               <RefreshCw class="w-3.5 h-3.5" />
-              <span>{{ t('btn_choose_another') || '更换文件' }}</span>
+              <span>{{ t('btn_choose_another') || 'Choose Another File' }}</span>
             </button>
 
             <!-- Choose From Vault -->
@@ -130,7 +126,7 @@
               class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
             >
               <FolderLock class="w-3.5 h-3.5 text-emerald-600" />
-              <span>{{ t('merge_btn_from_vault') || '从收纳箱选取' }}</span>
+              <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
             </button>
 
             <!-- Clear / Reset -->
@@ -138,7 +134,7 @@
               @click="reset" 
               class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
             >
-              {{ t('btn_clear_all') || '清空' }}
+              {{ t('btn_clear_all') || 'Clear All' }}
             </button>
           </div>
         </div>
@@ -146,23 +142,23 @@
         <!-- Range Selection Bar -->
         <div class="bg-slate-50/80 rounded-2xl p-2.5 my-2 border border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs">
           <div class="flex items-center space-x-2 flex-1 min-w-[280px]">
-            <span class="font-bold text-slate-700 shrink-0">{{ t('custom_page_range') || '自定义提取页码范围：' }}</span>
+            <span class="font-bold text-slate-700 shrink-0">{{ t('custom_page_range') || 'Custom Page Range:' }}</span>
             <input 
               v-model="rangeInput" 
               @keyup.enter="applyRange"
               type="text" 
-              :placeholder="t('range_placeholder') || '例如 1-3, 5, 8'" 
+              :placeholder="t('range_placeholder') || 'e.g. 1-3, 5, 8'" 
               class="bg-white border border-slate-300 rounded-xl px-3 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-hidden flex-1 font-mono"
             >
             <button 
               @click="applyRange" 
               class="bg-slate-800 hover:bg-slate-700 text-white font-semibold px-3.5 py-1.5 rounded-xl transition shadow-xs cursor-pointer"
             >
-              {{ t('apply_range') || '应用区间' }}
+              {{ t('apply_range') || 'Apply Range' }}
             </button>
           </div>
           <span class="text-[11px] text-slate-400 hidden md:block">
-            点击下方卡片即可直接选中或取消
+            {{ t('split_click_hint', 'Click cards below to toggle selection') }}
           </span>
         </div>
 
@@ -202,7 +198,7 @@
                 'text-[11px] font-extrabold px-2 py-0.5 rounded-md',
                 selectedIndices.has(p.index) ? 'bg-emerald-600 text-white' : 'bg-slate-200/80 text-slate-700'
               ]">
-                {{ t('page_card_prefix') || '第' }} {{ p.index + 1 }} {{ t('page_card_suffix') || '页' }}
+                {{ t('page_card_prefix', 'Page') }} {{ p.index + 1 }}{{ t('page_card_suffix') ? ' ' + t('page_card_suffix') : '' }}
               </span>
               
               <div 
@@ -236,7 +232,7 @@
               <input 
                 v-model="customOutputBaseName"
                 type="text" 
-                :placeholder="t('vault_filename_placeholder') || '自定义导出文件名 (可选)'"
+                :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
               >
             </div>
@@ -258,9 +254,9 @@
             class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
             <span v-if="!isProcessing">
-              {{ t('extract_selected') || '提取所选页面' }} ({{ selectedIndices.size }})
+              {{ t('extract_selected') || '🦭 Extract Selected' }} ({{ selectedIndices.size }})
             </span>
-            <span v-else>{{ t('loading') || '提取中...' }}</span>
+            <span v-else>{{ t('loading') || 'Processing...' }}</span>
             <Download v-if="!isProcessing" class="w-4 h-4" />
             <Loader2 v-else class="w-4 h-4 animate-spin" />
           </button>

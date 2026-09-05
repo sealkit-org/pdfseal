@@ -1,0 +1,1859 @@
+<template>
+  <section class="w-full flex-1 flex flex-col">
+    <!-- Main Assembly Container matching Merge & Split tools (Fills entire available space cleanly) -->
+    <div class="relative bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1 space-y-3 overflow-hidden">
+      
+      <!-- Top Title Header (shrink-0) -->
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 shrink-0 gap-3">
+        <div class="flex items-center space-x-3 min-w-0 flex-1">
+          <div class="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+            <Zap class="w-5 h-5" />
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center space-x-2">
+              <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight whitespace-nowrap truncate">
+                {{ t('pipeline_title') }}
+              </h2>
+              <span class="text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100 px-2 py-0.5 rounded-full whitespace-nowrap shrink-0">
+                Pipeline Engine
+              </span>
+            </div>
+            <p class="text-xs text-slate-400 font-medium hidden sm:block mt-0.5 truncate max-w-xl lg:max-w-2xl" :title="t('pipeline_subtitle')">
+              {{ t('pipeline_subtitle') }}
+            </p>
+          </div>
+        </div>
+
+        <div class="text-xs text-slate-400 font-mono hidden md:flex items-center space-x-2.5 shrink-0">
+          <!-- Workflow Slot Capacity Badge (3 slots for Free, Unlimited for Pro) -->
+          <div 
+            @click="!isProSupporter && savedUserFlows.length >= 3 ? emit('open-enterprise') : null"
+            :class="[
+              'flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs border whitespace-nowrap shrink-0 transition select-none',
+              isProSupporter 
+                ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80 font-bold' 
+                : savedUserFlows.length >= 3
+                  ? 'bg-amber-50/90 text-amber-800 border-amber-300 font-semibold cursor-pointer hover:bg-amber-100 shadow-2xs'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 font-medium'
+            ]"
+            :title="isProSupporter ? t('pipeline_slot_tooltip_pro') : (savedUserFlows.length >= 3 ? t('pipeline_slot_tooltip_full') : t('pipeline_slot_tooltip_free'))"
+          >
+            <Crown v-if="isProSupporter" class="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <BookmarkPlus v-else-if="savedUserFlows.length >= 3" class="w-3.5 h-3.5 text-amber-600 shrink-0" />
+            <Bookmark v-else class="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <span class="whitespace-nowrap">
+              {{ isProSupporter ? t('pipeline_slot_pro') : (savedUserFlows.length >= 3 ? t('pipeline_slot_full') : t('pipeline_slot_free', { count: savedUserFlows.length })) }}
+            </span>
+          </div>
+
+          <button 
+            v-if="!isProSupporter && siteConfig.features.enableProDesktopSuggestion"
+            @click="emit('open-enterprise')"
+            class="text-xs bg-amber-500 hover:bg-amber-600 text-white font-bold px-2.5 py-1 rounded-xl transition shadow-2xs cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
+          >
+            <Crown class="w-3 h-3 text-white shrink-0" />
+            <span class="whitespace-nowrap">{{ t('pro_desktop_btn') }}</span>
+          </button>
+
+        </div>
+      </div>
+
+      <!-- Two-Column Workbench Layout (Flexible Grid Filling the Card) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 flex-1 items-stretch">
+        
+        <!-- LEFT COLUMN: Workflow Selector, Step Box & Bottom Add Button (5 cols) -->
+        <div class="lg:col-span-5 flex flex-col space-y-2">
+          
+          <!-- 1. Workflow Selector & Save Control Bar (Pinned at Top of Left Column) -->
+          <div class="bg-slate-50/90 rounded-2xl p-2.5 sm:p-3 border border-slate-200/80 space-y-1.5 shrink-0">
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-xs font-bold text-slate-700 flex items-center space-x-1.5 min-w-0">
+                <Sliders class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span class="truncate" :title="t('pipeline_config_panel_title')">{{ t('pipeline_config_panel_title') }}</span>
+              </span>
+
+              <!-- Action buttons: Save Flow / Reset -->
+              <div class="flex items-center space-x-2 shrink-0">
+                <button 
+                  v-if="currentCustomFlowRecord && isCurrentFlowModified"
+                  type="button"
+                  @click="saveChangesSilently"
+                  class="text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-md transition cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0 shadow-xs"
+                >
+                  <Save class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span class="whitespace-nowrap">{{ t('pipeline_btn_save_changes') }}</span>
+                </button>
+                <button 
+                  v-else-if="!currentCustomFlowRecord"
+                  type="button"
+                  @click="openSaveFlowModal('new')"
+                  class="text-[11px] font-bold text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 px-2.5 py-1 rounded-md transition cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0 shadow-xs"
+                >
+                  <BookmarkPlus class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span class="whitespace-nowrap">{{ t('pipeline_btn_save_as_my_flow') }}</span>
+                </button>
+
+                <button 
+                  v-if="isCurrentFlowModified"
+                  type="button"
+                  @click="resetCurrentFlow"
+                  class="text-[11px] font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 px-2.5 py-1 rounded-md transition cursor-pointer flex items-center space-x-1 whitespace-nowrap shrink-0"
+                >
+                  <RotateCcw class="w-3.5 h-3.5" />
+                  <span class="whitespace-nowrap shrink-0">{{ t('pipeline_btn_reset') }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Flow Dropdown Selector -->
+            <div class="relative">
+              <select 
+                v-model="activeFlowSelectionKey" 
+                data-testid="pipeline-flow-select"
+                @change="handleFlowChange"
+                class="w-full appearance-none text-xs font-bold bg-white border border-slate-200 rounded-xl px-3 py-1.5 pr-8 text-slate-800 focus:outline-indigo-500 cursor-pointer shadow-2xs"
+              >
+                <optgroup :label="t('pipeline_preset_flows_group')">
+                  <option v-for="preset in PRESET_PIPELINES" :key="'preset_' + preset.id" :value="'preset_' + preset.id">
+                    ⚡ {{ t(preset.nameKey, preset.defaultName) }}
+                  </option>
+                </optgroup>
+
+                <optgroup v-if="savedUserFlows.length > 0" :label="t('pipeline_saved_flows_group')">
+                  <option v-for="flow in savedUserFlows" :key="'user_' + flow.id" :value="'user_' + flow.id">
+                    ⭐ {{ flow.name }}
+                  </option>
+                </optgroup>
+
+                <option value="new_blank">
+                  {{ t('pipeline_new_blank_flow') }}
+                </option>
+              </select>
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
+                <ChevronDown class="w-3.5 h-3.5" />
+              </div>
+            </div>
+
+            <!-- Active Flow Description & Status -->
+            <div class="flex items-center justify-between text-[11px] text-slate-500 pt-1 px-1">
+              <span class="truncate text-slate-500 flex-1 mr-2" :title="currentPipelineDesc">
+                {{ currentPipelineDesc }}
+              </span>
+              <div class="flex items-center space-x-1.5 shrink-0">
+                <span v-if="isCurrentFlowModified" class="text-amber-600 font-bold text-[10px] bg-amber-50 px-1 py-0.5 rounded">
+                  * {{ t('pipeline_flow_modified') }}
+                </span>
+                
+                <!-- Action Icons for Custom Flow -->
+                <template v-if="currentCustomFlowRecord">
+                  <button type="button" @click="openSaveFlowModal('rename')" class="text-slate-400 hover:text-indigo-600 p-0.5 rounded transition cursor-pointer" :title="t('pipeline_btn_rename')">
+                    <Pencil class="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" @click="duplicateCurrentFlow" class="text-slate-400 hover:text-indigo-600 p-0.5 rounded transition cursor-pointer" :title="t('pipeline_btn_duplicate')">
+                    <Copy class="w-3.5 h-3.5" />
+                  </button>
+                  <button type="button" @click="deleteCurrentCustomFlow" class="text-slate-400 hover:text-red-600 p-0.5 rounded transition cursor-pointer" :title="t('btn_delete')">
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Step Scroll Box (flex-1 fills available left column height with inner scrollbar) -->
+          <div class="flex-1 min-h-[260px] bg-slate-50/60 rounded-2xl border border-slate-200/90 p-2.5 flex flex-col overflow-hidden shadow-2xs">
+            <!-- Pinned Step Box Header -->
+            <div class="flex items-center justify-between px-1 pb-2 border-b border-slate-200/70 shrink-0 text-xs">
+              <span class="font-bold text-slate-700 flex items-center space-x-1.5">
+                <span>{{ t('pipeline_steps_title') }}</span>
+                <span class="text-[10px] bg-indigo-50 text-indigo-700 font-extrabold px-1.5 py-0.2 rounded-full border border-indigo-100">
+                  {{ activeWorkflowSteps.length }}
+                </span>
+              </span>
+              <span class="text-[10px] text-slate-400">
+                {{ t('pipeline_step_click_hint') }}
+              </span>
+            </div>
+
+            <!-- Scrollable Step List Container (Scrolls cleanly when exceeding box height) -->
+            <transition-group 
+              name="list" 
+              tag="div" 
+              class="flex-1 overflow-y-auto space-y-1.5 pt-2 pr-1 custom-scrollbar relative"
+            >
+              <div 
+                v-for="(st, idx) in activeWorkflowSteps" 
+                :key="st.id || idx"
+                :draggable="true"
+                @dragstart="onDragStart($event, idx)"
+                @dragover.prevent="onDragOver($event, idx)"
+                @drop="onDrop($event, idx)"
+                @dragend="onDragEnd"
+                :class="[
+                  'group flex items-center justify-between px-2.5 py-2 rounded-xl bg-white border transition-all duration-300 gap-2 cursor-pointer shrink-0',
+                  draggedStepIndex === idx ? 'opacity-30 border-dashed border-indigo-400 bg-indigo-50/20' : 'border-slate-200/90 hover:border-indigo-300 hover:shadow-xs'
+                ]"
+                @click="openStepConfigModal(idx)"
+              >
+                <!-- Left: Step Index + Node Name + Summary Badge -->
+                <div class="flex items-center space-x-2 min-w-0 flex-1">
+                  <span class="w-5 h-5 rounded-md bg-indigo-600 text-white text-[10px] font-black flex items-center justify-center shrink-0 shadow-2xs">
+                    {{ idx + 1 }}
+                  </span>
+                  
+                  <span class="font-bold text-slate-800 text-xs truncate shrink-0">
+                    {{ getNodeName(st.nodeId) }}
+                  </span>
+
+                  <!-- Parameter Summary Pill -->
+                  <span 
+                    class="px-2 py-0.5 rounded-md text-[10px] font-medium border truncate max-w-[140px] hidden sm:inline-block"
+                    :class="getStepTagClass(st.nodeId)"
+                    :title="getStepSummary(st)"
+                  >
+                    {{ getStepSummary(st) }}
+                  </span>
+                </div>
+
+                <!-- Right: Config Button + Reorder + Delete -->
+                <div class="flex items-center space-x-1 shrink-0" @click.stop>
+                  <!-- Configure Button -->
+                  <button 
+                    type="button"
+                    @click.stop="openStepConfigModal(idx)"
+                    class="flex items-center space-x-1 text-[11px] font-semibold text-slate-600 hover:text-indigo-600 bg-slate-50 hover:bg-indigo-50 border border-slate-200 hover:border-indigo-200 px-2 py-0.5 rounded-lg transition cursor-pointer"
+                    :title="t('pipeline_step_config_btn')"
+                  >
+                    <Settings2 class="w-3 h-3 text-slate-500 group-hover:text-indigo-600" />
+                    <span class="hidden md:inline">{{ t('pipeline_step_config_btn') }}</span>
+                  </button>
+
+                  <!-- Drag Handle -->
+                  <div 
+                    class="drag-handle p-1 text-slate-400 hover:text-indigo-600 rounded-md hover:bg-indigo-50 transition cursor-grab active:cursor-grabbing shrink-0"
+                    :title="t('pipeline_btn_drag_reorder') || 'Drag to reorder'"
+                  >
+                    <GripVertical class="w-3.5 h-3.5" />
+                  </div>
+
+                  <!-- Remove -->
+                  <button 
+                    v-if="activeWorkflowSteps.length > 1"
+                    type="button"
+                    @click.stop="removeStep(idx)"
+                    class="p-1 text-slate-300 hover:text-red-500 rounded-md hover:bg-red-50 transition cursor-pointer"
+                    :title="t('pipeline_delete_step')"
+                  >
+                    <Trash2 class="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Empty Steps State -->
+              <div v-if="activeWorkflowSteps.length === 0" class="text-center py-8 text-slate-400 text-xs">
+                {{ t('pipeline_no_steps_hint') }}
+              </div>
+            </transition-group>
+          </div>
+
+          <!-- 3. Append Node Button: Docked at Bottom of Left Column (shrink-0) -->
+          <button 
+            type="button"
+            @click="addStepModal = true"
+            class="w-full py-2 rounded-xl border-2 border-dashed border-indigo-200 hover:border-indigo-400 hover:bg-indigo-50/40 text-indigo-600 text-xs font-bold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-2xs shrink-0"
+          >
+            <Plus class="w-3.5 h-3.5" />
+            <span>{{ t('pipeline_btn_add_step') }}</span>
+          </button>
+
+        </div>
+
+        <!-- RIGHT COLUMN: Minimal Gap Between File Selection, Run Button & Deliverables (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col space-y-2">
+          
+          <input 
+            ref="fileInput" 
+            type="file" 
+            multiple 
+            data-testid="pipeline-file-input"
+            class="hidden" 
+            @change="handleFileInput" 
+          />
+
+          <!-- 1. Top Box: File Batch Area (flex-1: Fills upper half with only 8px gap to run button) -->
+          <div 
+            @dragover.prevent="isDragging = true"
+            @dragleave.prevent="isDragging = false"
+            @drop.prevent="handleFileDrop"
+            :class="[
+              'relative border-2 border-dashed rounded-2xl transition flex flex-col flex-1 min-h-[160px] overflow-hidden',
+              isDragging 
+                ? 'border-indigo-500 bg-indigo-50/60 scale-[0.995]' 
+                : 'border-slate-300 hover:border-indigo-300 bg-slate-50/40'
+            ]"
+          >
+            <!-- STATE A: When Empty (Centered Dropzone with Dual Source Buttons Inside) -->
+            <div 
+              v-if="inputFiles.length === 0"
+              class="flex-1 flex flex-col items-center justify-center p-3 sm:p-4 text-center cursor-pointer"
+              @click="fileInput?.click()"
+            >
+              <div class="w-9 h-9 bg-indigo-100/80 text-indigo-600 rounded-xl flex items-center justify-center mb-1.5 shadow-xs">
+                <UploadCloud class="w-5 h-5" />
+              </div>
+              <h4 class="text-xs sm:text-sm font-bold text-slate-800">
+                {{ t('pipeline_drop_box_title') }}
+              </h4>
+              <p class="text-[11px] text-slate-400 mt-0.5 max-w-sm">
+                {{ t('pipeline_drop_box_subtitle') }}
+              </p>
+
+              <!-- Integrated Upload Buttons Inside the Dashed Box -->
+              <div class="mt-2 flex items-center justify-center space-x-2" @click.stop>
+                <button 
+                  type="button" 
+                  @click="fileInput?.click()"
+                  class="flex items-center space-x-1 text-xs bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-3 py-1.5 rounded-xl transition cursor-pointer shadow-xs"
+                >
+                  <Plus class="w-3.5 h-3.5" />
+                  <span>{{ t('btn_add_from_pc') }}</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  @click="isVaultPickerOpen = true"
+                  class="flex items-center space-x-1 text-xs bg-white hover:bg-slate-100 text-slate-700 font-semibold px-3 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer shadow-2xs"
+                >
+                  <FolderLock class="w-3.5 h-3.5 text-blue-600" />
+                  <span>{{ t('btn_choose_from_vault') }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- STATE B: When Files Exist (Mini Toolbar + Compact Scrollable List Inside the Dashed Box) -->
+            <div v-else class="flex-1 flex flex-col overflow-hidden">
+              <!-- Pinned Top Mini-Bar Inside the Box -->
+              <div class="flex items-center justify-between px-3 py-1.5 bg-white/90 border-b border-slate-200/80 shrink-0 text-xs">
+                <span class="text-slate-600 font-semibold flex items-center space-x-1.5">
+                  <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                  <span>{{ t('pipeline_files_selected_prefix') }} <b class="text-indigo-600">{{ inputFiles.length }}</b> {{ t('pipeline_files_unit') }} ({{ formatSize(totalInputSize) }})</span>
+                </span>
+
+                <div class="flex items-center space-x-1">
+                  <button 
+                    type="button" 
+                    @click.stop="fileInput?.click()"
+                    class="text-[11px] text-indigo-700 hover:bg-indigo-50 font-bold px-2 py-0.5 rounded-md transition cursor-pointer flex items-center space-x-1"
+                  >
+                    <Plus class="w-3 h-3" />
+                    <span>{{ t('btn_add_from_pc') }}</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    @click.stop="isVaultPickerOpen = true"
+                    class="text-[11px] text-slate-600 hover:bg-slate-100 font-medium px-2 py-0.5 rounded-md transition cursor-pointer flex items-center space-x-1"
+                  >
+                    <FolderLock class="w-3 h-3 text-blue-600" />
+                    <span>{{ t('btn_choose_from_vault') }}</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    @click.stop="inputFiles = []"
+                    class="text-[11px] text-slate-400 hover:text-red-500 font-medium px-1.5 py-0.5 transition cursor-pointer"
+                  >
+                    {{ t('btn_clear_list') }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Compact Scrollable File List -->
+              <div class="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+                <div 
+                  v-for="(file, fIdx) in inputFiles" 
+                  :key="fIdx"
+                  class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-white border border-slate-200/90 shadow-2xs hover:border-indigo-300 transition text-xs shrink-0"
+                >
+                  <div class="flex items-center space-x-2 min-w-0 flex-1">
+                    <span class="w-4 h-4 rounded bg-slate-100 text-slate-500 text-[10px] font-bold flex items-center justify-center shrink-0">
+                      {{ fIdx + 1 }}
+                    </span>
+                    <Images v-if="isImageFile(file)" class="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    <FileText v-else class="w-3.5 h-3.5 text-red-600 shrink-0" />
+                    <span class="font-bold text-slate-800 text-xs truncate max-w-[260px]" :title="file.name">
+                      {{ file.name }}
+                    </span>
+                    <span class="text-[10px] text-slate-400 font-mono shrink-0">
+                      {{ formatSize(file.size) }}
+                    </span>
+                  </div>
+
+                  <button 
+                    type="button" 
+                    @click.stop="removeFile(fIdx)" 
+                    class="text-slate-300 hover:text-red-500 p-1 rounded transition cursor-pointer shrink-0"
+                  >
+                    <X class="w-3 h-3" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Bottom Subtle Append Hint Strip -->
+              <div 
+                @click="fileInput?.click()"
+                class="px-3 py-1 bg-slate-100/70 border-t border-slate-200/60 text-[11px] text-slate-400 flex items-center justify-between cursor-pointer hover:bg-slate-200/50 transition shrink-0"
+              >
+                <span class="flex items-center space-x-1 text-slate-500 font-medium">
+                  <Plus class="w-3 h-3 text-indigo-600" />
+                  <span>{{ t('pipeline_drag_more_hint') }}</span>
+                </span>
+                <span class="text-[10px] text-slate-400">
+                  {{ t('picker_multi_page_accumulate') }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. Middle Bar: Compact Execution Launch Control (Tight 8px gap above and below!) -->
+          <div class="bg-gradient-to-r from-slate-50 to-indigo-50/40 rounded-2xl border border-indigo-100 p-2.5 space-y-1.5 shrink-0 shadow-2xs">
+            <div class="flex items-center justify-between text-xs px-0.5">
+              <div class="flex items-center space-x-2">
+                <span class="font-bold text-slate-700">{{ t('pipeline_ready_to_run') }}:</span>
+                <span class="font-black text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-100 shadow-2xs">
+                  {{ currentPipeline.name || currentPipeline.defaultName }}
+                </span>
+              </div>
+              <div class="text-slate-500 text-[11px]">
+                {{ activeWorkflowSteps.length }} {{ t('pipeline_steps_count_unit') }} · {{ inputFiles.length }} {{ t('pipeline_files_unit') }}
+              </div>
+            </div>
+
+            <!-- Primary Run Button (Sleek, Compact Height) -->
+            <button 
+              type="button"
+              data-testid="pipeline-run-btn"
+              @click="startExecution" 
+              :disabled="isRunning || inputFiles.length === 0 || activeWorkflowSteps.length === 0"
+              :class="[
+                'w-full py-2 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center space-x-2 shadow-md transition cursor-pointer',
+                (isRunning || inputFiles.length === 0 || activeWorkflowSteps.length === 0) 
+                  ? 'bg-slate-300 cursor-not-allowed text-slate-500 shadow-none' 
+                  : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-indigo-500/20 active:scale-[0.99]'
+              ]"
+            >
+              <Loader2 v-if="isRunning" class="w-4 h-4 animate-spin text-white" />
+              <Play v-else class="w-4 h-4 text-white fill-white" />
+              <span>{{ isRunning ? t('pipeline_btn_running') : t('pipeline_btn_run_main') }}</span>
+            </button>
+
+            <!-- Live Progress Bar when Running -->
+            <div v-if="isRunning" class="space-y-1 pt-0.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="font-bold text-indigo-700 flex items-center space-x-2 truncate">
+                  <span>{{ progressState.stepName }}:</span>
+                  <span class="text-slate-600 font-normal truncate">{{ progressState.stepMessage }}</span>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                  <span class="font-extrabold text-indigo-600">{{ progressState.overallPercent }}%</span>
+                  <button 
+                    @click="cancelExecution"
+                    class="text-[10px] text-red-500 hover:text-red-700 font-semibold px-1.5 py-0.5 rounded border border-red-200 bg-red-50 transition cursor-pointer"
+                  >
+                    {{ t('btn_cancel') || 'Cancel' }}
+                  </button>
+                </div>
+              </div>
+              <div class="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden">
+                <div 
+                  class="h-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-300 rounded-full"
+                  :style="{ width: progressState.overallPercent + '%' }"
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3. Bottom Box: Deliverables & Output Area (flex-1: Fills lower half with only 8px gap to run button) -->
+          <!-- State A: Deliverables Available -->
+          <div v-if="outputResults.length > 0" class="flex-1 min-h-[160px] bg-white rounded-2xl shadow-sm border border-emerald-200 p-2.5 flex flex-col overflow-hidden animate-in fade-in duration-300">
+            <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 shrink-0">
+              <div class="flex items-center space-x-1.5">
+                <CheckCircle2 class="w-4 h-4 text-emerald-600" />
+                <h3 class="font-bold text-slate-800 text-xs">
+                  {{ t('pipeline_completed_title') }} ({{ outputResults.length }} {{ t('pipeline_files_unit') }})
+                </h3>
+              </div>
+
+              <div class="flex items-center space-x-1.5">
+                <button 
+                  @click="downloadAllSequential"
+                  data-testid="pipeline-download-all-btn"
+                  class="flex items-center space-x-1 px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg transition cursor-pointer shadow-xs"
+                >
+                  <Download class="w-3 h-3" />
+                  <span>{{ t('pipeline_btn_download_all') }}</span>
+                </button>
+
+                <button 
+                  @click="saveAllToVault"
+                  class="flex items-center space-x-1 px-2.5 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold rounded-lg transition cursor-pointer"
+                >
+                  <FolderLock class="w-3 h-3 text-blue-600" />
+                  <span>{{ t('pipeline_btn_save_vault') }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Processed Files List -->
+            <div class="flex-1 overflow-y-auto space-y-1 mt-1 pr-1 custom-scrollbar">
+              <div 
+                v-for="(item, oIdx) in outputResults" 
+                :key="oIdx"
+                class="flex items-center justify-between p-1.5 px-2 rounded-lg bg-slate-50 hover:bg-white border border-slate-200/80 transition text-xs shrink-0"
+              >
+                <div class="flex items-center space-x-2 min-w-0 flex-1">
+                  <div class="w-5 h-5 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                    <FileCheck class="w-3 h-3" />
+                  </div>
+                  <span class="font-bold text-slate-800 text-xs truncate max-w-[220px]">{{ item.name }}</span>
+                  <span class="text-[10px] text-slate-400 font-mono">{{ formatSize(item.data.byteLength) }}</span>
+                </div>
+
+                <button 
+                  @click="downloadSingle(item)"
+                  class="flex items-center space-x-1 text-[11px] text-emerald-700 hover:text-emerald-900 font-semibold px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 rounded-md transition cursor-pointer shrink-0"
+                >
+                  <Download class="w-3 h-3" />
+                  <span>{{ t('pipeline_btn_download_single') }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- State B: Empty Deliverables State -->
+          <div v-else-if="!isRunning" class="flex-1 min-h-[160px] bg-slate-50/40 rounded-2xl border border-dashed border-slate-200/80 p-3 text-center flex flex-col items-center justify-center space-y-1">
+            <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-500 mx-auto flex items-center justify-center mb-0.5">
+              <Sparkles class="w-3.5 h-3.5" />
+            </div>
+            <div class="text-xs font-bold text-slate-700">
+              {{ t('pipeline_deliverables_empty_title') }}
+            </div>
+            <p class="text-[11px] text-slate-400 max-w-sm mx-auto leading-relaxed">
+              {{ t('pipeline_deliverables_empty_desc') }}
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Step Parameter Configuration Side Drawer -->
+      <div 
+        v-if="isConfigStepModalOpen && editingStepDraft"
+        class="absolute inset-0 z-50 overflow-hidden flex justify-end"
+      @keydown.esc="isConfigStepModalOpen = false"
+    >
+      <!-- Backdrop -->
+      <div 
+        class="absolute inset-0 bg-slate-900/20 backdrop-blur-sm transition-opacity" 
+        @click="isConfigStepModalOpen = false"
+      ></div>
+
+      <!-- Drawer Panel -->
+      <div class="relative w-full max-w-sm sm:max-w-md bg-white shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-300 ease-out border-l border-slate-200">
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-base flex items-center space-x-2">
+              <Settings2 class="w-5 h-5 text-indigo-600" />
+              <span>{{ t('pipeline_modal_config_title') }}: {{ currentEditingStepName }}</span>
+            </h3>
+            <p class="text-[11px] text-slate-500 mt-1">
+              {{ t('pipeline_modal_config_desc') }}
+            </p>
+          </div>
+          <button @click="isConfigStepModalOpen = false" class="text-slate-400 hover:text-slate-600 p-1.5 rounded-full hover:bg-slate-200 transition cursor-pointer">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Dynamic Form for Active Step Node (Scrollable Body) -->
+        <div class="flex-1 overflow-y-auto p-6 space-y-5 text-xs custom-scrollbar">
+          <!-- 1. Watermark Parameters -->
+          <div v-if="currentEditingStepNodeId === 'node_watermark'" class="space-y-4">
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_watermark_text') }}</label>
+              <input 
+                type="text" 
+                v-model="editingStepDraft.text" 
+                :placeholder="t('param_watermark_placeholder')"
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+              />
+            </div>
+            
+            <div class="grid grid-cols-2 gap-5">
+              <div>
+                <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                  <span>{{ t('wm_size_label') || 'Font Size' }}</span>
+                  <span class="text-indigo-600 font-mono">{{ editingStepDraft.size || 48 }}px</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="16" 
+                  max="96" 
+                  v-model.number="editingStepDraft.size" 
+                  class="w-full accent-indigo-600 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                  <span>{{ t('param_watermark_opacity') }}</span>
+                  <span class="text-indigo-600 font-mono">{{ Math.round((editingStepDraft.opacity || 0.3) * 100) }}%</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="0.05" 
+                  max="0.9" 
+                  step="0.05" 
+                  v-model.number="editingStepDraft.opacity" 
+                  class="w-full accent-indigo-600 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                  <span>{{ t('param_watermark_rotation') || 'Rotation' }}</span>
+                  <span class="text-indigo-600 font-mono">{{ editingStepDraft.rotation || -45 }}°</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="-90" 
+                  max="90" 
+                  step="22.5" 
+                  v-model.number="editingStepDraft.rotation" 
+                  class="w-full accent-indigo-600 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_watermark_color') }}</label>
+                <div class="flex items-center space-x-2">
+                  <div class="relative w-8 h-8 rounded-lg border border-slate-200 overflow-hidden cursor-pointer shrink-0 shadow-sm">
+                    <input type="color" v-model="editingStepDraft.color" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                    <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.color || '#dc2626' }"></div>
+                  </div>
+                  <span class="font-mono text-[11px] text-slate-700 font-bold uppercase">{{ editingStepDraft.color || '#dc2626' }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100">
+              <label class="flex items-start space-x-2.5 cursor-pointer group">
+                <input type="checkbox" v-model="editingStepDraft.enableTamperProtection" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" />
+                <div>
+                  <div class="font-bold text-slate-800 group-hover:text-indigo-700 transition">{{ t('wm_protection_label') || 'Read-only Tamper Protection' }}</div>
+                  <div class="text-[11px] text-slate-400 mt-0.5">{{ t('wm_protection_hint') || 'Allow viewing, prevent editing' }}</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- 2. Compress Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_compress'" class="space-y-2.5">
+            <label class="block text-slate-700 font-bold mb-1">{{ t('param_compress_level') }}</label>
+            <div class="flex flex-col space-y-2.5">
+              <button 
+                type="button"
+                @click="editingStepDraft.level = 'extreme'"
+                :class="[
+                  'p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col relative overflow-hidden',
+                  editingStepDraft.level === 'extreme' 
+                    ? 'border-rose-500 bg-rose-50/70 text-rose-800 shadow-xs' 
+                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100'
+                ]"
+              >
+                <div class="flex items-center justify-between w-full">
+                  <div class="text-sm font-bold flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+                    <span>{{ t('compress_level_extreme') }}</span>
+                  </div>
+                </div>
+                <div class="text-[11px] mt-1 opacity-80 leading-relaxed">{{ t('compress_level_extreme_desc') }}</div>
+              </button>
+
+              <button 
+                type="button"
+                @click="editingStepDraft.level = 'balanced'"
+                :class="[
+                  'p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col relative overflow-hidden',
+                  editingStepDraft.level === 'balanced' 
+                    ? 'border-amber-500 bg-amber-50/70 text-amber-800 shadow-xs' 
+                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100'
+                ]"
+              >
+                <div class="flex items-center justify-between w-full">
+                  <div class="text-sm font-bold flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
+                    <span>{{ t('compress_level_balanced') }}</span>
+                  </div>
+                </div>
+                <div class="text-[11px] mt-1 opacity-80 leading-relaxed">{{ t('compress_level_balanced_desc') }}</div>
+              </button>
+
+              <button 
+                type="button"
+                @click="editingStepDraft.level = 'lossless'"
+                :class="[
+                  'p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col relative overflow-hidden',
+                  editingStepDraft.level === 'lossless' 
+                    ? 'border-emerald-500 bg-emerald-50/70 text-emerald-800 shadow-xs' 
+                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100'
+                ]"
+              >
+                <div class="flex items-center justify-between w-full">
+                  <div class="text-sm font-bold flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+                    <span>{{ t('compress_level_lossless') }}</span>
+                  </div>
+                </div>
+                <div class="text-[11px] mt-1 opacity-80 leading-relaxed">{{ t('compress_level_lossless_desc') }}</div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Sanitize Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_sanitize'" class="space-y-3">
+            <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium transition">
+              <input type="checkbox" v-model="editingStepDraft.stripDocInfo" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+              <div>
+                <div class="font-bold text-slate-800">{{ t('param_sanitize_docinfo') }}</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">{{ t('pipe_san_meta', 'Clear PDF Title, Author, Creator, ModDate') }}</div>
+              </div>
+            </label>
+            <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium transition">
+              <input type="checkbox" v-model="editingStepDraft.stripPieceInfo" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+              <div>
+                <div class="font-bold text-slate-800">{{ t('param_sanitize_pieceinfo') }}</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">{{ t('pipe_san_dict', 'Erase private dictionaries (Illustrator, Photoshop)') }}</div>
+              </div>
+            </label>
+            <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium transition">
+              <input type="checkbox" v-model="editingStepDraft.stripAnnots" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+              <div>
+                <div class="font-bold text-slate-800">{{ t('param_sanitize_annots') }}</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">{{ t('pipe_san_annots_desc', 'Remove comments, sticky notes, hyperlinks, and flatten forms') }}</div>
+              </div>
+            </label>
+          </div>
+
+          <!-- 4. Img2Pdf Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_img2pdf'" class="space-y-3.5">
+            <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium">
+              <input type="checkbox" v-model="editingStepDraft.mergeIntoOne" class="rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+              <div>
+                <div class="font-bold text-slate-800">{{ t('param_img2pdf_merge') }}</div>
+                <div class="text-[11px] text-slate-400 mt-0.5">{{ t('pipe_img2pdf_desc', 'Merge multiple images sequentially into one PDF') }}</div>
+              </div>
+            </label>
+            <div class="p-4 rounded-xl border border-slate-200 space-y-2.5">
+              <span class="text-slate-800 font-bold block">{{ t('param_img2pdf_pagesize') }}</span>
+              <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-5">
+                <label class="inline-flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" value="a4" v-model="editingStepDraft.pageSize" class="text-indigo-600 w-4 h-4" />
+                  <span class="font-semibold text-slate-700">{{ t('pipe_img2pdf_a4', 'Standard A4') }}</span>
+                </label>
+                <label class="inline-flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" value="fit_image" v-model="editingStepDraft.pageSize" class="text-indigo-600 w-4 h-4" />
+                  <span class="font-semibold text-slate-700">{{ t('pipe_img2pdf_fit', 'Fit to Image') }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. Unlock Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_unlock'" class="space-y-2">
+            <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_unlock_pwd') }}</label>
+            <input 
+              type="password" 
+              v-model="editingStepDraft.password" 
+              :placeholder="t('param_unlock_pwd_hint')"
+              class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+            />
+          </div>
+
+          <!-- Organize Parameters (Normalize) -->
+          <div v-else-if="currentEditingStepNodeId === 'node_organize'" class="space-y-4">
+            <!-- Paper Size -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_org_size') }}</label>
+              <div class="space-y-2">
+                <button type="button" @click="editingStepDraft.standardizeSize = 'none'"
+                  :class="['w-full p-3 rounded-xl border text-left transition cursor-pointer', editingStepDraft.standardizeSize === 'none' ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <div class="text-xs">{{ t('param_org_sz_none') }}</div>
+                </button>
+                <button type="button" @click="editingStepDraft.standardizeSize = 'a4'"
+                  :class="['w-full p-3 rounded-xl border text-left transition cursor-pointer', editingStepDraft.standardizeSize === 'a4' ? 'border-amber-500 bg-amber-50/70 text-amber-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <div class="text-xs flex items-center space-x-1.5"><Wand2 class="w-3.5 h-3.5"/><span>{{ t('param_org_sz_a4') }}</span></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Orientation -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_org_orient') }}</label>
+              <div class="space-y-2">
+                <button type="button" @click="editingStepDraft.forceOrientation = 'none'"
+                  :class="['w-full p-3 rounded-xl border text-left transition cursor-pointer', editingStepDraft.forceOrientation === 'none' ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <div class="text-xs">{{ t('param_org_or_none') }}</div>
+                </button>
+                <button type="button" @click="editingStepDraft.forceOrientation = 'portrait'"
+                  :class="['w-full p-3 rounded-xl border text-left transition cursor-pointer', editingStepDraft.forceOrientation === 'portrait' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <div class="text-xs flex items-center space-x-1.5"><Wand2 class="w-3.5 h-3.5"/><span>{{ t('param_org_or_port') }}</span></div>
+                </button>
+                <button type="button" @click="editingStepDraft.forceOrientation = 'landscape'"
+                  :class="['w-full p-3 rounded-xl border text-left transition cursor-pointer', editingStepDraft.forceOrientation === 'landscape' ? 'border-emerald-500 bg-emerald-50/70 text-emerald-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <div class="text-xs flex items-center space-x-1.5"><Wand2 class="w-3.5 h-3.5"/><span>{{ t('param_org_or_land') }}</span></div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Rotate All -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_org_rotate') || 'Rotate All Pages' }}</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" @click="editingStepDraft.rotateAll = 'none'"
+                  :class="['p-3 rounded-xl border text-center transition cursor-pointer', editingStepDraft.rotateAll === 'none' ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <div class="text-xs">{{ t('param_org_rot_none') }}</div>
+                </button>
+                <button type="button" @click="editingStepDraft.rotateAll = '90'"
+                  :class="['p-3 rounded-xl border text-center transition cursor-pointer flex items-center justify-center space-x-1', editingStepDraft.rotateAll === '90' ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <RotateCw class="w-3.5 h-3.5"/><span class="text-xs">90°</span>
+                </button>
+                <button type="button" @click="editingStepDraft.rotateAll = '-90'"
+                  :class="['p-3 rounded-xl border text-center transition cursor-pointer flex items-center justify-center space-x-1', editingStepDraft.rotateAll === '-90' ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <RotateCcw class="w-3.5 h-3.5"/><span class="text-xs">-90°</span>
+                </button>
+                <button type="button" @click="editingStepDraft.rotateAll = '180'"
+                  :class="['p-3 rounded-xl border text-center transition cursor-pointer flex items-center justify-center space-x-1', editingStepDraft.rotateAll === '180' ? 'border-indigo-500 bg-indigo-50/70 text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100']">
+                  <RefreshCw class="w-3.5 h-3.5"/><span class="text-xs">180°</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Split Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_split'" class="space-y-4">
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_split_mode') }}</label>
+              <div class="space-y-2">
+                <label class="flex items-center space-x-3 p-3.5 rounded-xl border transition cursor-pointer text-slate-700 font-medium"
+                  :class="editingStepDraft.mode === 'extract_range' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'">
+                  <input type="radio" value="extract_range" v-model="editingStepDraft.mode" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+                  <span class="font-bold text-slate-800 text-sm">{{ t('param_split_extract') }}</span>
+                </label>
+                <label class="flex items-center space-x-3 p-3.5 rounded-xl border transition cursor-pointer text-slate-700 font-medium"
+                  :class="editingStepDraft.mode === 'burst' ? 'border-indigo-500 bg-indigo-50/50' : 'border-slate-200 hover:bg-slate-50'">
+                  <input type="radio" value="burst" v-model="editingStepDraft.mode" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+                  <span class="font-bold text-slate-800 text-sm">{{ t('param_split_burst') }}</span>
+                </label>
+              </div>
+            </div>
+
+            <div v-if="editingStepDraft.mode === 'extract_range'" class="p-3.5 rounded-xl border border-indigo-100 bg-indigo-50/30 space-y-3">
+              <label class="block text-slate-700 font-bold">{{ t('param_split_range') }}</label>
+              <div class="grid grid-cols-2 gap-2">
+                <button type="button" @click="editingStepDraft.rangeType = 'first'"
+                  :class="['p-2 rounded-lg border text-center transition cursor-pointer text-xs', editingStepDraft.rangeType === 'first' ? 'border-indigo-500 bg-white text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-white/50 text-slate-600 hover:bg-white']">
+                  {{ t('param_split_range_first') }}
+                </button>
+                <button type="button" @click="editingStepDraft.rangeType = 'last'"
+                  :class="['p-2 rounded-lg border text-center transition cursor-pointer text-xs', editingStepDraft.rangeType === 'last' ? 'border-indigo-500 bg-white text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-white/50 text-slate-600 hover:bg-white']">
+                  {{ t('param_split_range_last') }}
+                </button>
+                <button type="button" @click="editingStepDraft.rangeType = 'custom'"
+                  :class="['p-2 rounded-lg border text-center transition cursor-pointer text-xs col-span-2', editingStepDraft.rangeType === 'custom' ? 'border-indigo-500 bg-white text-indigo-700 font-bold shadow-xs' : 'border-slate-200 bg-white/50 text-slate-600 hover:bg-white']">
+                  {{ t('param_split_range_custom') }}
+                </button>
+              </div>
+              <div v-if="editingStepDraft.rangeType === 'custom'" class="pt-1">
+                <input 
+                  type="text" 
+                  v-model="editingStepDraft.rangeExpr" 
+                  :placeholder="t('param_split_range_ph')"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm bg-white"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Sign Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_sign'" class="space-y-4">
+            <!-- Stamp Image Upload -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_sign_stamp') }}</label>
+              <div v-if="editingStepDraft.stampDataUrl" class="relative group rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center p-4 bg-slate-50/50 h-32">
+                <img :src="editingStepDraft.stampDataUrl" class="max-h-full max-w-full object-contain mix-blend-multiply drop-shadow-sm" />
+                <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                  <button type="button" @click="editingStepDraft.stampDataUrl = ''" class="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 cursor-pointer shadow-lg transform hover:scale-105 transition">
+                    <Trash2 class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <label v-else class="cursor-pointer flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition group h-32 text-slate-500 hover:text-indigo-600">
+                <input type="file" accept="image/png, image/jpeg" class="hidden" @change="e => handleStampUpload(e, editingStepDraft)" />
+                <Plus class="w-6 h-6 mb-2 group-hover:scale-110 transition" />
+                <span class="text-xs font-bold">{{ t('param_sign_stamp_upload') }}</span>
+              </label>
+              <p class="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{{ t('param_sign_stamp_hint') }}</p>
+            </div>
+
+            <!-- Placement -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_sign_placement') }}</label>
+              <select v-model="editingStepDraft.placement" class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm cursor-pointer bg-white">
+                <option value="last_page_bottom_right">{{ t('param_sign_place_last') }}</option>
+                <option value="first_page">{{ t('param_sign_place_first') }}</option>
+                <option value="all_pages">{{ t('param_sign_place_all') }}</option>
+              </select>
+            </div>
+
+            <!-- Scale & Date -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_sign_scale') }}</label>
+                <div class="flex items-center space-x-2">
+                  <input type="range" min="0.1" max="1.0" step="0.05" v-model.number="editingStepDraft.scale" class="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-indigo-600" />
+                  <span class="text-xs font-mono text-slate-500 shrink-0 w-8 text-right">{{ Math.round(editingStepDraft.scale * 100) }}%</span>
+                </div>
+              </div>
+              <div>
+                <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_sign_add_date') }}</label>
+                <label class="relative inline-flex items-center cursor-pointer mt-1">
+                  <input type="checkbox" v-model="editingStepDraft.addDateStamp" class="sr-only peer">
+                  <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. Merge Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_merge'" class="space-y-4">
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_merge_sort') }}</label>
+              <div class="space-y-2">
+                <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium">
+                  <input type="radio" value="order" v-model="editingStepDraft.sortBy" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+                  <div>
+                    <div class="font-bold text-slate-800">{{ t('param_merge_order_title') }}</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">{{ t('param_merge_order_desc') }}</div>
+                  </div>
+                </label>
+                <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium">
+                  <input type="radio" value="name_asc" v-model="editingStepDraft.sortBy" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+                  <div>
+                    <div class="font-bold text-slate-800">{{ t('param_merge_name_title') }}</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">{{ t('param_merge_name_desc') }}</div>
+                  </div>
+                </label>
+                <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium">
+                  <input type="radio" value="date" v-model="editingStepDraft.sortBy" class="text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+                  <div>
+                    <div class="font-bold text-slate-800">{{ t('param_merge_date_title') }}</div>
+                    <div class="text-[11px] text-slate-400 mt-0.5">{{ t('param_merge_date_desc') }}</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-100">
+              <label class="flex items-start space-x-2.5 cursor-pointer group">
+                <input type="checkbox" v-model="editingStepDraft.padBlankPageIfOdd" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" />
+                <div>
+                  <div class="font-bold text-slate-800 group-hover:text-indigo-700 transition">{{ t('param_merge_pad_title') }}</div>
+                  <div class="text-[11px] text-slate-400 mt-0.5">{{ t('param_merge_pad_desc') }}</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Fallback Generic Params -->
+          <div v-else class="text-slate-500 text-xs p-4 bg-slate-50 rounded-xl font-mono">
+            {{ formatStepParams({ params: editingStepDraft }) }}
+          </div>
+        </div>
+
+        <!-- Drawer Footer Actions -->
+        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between shrink-0">
+          <button 
+            type="button" 
+            @click="resetStepToDefault"
+            class="text-slate-500 hover:text-slate-700 text-[11px] font-semibold hover:underline cursor-pointer"
+          >
+            {{ t('pipeline_btn_reset_step_default') }}
+          </button>
+
+          <div class="flex items-center space-x-2.5">
+            <button 
+              type="button" 
+              @click="isConfigStepModalOpen = false"
+              class="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 font-bold text-xs hover:bg-slate-100 transition cursor-pointer"
+            >
+              {{ t('btn_cancel') || 'Cancel' }}
+            </button>
+            <button 
+              type="button" 
+              @click="saveStepConfig"
+              class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs transition cursor-pointer shadow-md shadow-indigo-500/20 active:scale-95"
+            >
+              {{ t('pipeline_btn_save_config') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+    <!-- Save Custom Flow Modal -->
+    <div 
+      v-if="isSaveFlowModalOpen"
+      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+      @click.self="isSaveFlowModalOpen = false"
+      @keydown.esc="isSaveFlowModalOpen = false"
+    >
+      <div class="bg-white rounded-3xl max-w-sm w-full shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
+        <!-- Header -->
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50 shrink-0">
+          <h3 class="text-base font-semibold text-slate-800 flex items-center space-x-2">
+            <Pencil v-if="saveFlowMode === 'rename'" class="w-5 h-5 text-indigo-600" />
+            <BookmarkPlus v-else class="w-5 h-5 text-indigo-600" />
+            <span>{{ saveFlowMode === 'rename' ? t('pipeline_modal_rename_title') : t('pipeline_save_flow_btn') }}</span>
+          </h3>
+          <button @click="isSaveFlowModalOpen = false" class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-5 overflow-y-auto space-y-4">
+          <!-- Name Input -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              {{ t('pipeline_flow_name') }} <span class="text-red-500">*</span>
+            </label>
+            <input
+              v-model="customFlowNameInput"
+              type="text"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+              :placeholder="t('pipeline_flow_name_placeholder')"
+              @keyup.enter="confirmSaveFlow"
+            />
+          </div>
+
+          <!-- Desc Input -->
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">
+              {{ t('pipeline_flow_desc') }} <span class="text-slate-400 text-xs font-normal">({{ t('optional') }})</span>
+            </label>
+            <textarea
+              v-model="customFlowDescInput"
+              rows="3"
+              class="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm resize-none"
+              :placeholder="t('pipeline_flow_desc_placeholder')"
+              @keyup.ctrl.enter="confirmSaveFlow"
+              @keyup.meta.enter="confirmSaveFlow"
+            ></textarea>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-5 py-4 border-t border-slate-100 bg-slate-50 flex justify-end space-x-3 shrink-0">
+          <button
+            type="button"
+            @click="isSaveFlowModalOpen = false"
+            class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg shadow-sm hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 cursor-pointer"
+          >
+            {{ t('btn_cancel') || 'Cancel' }}
+          </button>
+          <button
+            type="button"
+            @click="confirmSaveFlow"
+            :disabled="!customFlowNameInput.trim()"
+            class="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 cursor-pointer"
+          >
+            <Save class="w-4 h-4" />
+            <span>{{ t('btn_save') || 'Fallback' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Custom Flow Quota Modal (Triggered when Free user tries to save > 1 flow) -->
+    <div 
+      v-if="isFlowQuotaModalOpen"
+      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+      @click.self="isFlowQuotaModalOpen = false"
+      @keydown.esc="isFlowQuotaModalOpen = false"
+    >
+      <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 space-y-4 animate-in zoom-in-95 duration-200">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center space-x-2">
+            <div class="w-8 h-8 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold">
+              <BookmarkPlus class="w-4 h-4" />
+            </div>
+            <h3 class="font-extrabold text-slate-800 text-base">
+              {{ t('pipeline_quota_modal_title') }}
+            </h3>
+          </div>
+          <button @click="isFlowQuotaModalOpen = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition cursor-pointer">
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="space-y-3 text-xs text-slate-600">
+          <p class="leading-relaxed">
+            {{ t('pipeline_quota_modal_desc') }}
+          </p>
+
+          <div v-if="savedUserFlows.length > 0" class="space-y-1.5">
+            <div class="text-[11px] text-slate-500 font-semibold">{{ t('pipeline_select_overwrite_label') }}:</div>
+            <div class="space-y-1 max-h-36 overflow-y-auto pr-1 custom-scrollbar">
+              <label 
+                v-for="flow in savedUserFlows" 
+                :key="flow.id"
+                class="flex items-center justify-between p-2 rounded-xl border cursor-pointer transition text-xs select-none"
+                :class="selectedOverwriteFlowId === flow.id ? 'border-indigo-500 bg-indigo-50/60 font-bold text-indigo-900 shadow-2xs' : 'border-slate-200 bg-slate-50/60 hover:bg-slate-100 text-slate-700'"
+              >
+                <div class="flex items-center space-x-2 min-w-0 flex-1">
+                  <input 
+                    type="radio" 
+                    :value="flow.id" 
+                    v-model="selectedOverwriteFlowId" 
+                    class="text-indigo-600 focus:ring-indigo-500" 
+                  />
+                  <span class="truncate">⭐ {{ flow.name }}</span>
+                </div>
+                <span class="text-[10px] text-slate-400 font-mono shrink-0">({{ flow.steps.length }} {{ t('pipeline_steps_count_unit') }})</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-2">
+          <button 
+            type="button" 
+            @click="handleOverwriteExistingFlow"
+            class="w-full sm:w-auto px-3.5 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 font-semibold text-xs transition cursor-pointer"
+          >
+            {{ t('pipeline_btn_overwrite_flow') }}
+          </button>
+          <button 
+            type="button" 
+            @click="isFlowQuotaModalOpen = false; emit('open-enterprise')"
+            class="w-full sm:w-auto px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-xs transition cursor-pointer shadow-sm flex items-center justify-center space-x-1"
+          >
+            <Crown class="w-3.5 h-3.5 text-white" />
+            <span>{{ t('pipeline_btn_upgrade_unlimited') }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Step Modal -->
+    <div 
+      v-if="addStepModal"
+      class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+      @click.self="addStepModal = false"
+      @keydown.esc="addStepModal = false"
+    >
+      <div class="bg-white rounded-3xl max-w-xl w-full max-h-[85vh] p-5 sm:p-6 shadow-2xl border border-slate-100 flex flex-col relative animate-in zoom-in-95 duration-200">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
+          <div>
+            <h3 class="font-extrabold text-slate-900 text-sm sm:text-base">
+              {{ t('pipeline_modal_add_step_title') }}
+            </h3>
+            <p class="text-xs text-slate-400">
+              {{ t('pipeline_modal_add_step_desc') }}
+            </p>
+          </div>
+          <button 
+            @click="addStepModal = false" 
+            class="text-slate-400 hover:text-slate-700 p-1.5 rounded-full hover:bg-slate-100 transition cursor-pointer"
+          >
+            <X class="w-5 h-5" />
+          </button>
+        </div>
+
+        <!-- Node List -->
+        <div class="py-3 space-y-2 overflow-y-auto max-h-[55vh] pr-1 custom-scrollbar">
+          <div 
+            v-for="(node, nId) in AVAILABLE_NODES" 
+            :key="nId"
+            @click="addNodeToFlow(nId)"
+            class="group p-3 rounded-xl border border-slate-200 hover:border-indigo-400 hover:bg-indigo-50/40 transition cursor-pointer flex items-center justify-between gap-3"
+          >
+            <div class="flex items-center space-x-3 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-slate-100 group-hover:bg-indigo-100 text-slate-700 group-hover:text-indigo-600 flex items-center justify-center shrink-0 transition shadow-2xs">
+                <Plus class="w-4 h-4" />
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-slate-800 text-xs sm:text-sm group-hover:text-indigo-900">
+                  {{ t(node.nameKey, node.defaultName) }}
+                </div>
+                <div class="text-[11px] text-slate-400 truncate">
+                  {{ t(node.descKey, node.defaultDesc) }}
+                </div>
+              </div>
+            </div>
+
+            <span class="text-xs font-bold text-indigo-600 bg-indigo-50 group-hover:bg-indigo-600 group-hover:text-white px-2.5 py-1 rounded-lg transition shrink-0">
+              {{ t('pipeline_btn_add_step_short') }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vault File Picker Modal -->
+    <VaultFilePickerModal 
+      :is-open="isVaultPickerOpen" 
+      :multiple="true"
+      @close="isVaultPickerOpen = false" 
+      @select-files="handleVaultFilesSelected" 
+    />
+  </section>
+</template>
+
+<script setup>
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+
+import { 
+  Zap, 
+  Sparkles, 
+  Sliders, 
+  Crown, 
+  Play, 
+  Loader2, 
+  UploadCloud, 
+  FileText, 
+  X, 
+  Download, 
+  FolderLock, 
+  CheckCircle2, 
+  FileCheck, 
+  Plus, 
+  Trash2, 
+  ArrowUp, 
+  ArrowDown, 
+  ShieldCheck, 
+  Images, 
+  Stamp, 
+  Lock, 
+  Minimize2, 
+  Scissors, 
+  RotateCcw,
+  Bookmark,
+  BookmarkPlus,
+  ChevronDown,
+  Settings2,
+  Copy,
+  Save,
+  AlertCircle,
+  Info
+,
+  Pencil,
+  GripVertical,
+  Wand2,
+  RotateCw,
+  RefreshCw
+} from 'lucide-vue-next';
+import { PRESET_PIPELINES } from '../utils/pipeline/presetPipelines';
+import { AVAILABLE_NODES } from '../utils/pipeline/pipelineTypes';
+import { runPipeline } from '../utils/pipeline/pipelineRunner';
+import { loadUserPipelines, saveUserPipeline, deleteUserPipeline } from '../utils/pipeline/userPipelines';
+import confetti from 'canvas-confetti';
+import { saveFile } from '../utils/vaultDb';
+import { siteConfig } from '../config/siteConfig';
+import { isProSupporter } from '../utils/security/certificateStore';
+import { t } from '../i18n';
+import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+
+const emit = defineEmits(['open-enterprise', 'send-to-tool']);
+
+const fileInput = ref(null);
+const isVaultPickerOpen = ref(false);
+const addStepModal = ref(false);
+const isSaveFlowModalOpen = ref(false);
+const saveFlowMode = ref('new'); // 'new' | 'update'
+const isFlowQuotaModalOpen = ref(false);
+const selectedOverwriteFlowId = ref('');
+const customFlowNameInput = ref('');
+const customFlowDescInput = ref('');
+
+// Step Configuration Modal State
+const isConfigStepModalOpen = ref(false);
+const editingStepIndex = ref(-1);
+const editingStepDraft = ref(null);
+
+// Flow persistence & selection
+const savedUserFlows = ref(loadUserPipelines());
+const activeFlowSelectionKey = ref('preset_' + PRESET_PIPELINES[0].id);
+
+// Active Step List State
+const activeWorkflowSteps = ref(
+  JSON.parse(JSON.stringify(PRESET_PIPELINES[0].steps))
+);
+
+// Native Drag and Drop State
+const draggedStepIndex = ref(-1);
+
+function onDragStart(evt, idx) {
+  draggedStepIndex.value = idx;
+  evt.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(evt, targetIdx) {
+  if (draggedStepIndex.value === -1) return;
+  evt.preventDefault(); // Necessary to allow dropping
+  
+  // Real-time swapping while dragging
+  if (draggedStepIndex.value !== targetIdx) {
+    const item = activeWorkflowSteps.value.splice(draggedStepIndex.value, 1)[0];
+    activeWorkflowSteps.value.splice(targetIdx, 0, item);
+    draggedStepIndex.value = targetIdx; // Update active index
+  }
+}
+
+function onDrop(evt, targetIdx) {
+  draggedStepIndex.value = -1;
+}
+
+function onDragEnd() {
+  draggedStepIndex.value = -1;
+}
+
+// File & Execution State
+const inputFiles = ref([]);
+const isDragging = ref(false);
+const isRunning = ref(false);
+const outputResults = ref([]);
+let abortController = null;
+
+const progressState = ref({
+  overallPercent: 0,
+  stepName: '',
+  stepMessage: ''
+});
+
+// Current active flow record
+const currentCustomFlowRecord = computed(() => {
+  if (!activeFlowSelectionKey.value.startsWith('user_')) return null;
+  const flowId = activeFlowSelectionKey.value.replace('user_', '');
+  return savedUserFlows.value.find(f => f.id === flowId) || null;
+});
+
+const currentPresetRecord = computed(() => {
+  if (!activeFlowSelectionKey.value.startsWith('preset_')) return null;
+  const pId = activeFlowSelectionKey.value.replace('preset_', '');
+  return PRESET_PIPELINES.find(p => p.id === pId) || PRESET_PIPELINES[0];
+});
+
+const currentPipelineDesc = computed(() => {
+  if (currentPresetRecord.value) {
+    return t(currentPresetRecord.value.descKey, currentPresetRecord.value.defaultDesc);
+  }
+  if (currentCustomFlowRecord.value) {
+    return currentCustomFlowRecord.value.desc || currentCustomFlowRecord.value.name;
+  }
+  return t('pipeline_new_blank_flow');
+});
+
+// Detects if steps/params have diverged from selected original
+const isCurrentFlowModified = computed(() => {
+  if (currentPresetRecord.value) {
+    return JSON.stringify(activeWorkflowSteps.value) !== JSON.stringify(currentPresetRecord.value.steps);
+  }
+  if (currentCustomFlowRecord.value) {
+    return JSON.stringify(activeWorkflowSteps.value) !== JSON.stringify(currentCustomFlowRecord.value.steps);
+  }
+  return activeWorkflowSteps.value.length > 0;
+});
+
+const currentPipeline = computed(() => {
+  if (currentPresetRecord.value) {
+    return {
+      ...currentPresetRecord.value,
+      steps: activeWorkflowSteps.value
+    };
+  }
+  if (currentCustomFlowRecord.value) {
+    return {
+      ...currentCustomFlowRecord.value,
+      steps: activeWorkflowSteps.value
+    };
+  }
+  return {
+    id: 'blank_flow',
+    name: t('pipeline_custom_default_name'),
+    steps: activeWorkflowSteps.value,
+    exportConfig: { destination: 'download_files' }
+  };
+});
+
+// Active Editing Step Computed
+const currentEditingStepNodeId = computed(() => {
+  if (editingStepIndex.value < 0 || editingStepIndex.value >= activeWorkflowSteps.value.length) return '';
+  return activeWorkflowSteps.value[editingStepIndex.value].nodeId;
+});
+
+const currentEditingStepName = computed(() => {
+  return getNodeName(currentEditingStepNodeId.value);
+});
+
+function openStepConfigModal(idx) {
+  editingStepIndex.value = idx;
+  const step = activeWorkflowSteps.value[idx];
+  editingStepDraft.value = JSON.parse(JSON.stringify(step.params || {}));
+  isConfigStepModalOpen.value = true;
+}
+
+function saveStepConfig() {
+  if (editingStepIndex.value >= 0 && editingStepIndex.value < activeWorkflowSteps.value.length) {
+    activeWorkflowSteps.value[editingStepIndex.value].params = JSON.parse(JSON.stringify(editingStepDraft.value));
+  }
+  isConfigStepModalOpen.value = false;
+}
+
+function resetStepToDefault() {
+  if (editingStepIndex.value >= 0 && editingStepIndex.value < activeWorkflowSteps.value.length) {
+    const step = activeWorkflowSteps.value[editingStepIndex.value];
+    const node = AVAILABLE_NODES[step.nodeId];
+    if (node && node.defaultParams) {
+      editingStepDraft.value = JSON.parse(JSON.stringify(node.defaultParams));
+    }
+  }
+}
+
+function getStepSummary(step) {
+  if (!step || !step.params) return '';
+  switch (step.nodeId) {
+    case 'node_watermark': {
+      const txt = step.params.text || t('pipe_wm_empty', 'No Text');
+      const size = step.params.size || 48;
+      const color = step.params.color || '#dc2626';
+      return `"${txt}" · ${size}px · ${color.toUpperCase()}`;
+    }
+    case 'node_organize': {
+      const parts = [];
+      if (step.params.standardizeSize === 'a4') parts.push('A4');
+      if (step.params.forceOrientation === 'portrait') parts.push(t('param_org_or_port'));
+      if (step.params.forceOrientation === 'landscape') parts.push(t('param_org_or_land'));
+      if (step.params.rotateAll && step.params.rotateAll !== 'none') parts.push(`↻ ${step.params.rotateAll}°`);
+      return parts.length > 0 ? parts.join(' · ') : t('param_org_sz_none');
+    }
+    case 'node_compress': {
+      const map = {
+        balanced: t('compress_level_balanced', 'Balanced'),
+        extreme: t('compress_level_extreme', 'Extreme'),
+        lossless: t('compress_level_lossless', 'Lossless')
+      };
+      return map[step.params.level] || t('compress_level_balanced', 'Balanced');
+    }
+    case 'node_sanitize': {
+      if (step.params.stripDocInfo && step.params.stripPieceInfo && step.params.stripAnnots) {
+        return t('pipe_san_all', 'Erase all metadata');
+      }
+      const parts = [];
+      if (step.params.stripDocInfo) parts.push(t('pipe_san_info', 'Clear doc info'));
+      if (step.params.stripAnnots) parts.push('Remove annots');
+      return parts.length > 0 ? parts.join(' + ') : t('pipe_san_basic', 'Sanitize');
+    }
+    case 'node_img2pdf': {
+      const merge = step.params.mergeIntoOne ? t('pipe_merge_one', 'Merged') : t('pipe_merge_split', '1 Page/Img');
+      const sz = step.params.pageSize === 'a4' ? 'A4' : t('pipe_sz_fit', 'Original');
+      return `${merge} · ${sz}`;
+    }
+    case 'node_sign': {
+      let txt = step.params.stampDataUrl ? t('pipe_pwd_set', 'Set') : t('pipe_pwd_unset', 'Not Set');
+      if (step.params.placement === 'last_page_bottom_right') txt += ' · ' + (t('param_sign_place_last') || 'Last Page');
+      else if (step.params.placement === 'first_page') txt += ' · ' + (t('param_sign_place_first') || 'First Page');
+      else if (step.params.placement === 'all_pages') txt += ' · ' + (t('param_sign_place_all') || 'All Pages');
+      return txt;
+    }
+    case 'node_unlock': {
+      return step.params.password ? t('pipe_pwd_set', 'Password Set') : t('pipe_pwd_unset', 'No Password');
+    }
+    case 'node_split': {
+      if (step.params.mode === 'burst') return t('param_split_burst').split('(')[0].trim();
+      if (step.params.rangeType === 'first') return t('param_split_range_first');
+      if (step.params.rangeType === 'last') return t('param_split_range_last');
+      return step.params.rangeExpr || '1-3';
+    }
+    case 'node_merge': {
+      const sortMap = {
+        order: t('pipe_merge_sort_order'),
+        name_asc: t('pipe_merge_sort_name'),
+        date: t('pipe_merge_sort_date')
+      };
+      const sortBy = sortMap[step.params.sortBy] || t('pipe_merge_sort_order');
+      const pad = step.params.padBlankPageIfOdd ? t('pipe_merge_pad_odd') : '';
+      return `${sortBy}${pad}`;
+    }
+    default:
+      return formatStepParams(step);
+  }
+}
+
+function getStepTagClass(nodeId) {
+  switch (nodeId) {
+    case 'node_watermark':
+      return 'bg-amber-50 text-amber-700 border-amber-200/80';
+    case 'node_compress':
+      return 'bg-blue-50 text-blue-700 border-blue-200/80';
+    case 'node_sanitize':
+      return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+    case 'node_img2pdf':
+      return 'bg-purple-50 text-purple-700 border-purple-200/80';
+    case 'node_unlock':
+      return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
+    case 'node_organize':
+      return 'bg-cyan-50 text-cyan-700 border-cyan-200/80';
+    default:
+      return 'bg-slate-100 text-slate-600 border-slate-200';
+  }
+}
+
+function handleFlowChange() {
+  if (currentPresetRecord.value) {
+    activeWorkflowSteps.value = JSON.parse(JSON.stringify(currentPresetRecord.value.steps));
+  } else if (currentCustomFlowRecord.value) {
+    activeWorkflowSteps.value = JSON.parse(JSON.stringify(currentCustomFlowRecord.value.steps));
+  } else if (activeFlowSelectionKey.value === 'new_blank') {
+    activeWorkflowSteps.value = [];
+  }
+}
+
+function handleStampUpload(e, draft) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (event) => {
+    draft.stampDataUrl = event.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetCurrentFlow() {
+  handleFlowChange();
+}
+
+function setSaveFlowMode(mode) {
+  saveFlowMode.value = mode;
+  if (mode === 'new') {
+    if (currentCustomFlowRecord.value && customFlowNameInput.value === currentCustomFlowRecord.value.name) {
+      const copySuffix = ' (' + (t('pipeline_flow_copy_suffix') || 'Copy') + ')';
+      customFlowNameInput.value = currentCustomFlowRecord.value.name + copySuffix;
+    }
+  } else if (mode === 'update') {
+    if (currentCustomFlowRecord.value) {
+      const copySuffix = ' (' + (t('pipeline_flow_copy_suffix') || 'Copy') + ')';
+      if (customFlowNameInput.value === currentCustomFlowRecord.value.name + copySuffix) {
+        customFlowNameInput.value = currentCustomFlowRecord.value.name;
+      }
+    }
+  }
+}
+
+function openSaveFlowModal() {
+  // If user is editing an already saved custom flow
+  if (currentCustomFlowRecord.value) {
+    if (isCurrentFlowModified.value) {
+      saveFlowMode.value = 'update';
+      customFlowNameInput.value = currentCustomFlowRecord.value.name;
+    } else {
+      saveFlowMode.value = 'new';
+      const copySuffix = ' (' + (t('pipeline_flow_copy_suffix') || 'Copy') + ')';
+      customFlowNameInput.value = currentCustomFlowRecord.value.name + copySuffix;
+    }
+    customFlowDescInput.value = currentCustomFlowRecord.value.desc || '';
+    isSaveFlowModalOpen.value = true;
+    return;
+  }
+
+  // If user is Free tier and already has 3 saved custom workflows, trigger quota modal
+  if (!isProSupporter.value && savedUserFlows.value.length >= 3) {
+    selectedOverwriteFlowId.value = savedUserFlows.value[0]?.id || '';
+    isFlowQuotaModalOpen.value = true;
+    return;
+  }
+
+  // Otherwise, allow saving a new flow
+  saveFlowMode.value = 'new';
+  if (currentPresetRecord.value) {
+    const customSuffix = ' (' + (t('pipeline_flow_custom_suffix') || 'Custom') + ')';
+    customFlowNameInput.value = t(currentPresetRecord.value.nameKey, currentPresetRecord.value.defaultName) + customSuffix;
+    customFlowDescInput.value = currentPipelineDesc.value;
+  } else {
+    customFlowNameInput.value = t('pipeline_default_custom_flow_name') || 'My Custom Flow';
+    customFlowDescInput.value = '';
+  }
+  isSaveFlowModalOpen.value = true;
+}
+
+function handleOverwriteExistingFlow() {
+  isFlowQuotaModalOpen.value = false;
+  const targetId = selectedOverwriteFlowId.value || savedUserFlows.value[0]?.id;
+  const existing = savedUserFlows.value.find(f => f.id === targetId) || savedUserFlows.value[0];
+  if (existing) {
+    activeFlowSelectionKey.value = 'user_' + existing.id;
+    saveFlowMode.value = 'update';
+    if (!customFlowNameInput.value.trim()) {
+      customFlowNameInput.value = existing.name;
+    }
+    if (!customFlowDescInput.value.trim()) {
+      customFlowDescInput.value = existing.desc || '';
+    }
+    isSaveFlowModalOpen.value = true;
+  }
+}
+
+function confirmSaveFlow(explicitMode) {
+  const mode = typeof explicitMode === 'string' ? explicitMode : saveFlowMode.value;
+  const name = customFlowNameInput.value.trim();
+  if (!name) return;
+
+  if (mode === 'new' || !currentCustomFlowRecord.value) {
+    // If user is Free tier and already has 3 saved custom workflows, trigger quota modal
+    if (!isProSupporter.value && savedUserFlows.value.length >= 3) {
+      isSaveFlowModalOpen.value = false;
+      selectedOverwriteFlowId.value = currentCustomFlowRecord.value?.id || savedUserFlows.value[0]?.id || '';
+      isFlowQuotaModalOpen.value = true;
+      return;
+    }
+
+    const saved = saveUserPipeline({
+      name,
+      desc: customFlowDescInput.value.trim(),
+      steps: activeWorkflowSteps.value
+    });
+
+    if (saved) {
+      savedUserFlows.value = loadUserPipelines();
+      activeFlowSelectionKey.value = 'user_' + saved.id;
+      isSaveFlowModalOpen.value = false;
+    }
+    return;
+  }
+
+  // mode === 'update'
+  const saved = saveUserPipeline({
+    id: currentCustomFlowRecord.value?.id,
+    name,
+    desc: customFlowDescInput.value.trim(),
+    steps: activeWorkflowSteps.value
+  });
+
+  if (saved) {
+    savedUserFlows.value = loadUserPipelines();
+    activeFlowSelectionKey.value = 'user_' + saved.id;
+    isSaveFlowModalOpen.value = false;
+  }
+}
+
+function deleteCurrentCustomFlow() {
+  if (!currentCustomFlowRecord.value) return;
+  if (confirm(t('pipeline_delete_flow_confirm'))) {
+    deleteUserPipeline(currentCustomFlowRecord.value.id);
+    savedUserFlows.value = loadUserPipelines();
+    activeFlowSelectionKey.value = 'preset_' + PRESET_PIPELINES[0].id;
+    handleFlowChange();
+  }
+}
+
+function getNodeName(nodeId) {
+  const n = AVAILABLE_NODES[nodeId];
+  return n ? t(n.nameKey, n.defaultName) : nodeId;
+}
+
+function formatStepParams(step) {
+  if (!step.params) return t('pipeline_step_default_params');
+  return Object.entries(step.params)
+    .map(([k, v]) => `${k}=${v}`)
+    .join(', ');
+}
+
+function moveStep(idx, direction) {
+  const target = idx + direction;
+  if (target < 0 || target >= activeWorkflowSteps.value.length) return;
+  const item = activeWorkflowSteps.value.splice(idx, 1)[0];
+  activeWorkflowSteps.value.splice(target, 0, item);
+}
+
+function removeStep(idx) {
+  if (activeWorkflowSteps.value.length <= 1) return;
+  activeWorkflowSteps.value.splice(idx, 1);
+}
+
+function addNodeToFlow(nodeId) {
+  const node = AVAILABLE_NODES[nodeId];
+  if (!node) return;
+  const newStep = {
+    id: `step_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    nodeId: node.id,
+    params: JSON.parse(JSON.stringify(node.defaultParams || {}))
+  };
+  activeWorkflowSteps.value.push(newStep);
+  addStepModal.value = false;
+  openStepConfigModal(activeWorkflowSteps.value.length - 1);
+}
+
+function handleFileInput(e) {
+  const files = Array.from(e.target.files || []);
+  appendFiles(files);
+  e.target.value = '';
+}
+
+function handleFileDrop(e) {
+  isDragging.value = false;
+  const files = Array.from(e.dataTransfer.files || []);
+  appendFiles(files);
+}
+
+const totalInputSize = computed(() => {
+  return inputFiles.value.reduce((acc, f) => acc + (f.size || 0), 0);
+});
+
+function isImageFile(file) {
+  return Boolean(file.type?.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(file.name));
+}
+
+function appendFiles(files) {
+  for (const f of files) {
+    const isDup = inputFiles.value.some(existing => existing.name === f.name && existing.size === f.size);
+    if (!isDup) {
+      inputFiles.value.push(f);
+    }
+  }
+}
+
+function handleVaultFilesSelected(vaultFiles) {
+  isVaultPickerOpen.value = false;
+  if (vaultFiles && vaultFiles.length > 0) {
+    appendFiles(vaultFiles);
+  }
+}
+
+function removeFile(index) {
+  inputFiles.value.splice(index, 1);
+}
+
+function formatSize(bytes) {
+  if (!bytes) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+async function startExecution() {
+  if (inputFiles.value.length === 0 || activeWorkflowSteps.value.length === 0) return;
+
+  outputResults.value = [];
+  isRunning.value = true;
+  progressState.value = {
+    overallPercent: 0,
+    stepName: t('pipeline_preparing_step'),
+    stepMessage: t('pipeline_preparing_msg')
+  };
+
+  abortController = new AbortController();
+
+  try {
+    const result = await runPipeline(
+      currentPipeline.value,
+      inputFiles.value,
+      isProSupporter.value ? 'pro' : 'free',
+      (p) => {
+        progressState.value = p;
+      },
+      abortController.signal
+    );
+
+    if (result.success) {
+      outputResults.value = result.deliverables || result.items || [];
+      confetti({
+        particleCount: 50,
+        spread: 60,
+        origin: { y: 0.7 }
+      });
+    } else {
+      if (result.code === 'ABORTED') {
+        // User aborted
+      } else if (result.code === 'BATCH_LIMIT_EXCEEDED') {
+        emit('open-enterprise');
+      } else {
+        alert(result.reason || t('pipe_err', 'Pipeline execution failed.'));
+      }
+    }
+  } catch (err) {
+    alert(t('pipeline_execution_error') + err.message);
+  } finally {
+    isRunning.value = false;
+  }
+}
+
+function cancelExecution() {
+  if (abortController) {
+    abortController.abort();
+    isRunning.value = false;
+  }
+}
+
+function downloadSingle(item) {
+  const blob = new Blob([item.data], { type: item.mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = item.name;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadAllSequential() {
+  outputResults.value.forEach((item, i) => {
+    setTimeout(() => {
+      downloadSingle(item);
+    }, i * 350);
+  });
+}
+
+async function saveAllToVault() {
+  for (const item of outputResults.value) {
+    await saveFile({
+      name: item.name,
+      arrayBuffer: item.data,
+      category: 'export',
+      pageCount: item.pageCount || 1
+    });
+  }
+  alert(t('pipeline_save_vault_success').replace('{count}', outputResults.value.length));
+}
+</script>
+
+<style scoped>
+.list-move {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.list-enter-active,
+.list-leave-active {
+  transition: all 0.3s ease;
+}
+.list-enter-from,
+.list-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+</style>

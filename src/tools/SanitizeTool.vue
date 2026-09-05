@@ -1,7 +1,7 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Card Container matching Merge, Organize, Split, and Watermark tools -->
-    <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Integrated Header with Badge -->
       <div class="flex items-center justify-between pb-3 mb-2.5 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
@@ -18,10 +18,6 @@
           </div>
         </div>
 
-        <div class="hidden sm:flex items-center space-x-1.5 text-xs text-cyan-600 font-semibold bg-cyan-50/80 px-3 py-1.5 rounded-full border border-cyan-100 shadow-2xs">
-          <Lock class="w-3.5 h-3.5" />
-          <span>{{ t('processed_locally') || '纯浏览器本地内存处理' }}</span>
-        </div>
       </div>
 
       <!-- State A: Empty State (Dual Source Dropzone: Local & Vault) -->
@@ -58,7 +54,7 @@
             class="bg-cyan-600 hover:bg-cyan-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-cyan-600/25 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>{{ t('merge_btn_from_local') || '从电脑本地添加' }}</span>
+            <span>{{ t('merge_btn_from_local') || 'Add from Computer' }}</span>
           </button>
           
           <button 
@@ -67,7 +63,7 @@
             class="bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center space-x-2 border border-slate-200 shadow-2xs hover:border-slate-300 cursor-pointer"
           >
             <FolderLock class="w-4 h-4 text-cyan-600" />
-            <span>{{ t('merge_btn_from_vault') || '从海豹收纳箱挑选' }}</span>
+            <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
           </button>
         </div>
       </div>
@@ -78,7 +74,7 @@
         <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100 shrink-0">
           <div class="flex items-center space-x-2 min-w-0 flex-1">
             <span class="text-xs bg-cyan-50 text-cyan-700 font-extrabold px-2.5 py-1 rounded-lg border border-cyan-200 shrink-0">
-              {{ totalPages }} {{ t('pages_label') || '页' }}
+              {{ totalPages }} {{ t('pages_label') || 'pages' }}
             </span>
             <span 
               :class="[
@@ -88,7 +84,7 @@
                   : 'bg-emerald-50 text-emerald-700 border-emerald-200'
               ]"
             >
-              {{ leakingCount > 0 ? `已检测出 ${leakingCount} 项元数据指纹` : '未发现明文元数据' }}
+              {{ leakingCount > 0 ? t('san_leak_found', '{count} metadata leaks detected', {count: leakingCount}) : t('san_no_leak', 'No plaintext metadata found') }}
             </span>
             <span class="text-xs font-bold text-slate-700 truncate max-w-xs" :title="filename">
               {{ filename }}
@@ -98,7 +94,7 @@
               class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold flex items-center shrink-0"
             >
               <Unlock class="w-3 h-3 mr-0.5" />
-              {{ t('badge_unlocked') || '已解密' }}
+              {{ t('badge_unlocked') || 'Unlocked' }}
             </span>
           </div>
 
@@ -110,7 +106,7 @@
               class="text-xs text-cyan-600 hover:bg-cyan-50 font-semibold px-2.5 py-1.5 rounded-xl border border-cyan-200 transition flex items-center space-x-1 cursor-pointer"
             >
               <RefreshCw class="w-3.5 h-3.5" />
-              <span>{{ t('btn_choose_another') || '更换文件' }}</span>
+              <span>{{ t('btn_choose_another') || 'Choose Another File' }}</span>
             </button>
 
             <!-- Choose From Vault -->
@@ -119,15 +115,16 @@
               class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
             >
               <FolderLock class="w-3.5 h-3.5 text-cyan-600" />
-              <span>{{ t('merge_btn_from_vault') || '从收纳箱选取' }}</span>
+              <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
             </button>
 
             <!-- Clear / Reset -->
             <button 
               @click="reset" 
+              data-testid="san-reset-btn"
               class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
             >
-              {{ t('btn_clear_all') || '清空' }}
+              {{ t('btn_clear_all') || 'Clear All' }}
             </button>
           </div>
         </div>
@@ -153,10 +150,10 @@
             <div class="flex items-center justify-between border-b border-slate-200/70 pb-2 mb-2 shrink-0">
               <div class="flex items-center space-x-2 font-bold text-slate-800 text-xs">
                 <FileText class="w-3.5 h-3.5 text-cyan-600" />
-                <span>{{ t('detected_metadata') || '检测到的文档元数据指纹' }}</span>
+                <span>{{ t('detected_metadata') || 'Detected Metadata Attributes' }}</span>
               </div>
               <span class="text-[10px] text-slate-400 font-medium">
-                {{ t('detected_subtitle') || '以下隐私属性已嵌入在源文件中' }}
+                {{ t('detected_subtitle') || 'The following information was found embedded in your file' }}
               </span>
             </div>
 
@@ -174,13 +171,13 @@
                     class="text-[9px] bg-amber-50 text-amber-700 border border-amber-200/80 px-1.5 py-0.2 rounded-md font-bold flex items-center"
                   >
                     <AlertTriangle class="w-2.5 h-2.5 mr-0.5 text-amber-600" />
-                    <span>存在指纹</span>
+                    <span>{{ t('san_has_fingerprint', 'Fingerprint Found') }}</span>
                   </span>
                   <span 
                     v-else 
                     class="text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.2 rounded-md font-medium"
                   >
-                    空白
+                    {{ t('san_empty', 'Empty') }}
                   </span>
                 </div>
                 <div class="text-[11px] font-mono font-semibold break-all text-slate-800 select-all leading-tight">
@@ -195,33 +192,37 @@
             <div>
               <div class="flex items-center space-x-1.5 font-bold text-cyan-900 text-xs border-b border-cyan-200/70 pb-2 mb-3">
                 <Sparkles class="w-3.5 h-3.5 text-cyan-600" />
-                <span>{{ t('what_will_be_stripped') || '脱敏清理清单与安全承诺' }}</span>
+                <span>{{ t('what_will_be_stripped') || '🛡️ What will be stripped:' }}</span>
               </div>
 
               <!-- Clean Checklist -->
               <div class="space-y-2 text-xs text-cyan-900 font-medium">
                 <div class="flex items-start space-x-2 bg-white/70 p-2 rounded-xl border border-cyan-100">
                   <CheckCircle2 class="w-3.5 h-3.5 text-cyan-600 shrink-0 mt-0.5" />
-                  <span class="text-[11px] leading-tight">抹除文档标题、主题、关键词及作者姓名</span>
+                  <span class="text-[11px] leading-tight">{{ t('san_desc_title', 'Erase document Title, Subject, Keywords, and Author') }}</span>
                 </div>
                 <div class="flex items-start space-x-2 bg-white/70 p-2 rounded-xl border border-cyan-100">
                   <CheckCircle2 class="w-3.5 h-3.5 text-cyan-600 shrink-0 mt-0.5" />
-                  <span class="text-[11px] leading-tight">清除制作软件指纹 (Creator, Producer)</span>
+                  <span class="text-[11px] leading-tight">{{ t('san_desc_creator', 'Clear creator software fingerprints (Creator, Producer)') }}</span>
                 </div>
                 <div class="flex items-start space-x-2 bg-white/70 p-2 rounded-xl border border-cyan-100">
                   <CheckCircle2 class="w-3.5 h-3.5 text-cyan-600 shrink-0 mt-0.5" />
-                  <span class="text-[11px] leading-tight">擦除文档创建与修改时间戳线索</span>
+                  <span class="text-[11px] leading-tight">{{ t('san_desc_time', 'Wipe creation and modification timestamps') }}</span>
                 </div>
                 <div class="flex items-start space-x-2 bg-white/70 p-2 rounded-xl border border-cyan-100">
                   <CheckCircle2 class="w-3.5 h-3.5 text-cyan-600 shrink-0 mt-0.5" />
-                  <span class="text-[11px] leading-tight">剥离深层 XMP/XML 私有元数据流</span>
+                  <span class="text-[11px] leading-tight">{{ t('san_desc_xmp', 'Strip deep XMP/XML private metadata streams') }}</span>
+                </div>
+                <div class="flex items-start space-x-2 bg-white/70 p-2 rounded-xl border border-cyan-100">
+                  <CheckCircle2 class="w-3.5 h-3.5 text-cyan-600 shrink-0 mt-0.5" />
+                  <span class="text-[11px] leading-tight">{{ t('pipe_san_annots_desc', 'Remove comments, sticky notes, hyperlinks, and flatten forms') }}</span>
                 </div>
               </div>
             </div>
 
             <!-- Guarantee Notice -->
             <div class="mt-3 pt-2.5 border-t border-cyan-200/70 text-[10px] text-cyan-800 leading-relaxed font-medium bg-cyan-100/40 p-2 rounded-xl">
-              🛡️ <span class="font-bold">物理高保真脱敏：</span> 文档全部文字、图表、印章等正文内容 100% 保持原样，仅在本地内存彻底剔除元数据底层指纹。
+              🛡️ <span class="font-bold">{{ t('san_hi_fi', 'High-Fidelity Sanitization:') }}</span> {{ t('san_hi_fi_desc', 'Document text, images, and stamps remain 100% intact. Only underlying metadata fingerprints are completely stripped in local memory.') }}
             </div>
           </div>
         </div>
@@ -237,7 +238,8 @@
               <input 
                 v-model="customOutputBaseName"
                 type="text" 
-                :placeholder="t('vault_filename_placeholder') || '自定义导出文件名 (可选)'"
+                data-testid="san-filename-input"
+                :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-cyan-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
               >
             </div>
@@ -257,11 +259,12 @@
             <button 
               :disabled="isProcessing"
               @click="executeSanitize"
+              data-testid="san-download-btn"
               class="w-full sm:w-auto bg-cyan-600 hover:bg-cyan-700 active:scale-98 text-white font-extrabold text-xs px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-cyan-600/25 disabled:opacity-50 cursor-pointer"
             >
               <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
               <Download v-else class="w-4 h-4" />
-              <span>{{ isProcessing ? (t('sealing_state') || '正在脱敏...') : (t('sanitize_and_download') || '一键脱敏并下载 PDF') }}</span>
+              <span>{{ isProcessing ? (t('sealing_state') || 'Sealing...') : (t('sanitize_and_download') || '🦭 Sanitize & Download Clean PDF') }}</span>
             </button>
           </div>
         </div>
@@ -336,7 +339,7 @@ const pendingFileName = ref('');
 let pendingFileObj = null;
 let unlockedPassword = '';
 
-const noneText = computed(() => t('none_value') || '(无)');
+const noneText = computed(() => t('none_value') || 'None');
 
 // Watch global autoSaveToVault setting
 watch(
@@ -354,14 +357,14 @@ const metadataList = computed(() => {
   const n = noneText.value;
   const raw = rawMetadata.value;
   return [
-    { key: 'Title', label: 'Title / 标题', value: raw.Title || n, isLeaking: Boolean(raw.Title && raw.Title !== n) },
-    { key: 'Author', label: 'Author / 作者', value: raw.Author || n, isLeaking: Boolean(raw.Author && raw.Author !== n) },
-    { key: 'Subject', label: 'Subject / 主题', value: raw.Subject || n, isLeaking: Boolean(raw.Subject && raw.Subject !== n) },
-    { key: 'Keywords', label: 'Keywords / 关键词', value: raw.Keywords || n, isLeaking: Boolean(raw.Keywords && raw.Keywords !== n) },
-    { key: 'Creator', label: 'Creator / 创建软件', value: raw.Creator || n, isLeaking: Boolean(raw.Creator && raw.Creator !== n) },
-    { key: 'Producer', label: 'Producer / 转换工具', value: raw.Producer || n, isLeaking: Boolean(raw.Producer && raw.Producer !== n) },
-    { key: 'Creation Date', label: 'Creation / 创建时间', value: raw['Creation Date'] || n, isLeaking: Boolean(raw['Creation Date'] && raw['Creation Date'] !== n) },
-    { key: 'Modification Date', label: 'ModDate / 修改时间', value: raw['Modification Date'] || n, isLeaking: Boolean(raw['Modification Date'] && raw['Modification Date'] !== n) }
+    { key: 'Title', label: 'Title', value: raw.Title || n, isLeaking: Boolean(raw.Title && raw.Title !== n) },
+    { key: 'Author', label: 'Author', value: raw.Author || n, isLeaking: Boolean(raw.Author && raw.Author !== n) },
+    { key: 'Subject', label: 'Subject', value: raw.Subject || n, isLeaking: Boolean(raw.Subject && raw.Subject !== n) },
+    { key: 'Keywords', label: 'Keywords', value: raw.Keywords || n, isLeaking: Boolean(raw.Keywords && raw.Keywords !== n) },
+    { key: 'Creator', label: 'Creator', value: raw.Creator || n, isLeaking: Boolean(raw.Creator && raw.Creator !== n) },
+    { key: 'Producer', label: 'Producer', value: raw.Producer || n, isLeaking: Boolean(raw.Producer && raw.Producer !== n) },
+    { key: 'Creation Date', label: 'Creation Date', value: raw['Creation Date'] || n, isLeaking: Boolean(raw['Creation Date'] && raw['Creation Date'] !== n) },
+    { key: 'Modification Date', label: 'Modification Date', value: raw['Modification Date'] || n, isLeaking: Boolean(raw['Modification Date'] && raw['Modification Date'] !== n) }
   ];
 });
 
@@ -567,6 +570,26 @@ async function generateSanitizedBytes() {
     }
   } catch (xmpErr) {
     console.warn('XMP metadata stream strip notice:', xmpErr);
+  }
+
+  // 4. Purge Annotations, Comments, Hyperlinks, and Interactive Forms
+  try {
+    const form = pdfDoc.getForm();
+    if (form) {
+      form.flatten();
+    }
+  } catch (e) {
+    console.warn('SANITIZE', `Failed to flatten forms: ${e.message}`);
+  }
+  try {
+    const pages = pdfDoc.getPages();
+    for (const page of pages) {
+      if (page.node.has(PDFName.of('Annots'))) {
+        page.node.delete(PDFName.of('Annots'));
+      }
+    }
+  } catch (e) {
+    console.warn('SANITIZE', `Failed to delete annotations: ${e.message}`);
   }
 
   const outBytes = await pdfDoc.save();

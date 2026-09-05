@@ -18,10 +18,6 @@
           </div>
         </div>
 
-        <div class="text-xs text-slate-400 font-mono hidden md:flex items-center space-x-1.5">
-          <Lock class="w-3.5 h-3.5 text-emerald-600" />
-          <span>{{ t('processed_locally') }}</span>
-        </div>
       </div>
 
       <!-- 1. EMPTY STATE DROPZONE (Spacious with Dual-Source Import) -->
@@ -206,7 +202,7 @@
                 @click.stop="moveUp(idx)" 
                 :disabled="idx === 0"
                 class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-25 disabled:hover:bg-transparent transition cursor-pointer"
-                title="上移"
+                :title="t('action_move_up', 'Move Up')"
               >
                 <ArrowUp class="w-3.5 h-3.5" />
               </button>
@@ -216,7 +212,7 @@
                 @click.stop="moveDown(idx)" 
                 :disabled="idx === files.length - 1"
                 class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-25 disabled:hover:bg-transparent transition cursor-pointer"
-                title="下移"
+                :title="t('action_move_down', 'Move Down')"
               >
                 <ArrowDown class="w-3.5 h-3.5" />
               </button>
@@ -357,7 +353,8 @@ function handleVaultFilesSelected(vaultFiles) {
 }
 
 async function addFiles(newFiles, defaultSource = 'local') {
-  for (const f of newFiles) {
+  const list = Array.from(newFiles || []);
+  for (const f of list) {
     if (f.type === 'application/pdf' || f.name.endsWith('.pdf')) {
       f.source = f.source || defaultSource;
       f.id = f.id || 'merge_f_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);

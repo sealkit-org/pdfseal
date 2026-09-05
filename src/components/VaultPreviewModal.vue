@@ -66,7 +66,7 @@
           <button 
             @click="$emit('close')" 
             class="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-slate-800 transition cursor-pointer"
-            :title="t('btn_close') || '关闭'"
+            :title="t('btn_close') || 'Close'"
           >
             <X class="w-5 h-5" />
           </button>
