@@ -18,10 +18,6 @@
           </div>
         </div>
 
-        <div class="text-xs text-slate-400 font-mono hidden md:flex items-center space-x-1.5">
-          <Lock class="w-3.5 h-3.5 text-emerald-600" />
-          <span>{{ t('processed_locally') }}</span>
-        </div>
       </div>
 
       <!-- 1. EMPTY STATE DROPZONE (Spacious with Dual-Source Import) -->
@@ -62,7 +58,7 @@
             class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-indigo-600/25 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>{{ t('merge_btn_from_local') || '选择本地 PDF 文件' }}</span>
+            <span>{{ t('merge_btn_from_local') || 'Add from Computer' }}</span>
           </button>
 
           <!-- From Local Vault -->
@@ -72,7 +68,7 @@
             class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 hover:border-slate-400 text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-2xs cursor-pointer"
           >
             <FolderLock class="w-4 h-4 text-indigo-600" />
-            <span>{{ t('merge_btn_from_vault') || '从海豹收纳箱中选取' }}</span>
+            <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
           </button>
         </div>
       </div>
@@ -84,7 +80,7 @@
           <!-- Left Info Badges -->
           <div class="flex items-center space-x-2 min-w-0">
             <span class="text-xs bg-indigo-50 text-indigo-700 font-extrabold px-2.5 py-1 rounded-xl border border-indigo-200/80 shrink-0">
-              {{ pages.length }} {{ t('pages_label') || '页' }}
+              {{ pages.length }} {{ t('pages_label') || 'pages' }}
             </span>
             <span class="text-xs font-bold text-slate-800 truncate max-w-[200px] sm:max-w-xs md:max-w-md" :title="filename">
               {{ filename }}
@@ -94,12 +90,32 @@
               class="inline-flex items-center px-1.5 py-0.5 text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-md shrink-0"
             >
               <Unlock class="w-3 h-3 mr-0.5" />
-              {{ t('badge_unlocked') || '已解密' }}
+              {{ t('badge_unlocked') || 'Unlocked' }}
             </span>
           </div>
 
           <!-- Quick Action Buttons -->
           <div class="flex items-center space-x-1.5 sm:space-x-2">
+            <!-- Magic A4 -->
+            <button 
+              @click="magicStandardizeA4()" 
+              class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-700 font-bold px-3 py-1.5 rounded-xl border border-amber-200/80 transition flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+              title="Scale & Center to A4"
+            >
+              <Wand2 class="w-3.5 h-3.5" />
+              <span>A4</span>
+            </button>
+
+            <!-- Magic Portrait -->
+            <button 
+              @click="magicForcePortrait()" 
+              class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3 py-1.5 rounded-xl border border-emerald-200/80 transition flex items-center space-x-1.5 cursor-pointer shadow-2xs"
+              title="Force Portrait"
+            >
+              <Wand2 class="w-3.5 h-3.5" />
+              <span>{{ t('param_org_or_port') || 'Portrait' }}</span>
+            </button>
+
             <!-- Rotate All 90° -->
             <button 
               @click="rotateAllPages(90)" 
@@ -116,7 +132,7 @@
               class="text-xs text-indigo-600 hover:bg-indigo-50 font-semibold px-2.5 py-1.5 rounded-xl border border-indigo-200 transition flex items-center space-x-1 cursor-pointer"
             >
               <RefreshCw class="w-3.5 h-3.5" />
-              <span>{{ t('btn_choose_another') || '更换文件' }}</span>
+              <span>{{ t('btn_choose_another') || 'Choose Another File' }}</span>
             </button>
 
             <!-- Choose From Vault -->
@@ -125,7 +141,7 @@
               class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
             >
               <FolderLock class="w-3.5 h-3.5 text-indigo-600" />
-              <span>{{ t('merge_btn_from_vault') || '从收纳箱选取' }}</span>
+              <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
             </button>
 
             <!-- Clear / Reset -->
@@ -133,7 +149,7 @@
               @click="reset" 
               class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
             >
-              {{ t('btn_clear_all') || '清空' }}
+              {{ t('btn_clear_all') || 'Clear All' }}
             </button>
           </div>
         </div>
@@ -166,7 +182,7 @@
             <!-- Card Header: Page Index Badge + Rotate/Delete Controls -->
             <div class="w-full flex items-center justify-between mb-1.5">
               <span class="text-[11px] font-extrabold bg-slate-200/80 text-slate-700 px-2 py-0.5 rounded-md">
-                {{ t('page_card_prefix') || '第' }} {{ idx + 1 }} {{ t('page_card_suffix') || '页' }}
+                {{ t('page_card_prefix', 'Page') }} {{ idx + 1 }}{{ t('page_card_suffix') ? ' ' + t('page_card_suffix') : '' }}
               </span>
               <div class="flex items-center space-x-1">
                 <!-- Rotate 90° -->
@@ -210,7 +226,7 @@
               <input 
                 v-model="customOutputBaseName"
                 type="text" 
-                :placeholder="t('vault_filename_placeholder') || '自定义导出文件名 (可选)'"
+                :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
               >
             </div>
@@ -231,8 +247,8 @@
             @click="executeExport" 
             class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-indigo-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
-            <span v-if="!isProcessing">{{ t('seal_and_download') || '🦭 封印并导出 PDF' }}</span>
-            <span v-else>{{ t('sealing_state') || '处理中...' }}</span>
+            <span v-if="!isProcessing">{{ t('seal_and_download') || '🦭 Seal & Download' }}</span>
+            <span v-else>{{ t('sealing_state') || 'Sealing...' }}</span>
             <Download v-if="!isProcessing" class="w-4 h-4" />
             <Loader2 v-else class="w-4 h-4 animate-spin" />
           </button>
@@ -272,10 +288,11 @@ import {
   FolderLock, 
   Lock, 
   Unlock, 
-  RefreshCw 
+  RefreshCw,
+  Wand2
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
-import { PDFDocument, degrees } from 'pdf-lib';
+import { PDFDocument, PageSizes, degrees } from 'pdf-lib';
 import Sortable from 'sortablejs';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
@@ -456,7 +473,7 @@ function rotateAllPages(deg) {
 
 function deletePage(idx) {
   if (pages.value.length <= 1) {
-    alert(t('alert_cannot_delete_last_page') || '至少需要保留 1 页，无法继续删除');
+    alert(t('alert_cannot_delete_last_page') || 'Cannot delete the only remaining page.');
     return;
   }
   pages.value.splice(idx, 1);
@@ -470,6 +487,61 @@ function reset() {
   if (sortableInstance) {
     sortableInstance.destroy();
     sortableInstance = null;
+  }
+}
+
+async function magicStandardizeA4() {
+  if (!docBytes.value) return;
+  isLoading.value = true;
+  try {
+    const doc = await loadCleanPdfDocument(docBytes.value, unlockedPassword);
+    const docPages = doc.getPages();
+    for (const page of docPages) {
+      const sz = page.getSize();
+      const isLandscape = sz.width > sz.height;
+      const a4Width = isLandscape ? PageSizes.A4[1] : PageSizes.A4[0];
+      const a4Height = isLandscape ? PageSizes.A4[0] : PageSizes.A4[1];
+
+      const scale = Math.min(a4Width / sz.width, a4Height / sz.height);
+      const scaledWidth = sz.width * scale;
+      const scaledHeight = sz.height * scale;
+      const x = (a4Width - scaledWidth) / 2;
+      const y = (a4Height - scaledHeight) / 2;
+
+      page.setSize(a4Width, a4Height);
+      page.translateContent(x, y);
+      page.scaleContent(scale, scale);
+    }
+    const newBytes = await doc.save();
+    const mockFile = new File([newBytes], pendingFileObj?.name || filename.value, { type: 'application/pdf' });
+    await loadFile(mockFile, unlockedPassword);
+  } catch (err) {
+    logger.error('ORGANIZE', `Magic A4 Error: ${err.message}`);
+    alert('Failed: ' + err.message);
+    isLoading.value = false;
+  }
+}
+
+async function magicForcePortrait() {
+  if (!docBytes.value) return;
+  isLoading.value = true;
+  try {
+    const doc = await loadCleanPdfDocument(docBytes.value, unlockedPassword);
+    const docPages = doc.getPages();
+    for (const page of docPages) {
+      const sz = page.getSize();
+      const { angle } = page.getRotation();
+      if (sz.width > sz.height) { // Landscape
+        page.setRotation(degrees((angle || 0) + 90));
+      }
+    }
+    const newBytes = await doc.save();
+    const mockFile = new File([newBytes], pendingFileObj?.name || filename.value, { type: 'application/pdf' });
+    await loadFile(mockFile, unlockedPassword);
+  } catch (err) {
+    logger.error('ORGANIZE', `Magic Portrait Error: ${err.message}`);
+    alert('Failed: ' + err.message);
+    isLoading.value = false;
   }
 }
 

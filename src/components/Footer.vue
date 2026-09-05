@@ -21,12 +21,30 @@
         >
           {{ t('footer_license') }}
         </a>
+        <button 
+          v-if="siteConfig.features.enableEnterprisePortal"
+          @click="$emit('open-enterprise')" 
+          class="text-indigo-600 hover:text-indigo-800 transition font-medium cursor-pointer"
+        >
+          {{ t('footer_enterprise') || 'Commercial License' }}
+        </button>
         <button @click="$emit('open-privacy')" class="text-slate-500 hover:text-slate-900 transition">{{ t('footer_privacy') }}</button>
-        <a href="https://github.com/sealkit-org/pdfseal" target="_blank" class="text-slate-500 hover:text-slate-900 transition">GitHub</a>
-        <a href="https://ko-fi.com/muffin27" target="_blank" class="text-amber-700 hover:text-amber-900 font-medium transition flex items-center space-x-1">
+        <a v-if="siteConfig.githubRepoUrl" :href="siteConfig.githubRepoUrl" target="_blank" class="text-slate-500 hover:text-slate-900 transition">GitHub</a>
+        <a 
+          v-if="siteConfig.features.enableDonations"
+          :href="siteConfig.kofiUrl" 
+          target="_blank" 
+          class="text-amber-700 hover:text-amber-900 font-medium transition flex items-center space-x-1"
+        >
           <span>{{ t('footer_feed_seal') }}</span>
         </a>
-        <button @click="$emit('open-feedback')" class="text-slate-500 hover:text-slate-900 transition">{{ t('feedback_btn') }}</button>
+        <button 
+          v-if="siteConfig.features.enableFeedback"
+          @click="$emit('open-feedback')" 
+          class="text-slate-500 hover:text-slate-900 transition"
+        >
+          {{ t('feedback_btn') }}
+        </button>
       </div>
     </div>
   </footer>
@@ -34,5 +52,7 @@
 
 <script setup>
 import { t } from '../i18n';
-defineEmits(['open-feedback', 'open-privacy']);
+import { siteConfig } from '../config/siteConfig';
+
+defineEmits(['open-feedback', 'open-privacy', 'open-enterprise']);
 </script>

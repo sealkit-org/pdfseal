@@ -17,7 +17,7 @@ export function triggerDownload(data, filename) {
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
 
   // Trigger celebratory confetti
   try {

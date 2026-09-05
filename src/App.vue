@@ -16,6 +16,7 @@
       @open-privacy="isPrivacyOpen = true"
       @open-settings="isSettingsOpen = true"
       @open-logs="isLogsOpen = true"
+      @open-enterprise="isEnterpriseOpen = true"
     />
 
     <!-- Main Workspace (Clean, Uncluttered, 100% Focused) -->
@@ -23,10 +24,11 @@
       <KeepAlive>
         <component 
           :is="activeToolComponent" 
-          :share-id="activeShareId"
+          :share-id="activeShareId" 
           :key-url-safe="activeShareKey"
           @send-to-tool="switchTool" 
           @exit-receive="switchTool('merge')"
+          @open-enterprise="isEnterpriseOpen = true"
         />
       </KeepAlive>
     </main>
@@ -35,6 +37,7 @@
     <Footer 
       @open-feedback="isFeedbackOpen = true" 
       @open-privacy="isPrivacyOpen = true"
+      @open-enterprise="isEnterpriseOpen = true"
     />
 
     <!-- Diagnostic Logs Modal -->
@@ -55,6 +58,12 @@
       @close="isFeedbackOpen = false" 
     />
 
+    <!-- Enterprise & Pro Modal -->
+    <EnterpriseModal 
+      :is-open="isEnterpriseOpen" 
+      @close="isEnterpriseOpen = false" 
+    />
+
     <!-- Privacy & Speed Guarantee Manifesto Modal -->
     <PrivacyModal 
       :is-open="isPrivacyOpen" 
@@ -71,6 +80,7 @@ import FeedbackModal from './components/FeedbackModal.vue';
 import PrivacyModal from './components/PrivacyModal.vue';
 import GlobalSettingsModal from './components/GlobalSettingsModal.vue';
 import DiagnosticLogModal from './components/DiagnosticLogModal.vue';
+import EnterpriseModal from './components/EnterpriseModal.vue';
 
 import MergeTool from './tools/MergeTool.vue';
 import CompressTool from './tools/CompressTool.vue';
@@ -83,9 +93,11 @@ import WatermarkTool from './tools/WatermarkTool.vue';
 import SanitizeTool from './tools/SanitizeTool.vue';
 import VaultTool from './tools/VaultTool.vue';
 import ShareReceiveTool from './tools/ShareReceiveTool.vue';
+import PipelineTool from './tools/PipelineTool.vue';
 import { t } from './i18n';
 
 const toolComponents = {
+  pipeline: PipelineTool,
   vault: VaultTool,
   merge: MergeTool,
   compress: CompressTool,
@@ -136,6 +148,7 @@ const isSettingsOpen = ref(false);
 const isLogsOpen = ref(false);
 const isFeedbackOpen = ref(false);
 const isPrivacyOpen = ref(false);
+const isEnterpriseOpen = ref(false);
 const isOnline = ref(navigator.onLine);
 
 const activeToolComponent = computed(() => toolComponents[activeTab.value] || MergeTool);
@@ -163,7 +176,10 @@ function updateOnlineStatus() {
   isOnline.value = navigator.onLine;
 }
 
+import { initCertificateStore } from './utils/security/certificateStore';
+
 onMounted(() => {
+  initCertificateStore();
   window.addEventListener('hashchange', onHashChange);
   window.addEventListener('online', updateOnlineStatus);
   window.addEventListener('offline', updateOnlineStatus);

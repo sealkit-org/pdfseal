@@ -1,7 +1,7 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Card Container matching Merge, Organize, and Split tools -->
-    <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Integrated Header with Badge -->
       <div class="flex items-center justify-between pb-3 mb-2.5 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
@@ -18,10 +18,6 @@
           </div>
         </div>
 
-        <div class="hidden sm:flex items-center space-x-1.5 text-xs text-amber-600 font-semibold bg-amber-50/80 px-3 py-1.5 rounded-full border border-amber-100 shadow-2xs">
-          <Lock class="w-3.5 h-3.5" />
-          <span>{{ t('processed_locally') || '纯浏览器本地内存处理' }}</span>
-        </div>
       </div>
 
       <!-- State A: Empty State (Dual Source Dropzone: Local & Vault) -->
@@ -58,7 +54,7 @@
             class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-amber-600/25 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>{{ t('merge_btn_from_local') || '从电脑本地添加' }}</span>
+            <span>{{ t('merge_btn_from_local') || 'Add from Computer' }}</span>
           </button>
           
           <button 
@@ -67,7 +63,7 @@
             class="bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center space-x-2 border border-slate-200 shadow-2xs hover:border-slate-300 cursor-pointer"
           >
             <FolderLock class="w-4 h-4 text-amber-600" />
-            <span>{{ t('merge_btn_from_vault') || '从海豹收纳箱挑选' }}</span>
+            <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
           </button>
         </div>
       </div>
@@ -78,7 +74,7 @@
         <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100 shrink-0">
           <div class="flex items-center space-x-2 min-w-0 flex-1">
             <span class="text-xs bg-amber-50 text-amber-700 font-extrabold px-2.5 py-1 rounded-lg border border-amber-200 shrink-0">
-              {{ totalPages }} {{ t('pages_label') || '页' }}
+              {{ totalPages }} {{ t('pages_label') || 'pages' }}
             </span>
             <span class="text-xs font-bold text-slate-700 truncate max-w-xs" :title="filename">
               {{ filename }}
@@ -88,7 +84,7 @@
               class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold flex items-center shrink-0"
             >
               <Unlock class="w-3 h-3 mr-0.5" />
-              {{ t('badge_unlocked') || '已解密' }}
+              {{ t('badge_unlocked') || 'Unlocked' }}
             </span>
           </div>
 
@@ -100,7 +96,7 @@
               class="text-xs text-amber-600 hover:bg-amber-50 font-semibold px-2.5 py-1.5 rounded-xl border border-amber-200 transition flex items-center space-x-1 cursor-pointer"
             >
               <RefreshCw class="w-3.5 h-3.5" />
-              <span>{{ t('btn_choose_another') || '更换文件' }}</span>
+              <span>{{ t('btn_choose_another') || 'Choose Another File' }}</span>
             </button>
 
             <!-- Choose From Vault -->
@@ -109,15 +105,16 @@
               class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
             >
               <FolderLock class="w-3.5 h-3.5 text-amber-600" />
-              <span>{{ t('merge_btn_from_vault') || '从收纳箱选取' }}</span>
+              <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
             </button>
 
             <!-- Clear / Reset -->
             <button 
               @click="reset" 
+              data-testid="wm-reset-btn"
               class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
             >
-              {{ t('btn_clear_all') || '清空' }}
+              {{ t('btn_clear_all') || 'Clear All' }}
             </button>
           </div>
         </div>
@@ -143,17 +140,18 @@
             <div class="space-y-2.5">
               <div class="flex items-center space-x-2 font-bold text-slate-800 text-xs border-b border-slate-200/70 pb-1.5">
                 <Sliders class="w-3.5 h-3.5 text-amber-600" />
-                <span>{{ t('wm_controls') || '水印参数控制' }}</span>
+                <span>{{ t('wm_controls') || 'Watermark Controls' }}</span>
               </div>
 
               <!-- Watermark Text Input -->
               <div>
-                <label class="block text-[11px] font-semibold text-slate-700 mb-1">{{ t('wm_text_label') || '水印文字' }}</label>
+                <label class="block text-[11px] font-semibold text-slate-700 mb-1">{{ t('wm_text_label') || 'Watermark Text' }}</label>
                 <input 
                   v-model="wmText" 
                   @input="renderPreview"
                   type="text" 
-                  placeholder="例如: 机密文件 / 内部参考"
+                  data-testid="wm-text-input"
+                  :placeholder="t('wm_placeholder', 'e.g. CONFIDENTIAL / INTERNAL USE')"
                   class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-amber-500 focus:bg-white outline-hidden font-medium shadow-2xs"
                 >
               </div>
@@ -161,7 +159,7 @@
               <!-- Font Size Slider Row -->
               <div>
                 <div class="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                  <span>{{ t('wm_size_label') || '字体大小' }}</span>
+                  <span>{{ t('wm_size_label') || 'Font Size' }}</span>
                   <span class="text-slate-500 font-mono font-bold">{{ wmSize }}px</span>
                 </div>
                 <input 
@@ -177,7 +175,7 @@
               <!-- Opacity Slider Row -->
               <div>
                 <div class="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                  <span>{{ t('wm_opacity_label') || '透明度' }}</span>
+                  <span>{{ t('wm_opacity_label') || 'Opacity' }}</span>
                   <span class="text-slate-500 font-mono font-bold">{{ wmOpacity }}%</span>
                 </div>
                 <input 
@@ -193,7 +191,7 @@
               <!-- Rotation Angle Presets (8 Angles: ±67.5°, ±45°, ±22.5°, 0°, 90°) -->
               <div>
                 <div class="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                  <span>{{ t('wm_rotation_label') || '倾斜角度' }}</span>
+                  <span>{{ t('wm_rotation_label') || 'Rotation Angle' }}</span>
                   <span class="text-slate-500 font-mono font-bold">{{ wmAngle }}°</span>
                 </div>
                 <div class="grid grid-cols-4 gap-1.5">
@@ -216,7 +214,7 @@
               <!-- Color Selection: Compact Swatches + Color Picker + Hex Input -->
               <div>
                 <div class="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                  <span>{{ t('wm_color_preset') || '水印颜色' }}</span>
+                  <span>{{ t('wm_color_preset') || 'Color Preset' }}</span>
                   <span class="text-slate-500 font-mono uppercase">{{ wmColor }}</span>
                 </div>
 
@@ -243,7 +241,7 @@
                         type="color" 
                         v-model="wmColor" 
                         class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
-                        title="点击打开调色板"
+                        :title="t('wm_color_picker', 'Open Color Picker')"
                       >
                       <div class="w-full h-full rounded-md" :style="{ backgroundColor: wmColor }"></div>
                     </div>
@@ -270,24 +268,25 @@
                 <div class="flex items-center space-x-2">
                   <input 
                     type="checkbox" 
+                    data-testid="wm-tamper-checkbox"
                     v-model="enableTamperProtection" 
                     class="w-4 h-4 text-amber-600 rounded-md border-slate-300 focus:ring-amber-500 cursor-pointer"
                   >
                   <span class="text-xs font-bold text-slate-700 group-hover:text-amber-600 transition flex items-center space-x-1">
                     <ShieldCheck class="w-3.5 h-3.5 text-amber-600" />
-                    <span>{{ t('wm_protection_label') || '只读防篡改保护' }}</span>
+                    <span>{{ t('wm_protection_label') || 'Read-only Tamper Protection' }}</span>
                   </span>
                 </div>
-                <span class="text-[10px] text-slate-400 font-medium">{{ t('wm_protection_hint') || '可直接阅读，禁止修改' }}</span>
+                <span class="text-[10px] text-slate-400 font-medium">{{ t('wm_protection_hint') || 'Allow viewing, prevent editing' }}</span>
               </label>
 
               <!-- Optional custom modify password input -->
               <div v-if="enableTamperProtection" class="mt-2 flex items-center space-x-2 animate-in fade-in duration-150">
                 <div class="relative flex-1">
                   <input 
-                    v-model="protectionPassword"
+                    v-model="protectionPassword" 
                     type="text"
-                    :placeholder="t('wm_protection_placeholder') || '设置修改保护密码 (留空则自动加锁)'"
+                    :placeholder="t('wm_protection_placeholder') || 'Set modify protection password (optional)'"
                     class="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden text-slate-700 font-mono shadow-2xs"
                   >
                 </div>
@@ -299,7 +298,7 @@
           <div class="lg:col-span-7 bg-slate-100/70 rounded-2xl p-3 sm:p-4 border border-slate-200/80 flex flex-col justify-between overflow-hidden min-h-0">
             <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-600 mb-1.5 self-start shrink-0">
               <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-              <span>{{ t('live_preview') || '第一页实时效果预览' }}</span>
+              <span>{{ t('live_preview') || 'Live Page 1 Preview' }}</span>
             </div>
             <div class="bg-white p-2 rounded-2xl shadow-md border border-slate-200/80 max-w-full flex-1 w-full overflow-hidden flex items-center justify-center min-h-0">
               <canvas ref="previewCanvasRef" class="max-h-[360px] max-w-full object-contain rounded-lg shadow-2xs"></canvas>
@@ -318,7 +317,8 @@
               <input 
                 v-model="customOutputBaseName"
                 type="text" 
-                :placeholder="t('vault_filename_placeholder') || '自定义导出文件名 (可选)'"
+                data-testid="wm-filename-input"
+                :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
               >
             </div>
@@ -337,10 +337,11 @@
           <button 
             :disabled="isProcessing || isLoading"
             @click="executeWatermark" 
+            data-testid="wm-download-btn"
             class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
-            <span v-if="!isProcessing">{{ t('stamp_and_download') || '盖章并下载 PDF' }}</span>
-            <span v-else>{{ t('loading') || '盖章处理中...' }}</span>
+            <span v-if="!isProcessing">{{ t('stamp_and_download') || '🦭 Stamp & Download PDF' }}</span>
+            <span v-else>{{ t('loading') || 'Processing...' }}</span>
             <Download v-if="!isProcessing" class="w-4 h-4" />
             <Loader2 v-else class="w-4 h-4 animate-spin" />
           </button>
@@ -427,11 +428,11 @@ const anglePresets = [
   { val: -67.5, label: '-67.5°' },
   { val: -45, label: '-45°' },
   { val: -22.5, label: '-22.5°' },
-  { val: 0, label: '0° 水平' },
+  { val: 0, label: t('wm_angle_0', '0° Horizontal') },
   { val: 22.5, label: '+22.5°' },
   { val: 45, label: '+45°' },
   { val: 67.5, label: '+67.5°' },
-  { val: 90, label: '90° 垂直' }
+  { val: 90, label: t('wm_angle_90', '90° Vertical') }
 ];
 
 function handleHexInput(e) {

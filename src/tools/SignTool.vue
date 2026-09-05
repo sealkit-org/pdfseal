@@ -1,7 +1,7 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
-    <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->
       <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
@@ -18,10 +18,6 @@
           </div>
         </div>
 
-        <div class="text-xs text-slate-400 font-mono hidden md:flex items-center space-x-1.5">
-          <Lock class="w-3.5 h-3.5 text-emerald-600" />
-          <span>{{ t('processed_locally') }}</span>
-        </div>
       </div>
 
       <!-- 1. EMPTY STATE DROPZONE (Spacious with Dual-Source Import) -->
@@ -62,7 +58,7 @@
             class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-indigo-600/25 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>{{ t('merge_btn_from_local') || '选择本地 PDF 文件' }}</span>
+            <span>{{ t('merge_btn_from_local') || 'Add from Computer' }}</span>
           </button>
 
           <!-- From Local Vault -->
@@ -72,7 +68,7 @@
             class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 hover:border-slate-400 text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-2xs cursor-pointer"
           >
             <FolderLock class="w-4 h-4 text-indigo-600" />
-            <span>{{ t('merge_btn_from_vault') || '从海豹收纳箱中选取' }}</span>
+            <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
           </button>
         </div>
       </div>
@@ -92,7 +88,7 @@
               <div class="text-[11px] text-slate-400 font-mono">
                 <span>{{ (docBytes.byteLength / 1024 / 1024).toFixed(2) }} MB</span>
                 <span> • </span>
-                <span>{{ totalPages }} {{ t('pages_label') || '页' }}</span>
+                <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
               </div>
             </div>
           </div>
@@ -121,7 +117,7 @@
               @click="reset" 
               class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 rounded-lg hover:bg-slate-100 transition cursor-pointer ml-2"
             >
-              {{ t('btn_reset_file') || '更换' }}
+              {{ t('btn_reset_file') || 'Reset / Change File' }}
             </button>
           </div>
         </div>
@@ -161,7 +157,7 @@
 
               <!-- Color Presets (For Draw & Type) -->
               <div v-if="activeSignTab === 'draw' || activeSignTab === 'type'" class="flex items-center justify-between mb-2.5">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">墨水颜色:</span>
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_ink_color', 'Ink Color:') }}</span>
                 <div class="flex items-center space-x-2">
                   <button 
                     v-for="c in colorOptions" 
@@ -203,7 +199,7 @@
                   class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                 >
                   <Plus class="w-3.5 h-3.5" />
-                  <span>添加手绘签名到页面</span>
+                  <span>{{ t('sign_add_draw', 'Add drawn signature to page') }}</span>
                 </button>
               </div>
 
@@ -244,7 +240,7 @@
                     :class="{ 'italic': currentSignatureStyle.slant }"
                     :style="{ fontFamily: currentSignatureStyle.fontFamily }"
                   >
-                    {{ typedName || '您的艺术签名' }}
+                    {{ typedName || t('sign_typed_preview', 'Your artistic signature') }}
                   </span>
                 </div>
                 <button 
@@ -253,7 +249,7 @@
                   class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                 >
                   <Plus class="w-3.5 h-3.5" />
-                  <span>添加艺术字签名到页面</span>
+                  <span>{{ t('sign_add_type', 'Add typed signature to page') }}</span>
                 </button>
               </div>
 
@@ -275,7 +271,7 @@
                   </div>
                   <div v-else class="text-slate-400 text-xs flex flex-col items-center">
                     <Upload class="w-5 h-5 mb-1 text-slate-400" />
-                    <span>点击上传透明 PNG 签名或印章</span>
+                    <span>{{ t('sign_upload_hint', 'Click to upload transparent PNG signature or stamp') }}</span>
                   </div>
                 </div>
                 <button 
@@ -284,7 +280,7 @@
                   class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                 >
                   <Plus class="w-3.5 h-3.5" />
-                  <span>添加印章到页面</span>
+                  <span>{{ t('sign_add_upload', 'Add uploaded image to page') }}</span>
                 </button>
               </div>
 
@@ -309,7 +305,7 @@
                   class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                 >
                   <Plus class="w-3.5 h-3.5" />
-                  <span>添加日期戳到页面</span>
+                  <span>{{ t('sign_add_date', 'Add date stamp to page') }}</span>
                 </button>
               </div>
             </div>
@@ -317,7 +313,7 @@
             <!-- Hint: Drag and Resize -->
             <div class="p-2 rounded-xl bg-indigo-50/60 border border-indigo-100 text-[10.5px] text-indigo-900 flex items-start space-x-1.5">
               <CheckCircle2 class="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
-              <span>签名放置后可直接在页面上拖拽移动位置，拖动右下角可任意缩放大小。</span>
+              <span>{{ t('sign_drag_hint', 'Signatures can be dragged to move and resized from the bottom-right corner.') }}</span>
             </div>
           </div>
 
@@ -352,7 +348,7 @@
                 <button 
                   @click.stop="removeSignature(sig.id)"
                   class="absolute -top-2.5 -right-2.5 w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 transition cursor-pointer z-10"
-                  title="删除"
+                  :title="t('sign_action_delete', 'Delete')"
                 >
                   <X class="w-3 h-3" />
                 </button>
@@ -361,7 +357,7 @@
                 <div 
                   @pointerdown.stop="startResizeSig(sig, $event)"
                   class="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-indigo-600 border border-white rounded-full cursor-nwse-resize shadow-xs z-10"
-                  title="缩放大小"
+                  :title="t('sign_action_resize', 'Resize')"
                 ></div>
               </div>
             </div>
@@ -472,9 +468,9 @@ const isVaultPickerOpen = ref(false);
 const activeSignTab = ref('draw'); // 'draw' | 'type' | 'upload' | 'date'
 const activeColor = ref('#0f172a');
 const colorOptions = [
-  { value: '#0f172a', label: '碳黑' },
-  { value: '#1e3a8a', label: '商务蓝' },
-  { value: '#dc2626', label: '印章红' }
+  { value: '#0f172a', label: t('sign_color_black', 'Black') },
+  { value: '#1e3a8a', label: t('sign_color_blue', 'Blue') },
+  { value: '#dc2626', label: t('sign_color_red', 'Red') }
 ];
 
 // Draw Tab State
@@ -488,25 +484,25 @@ const typedName = ref('');
 const signatureStyles = [
   {
     id: 'xingkai',
-    label: '商务行楷',
+    label: t('sign_font_business', 'Business'),
     fontFamily: '"Zhi Mang Xing", "STXingkai", "华文行楷", "Xingkai SC", "FZXingKai-S04S", "KaiTi", "楷体", cursive',
     slant: true,
   },
   {
     id: 'mashan',
-    label: '毛笔手书',
+    label: t('sign_font_brush', 'Brush'),
     fontFamily: '"Ma Shan Zheng", "FZShuTi", "方正舒体", "STKaiti", "华文楷体", "KaiTi", "楷体", cursive',
     slant: false,
   },
   {
     id: 'kaiti',
-    label: '端庄正楷',
+    label: t('sign_font_regular', 'Regular'),
     fontFamily: '"STKaiti", "华文楷体", "KaiTi", "楷体", "Kaiti SC", serif',
     slant: false,
   },
   {
     id: 'cursive',
-    label: '连笔花体',
+    label: t('sign_font_cursive', 'Cursive'),
     fontFamily: '"Great Vibes", "Dancing Script", "Brush Script MT", "Segoe Script", "Zhi Mang Xing", "STXingkai", cursive',
     slant: true,
   }
@@ -526,9 +522,9 @@ const dateFormats = computed(() => {
   const day = String(d.getDate()).padStart(2, '0');
   const year = d.getFullYear();
   return [
-    { id: 'us', sample: `${monthStr} ${day}, ${year}`, label: '欧美月日年' },
-    { id: 'iso', sample: `${year}-${String(d.getMonth() + 1).padStart(2, '0')}-${day}`, label: '国际标准' },
-    { id: 'eu', sample: `${day}/${String(d.getMonth() + 1).padStart(2, '0')}/${year}`, label: '欧洲日月年' }
+    { id: 'us', sample: `${monthStr} ${day}, ${year}`, label: t('sign_date_us', 'US Format') },
+    { id: 'iso', sample: `${year}-${String(d.getMonth() + 1).padStart(2, '0')}-${day}`, label: t('sign_date_iso', 'ISO Standard') },
+    { id: 'eu', sample: `${day}/${String(d.getMonth() + 1).padStart(2, '0')}/${year}`, label: t('sign_date_eu', 'EU Format') }
   ];
 });
 

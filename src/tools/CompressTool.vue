@@ -18,10 +18,6 @@
           </div>
         </div>
 
-        <div class="text-xs text-slate-400 font-mono hidden md:flex items-center space-x-1.5">
-          <Lock class="w-3.5 h-3.5 text-emerald-600" />
-          <span>{{ t('processed_locally') }}</span>
-        </div>
       </div>
 
       <!-- 1. EMPTY STATE DROPZONE (Spacious with Dual-Source Import) -->
@@ -62,7 +58,7 @@
             class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-amber-600/25 cursor-pointer"
           >
             <Plus class="w-4 h-4" />
-            <span>{{ t('merge_btn_from_local') || '选择本地 PDF 文件' }}</span>
+            <span>{{ t('merge_btn_from_local') || 'Add from Computer' }}</span>
           </button>
 
           <!-- From Local Vault -->
@@ -72,7 +68,7 @@
             class="bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 hover:border-slate-400 text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-2xs cursor-pointer"
           >
             <FolderLock class="w-4 h-4 text-amber-600" />
-            <span>{{ t('merge_btn_from_vault') || '从海豹收纳箱中选取' }}</span>
+            <span>{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
           </button>
         </div>
       </div>
@@ -93,7 +89,7 @@
                 <div class="flex items-center space-x-2 text-[11px] text-slate-400 font-mono mt-0.5">
                   <span class="font-bold text-slate-600">{{ originalSizeMb }} MB</span>
                   <span>•</span>
-                  <span>{{ totalPages }} {{ t('pages_label') || '页' }}</span>
+                  <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
                 </div>
               </div>
             </div>
@@ -103,7 +99,7 @@
               @click="reset" 
               class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2.5 py-1.5 rounded-xl hover:bg-slate-200/60 transition cursor-pointer"
             >
-              {{ t('btn_reset_file') || '更换文件' }}
+              {{ t('btn_reset_file') || 'Reset / Change File' }}
             </button>
           </div>
 
@@ -124,7 +120,7 @@
               </span>
             </div>
             <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/80 border shrink-0 font-bold">
-              {{ detectedType === 'vector' ? 'Vector 矢量文档' : 'Scanned 扫描件' }}
+              {{ detectedType === 'vector' ? t('compress_badge_vector', 'Vector') : t('compress_badge_scanned', 'Scanned') }}
             </span>
           </div>
 
@@ -216,7 +212,7 @@
           >
             <Sparkles class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <p class="leading-relaxed">
-              💡 <strong>扫描件提示</strong>：当前文档体积 95%+ 为内部照片，<strong>无损模式绝不压缩照片像素</strong>。如需显著缩减体积，推荐切换至 <strong>「高清推荐 (200~300 DPI)」</strong>，既能保持印刷级清晰度，又能减小 50%~75%！
+              💡 <strong>{{ t('compress_scanned_warn_title', 'Scanned Document Hint') }}</strong>: {{ t('compress_scanned_warn_desc', 'This document consists mostly of images. "Lossless" mode will NOT compress image pixels. To significantly reduce size, please switch to "High Quality (200~300 DPI)", which preserves print quality while shrinking the file by 50%~75%!') }}
             </p>
           </div>
 

@@ -35,4 +35,13 @@ describe('i18n Multi-Language Dictionary Consistency', () => {
     const missingInFr = masterKeys.filter(k => !frKeys.includes(k));
     expect(missingInFr).toEqual([]);
   });
+
+  it('should interpolate {param} variables correctly in t()', async () => {
+    const { t, setLanguage } = await import('../src/i18n.js');
+    setLanguage('en');
+    expect(t('pipeline_slot_free', { count: 0 })).toBe('Flows: 0/3');
+    expect(t('pipeline_slot_free', { count: 2 })).toBe('Flows: 2/3');
+    setLanguage('zh');
+    expect(t('pipeline_slot_free', { count: 1 })).toBe('自定义流程: 1/3');
+  });
 });

@@ -43,15 +43,17 @@
         <span class="text-[11px] text-slate-400">Prefer GitHub or Ko-fi?</span>
         <div class="flex items-center space-x-3 font-medium">
           <a 
-            href="https://github.com/sealkit-org/pdfseal/issues/new" 
+            v-if="siteConfig.githubRepoUrl"
+            :href="`${siteConfig.githubRepoUrl}/issues/new`" 
             target="_blank" 
             class="text-slate-600 hover:text-slate-900 transition hover:underline"
           >
             {{ t('btn_github_issue') }}
           </a>
-          <span class="text-slate-300">•</span>
+          <span v-if="siteConfig.githubRepoUrl && siteConfig.kofiUrl" class="text-slate-300">•</span>
           <a 
-            href="https://ko-fi.com/muffin27" 
+            v-if="siteConfig.kofiUrl"
+            :href="siteConfig.kofiUrl" 
             target="_blank" 
             class="text-amber-700 hover:text-amber-900 transition hover:underline"
           >
@@ -64,8 +66,9 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import { X, Loader2 } from 'lucide-vue-next';
+import { siteConfig } from '../config/siteConfig';
 import { t } from '../i18n';
 
 const props = defineProps({
@@ -75,8 +78,7 @@ const props = defineProps({
 defineEmits(['close']);
 
 const isLoading = ref(true);
-// Embed parameters: hide title, transparent bg, left aligned
-const tallyEmbedUrl = 'https://tally.so/embed/vG9eGg?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1';
+const tallyEmbedUrl = computed(() => siteConfig.feedbackUrl || 'https://tally.so/embed/vG9eGg?alignLeft=1&hideTitle=1&transparentBackground=1&dynamicHeight=1');
 
 watch(() => props.isOpen, (newVal) => {
   if (newVal) {

@@ -1,7 +1,7 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Container (Compact Desktop Viewport Fitting) -->
-    <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-lg sm:shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Unified Compact Header & Toolbar -->
       <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100">
         <!-- Title & Subtitle Badge -->
@@ -278,9 +278,16 @@
                         v-if="file.isEncrypted && !unlockedSessionPasswords.has(file.id)"
                         @click.stop="promptUnlock(file)"
                         class="p-1 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition cursor-pointer"
-                        :title="t('btn_unlock_pdf') || '输入密码解锁'"
+                        :title="t('btn_unlock_pdf') || '🦭 Unlock Document'"
                       >
                         <Key class="w-3.5 h-3.5" />
+                      </button>
+                      <button 
+                        @click.stop="promptRenameFile(file)" 
+                        class="p-1 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                        :title="t('vault_prompt_rename_file') || 'Enter new file name (will auto append .pdf):'"
+                      >
+                        <Pencil class="w-3.5 h-3.5" />
                       </button>
                       <button 
                         @click="previewFile(file)" 
@@ -324,7 +331,7 @@
                       v-else-if="file.isEncrypted" 
                       @click.stop="promptUnlock(file)"
                       class="inline-flex items-center px-1 py-0.2 text-[8px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 hover:border-amber-300 rounded shrink-0 cursor-pointer transition active:scale-95"
-                      :title="t('btn_unlock_pdf') || '点击输入密码解锁'"
+                      :title="t('btn_unlock_pdf') || '🦭 Unlock Document'"
                     >
                       <Lock class="w-2 h-2 mr-0.5" />
                       {{ t('badge_pwd_required') }}
@@ -421,7 +428,7 @@
                         class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
                       >
                         <Send class="w-4 h-4 text-blue-600" />
-                        <span>{{ t('vault_action_send_e2ee') || '🚀 加密外发' }}</span>
+                        <span>{{ t('vault_action_send_e2ee') || '🚀 Seal Send' }}</span>
                       </button>
                     </div>
                   </div>
@@ -488,7 +495,7 @@
                             v-else-if="file.isEncrypted" 
                             @click.stop="promptUnlock(file)"
                             class="inline-flex items-center px-1.5 py-0.2 text-[9px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 hover:border-amber-300 rounded-md shrink-0 cursor-pointer transition active:scale-95"
-                            :title="t('btn_unlock_pdf') || '点击输入密码解锁'"
+                            :title="t('btn_unlock_pdf') || '🦭 Unlock Document'"
                           >
                             <Lock class="w-2.5 h-2.5 mr-0.5" />
                             {{ t('badge_pwd_required') }}
@@ -521,9 +528,16 @@
                             v-if="file.isEncrypted && !unlockedSessionPasswords.has(file.id)"
                             @click.stop="promptUnlock(file)" 
                             class="p-1.5 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg transition cursor-pointer"
-                            :title="t('btn_unlock_pdf') || '输入密码解锁'"
+                            :title="t('btn_unlock_pdf') || '🦭 Unlock Document'"
                           >
                             <Key class="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            @click.stop="promptRenameFile(file)" 
+                            class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
+                            :title="t('vault_prompt_rename_file') || 'Enter new file name (will auto append .pdf):'"
+                          >
+                            <Pencil class="w-3.5 h-3.5" />
                           </button>
                           <button 
                             @click="previewFile(file)" 
@@ -619,7 +633,7 @@
                                 class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
                               >
                                 <Send class="w-4 h-4 text-blue-600" />
-                                <span>{{ t('vault_action_send_e2ee') || '🚀 加密外发' }}</span>
+                                <span>{{ t('vault_action_send_e2ee') || '🚀 Seal Send' }}</span>
                               </button>
                             </div>
                           </div>
@@ -731,7 +745,7 @@ import {
   getFiles, saveFile, deleteFile, clearVault, 
   getFolders, createFolder, renameFolder, deleteFolder, 
   getVaultStorageStats, checkDuplicateHash, computeSha256,
-  updateFileEncryption
+  updateFileEncryption, renameFile
 } from '../utils/vaultDb';
 import DuplicateModal from '../components/DuplicateModal.vue';
 import VaultPreviewModal from '../components/VaultPreviewModal.vue';
@@ -1095,6 +1109,18 @@ async function openNewFolderPrompt() {
     const created = await createFolder(name.trim());
     await refreshVault();
     activeFolderId.value = created.id;
+  }
+}
+
+async function promptRenameFile(file) {
+  const newName = prompt(t('vault_prompt_rename_file') || 'Rename file:', file.name);
+  if (newName && newName.trim() && newName !== file.name) {
+    let finalName = newName.trim();
+    if (!finalName.toLowerCase().endsWith('.pdf')) {
+      finalName += '.pdf';
+    }
+    await renameFile(file.id, finalName);
+    await refreshVault();
   }
 }
 

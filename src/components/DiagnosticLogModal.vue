@@ -15,14 +15,14 @@
           <div>
             <div class="flex items-center space-x-2">
               <h3 class="font-bold text-slate-100 text-base leading-tight">
-                {{ t('log_modal_title') || '实时诊断日志控制台' }}
+                {{ t('log_modal_title') || 'Diagnostic Logs Console' }}
               </h3>
               <span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-sans">
-                {{ filteredLogs.length }} {{ t('log_entries_count') || '条记录' }}
+                {{ filteredLogs.length }} {{ t('log_entries_count') || 'entries' }}
               </span>
             </div>
             <p class="text-xs text-slate-400 font-sans mt-0.5">
-              {{ t('log_modal_desc') || '实时监控 PDF 安全校验、解密链路、图层提取与装配流水线' }}
+              {{ t('log_modal_desc') || 'Real-time monitoring of security verification, decryption pipelines, and page assembly' }}
             </p>
           </div>
         </div>
@@ -44,7 +44,7 @@
             <input 
               type="text" 
               v-model="searchQuery" 
-              :placeholder="t('log_search_placeholder') || '搜索日志关键字/标签/文件名...'" 
+              :placeholder="t('log_search_placeholder') || 'Search logs by keyword, tag, filename...'" 
               class="w-full text-xs bg-slate-900 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-slate-200 focus:outline-hidden focus:border-blue-500"
             >
           </div>
@@ -73,7 +73,7 @@
             class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center space-x-1"
           >
             <Copy class="w-3.5 h-3.5" />
-            <span>{{ copySuccess ? (t('copied') || '已复制!') : (t('log_btn_copy') || '复制全部') }}</span>
+            <span>{{ copySuccess ? (t('copied') || 'Copied!') : (t('log_btn_copy') || 'Copy All') }}</span>
           </button>
 
           <button 
@@ -82,7 +82,7 @@
             class="text-xs bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center space-x-1"
           >
             <Download class="w-3.5 h-3.5" />
-            <span>{{ t('log_btn_export') || '导出日志' }}</span>
+            <span>{{ t('log_btn_export') || 'Export Log' }}</span>
           </button>
 
           <button 
@@ -91,7 +91,7 @@
             class="text-xs text-rose-400 hover:bg-rose-950/40 border border-rose-900/30 px-3 py-1.5 rounded-xl transition cursor-pointer flex items-center space-x-1"
           >
             <Trash2 class="w-3.5 h-3.5" />
-            <span>{{ t('log_btn_clear') || '清空' }}</span>
+            <span>{{ t('log_btn_clear') || 'Clear' }}</span>
           </button>
         </div>
       </div>
@@ -100,7 +100,7 @@
       <div ref="logContainerRef" class="flex-1 overflow-y-auto py-3 space-y-1.5 text-[11px] leading-relaxed select-text scrollbar-thin">
         <div v-if="filteredLogs.length === 0" class="text-center py-20 text-slate-600 font-sans">
           <Terminal class="w-8 h-8 mx-auto mb-2 opacity-30" />
-          <p>{{ t('log_empty_hint') || '暂无匹配的诊断日志记录' }}</p>
+          <p>{{ t('log_empty_hint') || 'No matching diagnostic logs recorded' }}</p>
         </div>
 
         <div 
@@ -133,7 +133,7 @@
             <button 
               @click="copySingleEntry(entry)" 
               class="opacity-0 group-hover:opacity-100 text-slate-500 hover:text-slate-300 p-1 rounded-md transition cursor-pointer"
-              title="复制此条日志"
+              :title="t('log_action_copy', 'Copy this log')"
             >
               <Copy class="w-3 h-3" />
             </button>
@@ -153,14 +153,14 @@
       <div class="pt-3 border-t border-slate-800 flex items-center justify-between text-xs text-slate-500 font-sans shrink-0">
         <div class="flex items-center space-x-2">
           <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>{{ t('log_live_active') || '诊断监听引擎处于活动状态 (100% 本地浏览器内存沙箱)' }}</span>
+          <span>{{ t('log_live_active') || 'Diagnostic engine active (100% local browser memory sandbox)' }}</span>
         </div>
 
         <button 
           @click="$emit('close')" 
           class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-5 py-1.5 rounded-xl transition cursor-pointer text-xs font-bold font-sans"
         >
-          {{ t('btn_close') || '关闭' }}
+          {{ t('btn_close') || 'Close' }}
         </button>
       </div>
     </div>

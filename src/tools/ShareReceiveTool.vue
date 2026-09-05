@@ -13,11 +13,11 @@
           </div>
           <div>
             <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight flex items-center justify-center sm:justify-start space-x-2">
-              <span>{{ t('receive_title') || '海豹端到端加密安全提取' }}</span>
+              <span>{{ t('receive_title') || 'Seal Zero-Knowledge E2EE Extraction' }}</span>
               <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-600 border border-blue-200">E2EE</span>
             </h2>
             <p class="text-xs text-slate-400 font-medium mt-1">
-              {{ t('receive_subtitle') || '零知识本地内存解密 · 任何第三方均无法查看原件' }}
+              {{ t('receive_subtitle') || 'In-Browser Local Decryption · Zero Server Leakage' }}
             </p>
           </div>
         </div>
@@ -27,7 +27,7 @@
           @click="$emit('exit-receive')"
           class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition cursor-pointer"
         >
-          {{ t('receive_btn_return_tools') || '返回 PDF 工具箱' }}
+          {{ t('receive_btn_return_tools') || 'Back to PDF Tools' }}
         </button>
       </div>
 
@@ -35,8 +35,8 @@
       <div v-if="isLoading" class="py-16 flex flex-col items-center justify-center text-center space-y-4">
         <Loader2 class="w-10 h-10 text-blue-600 animate-spin" />
         <div>
-          <p class="text-sm font-bold text-slate-800">{{ t('receive_loading_info') || '正在从安全盲盒获取密文切片...' }}</p>
-          <p class="text-xs text-slate-400 mt-1">正在校验客户端零知识密钥</p>
+          <p class="text-sm font-bold text-slate-800">{{ t('receive_loading_info') || 'Fetching ciphertext from secure relay...' }}</p>
+          <p class="text-xs text-slate-400 mt-1">{{ t('recv_verifying', 'Verifying client-side zero-knowledge key') }}</p>
         </div>
       </div>
 
@@ -48,7 +48,7 @@
         </div>
         <div class="max-w-md">
           <h3 class="text-base font-extrabold text-slate-900">
-            {{ isBurned ? (t('receive_err_burned_title') || '该文件已阅后即焚销毁') : (t('receive_err_expired_title') || '文件不存在或已过期') }}
+            {{ isBurned ? (t('receive_err_burned_title') || 'File Burned / Destroyed') : (t('receive_err_expired_title') || 'File Expired or Not Found') }}
           </h3>
           <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
             {{ errorMessage }}
@@ -58,7 +58,7 @@
           @click="$emit('exit-receive')"
           class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold px-6 py-2.5 rounded-xl transition shadow-md hover:shadow-blue-600/25 cursor-pointer mt-2"
         >
-          {{ t('receive_btn_home') || '前往首页开始处理 PDF' }}
+          {{ t('receive_btn_home') || 'Go to Home' }}
         </button>
       </div>
 
@@ -76,7 +76,7 @@
               </p>
               <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-slate-500 font-medium">
                 <span>{{ formatBytes(decryptedResult ? decryptedResult.size : (fileInfo ? fileInfo.size : 0)) }}</span>
-                <span v-if="decryptedResult">· {{ decryptedResult.pageCount }} {{ t('page_unit') || '页' }}</span>
+                <span v-if="decryptedResult">· {{ decryptedResult.pageCount }} {{ t('page_unit') || 'pages' }}</span>
                 <span>·</span>
                 <span class="font-mono text-emerald-600 font-bold">AES-256-GCM</span>
               </div>
@@ -87,7 +87,7 @@
           <div class="flex items-center space-x-2 shrink-0">
             <span v-if="fileInfo?.burnAfterRead" class="flex items-center space-x-1 text-xs font-bold px-3 py-1 rounded-full bg-rose-50 text-rose-600 border border-rose-200 shadow-2xs">
               <Flame class="w-3.5 h-3.5" />
-              <span>{{ t('receive_badge_burn') || '阅后即焚（下载后立即物理销毁）' }}</span>
+              <span>{{ t('receive_badge_burn') || 'Burn-after-Reading (Destroyed after 1 download)' }}</span>
             </span>
             <span v-else class="flex items-center space-x-1 text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-600 border border-blue-200 shadow-2xs">
               <Clock class="w-3.5 h-3.5" />
@@ -100,14 +100,14 @@
         <div v-if="requiresPassword && !decryptedResult" class="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-4 sm:p-5 space-y-3">
           <div class="flex items-center space-x-2 text-amber-900 font-bold text-xs">
             <Lock class="w-4 h-4 text-amber-600" />
-            <span>{{ t('receive_pin_required_title') || '此分享已设置提取密码保护' }}</span>
+            <span>{{ t('receive_pin_required_title') || 'This share is protected with a PIN' }}</span>
           </div>
           <div class="flex items-center space-x-2">
             <input 
               v-model="inputPassword" 
               type="password" 
               maxlength="16"
-              :placeholder="t('receive_pin_input_placeholder') || '请输入提取密码/PIN码'"
+              :placeholder="t('receive_pin_input_placeholder') || 'Enter PIN / Password to unlock'"
               class="w-full text-xs font-mono font-bold bg-white border border-slate-200 rounded-xl px-3.5 py-2.5 focus:ring-2 focus:ring-amber-500 outline-hidden tracking-widest placeholder:font-sans placeholder:tracking-normal placeholder:text-slate-400"
               @keydown.enter="executeDecrypt"
             >
@@ -121,8 +121,8 @@
         <div v-if="decryptedResult" class="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 flex items-center space-x-3 text-emerald-900 animate-in fade-in duration-200">
           <CheckCircle2 class="w-5 h-5 text-emerald-600 shrink-0" />
           <div class="text-xs">
-            <p class="font-bold">{{ t('receive_decrypted_ready_title') || '已在本地内存成功解密 PDF 原件！' }}</p>
-            <p class="text-emerald-700/80 mt-0.5">您可以直接下载、在本地预览或一键存入您的海豹收纳箱。</p>
+            <p class="font-bold">{{ t('receive_decrypted_ready_title') || 'PDF Document Decrypted Locally in RAM!' }}</p>
+            <p class="text-emerald-700/80 mt-0.5">{{ t('recv_success_desc', 'You can download, preview, or save directly to your Vault.') }}</p>
           </div>
         </div>
 
@@ -137,7 +137,7 @@
           >
             <Loader2 v-if="isDecrypting" class="w-4 h-4 animate-spin" />
             <Unlock v-else class="w-4 h-4" />
-            <span>{{ isDecrypting ? (t('receive_state_decrypting') || '正在本地解密 (AES-256)...') : (t('receive_btn_decrypt_download') || '本地解密并下载 PDF') }}</span>
+            <span>{{ isDecrypting ? (t('receive_state_decrypting') || 'Decrypting locally (AES-256)...') : (t('receive_btn_decrypt_download') || 'Decrypt & Download PDF') }}</span>
           </button>
 
           <!-- Post-Decryption Actions -->
@@ -148,7 +148,7 @@
               class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer"
             >
               <Eye class="w-4 h-4 text-slate-500" />
-              <span>{{ t('vault_action_preview') || '本地安全预览' }}</span>
+              <span>{{ t('vault_action_preview') || 'Quick Preview' }}</span>
             </button>
 
             <!-- Save to Vault Button -->
@@ -157,7 +157,7 @@
               class="px-4 py-2.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 cursor-pointer shadow-2xs"
             >
               <FolderLock class="w-4 h-4 text-indigo-600" />
-              <span>{{ isSavedToVault ? (t('vault_saved') || '已存入收纳箱') : (t('receive_btn_save_vault') || '存入我的海豹收纳箱') }}</span>
+              <span>{{ isSavedToVault ? (t('vault_saved') || 'Saved to Vault') : (t('receive_btn_save_vault') || 'Save to My Vault') }}</span>
             </button>
 
             <!-- Download Button -->
@@ -166,7 +166,7 @@
               class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold text-xs px-6 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md hover:shadow-blue-600/25 cursor-pointer"
             >
               <Download class="w-4 h-4" />
-              <span>{{ t('download') || '下载 PDF' }}</span>
+              <span>{{ t('download') || 'Download PDF' }}</span>
             </button>
           </template>
         </div>
@@ -239,7 +239,7 @@ watch(() => props.shareId, async () => {
 
 async function loadShareData() {
   if (!props.shareId || !props.keyUrlSafe) {
-    errorMessage.value = '无效或不完整的解密链接（缺少密钥参数）。';
+    errorMessage.value = t('recv_err_link', 'Invalid or incomplete decryption link (missing key parameter).');
     isLoading.value = false;
     return;
   }
@@ -259,9 +259,9 @@ async function loadShareData() {
     logger.error('RECEIVE', `Failed to fetch payload info: ${err.message}`);
     if (err.message.includes('EXPIRED') || err.message.includes('DESTROYED')) {
       isBurned.value = true;
-      errorMessage.value = '该文件已达到有效期限，或已被阅后即焚规则自动从云端物理抹除。';
+      errorMessage.value = t('recv_err_exp', 'The file has expired or has been automatically wiped by the burn-after-read rule.');
     } else {
-      errorMessage.value = '无法连接到中转盲盒或文件不存在。';
+      errorMessage.value = t('recv_err_conn', 'Cannot connect to relay endpoint or file does not exist.');
     }
   } finally {
     isLoading.value = false;
@@ -270,7 +270,7 @@ async function loadShareData() {
 
 async function executeDecrypt() {
   if (requiresPassword.value && !inputPassword.value.trim()) {
-    passwordError.value = t('pwd_error_empty') || '请输入提取密码';
+    passwordError.value = t('pwd_error_empty') || 'Please enter extraction password';
     return;
   }
 
@@ -308,12 +308,12 @@ async function executeDecrypt() {
   } catch (err) {
     logger.error('RECEIVE', `Decryption failed: ${err.message}`);
     if (err.message === 'INVALID_PASSWORD') {
-      passwordError.value = t('pwd_error_wrong') || '提取密码不正确，请重新输入';
+      passwordError.value = t('pwd_error_wrong') || 'Incorrect password. Please verify and try again.';
     } else if (err.message.includes('EXPIRED') || err.message.includes('DESTROYED')) {
       isBurned.value = true;
-      errorMessage.value = '该文件已阅后即焚销毁。';
+      errorMessage.value = t('recv_err_burned', 'The file has been destroyed (burn-after-read).');
     } else {
-      passwordError.value = '解密失败：' + err.message;
+      passwordError.value = t('recv_err_decrypt', 'Decryption failed: ') + err.message;
     }
   } finally {
     isDecrypting.value = false;
@@ -364,11 +364,11 @@ function formatBytes(bytes) {
 }
 
 function formatExpiresLabel(timestamp) {
-  if (!timestamp) return '24 小时内有效';
+  if (!timestamp) return t('recv_exp_24h', 'Valid for 24 Hours');
   const diffHours = Math.round((timestamp - Date.now()) / (1000 * 3600));
-  if (diffHours <= 1) return '约 1 小时内有效';
-  if (diffHours < 24) return `${diffHours} 小时内有效`;
+  if (diffHours <= 1) return t('recv_exp_1h', 'Valid within 1 hour');
+  if (diffHours < 24) return t('recv_exp_h', 'Valid for {h} hours', {h: diffHours});
   const diffDays = Math.round(diffHours / 24);
-  return `${diffDays} 天内有效`;
+  return t('recv_exp_d', 'Valid for {d} days', {d: diffDays});
 }
 </script>
