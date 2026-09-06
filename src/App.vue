@@ -91,6 +91,7 @@ import ImageToPdfTool from './tools/ImageToPdfTool.vue';
 import UnlockTool from './tools/UnlockTool.vue';
 import WatermarkTool from './tools/WatermarkTool.vue';
 import SanitizeTool from './tools/SanitizeTool.vue';
+import ProtectTool from './tools/ProtectTool.vue';
 import VaultTool from './tools/VaultTool.vue';
 import ShareReceiveTool from './tools/ShareReceiveTool.vue';
 import PipelineTool from './tools/PipelineTool.vue';
@@ -106,6 +107,7 @@ const toolComponents = {
   sign: SignTool,
   image_to_pdf: ImageToPdfTool,
   unlock: UnlockTool,
+  protect: ProtectTool,
   watermark: WatermarkTool,
   sanitize: SanitizeTool,
   receive: ShareReceiveTool

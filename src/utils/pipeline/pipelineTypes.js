@@ -169,6 +169,27 @@ export const AVAILABLE_NODES = {
       forceOrientation: 'none', // 'none' | 'portrait' | 'landscape'
       rotateAll: 'none' // 'none' | '90' | '-90' | '180'
     }
+  },
+
+  node_protect: {
+    id: 'node_protect',
+    nameKey: 'tab_protect',
+    defaultName: '加密保护',
+    descKey: 'node_protect_desc',
+    defaultDesc: '批量设置打开密码，或全局限制复制、修改、打印防篡改',
+    category: 'security',
+    inputs: [DATA_TYPES.PDF_DOCS],
+    outputs: [DATA_TYPES.PDF_DOCS],
+    topology: TOPOLOGY_MODES.MAP,
+    defaultParams: {
+      userPassword: '',
+      ownerPassword: '',
+      algorithm: 'AES-256',
+      allowPrinting: false,
+      allowCopying: false,
+      allowModifying: false,
+      allowAnnotating: false
+    }
   }
 };
 
