@@ -7,6 +7,7 @@ import { executeSanitizeNode } from './sanitizeNode';
 import { executeSignNode } from './signNode';
 import { executeImg2PdfNode } from './img2pdfNode';
 import { executeOrganizeNode } from './organizeNode';
+import { executeProtectNode } from './protectNode';
 
 export const NODE_EXECUTORS = {
   node_unlock: executeUnlockNode,
@@ -17,7 +18,8 @@ export const NODE_EXECUTORS = {
   node_sanitize: executeSanitizeNode,
   node_sign: executeSignNode,
   node_img2pdf: executeImg2PdfNode,
-  node_organize: executeOrganizeNode
+  node_organize: executeOrganizeNode,
+  node_protect: executeProtectNode
 };
 
 export async function executePipelineNode(nodeId, items, params = {}, onProgress = () => {}) {

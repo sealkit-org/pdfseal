@@ -268,8 +268,9 @@ const primaryTools = [
 
 // More Secondary Tools Dropdown (Fixed & predictable)
 const moreTools = [
-  { id: 'image_to_pdf', labelKey: 'tab_image_to_pdf', icon: Images, color: 'text-violet-600' },
+  { id: 'protect', labelKey: 'tab_protect', icon: Lock, color: 'text-rose-600' },
   { id: 'unlock', labelKey: 'tab_unlock', icon: Unlock, color: 'text-emerald-600' },
+  { id: 'image_to_pdf', labelKey: 'tab_image_to_pdf', icon: Images, color: 'text-violet-600' },
   { id: 'watermark', labelKey: 'tab_watermark', icon: Stamp, color: 'text-amber-600' },
   { id: 'sanitize', labelKey: 'tab_sanitize', icon: ShieldCheck, color: 'text-blue-600' }
 ];
