@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
     <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
@@ -84,7 +84,7 @@
                   {{ filename }}
                 </p>
                 <div class="flex items-center space-x-2 text-[11px] text-slate-400 font-mono mt-0.5">
-                  <span class="font-bold text-slate-600">{{ originalSizeMb }} MB</span>
+                  <span class="font-bold text-slate-600">{{ originalSizeFormatted }}</span>
                   <span>•</span>
                   <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
                   <span v-if="alreadyEncrypted" class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">
@@ -441,10 +441,18 @@ const fileInputRef = ref(null);
 const docBytes = ref(null);
 const filename = ref('');
 const totalPages = ref(0);
-const originalSizeMb = ref('0.00');
+const originalSizeFormatted = ref('0 B');
 const isDragOver = ref(false);
 const isProcessing = ref(false);
 const isVaultPickerOpen = ref(false);
+
+function formatBytes(bytes) {
+  if (!bytes || bytes === 0) return '0 B';
+  const k = 1024;
+  const sizes = ['B', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
 
 // Passwords and security controls
 const userPassword = ref('');
@@ -523,11 +531,11 @@ function onDrop(e) {
   if (file && file.type === 'application/pdf') loadFile(file);
 }
 
-function handleVaultFilesSelected(selected) {
+function handleVaultFilesSelected(selectedFiles) {
   isVaultPickerOpen.value = false;
-  if (selected && selected.length > 0) {
-    const v = selected[0];
-    const file = new File([v.arrayBuffer], v.name, { type: 'application/pdf' });
+  if (!selectedFiles || selectedFiles.length === 0) return;
+  const file = selectedFiles[0];
+  if (file) {
     loadFile(file);
   }
 }
@@ -550,7 +558,7 @@ async function loadFile(file, password = '') {
     alreadyEncrypted.value = sec.isEncrypted;
     docBytes.value = new Uint8Array(rawBuffer);
     filename.value = file.name;
-    originalSizeMb.value = (rawBuffer.byteLength / (1024 * 1024)).toFixed(2);
+    originalSizeFormatted.value = formatBytes(rawBuffer.byteLength);
     protectError.value = '';
 
     const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
@@ -595,13 +603,32 @@ function reset() {
   docBytes.value = null;
   filename.value = '';
   totalPages.value = 0;
-  originalSizeMb.value = '0.00';
+  originalSizeFormatted.value = '0 B';
   userPassword.value = '';
   confirmUserPassword.value = '';
   ownerPassword.value = '';
   alreadyEncrypted.value = false;
   protectError.value = '';
   customOutputBaseName.value = '';
+}
+
+function formatErrorMessage(err) {
+  if (!err) return t('protect_err_failed') || '加密保护处理失败，请重试。';
+  const msg = err.message || String(err);
+
+  if (/invalid pdf structure|failed to parse|no pdf header/i.test(msg)) {
+    return t('protect_err_invalid_pdf') || 'PDF 文件结构异常或已损坏，无法进行加密保护。';
+  }
+  if (/already password-protected|already encrypted/i.test(msg)) {
+    return t('protect_err_already_encrypted') || '该文档已被加密，请先解除现有密码保护后再进行加密。';
+  }
+  if (/password/i.test(msg) && (/incorrect|wrong|invalid/i.test(msg))) {
+    return t('pwd_error_wrong') || '密码不正确，请重新输入。';
+  }
+  if (/unsupported password character|prohibited password character/i.test(msg)) {
+    return t('protect_err_unsupported_char') || '密码包含不受支持的特殊字符，请尝试更换密码。';
+  }
+  return t('protect_err_failed') || `加密保护处理失败: ${msg}`;
 }
 
 async function executeProtect() {
@@ -624,11 +651,16 @@ async function executeProtect() {
 
   try {
     // 1. Ensure clean base document
-    const cleanDoc = await loadCleanPdfDocument(docBytes.value, {
-      password: currentLoadedCleanPassword || '',
-      preserveWatermarks: true
-    });
-    const rawBytes = await cleanDoc.save({ useObjectStreams: false });
+    let rawBytes;
+    if (alreadyEncrypted.value) {
+      const cleanDoc = await loadCleanPdfDocument(docBytes.value, {
+        password: currentLoadedCleanPassword || '',
+        preserveWatermarks: true
+      });
+      rawBytes = await cleanDoc.save({ useObjectStreams: false });
+    } else {
+      rawBytes = docBytes.value;
+    }
 
     // 2. Apply EncryptPDF
     const encryptedBytes = await encryptPDF(rawBytes, userPassword.value, {
@@ -666,7 +698,7 @@ async function executeProtect() {
     }
   } catch (err) {
     logger.error('PROTECT', `Protect failed: ${err.message}`);
-    protectError.value = err.message || 'Encryption failed. Please check inputs and try again.';
+    protectError.value = formatErrorMessage(err);
   } finally {
     isProcessing.value = false;
   }

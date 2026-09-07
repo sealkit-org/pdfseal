@@ -744,5 +744,9 @@
   "protect_err_no_pwd": "Bitte legen Sie ein Öffnungs- oder Berechtigungspasswort fest",
   "protect_status_success": "PDF erfolgreich lokal verschlüsselt und geschützt",
   "node_protect_title": "PDF-Stapelverschlüsselung & Schutz",
-  "node_protect_desc": "Öffnungspasswort stapelweise zuweisen oder Drucken, Kopieren einschränken"
+  "node_protect_desc": "Öffnungspasswort stapelweise zuweisen oder Drucken, Kopieren einschränken",
+  "protect_err_invalid_pdf": "Die PDF-Struktur ist ungültig oder beschädigt. Verschlüsselung nicht möglich.",
+  "protect_err_already_encrypted": "Dieses Dokument ist bereits passwortgeschützt. Bitte heben Sie den Schutz zuerst auf.",
+  "protect_err_unsupported_char": "Das Passwort enthält nicht unterstützte Sonderzeichen. Bitte verwenden Sie Standardzeichen.",
+  "protect_err_failed": "Verschlüsselung fehlgeschlagen. Bitte Eingaben prüfen und erneut versuchen."
 }
