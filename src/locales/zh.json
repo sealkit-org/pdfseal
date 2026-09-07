@@ -744,5 +744,9 @@
   "protect_err_no_pwd": "请至少设置一个打开密码或权限管理密码",
   "protect_status_success": "PDF 已在浏览器本地完成安全加密与权限锁定",
   "node_protect_title": "PDF 批量加密与权限锁定",
-  "node_protect_desc": "批量设置打开密码，或全局限制复制、修改、打印防篡改"
+  "node_protect_desc": "批量设置打开密码，或全局限制复制、修改、打印防篡改",
+  "protect_err_invalid_pdf": "PDF 文件结构异常或已损坏，无法进行加密保护。",
+  "protect_err_already_encrypted": "该文档已被加密，请先解除现有密码保护后再进行加密。",
+  "protect_err_unsupported_char": "密码包含不受支持的特殊字符，请使用常用字符。",
+  "protect_err_failed": "加密保护处理失败，请检查输入后重试。"
 }

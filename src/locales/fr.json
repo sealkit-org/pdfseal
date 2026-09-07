@@ -744,5 +744,9 @@
   "protect_err_no_pwd": "Veuillez définir au moins un mot de passe d'ouverture ou propriétaire",
   "protect_status_success": "PDF chiffré et protégé avec succès localement",
   "node_protect_title": "Chiffrement et protection PDF par lots",
-  "node_protect_desc": "Définir un mot de passe d'ouverture par lots ou restreindre la copie et l'impression"
+  "node_protect_desc": "Définir un mot de passe d'ouverture par lots ou restreindre la copie et l'impression",
+  "protect_err_invalid_pdf": "La structure du PDF est invalide ou corrompue. Impossible de chiffrer.",
+  "protect_err_already_encrypted": "Ce document est déjà protégé par mot de passe. Veuillez d'abord le déverrouiller.",
+  "protect_err_unsupported_char": "Le mot de passe contient des caractères spéciaux non pris en charge. Veuillez utiliser des caractères standard.",
+  "protect_err_failed": "Échec du chiffrement. Veuillez vérifier les entrées et réessayer."
 }

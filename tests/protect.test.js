@@ -1,4 +1,4 @@
-﻿import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
 import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../src/utils/pdfSecurity';
@@ -121,4 +121,12 @@ describe('PDF Protect & Encryption Engine', () => {
     expect(results[0].name).toBe('doc_Protected.pdf');
     expect(results[0].isEncrypted).toBe(true);
   });
+
+  it('should throw an error on malformed or non-PDF bytes', async () => {
+    const corruptedBytes = new TextEncoder().encode('function arrayBuffer() { [native code] }');
+    await expect(
+      encryptPDF(corruptedBytes, 'pass123', { algorithm: 'AES-256' })
+    ).rejects.toThrow(/failed to parse|no pdf header|invalid pdf/i);
+  });
 });
+

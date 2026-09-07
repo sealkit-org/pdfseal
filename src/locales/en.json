@@ -744,5 +744,9 @@
   "protect_err_no_pwd": "Please set an open password or owner password",
   "protect_status_success": "PDF successfully encrypted and protected locally",
   "node_protect_title": "Batch PDF Encryption & Lock",
-  "node_protect_desc": "Batch apply open password or restrict copying, modifying, and printing"
+  "node_protect_desc": "Batch apply open password or restrict copying, modifying, and printing",
+  "protect_err_invalid_pdf": "The PDF structure is invalid or corrupted. Unable to encrypt.",
+  "protect_err_already_encrypted": "This document is already password-protected. Please unlock it first.",
+  "protect_err_unsupported_char": "Password contains unsupported special characters. Please use standard characters.",
+  "protect_err_failed": "Encryption failed. Please check inputs and try again."
 }

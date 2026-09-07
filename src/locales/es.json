@@ -744,5 +744,9 @@
   "protect_err_no_pwd": "Establezca al menos una contraseña de apertura o de propietario",
   "protect_status_success": "PDF cifrado y protegido exitosamente a nivel local",
   "node_protect_title": "Cifrado y protección de PDF por lotes",
-  "node_protect_desc": "Asignar contraseña de apertura por lotes o restringir copiado e impresión"
+  "node_protect_desc": "Asignar contraseña de apertura por lotes o restringir copiado e impresión",
+  "protect_err_invalid_pdf": "La estructura del PDF no es válida o está dañada. No se puede cifrar.",
+  "protect_err_already_encrypted": "Este documento ya está protegido por contraseña. Desbloquéelo primero.",
+  "protect_err_unsupported_char": "La contraseña contiene caracteres especiales no admitidos. Utilice caracteres estándar.",
+  "protect_err_failed": "Error de cifrado. Verifique las entradas e intente nuevamente."
 }

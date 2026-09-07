@@ -932,11 +932,25 @@ function formatDate(ts) {
   return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
 }
 
+const HTML_ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (c) => HTML_ESCAPES[c]);
+}
+
 function highlightKeyword(filename) {
-  if (!searchQuery.value.trim()) return filename;
   const q = searchQuery.value.trim();
-  const reg = new RegExp(`(${q})`, 'gi');
-  return filename.replace(reg, '<mark class="bg-amber-200 text-amber-900 rounded-sm px-0.5">$1</mark>');
+  if (!q) return escapeHtml(filename);
+  // Escape regex metacharacters in the query to prevent RegExp injection
+  const safeQuery = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const reg = new RegExp(`(${safeQuery})`, 'gi');
+  // Split first, then escape each segment so user-controlled filenames
+  // can never inject markup into the v-html output
+  return filename
+    .split(reg)
+    .map((part, i) => (i % 2 === 1
+      ? `<mark class="bg-amber-200 text-amber-900 rounded-sm px-0.5">${escapeHtml(part)}</mark>`
+      : escapeHtml(part)))
+    .join('');
 }
 
 // File Import & Hash Duplicate Check & Encryption Detection
