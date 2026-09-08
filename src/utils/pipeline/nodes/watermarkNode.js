@@ -1,6 +1,5 @@
 import { StandardFonts, rgb } from 'pdf-lib';
 import { loadCleanPdfDocument } from '../../pdfSecurity';
-import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
 import { logger } from '../../logger';
 
 /**
@@ -8,7 +7,7 @@ import { logger } from '../../logger';
  * Applies watermark text/stamp across all pages of input items.
  * 
  * @param {Array<Object>} items 
- * @param {Object} params - { text: 'CONFIDENTIAL', opacity: 0.25, rotation: 45, color: '#808080', ownerPassword: '' }
+ * @param {Object} params - { text: 'CONFIDENTIAL', opacity: 0.25, rotation: 45, color: '#808080' }
  * @param {Function} [onProgress]
  * @returns {Promise<Array<Object>>}
  */
@@ -17,7 +16,6 @@ export async function executeWatermarkNode(items, params = {}, onProgress = () =
   const text = params.text || 'CONFIDENTIAL';
   const opacity = params.opacity !== undefined ? Number(params.opacity) : 0.25;
   const rotation = params.rotation !== undefined ? Number(params.rotation) : 45;
-  const ownerPassword = params.ownerPassword || '';
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
@@ -82,16 +80,6 @@ export async function executeWatermarkNode(items, params = {}, onProgress = () =
       }
 
       let outBytes = await doc.save({ useObjectStreams: true });
-
-      // Apply owner lock if requested
-      if (ownerPassword) {
-        outBytes = await encryptPDF(outBytes, '', ownerPassword, {
-          printing: 'highResolution',
-          modifying: false,
-          copying: false,
-          annotating: false
-        });
-      }
 
       result.push({
         ...item,

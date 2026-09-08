@@ -222,13 +222,8 @@ async function runWatermarkBusinessTest() {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'watermark_02_parameters_configured.png') });
     console.log('  📷 Screenshot saved: watermark_02_parameters_configured.png');
 
-    // 5. Verify Tamper Protection & Customize Filename
-    console.log('📍 [Step 5] Checking Tamper Protection & Customizing Output Filename...');
-    const isTamperChecked = await page.evaluate(() => {
-      const checkbox = document.querySelector('[data-testid="wm-tamper-checkbox"]');
-      return checkbox ? checkbox.checked : false;
-    });
-    console.log(`  ✓ Read-only Tamper Protection Enabled: ${isTamperChecked}`);
+    // 5. Customize Output Filename
+    console.log('📍 [Step 5] Customizing Output Filename...');
 
     // Customize Output Filename
     const outputCustomName = 'E2E_Watermarked_Confidential_Audit';
@@ -308,16 +303,14 @@ async function runWatermarkBusinessTest() {
       throw new Error(`Expected exactly 2 pages, got ${totalPages}`);
     }
 
-    // Verify Tamper Protection: Owner Restricted
+    // Verify Security Status: Clean Unencrypted Document
     const { verifyPdfSecurity } = await import('../src/utils/pdfSecurity.js');
     const sec = await verifyPdfSecurity(downloadedBytes.buffer, '');
     console.log(`  • Security Status: isEncrypted=${sec.isEncrypted}, isOpenPasswordRequired=${sec.isOpenPasswordRequired}`);
-    if (isTamperChecked) {
-      if (!sec.isEncrypted) {
-        console.warn('  ⚠️ Notice: Expected owner encryption lock on tamper protected export');
-      } else {
-        console.log('  ✓ Verified: Tamper protection active (Owner locked, free to view without password)');
-      }
+    if (sec.isEncrypted) {
+      console.warn('  ⚠️ Notice: Expected clean unencrypted document without owner lock');
+    } else {
+      console.log('  ✓ Verified: Watermark output is clean unencrypted document (100% focused)');
     }
 
     console.log('  🎉 [VALIDATION SUCCESS] Watermarked document verified with exact 2 pages!');
