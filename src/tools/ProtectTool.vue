@@ -646,6 +646,7 @@ import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
+import { generateExportFileName } from '../utils/filenameUtils';
 import { consumePendingFile } from '../utils/toolBridge';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import PasswordModal from '../components/PasswordModal.vue';
@@ -761,9 +762,7 @@ watch(() => userSettings.autoSaveToVault, (newVal) => {
 }, { immediate: true });
 
 const defaultFileNamePlaceholder = computed(() => {
-  const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
-  const clean = (filename.value || 'Document').replace(/\.[^/.]+$/, '');
-  return `${prefix}_Protected_${clean}`;
+  return generateExportFileName(filename.value, 'Protected');
 });
 
 function applyPreset(presetType) {
@@ -841,9 +840,7 @@ async function loadFile(file, password = '') {
     originalSizeFormatted.value = formatBytes(rawBuffer.byteLength);
     protectError.value = '';
 
-    const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
-    const cleanBase = file.name.replace(/\.[^/.]+$/, '');
-    customOutputBaseName.value = `${prefix}_Protected_${cleanBase}`;
+    customOutputBaseName.value = generateExportFileName(file.name, 'Protected');
 
     // Count pages
     try {
@@ -984,7 +981,7 @@ async function executeProtect() {
       allowHighQualityPrint: Boolean(allowPrinting.value)
     });
 
-    let outName = (customOutputBaseName.value.trim() || `PDFSeal_Protected_${Date.now()}`);
+    let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, 'Protected'));
     if (!outName.toLowerCase().endsWith('.pdf')) {
       outName += '.pdf';
     }

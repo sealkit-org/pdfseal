@@ -314,6 +314,7 @@ import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
+import { generateExportFileName } from '../utils/filenameUtils';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 
@@ -350,9 +351,7 @@ const pendingFileName = ref('');
 let unlockedPassword = '';
 
 const defaultFileNamePlaceholder = computed(() => {
-  const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
-  const base = filename.value ? filename.value.replace(/\.[^/.]+$/, '') : 'Document';
-  return `${prefix}_Compressed_${base}`;
+  return generateExportFileName(filename.value, 'Compressed');
 });
 
 function onFileSelected(e) {
@@ -399,9 +398,7 @@ async function loadFile(file, password = '') {
   filename.value = file.name;
   originalSizeMb.value = (rawBuffer.byteLength / (1024 * 1024)).toFixed(2);
 
-  const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
-  const cleanBase = file.name.replace(/\.[^/.]+$/, '');
-  customOutputBaseName.value = `${prefix}_Compressed_${cleanBase}`;
+  customOutputBaseName.value = generateExportFileName(file.name, 'Compressed');
 
   // Read page count via pdf.js
   try {
@@ -481,7 +478,7 @@ async function executeCompress() {
 
     progressPercent.value = 100;
 
-    let outName = (customOutputBaseName.value.trim() || `PDFSeal_Compressed_${Date.now()}`);
+    let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, 'Compressed'));
     if (!outName.toLowerCase().endsWith('.pdf')) {
       outName += '.pdf';
     }

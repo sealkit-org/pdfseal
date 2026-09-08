@@ -1,5 +1,6 @@
 import { loadCleanPdfDocument, verifyPdfSecurity } from '../../pdfSecurity';
 import { logger } from '../../logger';
+import { sanitizeBaseFileName } from '../../filenameUtils';
 
 /**
  * Headless Unlock / Security Stripping Node
@@ -32,7 +33,7 @@ export async function executeUnlockNode(items, params = {}, onProgress = () => {
         ...item,
         data: unlockedBytes,
         isEncrypted: false,
-        name: item.name.replace(/\.pdf$/i, '') + '_Unlocked.pdf'
+        name: `${sanitizeBaseFileName(item.name, { prefix: '' })}.pdf`
       });
     } catch (err) {
       logger.warn('PIPELINE_UNLOCK', `Failed to unlock ${item.name}: ${err.message}`);

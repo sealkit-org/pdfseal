@@ -241,6 +241,7 @@ import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
+import { generateExportFileName } from '../utils/filenameUtils';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 
 const fileInputRef = ref(null);
@@ -268,9 +269,7 @@ watch(() => userSettings.autoSaveToVault, (newVal) => {
 }, { immediate: true });
 
 const defaultFileNamePlaceholder = computed(() => {
-  const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
-  const base = filename.value ? filename.value.replace(/\.[^/.]+$/, '') : 'Document';
-  return `${prefix}_Unlocked_${base}`;
+  return generateExportFileName(filename.value, '');
 });
 
 function onFileSelected(e) {
@@ -303,9 +302,7 @@ async function loadFile(file, password = '') {
   unlockError.value = '';
   hasAffirmedRight.value = false;
 
-  const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
-  const cleanBase = file.name.replace(/\.[^/.]+$/, '');
-  customOutputBaseName.value = `${prefix}_Unlocked_${cleanBase}`;
+  customOutputBaseName.value = generateExportFileName(file.name, '');
 
   // Analyze encryption
   const sec = await verifyPdfSecurity(rawBuffer, password);
@@ -361,7 +358,7 @@ async function executeUnlock() {
     const cleanDoc = await loadCleanPdfDocument(docBytes.value, pwd);
     const unlockedBytes = await cleanDoc.save({ useObjectStreams: true });
 
-    let outName = (customOutputBaseName.value.trim() || `PDFSeal_Unlocked_${Date.now()}`);
+    let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, ''));
     if (!outName.toLowerCase().endsWith('.pdf')) {
       outName += '.pdf';
     }
