@@ -749,6 +749,7 @@
   "protect_err_already_encrypted": "Este documento ya está protegido por contraseña. Desbloquéelo primero.",
   "protect_err_unsupported_char": "La contraseña contiene caracteres especiales no admitidos. Utilice caracteres estándar.",
   "protect_err_failed": "Error de cifrado. Verifique las entradas e intente nuevamente.",
+  "protect_badge_confidential": "Requiere contraseña",
   "protect_badge_sign_only": "Solo firma",
   "protect_badge_readonly": "Solo lectura",
   "protect_tag_user_pwd": "Contraseña de usuario",
