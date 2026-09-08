@@ -1,4 +1,4 @@
-﻿import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
+import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
 import { loadCleanPdfDocument } from '../../pdfSecurity';
 import { logger } from '../../logger';
 
@@ -14,7 +14,7 @@ import { logger } from '../../logger';
 export async function executeProtectNode(items, params = {}, onProgress = () => {}) {
   const result = [];
   const userPassword = params.userPassword || '';
-  const ownerPassword = params.ownerPassword || '';
+  const ownerPassword = (params.useSamePassword && userPassword) ? userPassword : (params.ownerPassword || '');
   const algorithm = params.algorithm === 'RC4' ? 'RC4' : 'AES-256';
 
   for (let i = 0; i < items.length; i++) {

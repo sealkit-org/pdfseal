@@ -182,8 +182,12 @@ export const AVAILABLE_NODES = {
     outputs: [DATA_TYPES.PDF_DOCS],
     topology: TOPOLOGY_MODES.MAP,
     defaultParams: {
+      preset: 'confidential',
       userPassword: '',
+      confirmUserPassword: '',
       ownerPassword: '',
+      confirmOwnerPassword: '',
+      useSamePassword: true,
       algorithm: 'AES-256',
       allowPrinting: false,
       allowCopying: false,
