@@ -261,37 +261,6 @@
                 </div>
               </div>
             </div>
-
-            <!-- Permission & Tamper Protection: Single Line Checkbox (Bottom Pinned) -->
-            <div class="pt-2 border-t border-slate-200/70">
-              <label class="flex items-center justify-between cursor-pointer select-none group">
-                <div class="flex items-center space-x-2">
-                  <input 
-                    type="checkbox" 
-                    data-testid="wm-tamper-checkbox"
-                    v-model="enableTamperProtection" 
-                    class="w-4 h-4 text-amber-600 rounded-md border-slate-300 focus:ring-amber-500 cursor-pointer"
-                  >
-                  <span class="text-xs font-bold text-slate-700 group-hover:text-amber-600 transition flex items-center space-x-1">
-                    <ShieldCheck class="w-3.5 h-3.5 text-amber-600" />
-                    <span>{{ t('wm_protection_label') || 'Read-only Tamper Protection' }}</span>
-                  </span>
-                </div>
-                <span class="text-[10px] text-slate-400 font-medium">{{ t('wm_protection_hint') || 'Allow viewing, prevent editing' }}</span>
-              </label>
-
-              <!-- Optional custom modify password input -->
-              <div v-if="enableTamperProtection" class="mt-2 flex items-center space-x-2 animate-in fade-in duration-150">
-                <div class="relative flex-1">
-                  <input 
-                    v-model="protectionPassword" 
-                    type="text"
-                    :placeholder="t('wm_protection_placeholder') || 'Set modify protection password (optional)'"
-                    class="w-full text-[11px] bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden text-slate-700 font-mono shadow-2xs"
-                  >
-                </div>
-              </div>
-            </div>
           </div>
 
           <!-- Right Live Canvas Preview (7 cols on lg, Stretches gracefully to fill height) -->
@@ -380,12 +349,10 @@ import {
   FolderLock, 
   Lock, 
   Unlock, 
-  RefreshCw,
-  ShieldCheck
+  RefreshCw
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, rgb, degrees } from 'pdf-lib';
-import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
@@ -411,8 +378,6 @@ const wmSize = ref(48);
 const wmOpacity = ref(30);
 const wmAngle = ref(-45);
 const wmColor = ref('#dc2626');
-const enableTamperProtection = ref(true);
-const protectionPassword = ref('');
 const colorPresets = [
   '#dc2626', // 印章红
   '#e11d48', // 玫瑰红
@@ -613,8 +578,6 @@ function reset() {
   totalPages.value = 0;
   page1Canvas = null;
   unlockedPassword = '';
-  enableTamperProtection.value = true;
-  protectionPassword.value = '';
 }
 
 async function generateWatermarkedBytes() {
@@ -665,20 +628,6 @@ async function generateWatermarkedBytes() {
 
   let outBytes = await pdfDoc.save();
 
-  // Apply real ISO 32000-1 PDF Permissions & Owner Lock if Tamper Protection is enabled
-  if (enableTamperProtection.value) {
-    try {
-      const ownerSecret = protectionPassword.value?.trim() || `seal_owner_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
-      outBytes = await encryptPDF(outBytes, '', {
-        ownerPassword: ownerSecret,
-        algorithm: 'RC4'
-      });
-      logger.info('WATERMARK', `Watermark result protected with automatic Owner Security Lock (Read-only, Disallow Modify)`);
-    } catch (encErr) {
-      logger.warn('WATERMARK', `Owner encryption warning: ${encErr.message}`);
-    }
-  }
-
   let outName = (customOutputBaseName.value.trim() || `PDFSeal_Watermarked_${Date.now()}`);
   if (!outName.toLowerCase().endsWith('.pdf')) {
     outName += '.pdf';
@@ -697,10 +646,6 @@ async function executeWatermark() {
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
 
-    if (enableTamperProtection.value) {
-      logger.info('WATERMARK', `Watermark result protected with automatic Owner Security Lock: ${outName}`);
-    }
-
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {
       await saveFile({
@@ -709,9 +654,9 @@ async function executeWatermark() {
         folderId: 'default',
         category: 'export',
         pageCount,
-        isEncrypted: Boolean(enableTamperProtection.value)
+        isEncrypted: false
       });
-      logger.info('VAULT', `Watermarked result auto-saved to Vault: ${outName} (isEncrypted=${Boolean(enableTamperProtection.value)})`);
+      logger.info('VAULT', `Watermarked result auto-saved to Vault: ${outName}`);
     }
   } catch (err) {
     logger.error('WATERMARK', `Watermark execution failed: ${err.message}`);

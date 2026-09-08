@@ -647,16 +647,6 @@
                 </div>
               </div>
             </div>
-
-            <div class="pt-4 border-t border-slate-100">
-              <label class="flex items-start space-x-2.5 cursor-pointer group">
-                <input type="checkbox" v-model="editingStepDraft.enableTamperProtection" class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer" />
-                <div>
-                  <div class="font-bold text-slate-800 group-hover:text-indigo-700 transition">{{ t('wm_protection_label') || 'Read-only Tamper Protection' }}</div>
-                  <div class="text-[11px] text-slate-400 mt-0.5">{{ t('wm_protection_hint') || 'Allow viewing, prevent editing' }}</div>
-                </div>
-              </label>
-            </div>
           </div>
 
           <!-- 2. Compress Parameters -->

@@ -102,7 +102,7 @@ export const AVAILABLE_NODES = {
     nameKey: 'tab_watermark',
     defaultName: '添加水印',
     descKey: 'node_watermark_desc',
-    defaultDesc: '批量添加防盗斜向平铺水印，支持只读所有者密码锁',
+    defaultDesc: '批量添加防盗斜向平铺水印，支持自定义文本、字号、颜色与旋转',
     category: 'security',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -112,9 +112,7 @@ export const AVAILABLE_NODES = {
       size: 48,
       opacity: 0.3,
       rotation: -45,
-      color: '#dc2626',
-      enableTamperProtection: true,
-      ownerPassword: ''
+      color: '#dc2626'
     }
   },
 

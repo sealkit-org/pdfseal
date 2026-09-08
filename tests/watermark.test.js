@@ -33,20 +33,21 @@ describe('PDF Watermark & Stamp Utility', () => {
     expect(outBytes.length).toBeGreaterThan(0);
   });
 
-  it('should encrypt output bytes with owner password protection', async () => {
+  it('should execute watermarkNode and produce clean unencrypted watermarked items', async () => {
     const doc = await PDFDocument.create();
     doc.addPage([200, 200]);
     const rawBytes = await doc.save();
 
-    const { encryptPDF } = await import('@pdfsmaller/pdf-encrypt');
-    const encryptedBytes = await encryptPDF(rawBytes, '', {
-      ownerPassword: 'owner_test_password',
-      algorithm: 'RC4'
-    });
+    const { executeWatermarkNode } = await import('../src/utils/pipeline/nodes/watermarkNode.js');
+    const items = [{ name: 'test_doc.pdf', data: rawBytes }];
+    const result = await executeWatermarkNode(items, { text: 'SAMPLE' });
+
+    expect(result.length).toBe(1);
+    expect(result[0].name).toBe('test_doc_Watermarked.pdf');
 
     const { verifyPdfSecurity } = await import('../src/utils/pdfSecurity.js');
-    const sec = await verifyPdfSecurity(encryptedBytes.buffer, '');
-    expect(sec.isEncrypted).toBe(true);
+    const sec = await verifyPdfSecurity(result[0].data.buffer, '');
+    expect(sec.isEncrypted).toBe(false);
     expect(sec.isOpenPasswordRequired).toBe(false);
   });
 });
