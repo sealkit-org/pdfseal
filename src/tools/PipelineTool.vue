@@ -977,6 +977,455 @@
             </div>
           </div>
 
+          <!-- 7. Protect Node Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_protect'" class="space-y-4">
+            <!-- 1. Presets Selector -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-2 flex items-center space-x-1.5">
+                <Sparkles class="w-3.5 h-3.5 text-indigo-600" />
+                <span>{{ t('protect_preset_title') }}</span>
+              </label>
+              
+              <div class="space-y-2">
+                <!-- Preset 1: Confidential -->
+                <button 
+                  type="button"
+                  @click="applyProtectPresetInPipeline('confidential')"
+                  :class="[
+                    'w-full p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between',
+                    editingStepDraft.preset === 'confidential' 
+                      ? 'border-indigo-500 bg-indigo-50/70 ring-1 ring-indigo-500/20 shadow-xs' 
+                      : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-100'
+                  ]"
+                >
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-bold text-slate-800 flex items-center space-x-1">
+                      <span>🛡️</span>
+                      <span>{{ t('protect_preset_confidential') }}</span>
+                    </span>
+                    <span class="text-[10px] font-mono text-rose-600 font-bold">{{ t('protect_badge_confidential') }}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 leading-tight">
+                    {{ t('protect_mode_open') }} + {{ t('protect_mode_owner') }}
+                  </p>
+                </button>
+
+                <!-- Preset 2: Readonly -->
+                <button 
+                  type="button"
+                  @click="applyProtectPresetInPipeline('readonly')"
+                  :class="[
+                    'w-full p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between',
+                    editingStepDraft.preset === 'readonly' 
+                      ? 'border-indigo-500 bg-indigo-50/70 ring-1 ring-indigo-500/20 shadow-xs' 
+                      : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-100'
+                  ]"
+                >
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-bold text-slate-800 flex items-center space-x-1">
+                      <span>📄</span>
+                      <span>{{ t('protect_preset_readonly') }}</span>
+                    </span>
+                    <span class="text-[10px] font-mono text-indigo-600 font-bold">{{ t('protect_badge_readonly') }}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 leading-tight">
+                    {{ t('protect_perm_copying') }}: ❌ | {{ t('protect_perm_printing') }}: ❌
+                  </p>
+                </button>
+
+                <!-- Preset 3: Forms -->
+                <button 
+                  type="button"
+                  @click="applyProtectPresetInPipeline('forms')"
+                  :class="[
+                    'w-full p-3 rounded-xl border text-left transition cursor-pointer flex flex-col justify-between',
+                    editingStepDraft.preset === 'forms' 
+                      ? 'border-indigo-500 bg-indigo-50/70 ring-1 ring-indigo-500/20 shadow-xs' 
+                      : 'border-slate-200 bg-slate-50/50 hover:border-slate-300 hover:bg-slate-100'
+                  ]"
+                >
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs font-bold text-slate-800 flex items-center space-x-1">
+                      <span>✍️</span>
+                      <span>{{ t('protect_preset_forms') }}</span>
+                    </span>
+                    <span class="text-[10px] font-mono text-emerald-600 font-bold">{{ t('protect_badge_sign_only') }}</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 leading-tight">
+                    {{ t('protect_perm_annotating') }}: ✔️ | {{ t('protect_perm_modifying') }}: ❌
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            <!-- 2. Passwords Configuration Section -->
+            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-3.5">
+              <!-- SCENARIO A: Strict Confidential Preset -->
+              <div v-if="editingStepDraft.preset === 'confidential'" class="space-y-3">
+                <!-- Open Password -->
+                <div class="space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                      <Key class="w-3.5 h-3.5 text-rose-600" />
+                      <span>{{ t('protect_mode_open') }}</span>
+                    </label>
+                    <span class="text-[10px] text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full font-bold border border-rose-200/60">{{ t('protect_tag_user_pwd') }}</span>
+                  </div>
+
+                  <div class="relative">
+                    <input 
+                      v-model="editingStepDraft.userPassword"
+                      :type="showProtectUserPwd ? 'text' : 'password'"
+                      :placeholder="t('protect_open_pwd_placeholder')"
+                      class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-800 shadow-2xs"
+                    >
+                    <button 
+                      type="button" 
+                      @click="showProtectUserPwd = !showProtectUserPwd"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <Eye v-if="!showProtectUserPwd" class="w-3.5 h-3.5" />
+                      <EyeOff v-else class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <!-- Smallpdf Password Strength Meter -->
+                  <div v-if="editingStepDraft.userPassword" class="animate-in fade-in duration-200 pt-0.5">
+                    <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                      <div :class="['h-full transition-all duration-300 rounded-full', calcPasswordStrength(editingStepDraft.userPassword).widthClass]"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] mt-1 text-slate-500">
+                      <span>{{ t('protect_pwd_strength_label') }}: <strong :class="calcPasswordStrength(editingStepDraft.userPassword).color">{{ calcPasswordStrength(editingStepDraft.userPassword).label }}</strong></span>
+                    </div>
+                  </div>
+
+                  <!-- Confirm Open Password -->
+                  <div v-if="editingStepDraft.userPassword" class="space-y-1 animate-in fade-in duration-150">
+                    <div class="relative">
+                      <input 
+                        v-model="editingStepDraft.confirmUserPassword"
+                        :type="showProtectUserPwd ? 'text' : 'password'"
+                        :placeholder="t('protect_confirm_pwd_placeholder')"
+                        :class="[
+                          'w-full text-xs bg-white border rounded-xl px-3 py-2 pr-10 outline-none font-medium text-slate-800 shadow-2xs transition-colors',
+                          editingStepDraft.confirmUserPassword 
+                            ? (editingStepDraft.confirmUserPassword === editingStepDraft.userPassword ? 'border-emerald-400 focus:ring-2 focus:ring-emerald-500' : 'border-rose-400 focus:ring-2 focus:ring-rose-500')
+                            : 'border-slate-300 focus:ring-2 focus:ring-indigo-500'
+                        ]"
+                      >
+                      <span v-if="editingStepDraft.confirmUserPassword && editingStepDraft.userPassword === editingStepDraft.confirmUserPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
+                        ✓
+                      </span>
+                      <span v-else-if="editingStepDraft.confirmUserPassword && editingStepDraft.userPassword !== editingStepDraft.confirmUserPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-rose-500 text-xs font-bold">
+                        ✕
+                      </span>
+                    </div>
+
+                    <!-- Real-time Matching Feedback -->
+                    <div v-if="editingStepDraft.confirmUserPassword" class="flex items-center space-x-1 text-[11px] font-medium pt-0.5 animate-in fade-in duration-150">
+                      <span v-if="editingStepDraft.userPassword === editingStepDraft.confirmUserPassword" class="text-emerald-600 flex items-center space-x-1">
+                        <span>✓</span>
+                        <span>{{ t('protect_pwd_matched') }}</span>
+                      </span>
+                      <span v-else class="text-rose-500 flex items-center space-x-1">
+                        <span>✕</span>
+                        <span>{{ t('protect_pwd_mismatched') }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Apple Pattern: Single Password Sync Toggle -->
+                <div class="pt-2 border-t border-slate-200/60">
+                  <label class="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      v-model="editingStepDraft.useSamePassword"
+                      class="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                    >
+                    <span class="font-medium text-slate-800">{{ t('protect_use_same_pwd') }}</span>
+                  </label>
+                </div>
+
+                <!-- Owner / Management Password (Shown only if NOT using same password) -->
+                <div v-if="!editingStepDraft.useSamePassword" class="space-y-2 pt-2 border-t border-slate-200/60 animate-in fade-in duration-200">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                      <ShieldAlert class="w-3.5 h-3.5 text-indigo-600" />
+                      <span>{{ t('protect_mode_owner') }}</span>
+                    </label>
+                    <span class="text-[10px] text-slate-400 font-medium">{{ t('protect_tag_owner_pwd') }}</span>
+                  </div>
+
+                  <p class="text-[11px] text-slate-500 leading-tight">
+                    {{ t('protect_owner_pwd_hint') }}
+                  </p>
+
+                  <div class="relative">
+                    <input 
+                      v-model="editingStepDraft.ownerPassword"
+                      :type="showProtectOwnerPwd ? 'text' : 'password'"
+                      :placeholder="t('protect_owner_pwd_placeholder')"
+                      class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-800 shadow-2xs"
+                    >
+                    <button 
+                      type="button"
+                      @click="showProtectOwnerPwd = !showProtectOwnerPwd"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <Eye v-if="!showProtectOwnerPwd" class="w-3.5 h-3.5" />
+                      <EyeOff v-else class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <!-- Smallpdf Password Strength Meter for Separate Owner Password -->
+                  <div v-if="editingStepDraft.ownerPassword" class="animate-in fade-in duration-200 pt-0.5">
+                    <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                      <div :class="['h-full transition-all duration-300 rounded-full', calcPasswordStrength(editingStepDraft.ownerPassword).widthClass]"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] mt-1 text-slate-500">
+                      <span>{{ t('protect_pwd_strength_label') }}: <strong :class="calcPasswordStrength(editingStepDraft.ownerPassword).color">{{ calcPasswordStrength(editingStepDraft.ownerPassword).label }}</strong></span>
+                    </div>
+                  </div>
+
+                  <!-- Confirm Separate Owner Password -->
+                  <div v-if="editingStepDraft.ownerPassword" class="space-y-1 animate-in fade-in duration-150">
+                    <div class="relative">
+                      <input 
+                        v-model="editingStepDraft.confirmOwnerPassword"
+                        :type="showProtectOwnerPwd ? 'text' : 'password'"
+                        :placeholder="t('protect_confirm_owner_pwd_placeholder')"
+                        :class="[
+                          'w-full text-xs bg-white border rounded-xl px-3 py-2 pr-10 outline-none font-medium text-slate-800 shadow-2xs transition-colors',
+                          editingStepDraft.confirmOwnerPassword 
+                            ? (editingStepDraft.confirmOwnerPassword === editingStepDraft.ownerPassword ? 'border-emerald-400 focus:ring-2 focus:ring-emerald-500' : 'border-rose-400 focus:ring-2 focus:ring-rose-500')
+                            : 'border-slate-300 focus:ring-2 focus:ring-indigo-500'
+                        ]"
+                      >
+                      <span v-if="editingStepDraft.confirmOwnerPassword && editingStepDraft.ownerPassword === editingStepDraft.confirmOwnerPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
+                        ✓
+                      </span>
+                      <span v-else-if="editingStepDraft.confirmOwnerPassword && editingStepDraft.ownerPassword !== editingStepDraft.confirmOwnerPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-rose-500 text-xs font-bold">
+                        ✕
+                      </span>
+                    </div>
+
+                    <!-- Real-time Matching Feedback -->
+                    <div v-if="editingStepDraft.confirmOwnerPassword" class="flex items-center space-x-1 text-[11px] font-medium pt-0.5 animate-in fade-in duration-150">
+                      <span v-if="editingStepDraft.ownerPassword === editingStepDraft.confirmOwnerPassword" class="text-emerald-600 flex items-center space-x-1">
+                        <span>✓</span>
+                        <span>{{ t('protect_pwd_matched') }}</span>
+                      </span>
+                      <span v-else class="text-rose-500 flex items-center space-x-1">
+                        <span>✕</span>
+                        <span>{{ t('protect_pwd_mismatched') }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- SCENARIO B: Read-Only or Forms Presets (Public View, Protected Actions) -->
+              <div v-else class="space-y-3.5">
+                <!-- Friendly Public Read Badge -->
+                <div class="p-3 bg-emerald-50/80 border border-emerald-200/80 rounded-xl flex items-start space-x-2.5 text-xs text-emerald-800">
+                  <CheckCircle2 class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span class="font-bold block">{{ t('protect_mode_readonly_badge') }}</span>
+                  </div>
+                </div>
+
+                <!-- Management Password Section -->
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                      <ShieldAlert class="w-3.5 h-3.5 text-indigo-600" />
+                      <span>{{ t('protect_mode_owner') }}</span>
+                    </label>
+                    <span class="text-[10px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full font-bold border border-indigo-200/60">{{ t('protect_tag_owner_pwd') }}</span>
+                  </div>
+
+                  <p class="text-[11px] text-slate-500 leading-tight">
+                    {{ t('protect_owner_pwd_hint') }}
+                  </p>
+
+                  <div class="relative">
+                    <input 
+                      v-model="editingStepDraft.ownerPassword"
+                      :type="showProtectOwnerPwd ? 'text' : 'password'"
+                      :placeholder="t('protect_owner_pwd_placeholder')"
+                      class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-500 outline-none font-medium text-slate-800 shadow-2xs"
+                    >
+                    <button 
+                      type="button"
+                      @click="showProtectOwnerPwd = !showProtectOwnerPwd"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <Eye v-if="!showProtectOwnerPwd" class="w-3.5 h-3.5" />
+                      <EyeOff v-else class="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <!-- Smallpdf Password Strength Meter for Management Password -->
+                  <div v-if="editingStepDraft.ownerPassword" class="animate-in fade-in duration-200 pt-0.5">
+                    <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                      <div :class="['h-full transition-all duration-300 rounded-full', calcPasswordStrength(editingStepDraft.ownerPassword).widthClass]"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] mt-1 text-slate-500">
+                      <span>{{ t('protect_pwd_strength_label') }}: <strong :class="calcPasswordStrength(editingStepDraft.ownerPassword).color">{{ calcPasswordStrength(editingStepDraft.ownerPassword).label }}</strong></span>
+                    </div>
+                  </div>
+
+                  <!-- Confirm Management Password -->
+                  <div v-if="editingStepDraft.ownerPassword" class="space-y-1 animate-in fade-in duration-150">
+                    <div class="relative">
+                      <input 
+                        v-model="editingStepDraft.confirmOwnerPassword"
+                        :type="showProtectOwnerPwd ? 'text' : 'password'"
+                        :placeholder="t('protect_confirm_owner_pwd_placeholder')"
+                        :class="[
+                          'w-full text-xs bg-white border rounded-xl px-3 py-2 pr-10 outline-none font-medium text-slate-800 shadow-2xs transition-colors',
+                          editingStepDraft.confirmOwnerPassword 
+                            ? (editingStepDraft.confirmOwnerPassword === editingStepDraft.ownerPassword ? 'border-emerald-400 focus:ring-2 focus:ring-emerald-500' : 'border-rose-400 focus:ring-2 focus:ring-rose-500')
+                            : 'border-slate-300 focus:ring-2 focus:ring-indigo-500'
+                        ]"
+                      >
+                      <span v-if="editingStepDraft.confirmOwnerPassword && editingStepDraft.ownerPassword === editingStepDraft.confirmOwnerPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
+                        ✓
+                      </span>
+                      <span v-else-if="editingStepDraft.confirmOwnerPassword && editingStepDraft.ownerPassword !== editingStepDraft.confirmOwnerPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-rose-500 text-xs font-bold">
+                        ✕
+                      </span>
+                    </div>
+
+                    <!-- Real-time Matching Feedback -->
+                    <div v-if="editingStepDraft.confirmOwnerPassword" class="flex items-center space-x-1 text-[11px] font-medium pt-0.5 animate-in fade-in duration-150">
+                      <span v-if="editingStepDraft.ownerPassword === editingStepDraft.confirmOwnerPassword" class="text-emerald-600 flex items-center space-x-1">
+                        <span>✓</span>
+                        <span>{{ t('protect_pwd_matched') }}</span>
+                      </span>
+                      <span v-else class="text-rose-500 flex items-center space-x-1">
+                        <span>✕</span>
+                        <span>{{ t('protect_pwd_mismatched') }}</span>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 3. Granular Permissions -->
+            <div class="p-3.5 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2.5">
+              <span class="text-xs font-bold text-slate-800 block">
+                {{ t('protect_mode_owner') }}
+              </span>
+
+              <div class="space-y-2">
+                <label class="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    v-model="editingStepDraft.allowPrinting"
+                    @change="editingStepDraft.preset = 'custom'"
+                    class="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                  >
+                  <Printer class="w-3.5 h-3.5 text-slate-500" />
+                  <span :class="editingStepDraft.allowPrinting ? 'font-bold text-slate-900' : 'text-slate-600'">{{ t('protect_perm_printing') }}</span>
+                </label>
+
+                <label class="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    v-model="editingStepDraft.allowCopying"
+                    @change="editingStepDraft.preset = 'custom'"
+                    class="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                  >
+                  <Copy class="w-3.5 h-3.5 text-slate-500" />
+                  <span :class="editingStepDraft.allowCopying ? 'font-bold text-slate-900' : 'text-slate-600'">{{ t('protect_perm_copying') }}</span>
+                </label>
+
+                <label class="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    v-model="editingStepDraft.allowModifying"
+                    @change="editingStepDraft.preset = 'custom'"
+                    class="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                  >
+                  <FileEdit class="w-3.5 h-3.5 text-slate-500" />
+                  <span :class="editingStepDraft.allowModifying ? 'font-bold text-slate-900' : 'text-slate-600'">{{ t('protect_perm_modifying') }}</span>
+                </label>
+
+                <label class="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    v-model="editingStepDraft.allowAnnotating"
+                    @change="editingStepDraft.preset = 'custom'"
+                    class="w-4 h-4 rounded text-indigo-600 border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                  >
+                  <PenLine class="w-3.5 h-3.5 text-slate-500" />
+                  <span :class="editingStepDraft.allowAnnotating ? 'font-bold text-slate-900' : 'text-slate-600'">{{ t('protect_perm_annotating') }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 4. Progressive Disclosure: Collapsible Algorithm -->
+            <div class="p-3 rounded-xl border border-slate-200 bg-slate-50/40 space-y-2">
+              <button 
+                type="button" 
+                @click="isProtectAdvancedOpen = !isProtectAdvancedOpen"
+                class="w-full flex items-center justify-between text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer select-none py-0.5"
+              >
+                <span class="flex items-center space-x-1.5">
+                  <span>⚙️</span>
+                  <span>{{ t('protect_advanced_toggle') }}</span>
+                </span>
+                <ChevronDown :class="['w-3.5 h-3.5 transition-transform duration-200', isProtectAdvancedOpen ? 'rotate-180' : '']" />
+              </button>
+
+              <div v-show="isProtectAdvancedOpen" class="space-y-1.5 pt-1.5 animate-in fade-in duration-150">
+                <label class="text-[10px] font-semibold text-slate-500 block">
+                  {{ t('protect_algorithm_label') }}
+                </label>
+                <div class="grid grid-cols-2 gap-2">
+                  <button 
+                    type="button"
+                    @click="editingStepDraft.algorithm = 'AES-256'; editingStepDraft.preset = 'custom'"
+                    :class="[
+                      'py-1.5 px-2 rounded-lg border text-[11px] font-bold transition cursor-pointer text-center',
+                      editingStepDraft.algorithm === 'AES-256' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    ]"
+                  >
+                    {{ t('protect_algo_aes_btn') }}
+                  </button>
+                  <button 
+                    type="button"
+                    @click="editingStepDraft.algorithm = 'RC4'; editingStepDraft.preset = 'custom'"
+                    :class="[
+                      'py-1.5 px-2 rounded-lg border text-[11px] font-bold transition cursor-pointer text-center',
+                      editingStepDraft.algorithm === 'RC4' ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    ]"
+                  >
+                    RC4 128-bit
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 5. Live Effective Protection Preview -->
+            <div class="p-3 rounded-xl bg-amber-50/60 border border-amber-200/70 flex items-start space-x-2 text-xs text-slate-700">
+              <span class="text-sm shrink-0">💡</span>
+              <div class="leading-relaxed">
+                <span class="font-bold text-slate-800">{{ t('protect_summary_prefix') }}: </span>
+                <span class="text-slate-600">{{ getEffectiveProtectSummary(editingStepDraft) }}</span>
+              </div>
+            </div>
+
+            <!-- 6. Validation Error in Drawer -->
+            <div v-if="protectConfigError" class="p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 flex items-center space-x-2 animate-in fade-in duration-150">
+              <AlertCircle class="w-4 h-4 text-rose-600 shrink-0" />
+              <span class="font-medium">{{ protectConfigError }}</span>
+            </div>
+          </div>
+
           <!-- Fallback Generic Params -->
           <div v-else class="text-slate-500 text-xs p-4 bg-slate-50 rounded-xl font-mono">
             {{ formatStepParams({ params: editingStepDraft }) }}
@@ -1268,7 +1717,14 @@ import {
   GripVertical,
   Wand2,
   RotateCw,
-  RefreshCw
+  RefreshCw,
+  Key,
+  ShieldAlert,
+  Eye,
+  EyeOff,
+  Printer,
+  FileEdit,
+  PenLine
 } from 'lucide-vue-next';
 import { PRESET_PIPELINES } from '../utils/pipeline/presetPipelines';
 import { AVAILABLE_NODES } from '../utils/pipeline/pipelineTypes';
@@ -1297,6 +1753,10 @@ const customFlowDescInput = ref('');
 const isConfigStepModalOpen = ref(false);
 const editingStepIndex = ref(-1);
 const editingStepDraft = ref(null);
+const showProtectUserPwd = ref(false);
+const showProtectOwnerPwd = ref(false);
+const isProtectAdvancedOpen = ref(false);
+const protectConfigError = ref('');
 
 // Flow persistence & selection
 const savedUserFlows = ref(loadUserPipelines());
@@ -1413,15 +1873,160 @@ const currentEditingStepName = computed(() => {
   return getNodeName(currentEditingStepNodeId.value);
 });
 
+// Dynamic Password Strength Meter for Node Protect
+function calcPasswordStrength(pwd) {
+  if (!pwd) return { level: 0, score: 0, label: '', color: '', widthClass: 'w-0' };
+  
+  let score = 0;
+  if (pwd.length >= 6) score += 1;
+  if (pwd.length >= 10) score += 1;
+  if (/[0-9]/.test(pwd) && /[a-zA-Z]/.test(pwd)) score += 1;
+  if (/[^a-zA-Z0-9]/.test(pwd)) score += 1;
+
+  if (score <= 1) {
+    return {
+      level: 1,
+      score: 1,
+      label: t('protect_pwd_strength_weak') || '弱',
+      color: 'text-rose-600',
+      widthClass: 'w-1/3 bg-rose-500'
+    };
+  } else if (score <= 2) {
+    return {
+      level: 2,
+      score: 2,
+      label: t('protect_pwd_strength_medium') || '中',
+      color: 'text-amber-600',
+      widthClass: 'w-2/3 bg-amber-500'
+    };
+  } else {
+    return {
+      level: 3,
+      score: 3,
+      label: t('protect_pwd_strength_strong') || '极佳',
+      color: 'text-emerald-600',
+      widthClass: 'w-full bg-emerald-500'
+    };
+  }
+}
+
+function applyProtectPresetInPipeline(presetType) {
+  if (!editingStepDraft.value) return;
+  editingStepDraft.value.preset = presetType;
+  protectConfigError.value = '';
+
+  if (presetType === 'confidential') {
+    editingStepDraft.value.algorithm = 'AES-256';
+    editingStepDraft.value.useSamePassword = true;
+    editingStepDraft.value.confirmOwnerPassword = '';
+    editingStepDraft.value.allowPrinting = false;
+    editingStepDraft.value.allowCopying = false;
+    editingStepDraft.value.allowModifying = false;
+    editingStepDraft.value.allowAnnotating = false;
+  } else if (presetType === 'readonly') {
+    editingStepDraft.value.algorithm = 'AES-256';
+    editingStepDraft.value.userPassword = '';
+    editingStepDraft.value.confirmUserPassword = '';
+    editingStepDraft.value.confirmOwnerPassword = '';
+    editingStepDraft.value.allowPrinting = false;
+    editingStepDraft.value.allowCopying = false;
+    editingStepDraft.value.allowModifying = false;
+    editingStepDraft.value.allowAnnotating = false;
+  } else if (presetType === 'forms') {
+    editingStepDraft.value.algorithm = 'AES-256';
+    editingStepDraft.value.userPassword = '';
+    editingStepDraft.value.confirmUserPassword = '';
+    editingStepDraft.value.confirmOwnerPassword = '';
+    editingStepDraft.value.allowPrinting = true;
+    editingStepDraft.value.allowCopying = false;
+    editingStepDraft.value.allowModifying = false;
+    editingStepDraft.value.allowAnnotating = true;
+  }
+}
+
+function getEffectiveProtectSummary(draft) {
+  if (!draft) return '';
+  if (draft.preset === 'confidential') {
+    return t('protect_summary_confidential');
+  } else if (draft.preset === 'readonly') {
+    return t('protect_summary_readonly');
+  } else if (draft.preset === 'forms') {
+    return t('protect_summary_forms');
+  } else {
+    return t('protect_summary_custom');
+  }
+}
+
 function openStepConfigModal(idx) {
   editingStepIndex.value = idx;
   const step = activeWorkflowSteps.value[idx];
   editingStepDraft.value = JSON.parse(JSON.stringify(step.params || {}));
+
+  if (step.nodeId === 'node_protect') {
+    showProtectUserPwd.value = false;
+    showProtectOwnerPwd.value = false;
+    isProtectAdvancedOpen.value = false;
+    protectConfigError.value = '';
+
+    // Ensure preset and password confirmation fields exist
+    if (!editingStepDraft.value.preset) {
+      if (editingStepDraft.value.userPassword) {
+        editingStepDraft.value.preset = 'confidential';
+      } else if (editingStepDraft.value.allowAnnotating) {
+        editingStepDraft.value.preset = 'forms';
+      } else {
+        editingStepDraft.value.preset = 'readonly';
+      }
+    }
+    if (editingStepDraft.value.useSamePassword === undefined) {
+      editingStepDraft.value.useSamePassword = true;
+    }
+    editingStepDraft.value.confirmUserPassword = editingStepDraft.value.userPassword || '';
+    editingStepDraft.value.confirmOwnerPassword = editingStepDraft.value.ownerPassword || '';
+  }
+
   isConfigStepModalOpen.value = true;
 }
 
 function saveStepConfig() {
   if (editingStepIndex.value >= 0 && editingStepIndex.value < activeWorkflowSteps.value.length) {
+    if (currentEditingStepNodeId.value === 'node_protect') {
+      const draft = editingStepDraft.value;
+      protectConfigError.value = '';
+
+      if (draft.preset === 'confidential') {
+        if (!draft.userPassword) {
+          protectConfigError.value = t('protect_err_need_open_pwd') || 'Open password is required for Confidential preset.';
+          return;
+        }
+        if (draft.confirmUserPassword !== draft.userPassword) {
+          protectConfigError.value = t('protect_err_pwd_mismatch') || 'Open passwords do not match';
+          return;
+        }
+        if (draft.useSamePassword) {
+          draft.ownerPassword = draft.userPassword;
+        } else {
+          if (!draft.ownerPassword) {
+            protectConfigError.value = t('protect_err_need_owner_pwd') || 'Please set an owner password to allow lifting restrictions later.';
+            return;
+          }
+          if (draft.confirmOwnerPassword !== draft.ownerPassword) {
+            protectConfigError.value = t('protect_err_owner_pwd_mismatch') || 'Management passwords do not match';
+            return;
+          }
+        }
+      } else {
+        if (!draft.ownerPassword) {
+          protectConfigError.value = t('protect_err_need_owner_pwd') || 'Please set an owner password to allow lifting restrictions later.';
+          return;
+        }
+        if (draft.confirmOwnerPassword !== draft.ownerPassword) {
+          protectConfigError.value = t('protect_err_owner_pwd_mismatch') || 'Management passwords do not match';
+          return;
+        }
+      }
+    }
+
     activeWorkflowSteps.value[editingStepIndex.value].params = JSON.parse(JSON.stringify(editingStepDraft.value));
   }
   isConfigStepModalOpen.value = false;
@@ -1433,6 +2038,12 @@ function resetStepToDefault() {
     const node = AVAILABLE_NODES[step.nodeId];
     if (node && node.defaultParams) {
       editingStepDraft.value = JSON.parse(JSON.stringify(node.defaultParams));
+      if (step.nodeId === 'node_protect') {
+        showProtectUserPwd.value = false;
+        showProtectOwnerPwd.value = false;
+        isProtectAdvancedOpen.value = false;
+        protectConfigError.value = '';
+      }
     }
   }
 }
@@ -1502,6 +2113,16 @@ function getStepSummary(step) {
       const pad = step.params.padBlankPageIfOdd ? t('pipe_merge_pad_odd') : '';
       return `${sortBy}${pad}`;
     }
+    case 'node_protect': {
+      if (step.params.userPassword) {
+        return `🛡️ ${t('protect_preset_confidential')} (${step.params.algorithm || 'AES-256'})`;
+      } else if (step.params.allowAnnotating) {
+        return `✍️ ${t('protect_preset_forms')} (${t('protect_badge_sign_only')})`;
+      } else if (step.params.ownerPassword) {
+        return `📄 ${t('protect_preset_readonly')} (${t('protect_badge_readonly')})`;
+      }
+      return `🔒 ${t('tab_protect')}`;
+    }
     default:
       return formatStepParams(step);
   }
@@ -1521,6 +2142,8 @@ function getStepTagClass(nodeId) {
       return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
     case 'node_organize':
       return 'bg-cyan-50 text-cyan-700 border-cyan-200/80';
+    case 'node_protect':
+      return 'bg-rose-50 text-rose-700 border-rose-200/80';
     default:
       return 'bg-slate-100 text-slate-600 border-slate-200';
   }
