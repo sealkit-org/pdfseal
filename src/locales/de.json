@@ -774,5 +774,9 @@
   "protect_summary_custom": "Benutzerdefinierte Sicherheitsrichtlinie aktiv.",
   "protect_advanced_toggle": "Erweiterte Sicherheitseinstellungen (Algorithmus & Berechtigungen)",
   "protect_err_need_open_pwd": "Für den Modus Vertraulich ist ein Öffnungspasswort erforderlich.",
-  "protect_err_need_owner_pwd": "Bitte legen Sie ein Eigentümerpasswort fest, um Einschränkungen später aufzuheben."
+  "protect_err_need_owner_pwd": "Bitte legen Sie ein Eigentümerpasswort fest, um Einschränkungen später aufzuheben.",
+  "protect_confirm_owner_pwd_placeholder": "Verwaltungspasswort bestätigen",
+  "protect_err_owner_pwd_mismatch": "Verwaltungspasswörter stimmen nicht überein",
+  "protect_pwd_matched": "Passwörter stimmen überein",
+  "protect_pwd_mismatched": "Passwörter stimmen nicht überein"
 }
