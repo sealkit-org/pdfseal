@@ -754,5 +754,8 @@
   "protect_tag_user_pwd": "Contraseña de usuario",
   "protect_tag_owner_pwd": "Contraseña de propietario",
   "protect_algo_aes_btn": "AES-256 (Recomendado)",
-  "protect_badge_already_encrypted": "Ya cifrado"
+  "protect_badge_already_encrypted": "Ya cifrado",
+  "unlock_disclaimer_checkbox": "Confirmo que tengo el derecho legal para desbloquear y modificar este documento",
+  "unlock_disclaimer_subtext": "Protegido por normativas de seguridad digital. Esta herramienta funciona 100% localmente como utilidad neutral.",
+  "unlock_err_need_affirmation": "Por favor confirme que tiene derecho a desbloquear este documento"
 }

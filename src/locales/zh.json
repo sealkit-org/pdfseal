@@ -754,5 +754,8 @@
   "protect_tag_user_pwd": "用户密码",
   "protect_tag_owner_pwd": "所有者密码",
   "protect_algo_aes_btn": "AES-256 (推荐)",
-  "protect_badge_already_encrypted": "已加密"
+  "protect_badge_already_encrypted": "已加密",
+  "unlock_disclaimer_checkbox": "我确认拥有该文档的合法处理权限或已获得所有者的授权",
+  "unlock_disclaimer_subtext": "受数字版权与信息安全规范保护，本工具仅提供本地中立解密能力，请遵守相关法律法规。",
+  "unlock_err_need_affirmation": "请先勾选确认您拥有合法解除权限"
 }
