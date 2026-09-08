@@ -88,7 +88,7 @@
                   <span>•</span>
                   <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
                   <span v-if="alreadyEncrypted" class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">
-                    {{ t('badge_unlocked') || 'Already Encrypted' }}
+                    {{ t('protect_badge_already_encrypted') }}
                   </span>
                 </div>
               </div>
@@ -146,7 +146,7 @@
                     <span>📄</span>
                     <span>{{ t('protect_preset_readonly') }}</span>
                   </span>
-                  <span class="text-[10px] font-mono text-indigo-600 font-bold">{{ t('protect_preset_readonly') }}</span>
+                  <span class="text-[10px] font-mono text-indigo-600 font-bold">{{ t('protect_badge_readonly') }}</span>
                 </div>
                 <p class="text-[11px] text-slate-400 leading-tight">
                   {{ t('protect_perm_copying') }}: ❌ | {{ t('protect_perm_printing') }}: ❌
@@ -167,7 +167,7 @@
                     <span>✍️</span>
                     <span>{{ t('protect_preset_forms') }}</span>
                   </span>
-                  <span class="text-[10px] font-mono text-emerald-600 font-bold">Sign Only</span>
+                  <span class="text-[10px] font-mono text-emerald-600 font-bold">{{ t('protect_badge_sign_only') }}</span>
                 </div>
                 <p class="text-[11px] text-slate-400 leading-tight">
                   {{ t('protect_perm_annotating') }}: ✔️ | {{ t('protect_perm_modifying') }}: ❌
@@ -187,7 +187,7 @@
                     <Key class="w-3.5 h-3.5 text-rose-600" />
                     <span>{{ t('protect_mode_open') }}</span>
                   </label>
-                  <span class="text-[10px] text-slate-400 font-medium">User Password</span>
+                  <span class="text-[10px] text-slate-400 font-medium">{{ t('protect_tag_user_pwd') }}</span>
                 </div>
                 
                 <div class="relative">
@@ -198,7 +198,7 @@
                     class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 pr-10 focus:ring-2 focus:ring-rose-500 outline-hidden font-medium text-slate-800 shadow-2xs"
                   >
                   <button 
-                    type="button"
+                    type="button" 
                     @click="showUserPassword = !showUserPassword"
                     class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                   >
@@ -228,7 +228,7 @@
                     <ShieldAlert class="w-3.5 h-3.5 text-indigo-600" />
                     <span>{{ t('protect_mode_owner') }}</span>
                   </label>
-                  <span class="text-[10px] text-slate-400 font-medium">Owner Password</span>
+                  <span class="text-[10px] text-slate-400 font-medium">{{ t('protect_tag_owner_pwd') }}</span>
                 </div>
 
                 <div class="relative">
@@ -319,7 +319,7 @@
                       algorithm === 'AES-256' ? 'bg-rose-600 text-white border-rose-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
                     ]"
                   >
-                    AES-256 (推荐)
+                    {{ t('protect_algo_aes_btn') }}
                   </button>
                   <button 
                     type="button"
