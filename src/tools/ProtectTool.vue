@@ -117,7 +117,7 @@
                 @click="applyPreset('confidential')"
                 :class="[
                   'p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between',
-                  activePreset === 'confidential' ? 'bg-rose-50/70 border-rose-400 shadow-2xs' : 'bg-white border-slate-200/80 hover:border-rose-300'
+                  activePreset === 'confidential' ? 'bg-rose-50/80 border-rose-500 ring-2 ring-rose-500/20 shadow-xs' : 'bg-white border-slate-200/80 hover:border-rose-300 hover:bg-slate-50/50'
                 ]"
               >
                 <div class="flex items-center justify-between mb-1">
@@ -138,7 +138,7 @@
                 @click="applyPreset('readonly')"
                 :class="[
                   'p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between',
-                  activePreset === 'readonly' ? 'bg-rose-50/70 border-rose-400 shadow-2xs' : 'bg-white border-slate-200/80 hover:border-rose-300'
+                  activePreset === 'readonly' ? 'bg-indigo-50/80 border-indigo-500 ring-2 ring-indigo-500/20 shadow-xs' : 'bg-white border-slate-200/80 hover:border-indigo-300 hover:bg-slate-50/50'
                 ]"
               >
                 <div class="flex items-center justify-between mb-1">
@@ -159,7 +159,7 @@
                 @click="applyPreset('forms')"
                 :class="[
                   'p-3 rounded-2xl border text-left transition cursor-pointer flex flex-col justify-between',
-                  activePreset === 'forms' ? 'bg-rose-50/70 border-rose-400 shadow-2xs' : 'bg-white border-slate-200/80 hover:border-rose-300'
+                  activePreset === 'forms' ? 'bg-emerald-50/80 border-emerald-500 ring-2 ring-emerald-500/20 shadow-xs' : 'bg-white border-slate-200/80 hover:border-emerald-300 hover:bg-slate-50/50'
                 ]"
               >
                 <div class="flex items-center justify-between mb-1">
@@ -179,78 +179,152 @@
           <!-- Configuration Grid (Left: Passwords, Right: Permissions & Algorithm) -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Left: Passwords Configuration -->
-            <div class="bg-slate-50/70 rounded-2xl p-4 border border-slate-200/80 space-y-3.5">
-              <!-- Section 1: Open Password -->
-              <div class="space-y-2">
-                <div class="flex items-center justify-between">
-                  <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                    <Key class="w-3.5 h-3.5 text-rose-600" />
-                    <span>{{ t('protect_mode_open') }}</span>
-                  </label>
-                  <span class="text-[10px] text-slate-400 font-medium">{{ t('protect_tag_user_pwd') }}</span>
-                </div>
-                
-                <div class="relative">
-                  <input 
-                    v-model="userPassword"
-                    :type="showUserPassword ? 'text' : 'password'"
-                    :placeholder="t('protect_open_pwd_placeholder')"
-                    class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 pr-10 focus:ring-2 focus:ring-rose-500 outline-hidden font-medium text-slate-800 shadow-2xs"
-                  >
-                  <button 
-                    type="button" 
-                    @click="showUserPassword = !showUserPassword"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    <Eye v-if="!showUserPassword" class="w-4 h-4" />
-                    <EyeOff v-else class="w-4 h-4" />
-                  </button>
+            <div class="bg-slate-50/70 rounded-2xl p-4 border border-slate-200/80 space-y-3.5 flex flex-col justify-between">
+              
+              <!-- SCENARIO A: Strict Confidential Preset -->
+              <div v-if="activePreset === 'confidential'" class="space-y-3">
+                <!-- Section 1: Open Password -->
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                      <Key class="w-3.5 h-3.5 text-rose-600" />
+                      <span>{{ t('protect_mode_open') }}</span>
+                    </label>
+                    <span class="text-[10px] text-rose-600 bg-rose-50 px-2 py-0.5 rounded-full font-bold border border-rose-200/60">{{ t('protect_tag_user_pwd') }}</span>
+                  </div>
+                  
+                  <div class="relative">
+                    <input 
+                      v-model="userPassword"
+                      :type="showUserPassword ? 'text' : 'password'"
+                      :placeholder="t('protect_open_pwd_placeholder')"
+                      class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2.5 pr-10 focus:ring-2 focus:ring-rose-500 outline-hidden font-medium text-slate-800 shadow-2xs"
+                    >
+                    <button 
+                      type="button" 
+                      @click="showUserPassword = !showUserPassword"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <Eye v-if="!showUserPassword" class="w-4 h-4" />
+                      <EyeOff v-else class="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <!-- Smallpdf Password Strength Meter -->
+                  <div v-if="userPassword" class="animate-in fade-in duration-200 pt-0.5">
+                    <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                      <div :class="['h-full transition-all duration-300 rounded-full', passwordStrength.widthClass]"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] mt-1 text-slate-500">
+                      <span>{{ t('protect_pwd_strength_label') }}: <strong :class="passwordStrength.color">{{ passwordStrength.label }}</strong></span>
+                    </div>
+                  </div>
+
+                  <!-- Confirm Open Password -->
+                  <div v-if="userPassword" class="relative animate-in fade-in duration-150">
+                    <input 
+                      v-model="confirmUserPassword"
+                      :type="showUserPassword ? 'text' : 'password'"
+                      :placeholder="t('protect_confirm_pwd_placeholder')"
+                      class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2.5 pr-10 focus:ring-2 focus:ring-rose-500 outline-hidden font-medium text-slate-800 shadow-2xs"
+                    >
+                    <span v-if="confirmUserPassword && userPassword === confirmUserPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
+                      ✓
+                    </span>
+                  </div>
                 </div>
 
-                <!-- Confirm Open Password -->
-                <div v-if="userPassword" class="relative animate-in fade-in duration-150">
-                  <input 
-                    v-model="confirmUserPassword"
-                    :type="showUserPassword ? 'text' : 'password'"
-                    :placeholder="t('protect_confirm_pwd_placeholder')"
-                    class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 pr-10 focus:ring-2 focus:ring-rose-500 outline-hidden font-medium text-slate-800 shadow-2xs"
-                  >
-                  <span v-if="confirmUserPassword && userPassword === confirmUserPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
-                    ✓
-                  </span>
+                <!-- Apple Pattern: Single Password Sync Toggle -->
+                <div class="pt-2 border-t border-slate-200/60">
+                  <label class="flex items-center space-x-2 text-xs text-slate-700 cursor-pointer select-none">
+                    <input 
+                      type="checkbox" 
+                      v-model="useSamePassword"
+                      class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500 cursor-pointer"
+                    >
+                    <span class="font-medium text-slate-800">{{ t('protect_use_same_pwd') }}</span>
+                  </label>
+                </div>
+
+                <!-- Owner / Management Password (Shown only if NOT using same password) -->
+                <div v-if="!useSamePassword" class="space-y-2 pt-2 border-t border-slate-200/60 animate-in fade-in duration-200">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                      <ShieldAlert class="w-3.5 h-3.5 text-indigo-600" />
+                      <span>{{ t('protect_mode_owner') }}</span>
+                    </label>
+                    <span class="text-[10px] text-slate-400 font-medium">{{ t('protect_tag_owner_pwd') }}</span>
+                  </div>
+
+                  <p class="text-[11px] text-slate-500 leading-tight">
+                    {{ t('protect_owner_pwd_hint') }}
+                  </p>
+
+                  <div class="relative">
+                    <input 
+                      v-model="ownerPassword"
+                      :type="showOwnerPassword ? 'text' : 'password'"
+                      :placeholder="t('protect_owner_pwd_placeholder')"
+                      class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2.5 pr-10 focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-800 shadow-2xs"
+                    >
+                    <button 
+                      type="button"
+                      @click="showOwnerPassword = !showOwnerPassword"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <Eye v-if="!showOwnerPassword" class="w-4 h-4" />
+                      <EyeOff v-else class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <!-- Section 2: Owner / Master Password -->
-              <div class="space-y-2 pt-2 border-t border-slate-200/60">
-                <div class="flex items-center justify-between">
-                  <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                    <ShieldAlert class="w-3.5 h-3.5 text-indigo-600" />
-                    <span>{{ t('protect_mode_owner') }}</span>
-                  </label>
-                  <span class="text-[10px] text-slate-400 font-medium">{{ t('protect_tag_owner_pwd') }}</span>
+              <!-- SCENARIO B: Read-Only or Forms Presets (Public View, Protected Actions) -->
+              <div v-else class="space-y-3.5">
+                <!-- Friendly Public Read Badge -->
+                <div class="p-3 bg-emerald-50/80 border border-emerald-200/80 rounded-xl flex items-start space-x-2.5 text-xs text-emerald-800">
+                  <CheckCircle2 class="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span class="font-bold block">{{ t('protect_mode_readonly_badge') }}</span>
+                  </div>
                 </div>
 
-                <div class="relative">
-                  <input 
-                    v-model="ownerPassword"
-                    :type="showOwnerPassword ? 'text' : 'password'"
-                    :placeholder="t('protect_owner_pwd_placeholder')"
-                    class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2 pr-10 focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-800 shadow-2xs"
-                  >
-                  <button 
-                    type="button"
-                    @click="showOwnerPassword = !showOwnerPassword"
-                    class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
-                  >
-                    <Eye v-if="!showOwnerPassword" class="w-4 h-4" />
-                    <EyeOff v-else class="w-4 h-4" />
-                  </button>
+                <!-- Management Password Section -->
+                <div class="space-y-2">
+                  <div class="flex items-center justify-between">
+                    <label class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
+                      <ShieldAlert class="w-3.5 h-3.5 text-indigo-600" />
+                      <span>{{ t('protect_mode_owner') }}</span>
+                    </label>
+                    <span class="text-[10px] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full font-bold border border-indigo-200/60">{{ t('protect_tag_owner_pwd') }}</span>
+                  </div>
+
+                  <p class="text-[11px] text-slate-500 leading-tight">
+                    {{ t('protect_owner_pwd_hint') }}
+                  </p>
+
+                  <div class="relative">
+                    <input 
+                      v-model="ownerPassword"
+                      :type="showOwnerPassword ? 'text' : 'password'"
+                      :placeholder="t('protect_owner_pwd_placeholder')"
+                      class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2.5 pr-10 focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-800 shadow-2xs"
+                    >
+                    <button 
+                      type="button"
+                      @click="showOwnerPassword = !showOwnerPassword"
+                      class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <Eye v-if="!showOwnerPassword" class="w-4 h-4" />
+                      <EyeOff v-else class="w-4 h-4" />
+                    </button>
+                  </div>
                 </div>
               </div>
+
             </div>
 
-            <!-- Right: Permissions Checklist & Algorithm -->
+            <!-- Right: Permissions Checklist & Progressive Disclosure Algorithm -->
             <div class="bg-slate-50/70 rounded-2xl p-4 border border-slate-200/80 flex flex-col justify-between space-y-3">
               <div class="space-y-2.5">
                 <span class="text-xs font-bold text-slate-800 block">
@@ -264,6 +338,7 @@
                     <input 
                       type="checkbox" 
                       v-model="allowPrinting"
+                      @change="activePreset = 'custom'"
                       class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500 cursor-pointer"
                     >
                     <Printer class="w-3.5 h-3.5 text-slate-500" />
@@ -275,6 +350,7 @@
                     <input 
                       type="checkbox" 
                       v-model="allowCopying"
+                      @change="activePreset = 'custom'"
                       class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500 cursor-pointer"
                     >
                     <Copy class="w-3.5 h-3.5 text-slate-500" />
@@ -286,6 +362,7 @@
                     <input 
                       type="checkbox" 
                       v-model="allowModifying"
+                      @change="activePreset = 'custom'"
                       class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500 cursor-pointer"
                     >
                     <FileEdit class="w-3.5 h-3.5 text-slate-500" />
@@ -297,6 +374,7 @@
                     <input 
                       type="checkbox" 
                       v-model="allowAnnotating"
+                      @change="activePreset = 'custom'"
                       class="w-4 h-4 rounded text-rose-600 border-slate-300 focus:ring-rose-500 cursor-pointer"
                     >
                     <PenLine class="w-3.5 h-3.5 text-slate-500" />
@@ -305,34 +383,57 @@
                 </div>
               </div>
 
-              <!-- Algorithm Selection -->
+              <!-- Progressive Disclosure: Collapsible Algorithm Selection -->
               <div class="pt-2 border-t border-slate-200/60">
-                <label class="text-[11px] font-bold text-slate-600 block mb-1.5">
-                  {{ t('protect_algorithm_label') }}
-                </label>
-                <div class="grid grid-cols-2 gap-2">
-                  <button 
-                    type="button"
-                    @click="algorithm = 'AES-256'"
-                    :class="[
-                      'py-1.5 px-2 rounded-xl border text-[11px] font-bold transition cursor-pointer text-center',
-                      algorithm === 'AES-256' ? 'bg-rose-600 text-white border-rose-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                    ]"
-                  >
-                    {{ t('protect_algo_aes_btn') }}
-                  </button>
-                  <button 
-                    type="button"
-                    @click="algorithm = 'RC4'"
-                    :class="[
-                      'py-1.5 px-2 rounded-xl border text-[11px] font-bold transition cursor-pointer text-center',
-                      algorithm === 'RC4' ? 'bg-rose-600 text-white border-rose-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
-                    ]"
-                  >
-                    RC4 128-bit
-                  </button>
+                <button 
+                  type="button" 
+                  @click="isAdvancedOpen = !isAdvancedOpen"
+                  class="w-full flex items-center justify-between text-[11px] font-bold text-slate-600 hover:text-slate-900 cursor-pointer select-none py-1"
+                >
+                  <span class="flex items-center space-x-1.5">
+                    <span>⚙️</span>
+                    <span>{{ t('protect_advanced_toggle') }}</span>
+                  </span>
+                  <ChevronDown :class="['w-3.5 h-3.5 transition-transform duration-200', isAdvancedOpen ? 'rotate-180' : '']" />
+                </button>
+
+                <div v-show="isAdvancedOpen" class="space-y-1.5 pt-2 animate-in fade-in duration-150">
+                  <label class="text-[10px] font-semibold text-slate-500 block">
+                    {{ t('protect_algorithm_label') }}
+                  </label>
+                  <div class="grid grid-cols-2 gap-2">
+                    <button 
+                      type="button"
+                      @click="algorithm = 'AES-256'; activePreset = 'custom'"
+                      :class="[
+                        'py-1.5 px-2 rounded-xl border text-[11px] font-bold transition cursor-pointer text-center',
+                        algorithm === 'AES-256' ? 'bg-rose-600 text-white border-rose-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      ]"
+                    >
+                      {{ t('protect_algo_aes_btn') }}
+                    </button>
+                    <button 
+                      type="button"
+                      @click="algorithm = 'RC4'; activePreset = 'custom'"
+                      :class="[
+                        'py-1.5 px-2 rounded-xl border text-[11px] font-bold transition cursor-pointer text-center',
+                        algorithm === 'RC4' ? 'bg-rose-600 text-white border-rose-600 shadow-2xs' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                      ]"
+                    >
+                      RC4 128-bit
+                    </button>
+                  </div>
                 </div>
               </div>
+            </div>
+          </div>
+
+          <!-- Live Human-Readable Protection Summary Callout -->
+          <div class="p-3 rounded-2xl bg-amber-50/60 border border-amber-200/70 flex items-start space-x-2.5 text-xs text-slate-700">
+            <span class="text-base shrink-0">💡</span>
+            <div class="leading-relaxed">
+              <span class="font-bold text-slate-800">{{ t('protect_summary_prefix') }}: </span>
+              <span class="text-slate-600">{{ effectiveProtectionSummary }}</span>
             </div>
           </div>
 
@@ -420,7 +521,9 @@ import {
   FileEdit, 
   PenLine, 
   AlertCircle, 
-  Loader2 
+  Loader2,
+  CheckCircle2,
+  ChevronDown
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import confetti from 'canvas-confetti';
@@ -462,6 +565,61 @@ const showUserPassword = ref(false);
 const showOwnerPassword = ref(false);
 const protectError = ref('');
 
+// Password synchronization & progressive disclosure states
+const useSamePassword = ref(true);
+const isAdvancedOpen = ref(false);
+
+// Dynamic Password Strength Meter (Smallpdf Pattern)
+const passwordStrength = computed(() => {
+  const pwd = userPassword.value;
+  if (!pwd) return { level: 0, score: 0, label: '', color: '', widthClass: 'w-0' };
+  
+  let score = 0;
+  if (pwd.length >= 6) score += 1;
+  if (pwd.length >= 10) score += 1;
+  if (/[0-9]/.test(pwd) && /[a-zA-Z]/.test(pwd)) score += 1;
+  if (/[^a-zA-Z0-9]/.test(pwd)) score += 1;
+
+  if (score <= 1) {
+    return {
+      level: 1,
+      score: 1,
+      label: t('protect_pwd_strength_weak') || '弱',
+      color: 'text-rose-600',
+      widthClass: 'w-1/3 bg-rose-500'
+    };
+  } else if (score <= 2) {
+    return {
+      level: 2,
+      score: 2,
+      label: t('protect_pwd_strength_medium') || '中',
+      color: 'text-amber-600',
+      widthClass: 'w-2/3 bg-amber-500'
+    };
+  } else {
+    return {
+      level: 3,
+      score: 3,
+      label: t('protect_pwd_strength_strong') || '极佳',
+      color: 'text-emerald-600',
+      widthClass: 'w-full bg-emerald-500'
+    };
+  }
+});
+
+// Live Human-Readable Protection Summary
+const effectiveProtectionSummary = computed(() => {
+  if (activePreset.value === 'confidential') {
+    return t('protect_summary_confidential');
+  } else if (activePreset.value === 'readonly') {
+    return t('protect_summary_readonly');
+  } else if (activePreset.value === 'forms') {
+    return t('protect_summary_forms');
+  } else {
+    return t('protect_summary_custom');
+  }
+});
+
 // Permissions
 const allowPrinting = ref(false);
 const allowCopying = ref(false);
@@ -498,6 +656,7 @@ function applyPreset(presetType) {
 
   if (presetType === 'confidential') {
     algorithm.value = 'AES-256';
+    useSamePassword.value = true;
     allowPrinting.value = false;
     allowCopying.value = false;
     allowModifying.value = false;
@@ -512,6 +671,8 @@ function applyPreset(presetType) {
     allowAnnotating.value = false;
   } else if (presetType === 'forms') {
     algorithm.value = 'AES-256';
+    userPassword.value = '';
+    confirmUserPassword.value = '';
     allowPrinting.value = true;
     allowCopying.value = false;
     allowModifying.value = false;
@@ -607,9 +768,12 @@ function reset() {
   userPassword.value = '';
   confirmUserPassword.value = '';
   ownerPassword.value = '';
+  useSamePassword.value = true;
+  isAdvancedOpen.value = false;
   alreadyEncrypted.value = false;
   protectError.value = '';
   customOutputBaseName.value = '';
+  activePreset.value = 'confidential';
 }
 
 function formatErrorMessage(err) {
@@ -635,16 +799,26 @@ async function executeProtect() {
   if (!docBytes.value) return;
   protectError.value = '';
 
-  // Validation: Must have at least userPassword or ownerPassword
-  if (!userPassword.value && !ownerPassword.value) {
-    protectError.value = t('protect_err_no_pwd') || 'Please set an open password or owner password';
-    return;
-  }
-
-  // Validation: If confirm password was entered, check match
-  if (userPassword.value && confirmUserPassword.value && userPassword.value !== confirmUserPassword.value) {
-    protectError.value = t('protect_err_pwd_mismatch') || 'Open passwords do not match';
-    return;
+  // 1. Validation for Confidential preset
+  if (activePreset.value === 'confidential') {
+    if (!userPassword.value) {
+      protectError.value = t('protect_err_need_open_pwd') || 'Open password is required for Confidential preset.';
+      return;
+    }
+    if (confirmUserPassword.value && userPassword.value !== confirmUserPassword.value) {
+      protectError.value = t('protect_err_pwd_mismatch') || 'Open passwords do not match';
+      return;
+    }
+    if (!useSamePassword.value && !ownerPassword.value) {
+      protectError.value = t('protect_err_need_owner_pwd') || 'Please set an owner password to allow lifting restrictions later.';
+      return;
+    }
+  } else {
+    // 2. Validation for Readonly or Forms preset
+    if (!ownerPassword.value) {
+      protectError.value = t('protect_err_need_owner_pwd') || 'Please set an owner password to allow lifting restrictions later.';
+      return;
+    }
   }
 
   isProcessing.value = true;
@@ -662,9 +836,15 @@ async function executeProtect() {
       rawBytes = docBytes.value;
     }
 
-    // 2. Apply EncryptPDF
-    const encryptedBytes = await encryptPDF(rawBytes, userPassword.value, {
-      ownerPassword: ownerPassword.value || undefined,
+    // 2. Determine open password & owner password
+    const passToOpen = activePreset.value === 'confidential' ? userPassword.value : '';
+    const passToOwner = (activePreset.value === 'confidential' && useSamePassword.value)
+      ? userPassword.value
+      : (ownerPassword.value || undefined);
+
+    // 3. Apply EncryptPDF
+    const encryptedBytes = await encryptPDF(rawBytes, passToOpen, {
+      ownerPassword: passToOwner,
       algorithm: algorithm.value,
       allowPrinting: Boolean(allowPrinting.value),
       allowModifying: Boolean(allowModifying.value),
@@ -679,12 +859,12 @@ async function executeProtect() {
       outName += '.pdf';
     }
 
-    // 3. Download
+    // 4. Download
     triggerDownload(new Blob([encryptedBytes], { type: 'application/pdf' }), outName);
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
     logger.info('PROTECT', `PDF encrypted and protected successfully: ${outName}`);
 
-    // 4. Auto-save to Vault if checked
+    // 5. Auto-save to Vault if checked
     if (autoSaveToVault.value) {
       await saveFile({
         name: outName,

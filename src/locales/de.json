@@ -757,5 +757,21 @@
   "protect_badge_already_encrypted": "Bereits verschlüsselt",
   "unlock_disclaimer_checkbox": "Ich bestätige, dass ich berechtigt bin, dieses Dokument zu entsperren und zu bearbeiten",
   "unlock_disclaimer_subtext": "Geschützt durch digitale Sicherheitsstandards. Dieses Tool arbeitet zu 100 % lokal als neutrales Dienstprogramm.",
-  "unlock_err_need_affirmation": "Bitte bestätigen Sie, dass Sie zur Entsperrung berechtigt sind"
+  "unlock_err_need_affirmation": "Bitte bestätigen Sie, dass Sie zur Entsperrung berechtigt sind",
+  "protect_pwd_strength_label": "Passwortstärke",
+  "protect_pwd_strength_weak": "Schwach",
+  "protect_pwd_strength_medium": "Mittel",
+  "protect_pwd_strength_strong": "Stark",
+  "protect_use_same_pwd": "Gleiches Passwort für Berechtigungen verwenden (Empfohlen)",
+  "protect_separate_owner_pwd": "Eigenes Berechtigungspasswort festlegen (Erweitert)",
+  "protect_mode_readonly_badge": "🟢 Öffentlich schreibgeschützt (Öffnen ohne Passwort möglich)",
+  "protect_owner_pwd_hint": "Wird nur benötigt, um Einschränkungen später aufzuheben",
+  "protect_summary_prefix": "Vorschau des wirksamen Schutzes",
+  "protect_summary_confidential": "Öffnen nur mit Passwort; Kopieren, Ändern und Drucken sind untersagt.",
+  "protect_summary_readonly": "Frei lesbar ohne Passwort; Kopieren und Drucken sind gesperrt (mit Eigentümerpasswort aufhebbar).",
+  "protect_summary_forms": "Lesen und Ausfüllen frei möglich; Ändern des Inhalts ist gesperrt.",
+  "protect_summary_custom": "Benutzerdefinierte Sicherheitsrichtlinie aktiv.",
+  "protect_advanced_toggle": "Erweiterte Sicherheitseinstellungen (Algorithmus & Berechtigungen)",
+  "protect_err_need_open_pwd": "Für den Modus Vertraulich ist ein Öffnungspasswort erforderlich.",
+  "protect_err_need_owner_pwd": "Bitte legen Sie ein Eigentümerpasswort fest, um Einschränkungen später aufzuheben."
 }

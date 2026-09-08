@@ -757,5 +757,21 @@
   "protect_badge_already_encrypted": "Ya cifrado",
   "unlock_disclaimer_checkbox": "Confirmo que tengo el derecho legal para desbloquear y modificar este documento",
   "unlock_disclaimer_subtext": "Protegido por normativas de seguridad digital. Esta herramienta funciona 100% localmente como utilidad neutral.",
-  "unlock_err_need_affirmation": "Por favor confirme que tiene derecho a desbloquear este documento"
+  "unlock_err_need_affirmation": "Por favor confirme que tiene derecho a desbloquear este documento",
+  "protect_pwd_strength_label": "Seguridad de contraseña",
+  "protect_pwd_strength_weak": "Débil",
+  "protect_pwd_strength_medium": "Media",
+  "protect_pwd_strength_strong": "Fuerte",
+  "protect_use_same_pwd": "Usar la misma contraseña para permisos (Bloqueo total, recomendado)",
+  "protect_separate_owner_pwd": "Establecer contraseña de propietario independiente (Avanzado)",
+  "protect_mode_readonly_badge": "🟢 Solo lectura pública (Cualquiera puede abrir sin contraseña)",
+  "protect_owner_pwd_hint": "Solo se usa para eliminar restricciones de impresión o copia en el futuro",
+  "protect_summary_prefix": "Vista previa de protección efectiva",
+  "protect_summary_confidential": "Se requiere contraseña para abrir; se prohíbe copiar texto, modificar e imprimir.",
+  "protect_summary_readonly": "Lectura libre sin contraseña; copiar e imprimir están restringidos (desbloqueable con contraseña de propietario).",
+  "protect_summary_forms": "Lectura y firma de formularios libres sin contraseña; se prohíbe modificar el contenido.",
+  "protect_summary_custom": "Configuración de seguridad personalizada activa.",
+  "protect_advanced_toggle": "Configuración avanzada de seguridad (Algoritmo y permisos)",
+  "protect_err_need_open_pwd": "Se requiere contraseña de apertura para el modo Confidencial.",
+  "protect_err_need_owner_pwd": "Establezca una contraseña de propietario para poder levantar restricciones en el futuro."
 }

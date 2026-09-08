@@ -757,5 +757,21 @@
   "protect_badge_already_encrypted": "Déjà chiffré",
   "unlock_disclaimer_checkbox": "Je confirme que j'ai le droit légal de déverrouiller et de modifier ce document",
   "unlock_disclaimer_subtext": "Protégé par les réglementations de sécurité numérique. Cet outil fonctionne à 100 % localement en tant qu'utilitaire neutre.",
-  "unlock_err_need_affirmation": "Veuillez confirmer que vous avez le droit de déverrouiller ce document"
+  "unlock_err_need_affirmation": "Veuillez confirmer que vous avez le droit de déverrouiller ce document",
+  "protect_pwd_strength_label": "Force du mot de passe",
+  "protect_pwd_strength_weak": "Faible",
+  "protect_pwd_strength_medium": "Moyen",
+  "protect_pwd_strength_strong": "Fort",
+  "protect_use_same_pwd": "Utiliser le même mot de passe pour les autorisations (Recommandé)",
+  "protect_separate_owner_pwd": "Définir un mot de passe propriétaire distinct (Avancé)",
+  "protect_mode_readonly_badge": "🟢 Lecture seule publique (Ouverture sans mot de passe)",
+  "protect_owner_pwd_hint": "Uniquement utilisé pour lever les restrictions d'impression ou de copie ultérieurement",
+  "protect_summary_prefix": "Aperçu de la protection effective",
+  "protect_summary_confidential": "Mot de passe requis pour ouvrir ; la copie, la modification et l'impression sont interdites.",
+  "protect_summary_readonly": "Lecture libre sans mot de passe ; la copie et l'impression sont bloquées (déverrouillables avec le mot de passe propriétaire).",
+  "protect_summary_forms": "Lecture et signature libres sans mot de passe ; la modification du contenu est interdite.",
+  "protect_summary_custom": "Configuration de sécurité personnalisée active.",
+  "protect_advanced_toggle": "Paramètres de sécurité avancés (Algorithme et autorisations)",
+  "protect_err_need_open_pwd": "Le mot de passe d'ouverture est requis pour le mode Confidentiel.",
+  "protect_err_need_owner_pwd": "Veuillez définir un mot de passe propriétaire pour lever les restrictions ultérieurement."
 }
