@@ -757,5 +757,21 @@
   "protect_badge_already_encrypted": "Already Encrypted",
   "unlock_disclaimer_checkbox": "I confirm that I have the legal right to unlock and modify this document",
   "unlock_disclaimer_subtext": "Protected by digital copyright and security standards. This tool operates 100% locally as a neutral utility.",
-  "unlock_err_need_affirmation": "Please confirm that you have the legal right to unlock this document"
+  "unlock_err_need_affirmation": "Please confirm that you have the legal right to unlock this document",
+  "protect_pwd_strength_label": "Password Strength",
+  "protect_pwd_strength_weak": "Weak",
+  "protect_pwd_strength_medium": "Medium",
+  "protect_pwd_strength_strong": "Strong",
+  "protect_use_same_pwd": "Use the same password for permissions (Full lock, recommended)",
+  "protect_separate_owner_pwd": "Set separate permission management password (Advanced)",
+  "protect_mode_readonly_badge": "🟢 Public Read-Only (Anyone can open and view without password)",
+  "protect_owner_pwd_hint": "Only used by you to lift printing, copying, or modifying restrictions later",
+  "protect_summary_prefix": "Effective Protection Preview",
+  "protect_summary_confidential": "Recipient must enter password to open; copying, modifying, and printing are prohibited.",
+  "protect_summary_readonly": "Anyone can read without password; copying text and printing are prohibited (unlockable with owner password).",
+  "protect_summary_forms": "Anyone can read and sign/fill forms without password; altering document content is prohibited.",
+  "protect_summary_custom": "Custom security configuration active with specified permission rules.",
+  "protect_advanced_toggle": "Advanced Security Settings (Algorithm & Granular Permissions)",
+  "protect_err_need_open_pwd": "Open password is required for Confidential preset. Switch to Read-Only if you only want to restrict copying or printing.",
+  "protect_err_need_owner_pwd": "Please set an owner password to allow lifting restrictions later."
 }

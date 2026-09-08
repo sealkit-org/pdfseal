@@ -757,5 +757,21 @@
   "protect_badge_already_encrypted": "已加密",
   "unlock_disclaimer_checkbox": "我确认拥有该文档的合法处理权限或已获得所有者的授权",
   "unlock_disclaimer_subtext": "受数字版权与信息安全规范保护，本工具仅提供本地中立解密能力，请遵守相关法律法规。",
-  "unlock_err_need_affirmation": "请先勾选确认您拥有合法解除权限"
+  "unlock_err_need_affirmation": "请先勾选确认您拥有合法解除权限",
+  "protect_pwd_strength_label": "密码强度",
+  "protect_pwd_strength_weak": "较弱",
+  "protect_pwd_strength_medium": "中等",
+  "protect_pwd_strength_strong": "极佳",
+  "protect_use_same_pwd": "权限密码与打开密码保持一致 (一键全方位防盗，推荐)",
+  "protect_separate_owner_pwd": "设置独立的权限管理密码 (高级分权)",
+  "protect_mode_readonly_badge": "🟢 免密公开阅读 (任何人双击直接查看，无需输入密码)",
+  "protect_owner_pwd_hint": "仅用于您日后解除打印、复制或防篡改限制",
+  "protect_summary_prefix": "最终生效保护效果",
+  "protect_summary_confidential": "接收方必须输入密码才能打开；打开后禁止复制文字、禁止修改与打印。",
+  "protect_summary_readonly": "任何人无需密码即可直接双击阅读；但禁止复制文字与打印（凭管理密码可解除限制）。",
+  "protect_summary_forms": "任何人无需密码即可直接阅读并签字填表；但禁止修改正文条款（凭管理密码可解除限制）。",
+  "protect_summary_custom": "已启用自定义安全权限配置，按指定规则保护文档。",
+  "protect_advanced_toggle": "高级安全设置 (加密算法与细粒度权限微调)",
+  "protect_err_need_open_pwd": "「绝密防外泄」预设必须设置打开阅读密码；如只需限制复制或打印，请选择「只读防篡改」预设。",
+  "protect_err_need_owner_pwd": "请设置权限管理密码，以便日后解除防篡改限制。"
 }
