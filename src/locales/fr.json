@@ -749,6 +749,7 @@
   "protect_err_already_encrypted": "Ce document est déjà protégé par mot de passe. Veuillez d'abord le déverrouiller.",
   "protect_err_unsupported_char": "Le mot de passe contient des caractères spéciaux non pris en charge. Veuillez utiliser des caractères standard.",
   "protect_err_failed": "Échec du chiffrement. Veuillez vérifier les entrées et réessayer.",
+  "protect_badge_confidential": "Mot de passe requis",
   "protect_badge_sign_only": "Signature uniquement",
   "protect_badge_readonly": "Lecture seule",
   "protect_tag_user_pwd": "Mot de passe utilisateur",

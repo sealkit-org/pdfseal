@@ -749,6 +749,7 @@
   "protect_err_already_encrypted": "Dieses Dokument ist bereits passwortgeschützt. Bitte heben Sie den Schutz zuerst auf.",
   "protect_err_unsupported_char": "Das Passwort enthält nicht unterstützte Sonderzeichen. Bitte verwenden Sie Standardzeichen.",
   "protect_err_failed": "Verschlüsselung fehlgeschlagen. Bitte Eingaben prüfen und erneut versuchen.",
+  "protect_badge_confidential": "Passwort erforderlich",
   "protect_badge_sign_only": "Nur Signieren",
   "protect_badge_readonly": "Schreibgeschützt",
   "protect_tag_user_pwd": "Benutzerpasswort",

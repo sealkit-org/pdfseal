@@ -749,6 +749,7 @@
   "protect_err_already_encrypted": "This document is already password-protected. Please unlock it first.",
   "protect_err_unsupported_char": "Password contains unsupported special characters. Please use standard characters.",
   "protect_err_failed": "Encryption failed. Please check inputs and try again.",
+  "protect_badge_confidential": "Password Required",
   "protect_badge_sign_only": "Sign Only",
   "protect_badge_readonly": "Read-Only",
   "protect_tag_user_pwd": "User Password",

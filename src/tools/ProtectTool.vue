@@ -125,7 +125,7 @@
                     <span>🛡️</span>
                     <span>{{ t('protect_preset_confidential') }}</span>
                   </span>
-                  <span class="text-[10px] font-mono text-rose-600 font-bold">AES-256</span>
+                  <span class="text-[10px] font-mono text-rose-600 font-bold">{{ t('protect_badge_confidential') }}</span>
                 </div>
                 <p class="text-[11px] text-slate-400 leading-tight">
                   {{ t('protect_mode_open') }} + {{ t('protect_mode_owner') }}
@@ -210,13 +210,13 @@
                     </button>
                   </div>
 
-                  <!-- Smallpdf Password Strength Meter -->
+                  <!-- Smallpdf Password Strength Meter for Open Password -->
                   <div v-if="userPassword" class="animate-in fade-in duration-200 pt-0.5">
                     <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                      <div :class="['h-full transition-all duration-300 rounded-full', passwordStrength.widthClass]"></div>
+                      <div :class="['h-full transition-all duration-300 rounded-full', userPasswordStrength.widthClass]"></div>
                     </div>
                     <div class="flex justify-between items-center text-[10px] mt-1 text-slate-500">
-                      <span>{{ t('protect_pwd_strength_label') }}: <strong :class="passwordStrength.color">{{ passwordStrength.label }}</strong></span>
+                      <span>{{ t('protect_pwd_strength_label') }}: <strong :class="userPasswordStrength.color">{{ userPasswordStrength.label }}</strong></span>
                     </div>
                   </div>
 
@@ -276,6 +276,16 @@
                       <EyeOff v-else class="w-4 h-4" />
                     </button>
                   </div>
+
+                  <!-- Smallpdf Password Strength Meter for Separate Owner Password -->
+                  <div v-if="ownerPassword" class="animate-in fade-in duration-200 pt-0.5">
+                    <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                      <div :class="['h-full transition-all duration-300 rounded-full', ownerPasswordStrength.widthClass]"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] mt-1 text-slate-500">
+                      <span>{{ t('protect_pwd_strength_label') }}: <strong :class="ownerPasswordStrength.color">{{ ownerPasswordStrength.label }}</strong></span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -318,6 +328,16 @@
                       <Eye v-if="!showOwnerPassword" class="w-4 h-4" />
                       <EyeOff v-else class="w-4 h-4" />
                     </button>
+                  </div>
+
+                  <!-- Smallpdf Password Strength Meter for Management Password -->
+                  <div v-if="ownerPassword" class="animate-in fade-in duration-200 pt-0.5">
+                    <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                      <div :class="['h-full transition-all duration-300 rounded-full', ownerPasswordStrength.widthClass]"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-[10px] mt-1 text-slate-500">
+                      <span>{{ t('protect_pwd_strength_label') }}: <strong :class="ownerPasswordStrength.color">{{ ownerPasswordStrength.label }}</strong></span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -570,8 +590,7 @@ const useSamePassword = ref(true);
 const isAdvancedOpen = ref(false);
 
 // Dynamic Password Strength Meter (Smallpdf Pattern)
-const passwordStrength = computed(() => {
-  const pwd = userPassword.value;
+function calcPasswordStrength(pwd) {
   if (!pwd) return { level: 0, score: 0, label: '', color: '', widthClass: 'w-0' };
   
   let score = 0;
@@ -605,7 +624,11 @@ const passwordStrength = computed(() => {
       widthClass: 'w-full bg-emerald-500'
     };
   }
-});
+}
+
+const userPasswordStrength = computed(() => calcPasswordStrength(userPassword.value));
+const ownerPasswordStrength = computed(() => calcPasswordStrength(ownerPassword.value));
+const passwordStrength = userPasswordStrength;
 
 // Live Human-Readable Protection Summary
 const effectiveProtectionSummary = computed(() => {
