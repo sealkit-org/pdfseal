@@ -754,5 +754,8 @@
   "protect_tag_user_pwd": "User Password",
   "protect_tag_owner_pwd": "Owner Password",
   "protect_algo_aes_btn": "AES-256 (Recommended)",
-  "protect_badge_already_encrypted": "Already Encrypted"
+  "protect_badge_already_encrypted": "Already Encrypted",
+  "unlock_disclaimer_checkbox": "I confirm that I have the legal right to unlock and modify this document",
+  "unlock_disclaimer_subtext": "Protected by digital copyright and security standards. This tool operates 100% locally as a neutral utility.",
+  "unlock_err_need_affirmation": "Please confirm that you have the legal right to unlock this document"
 }

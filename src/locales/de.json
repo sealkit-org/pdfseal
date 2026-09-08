@@ -754,5 +754,8 @@
   "protect_tag_user_pwd": "Benutzerpasswort",
   "protect_tag_owner_pwd": "Eigentümerpasswort",
   "protect_algo_aes_btn": "AES-256 (Empfohlen)",
-  "protect_badge_already_encrypted": "Bereits verschlüsselt"
+  "protect_badge_already_encrypted": "Bereits verschlüsselt",
+  "unlock_disclaimer_checkbox": "Ich bestätige, dass ich berechtigt bin, dieses Dokument zu entsperren und zu bearbeiten",
+  "unlock_disclaimer_subtext": "Geschützt durch digitale Sicherheitsstandards. Dieses Tool arbeitet zu 100 % lokal als neutrales Dienstprogramm.",
+  "unlock_err_need_affirmation": "Bitte bestätigen Sie, dass Sie zur Entsperrung berechtigt sind"
 }

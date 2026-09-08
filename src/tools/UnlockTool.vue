@@ -147,6 +147,20 @@
                 <span>{{ unlockError }}</span>
               </p>
             </div>
+
+            <!-- Legal Authorization Affirmation & Disclaimer (when document is encrypted/restricted) -->
+            <div v-if="isEncrypted" class="pt-3 border-t border-slate-200/80 flex items-start space-x-2.5">
+              <input 
+                type="checkbox" 
+                id="unlock-affirmation-checkbox"
+                v-model="hasAffirmedRight"
+                class="w-4 h-4 rounded text-emerald-600 border-slate-300 focus:ring-emerald-500 cursor-pointer mt-0.5 shrink-0"
+              >
+              <label for="unlock-affirmation-checkbox" class="text-xs text-slate-700 cursor-pointer select-none leading-tight">
+                <span class="font-bold text-slate-800">{{ t('unlock_disclaimer_checkbox') }}</span>
+                <span class="block text-[11px] text-slate-400 mt-0.5">{{ t('unlock_disclaimer_subtext') }}</span>
+              </label>
+            </div>
           </div>
         </div>
 
@@ -181,8 +195,11 @@
           <!-- Main Unlock Action Button -->
           <button 
             @click="executeUnlock" 
-            :disabled="isProcessing"
-            class="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25 cursor-pointer"
+            :disabled="isProcessing || (isEncrypted && !hasAffirmedRight)"
+            :class="[
+              'w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25',
+              (isProcessing || (isEncrypted && !hasAffirmedRight)) ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+            ]"
           >
             <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
             <Unlock v-else class="w-4 h-4" />
@@ -240,6 +257,7 @@ const isOwnerOnly = ref(false);
 const inputPassword = ref('');
 const showPassword = ref(false);
 const unlockError = ref('');
+const hasAffirmedRight = ref(false);
 
 // Export settings
 const customOutputBaseName = ref('');
@@ -283,6 +301,7 @@ async function loadFile(file, password = '') {
   originalSizeMb.value = (rawBuffer.byteLength / (1024 * 1024)).toFixed(2);
   inputPassword.value = password;
   unlockError.value = '';
+  hasAffirmedRight.value = false;
 
   const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
   const cleanBase = file.name.replace(/\.[^/.]+$/, '');
@@ -318,11 +337,16 @@ function reset() {
   isOwnerOnly.value = false;
   inputPassword.value = '';
   unlockError.value = '';
+  hasAffirmedRight.value = false;
   customOutputBaseName.value = '';
 }
 
 async function executeUnlock() {
   if (!docBytes.value) return;
+  if (isEncrypted.value && !hasAffirmedRight.value) {
+    unlockError.value = t('unlock_err_need_affirmation') || 'Please confirm that you have the legal right to unlock this document';
+    return;
+  }
   isProcessing.value = true;
   unlockError.value = '';
 

@@ -754,5 +754,8 @@
   "protect_tag_user_pwd": "Mot de passe utilisateur",
   "protect_tag_owner_pwd": "Mot de passe propriétaire",
   "protect_algo_aes_btn": "AES-256 (Recommandé)",
-  "protect_badge_already_encrypted": "Déjà chiffré"
+  "protect_badge_already_encrypted": "Déjà chiffré",
+  "unlock_disclaimer_checkbox": "Je confirme que j'ai le droit légal de déverrouiller et de modifier ce document",
+  "unlock_disclaimer_subtext": "Protégé par les réglementations de sécurité numérique. Cet outil fonctionne à 100 % localement en tant qu'utilitaire neutre.",
+  "unlock_err_need_affirmation": "Veuillez confirmer que vous avez le droit de déverrouiller ce document"
 }
