@@ -360,6 +360,7 @@ import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
+import { generateExportFileName } from '../utils/filenameUtils';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 
@@ -457,9 +458,7 @@ async function loadFile(file, password = '') {
   pendingFileName.value = file.name;
   pendingFileObj = file;
 
-  const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
-  const cleanBase = file.name.replace(/\.[^/.]+$/, '');
-  customOutputBaseName.value = `${prefix}_Watermarked_${cleanBase}`;
+  customOutputBaseName.value = generateExportFileName(file.name, 'Watermarked');
 
   const rawBuffer = await file.arrayBuffer();
 
@@ -628,7 +627,7 @@ async function generateWatermarkedBytes() {
 
   let outBytes = await pdfDoc.save();
 
-  let outName = (customOutputBaseName.value.trim() || `PDFSeal_Watermarked_${Date.now()}`);
+  let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, 'Watermarked'));
   if (!outName.toLowerCase().endsWith('.pdf')) {
     outName += '.pdf';
   }
