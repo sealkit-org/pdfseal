@@ -748,5 +748,11 @@
   "protect_err_invalid_pdf": "Die PDF-Struktur ist ungültig oder beschädigt. Verschlüsselung nicht möglich.",
   "protect_err_already_encrypted": "Dieses Dokument ist bereits passwortgeschützt. Bitte heben Sie den Schutz zuerst auf.",
   "protect_err_unsupported_char": "Das Passwort enthält nicht unterstützte Sonderzeichen. Bitte verwenden Sie Standardzeichen.",
-  "protect_err_failed": "Verschlüsselung fehlgeschlagen. Bitte Eingaben prüfen und erneut versuchen."
+  "protect_err_failed": "Verschlüsselung fehlgeschlagen. Bitte Eingaben prüfen und erneut versuchen.",
+  "protect_badge_sign_only": "Nur Signieren",
+  "protect_badge_readonly": "Schreibgeschützt",
+  "protect_tag_user_pwd": "Benutzerpasswort",
+  "protect_tag_owner_pwd": "Eigentümerpasswort",
+  "protect_algo_aes_btn": "AES-256 (Empfohlen)",
+  "protect_badge_already_encrypted": "Bereits verschlüsselt"
 }

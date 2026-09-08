@@ -748,5 +748,11 @@
   "protect_err_invalid_pdf": "La structure du PDF est invalide ou corrompue. Impossible de chiffrer.",
   "protect_err_already_encrypted": "Ce document est déjà protégé par mot de passe. Veuillez d'abord le déverrouiller.",
   "protect_err_unsupported_char": "Le mot de passe contient des caractères spéciaux non pris en charge. Veuillez utiliser des caractères standard.",
-  "protect_err_failed": "Échec du chiffrement. Veuillez vérifier les entrées et réessayer."
+  "protect_err_failed": "Échec du chiffrement. Veuillez vérifier les entrées et réessayer.",
+  "protect_badge_sign_only": "Signature uniquement",
+  "protect_badge_readonly": "Lecture seule",
+  "protect_tag_user_pwd": "Mot de passe utilisateur",
+  "protect_tag_owner_pwd": "Mot de passe propriétaire",
+  "protect_algo_aes_btn": "AES-256 (Recommandé)",
+  "protect_badge_already_encrypted": "Déjà chiffré"
 }
