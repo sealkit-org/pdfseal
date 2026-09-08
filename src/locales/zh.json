@@ -774,5 +774,9 @@
   "protect_summary_custom": "已启用自定义安全权限配置，按指定规则保护文档。",
   "protect_advanced_toggle": "高级安全设置 (加密算法与细粒度权限微调)",
   "protect_err_need_open_pwd": "「绝密防外泄」预设必须设置打开阅读密码；如只需限制复制或打印，请选择「只读防篡改」预设。",
-  "protect_err_need_owner_pwd": "请设置权限管理密码，以便日后解除防篡改限制。"
+  "protect_err_need_owner_pwd": "请设置权限管理密码，以便日后解除防篡改限制。",
+  "protect_confirm_owner_pwd_placeholder": "再次确认管理密码",
+  "protect_err_owner_pwd_mismatch": "两次输入的管理密码不一致",
+  "protect_pwd_matched": "密码一致",
+  "protect_pwd_mismatched": "两次输入的密码不一致"
 }

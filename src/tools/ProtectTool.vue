@@ -221,16 +221,38 @@
                   </div>
 
                   <!-- Confirm Open Password -->
-                  <div v-if="userPassword" class="relative animate-in fade-in duration-150">
-                    <input 
-                      v-model="confirmUserPassword"
-                      :type="showUserPassword ? 'text' : 'password'"
-                      :placeholder="t('protect_confirm_pwd_placeholder')"
-                      class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-2.5 pr-10 focus:ring-2 focus:ring-rose-500 outline-hidden font-medium text-slate-800 shadow-2xs"
-                    >
-                    <span v-if="confirmUserPassword && userPassword === confirmUserPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
-                      ✓
-                    </span>
+                  <div v-if="userPassword" class="space-y-1 animate-in fade-in duration-150">
+                    <div class="relative">
+                      <input 
+                        v-model="confirmUserPassword"
+                        :type="showUserPassword ? 'text' : 'password'"
+                        :placeholder="t('protect_confirm_pwd_placeholder')"
+                        :class="[
+                          'w-full text-xs bg-white border rounded-xl px-3 py-2.5 pr-10 outline-hidden font-medium text-slate-800 shadow-2xs transition-colors',
+                          confirmUserPassword 
+                            ? (confirmUserPassword === userPassword ? 'border-emerald-400 focus:ring-2 focus:ring-emerald-500' : 'border-rose-400 focus:ring-2 focus:ring-rose-500')
+                            : 'border-slate-300 focus:ring-2 focus:ring-rose-500'
+                        ]"
+                      >
+                      <span v-if="confirmUserPassword && userPassword === confirmUserPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
+                        ✓
+                      </span>
+                      <span v-else-if="confirmUserPassword && userPassword !== confirmUserPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-rose-500 text-xs font-bold">
+                        ✕
+                      </span>
+                    </div>
+
+                    <!-- Real-time Matching Feedback -->
+                    <div v-if="confirmUserPassword" class="flex items-center space-x-1 text-[11px] font-medium pt-0.5 animate-in fade-in duration-150">
+                      <span v-if="userPassword === confirmUserPassword" class="text-emerald-600 flex items-center space-x-1">
+                        <span>✓</span>
+                        <span>{{ t('protect_pwd_matched') }}</span>
+                      </span>
+                      <span v-else class="text-rose-500 flex items-center space-x-1">
+                        <span>✕</span>
+                        <span>{{ t('protect_pwd_mismatched') }}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -286,6 +308,41 @@
                       <span>{{ t('protect_pwd_strength_label') }}: <strong :class="ownerPasswordStrength.color">{{ ownerPasswordStrength.label }}</strong></span>
                     </div>
                   </div>
+
+                  <!-- Confirm Separate Owner Password -->
+                  <div v-if="ownerPassword" class="space-y-1 animate-in fade-in duration-150">
+                    <div class="relative">
+                      <input 
+                        v-model="confirmOwnerPassword"
+                        :type="showOwnerPassword ? 'text' : 'password'"
+                        :placeholder="t('protect_confirm_owner_pwd_placeholder')"
+                        :class="[
+                          'w-full text-xs bg-white border rounded-xl px-3 py-2.5 pr-10 outline-hidden font-medium text-slate-800 shadow-2xs transition-colors',
+                          confirmOwnerPassword 
+                            ? (confirmOwnerPassword === ownerPassword ? 'border-emerald-400 focus:ring-2 focus:ring-emerald-500' : 'border-rose-400 focus:ring-2 focus:ring-rose-500')
+                            : 'border-slate-300 focus:ring-2 focus:ring-indigo-500'
+                        ]"
+                      >
+                      <span v-if="confirmOwnerPassword && ownerPassword === confirmOwnerPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
+                        ✓
+                      </span>
+                      <span v-else-if="confirmOwnerPassword && ownerPassword !== confirmOwnerPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-rose-500 text-xs font-bold">
+                        ✕
+                      </span>
+                    </div>
+
+                    <!-- Real-time Matching Feedback -->
+                    <div v-if="confirmOwnerPassword" class="flex items-center space-x-1 text-[11px] font-medium pt-0.5 animate-in fade-in duration-150">
+                      <span v-if="ownerPassword === confirmOwnerPassword" class="text-emerald-600 flex items-center space-x-1">
+                        <span>✓</span>
+                        <span>{{ t('protect_pwd_matched') }}</span>
+                      </span>
+                      <span v-else class="text-rose-500 flex items-center space-x-1">
+                        <span>✕</span>
+                        <span>{{ t('protect_pwd_mismatched') }}</span>
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -337,6 +394,41 @@
                     </div>
                     <div class="flex justify-between items-center text-[10px] mt-1 text-slate-500">
                       <span>{{ t('protect_pwd_strength_label') }}: <strong :class="ownerPasswordStrength.color">{{ ownerPasswordStrength.label }}</strong></span>
+                    </div>
+                  </div>
+
+                  <!-- Confirm Management Password -->
+                  <div v-if="ownerPassword" class="space-y-1 animate-in fade-in duration-150">
+                    <div class="relative">
+                      <input 
+                        v-model="confirmOwnerPassword"
+                        :type="showOwnerPassword ? 'text' : 'password'"
+                        :placeholder="t('protect_confirm_owner_pwd_placeholder')"
+                        :class="[
+                          'w-full text-xs bg-white border rounded-xl px-3 py-2.5 pr-10 outline-hidden font-medium text-slate-800 shadow-2xs transition-colors',
+                          confirmOwnerPassword 
+                            ? (confirmOwnerPassword === ownerPassword ? 'border-emerald-400 focus:ring-2 focus:ring-emerald-500' : 'border-rose-400 focus:ring-2 focus:ring-rose-500')
+                            : 'border-slate-300 focus:ring-2 focus:ring-indigo-500'
+                        ]"
+                      >
+                      <span v-if="confirmOwnerPassword && ownerPassword === confirmOwnerPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-emerald-600 text-xs font-bold">
+                        ✓
+                      </span>
+                      <span v-else-if="confirmOwnerPassword && ownerPassword !== confirmOwnerPassword" class="absolute right-3 top-1/2 -translate-y-1/2 text-rose-500 text-xs font-bold">
+                        ✕
+                      </span>
+                    </div>
+
+                    <!-- Real-time Matching Feedback -->
+                    <div v-if="confirmOwnerPassword" class="flex items-center space-x-1 text-[11px] font-medium pt-0.5 animate-in fade-in duration-150">
+                      <span v-if="ownerPassword === confirmOwnerPassword" class="text-emerald-600 flex items-center space-x-1">
+                        <span>✓</span>
+                        <span>{{ t('protect_pwd_matched') }}</span>
+                      </span>
+                      <span v-else class="text-rose-500 flex items-center space-x-1">
+                        <span>✕</span>
+                        <span>{{ t('protect_pwd_mismatched') }}</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -581,6 +673,7 @@ function formatBytes(bytes) {
 const userPassword = ref('');
 const confirmUserPassword = ref('');
 const ownerPassword = ref('');
+const confirmOwnerPassword = ref('');
 const showUserPassword = ref(false);
 const showOwnerPassword = ref(false);
 const protectError = ref('');
@@ -680,6 +773,7 @@ function applyPreset(presetType) {
   if (presetType === 'confidential') {
     algorithm.value = 'AES-256';
     useSamePassword.value = true;
+    confirmOwnerPassword.value = '';
     allowPrinting.value = false;
     allowCopying.value = false;
     allowModifying.value = false;
@@ -688,6 +782,7 @@ function applyPreset(presetType) {
     algorithm.value = 'AES-256';
     userPassword.value = '';
     confirmUserPassword.value = '';
+    confirmOwnerPassword.value = '';
     allowPrinting.value = false;
     allowCopying.value = false;
     allowModifying.value = false;
@@ -696,6 +791,7 @@ function applyPreset(presetType) {
     algorithm.value = 'AES-256';
     userPassword.value = '';
     confirmUserPassword.value = '';
+    confirmOwnerPassword.value = '';
     allowPrinting.value = true;
     allowCopying.value = false;
     allowModifying.value = false;
@@ -791,6 +887,7 @@ function reset() {
   userPassword.value = '';
   confirmUserPassword.value = '';
   ownerPassword.value = '';
+  confirmOwnerPassword.value = '';
   useSamePassword.value = true;
   isAdvancedOpen.value = false;
   alreadyEncrypted.value = false;
@@ -828,18 +925,28 @@ async function executeProtect() {
       protectError.value = t('protect_err_need_open_pwd') || 'Open password is required for Confidential preset.';
       return;
     }
-    if (confirmUserPassword.value && userPassword.value !== confirmUserPassword.value) {
+    if (confirmUserPassword.value !== userPassword.value) {
       protectError.value = t('protect_err_pwd_mismatch') || 'Open passwords do not match';
       return;
     }
-    if (!useSamePassword.value && !ownerPassword.value) {
-      protectError.value = t('protect_err_need_owner_pwd') || 'Please set an owner password to allow lifting restrictions later.';
-      return;
+    if (!useSamePassword.value) {
+      if (!ownerPassword.value) {
+        protectError.value = t('protect_err_need_owner_pwd') || 'Please set an owner password to allow lifting restrictions later.';
+        return;
+      }
+      if (confirmOwnerPassword.value !== ownerPassword.value) {
+        protectError.value = t('protect_err_owner_pwd_mismatch') || 'Management passwords do not match';
+        return;
+      }
     }
   } else {
     // 2. Validation for Readonly or Forms preset
     if (!ownerPassword.value) {
       protectError.value = t('protect_err_need_owner_pwd') || 'Please set an owner password to allow lifting restrictions later.';
+      return;
+    }
+    if (confirmOwnerPassword.value !== ownerPassword.value) {
+      protectError.value = t('protect_err_owner_pwd_mismatch') || 'Management passwords do not match';
       return;
     }
   }

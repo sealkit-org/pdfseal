@@ -774,5 +774,9 @@
   "protect_summary_custom": "Custom security configuration active with specified permission rules.",
   "protect_advanced_toggle": "Advanced Security Settings (Algorithm & Granular Permissions)",
   "protect_err_need_open_pwd": "Open password is required for Confidential preset. Switch to Read-Only if you only want to restrict copying or printing.",
-  "protect_err_need_owner_pwd": "Please set an owner password to allow lifting restrictions later."
+  "protect_err_need_owner_pwd": "Please set an owner password to allow lifting restrictions later.",
+  "protect_confirm_owner_pwd_placeholder": "Confirm management password",
+  "protect_err_owner_pwd_mismatch": "Management passwords do not match",
+  "protect_pwd_matched": "Passwords match",
+  "protect_pwd_mismatched": "Passwords do not match"
 }

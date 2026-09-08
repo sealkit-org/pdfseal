@@ -774,5 +774,9 @@
   "protect_summary_custom": "Configuration de sécurité personnalisée active.",
   "protect_advanced_toggle": "Paramètres de sécurité avancés (Algorithme et autorisations)",
   "protect_err_need_open_pwd": "Le mot de passe d'ouverture est requis pour le mode Confidentiel.",
-  "protect_err_need_owner_pwd": "Veuillez définir un mot de passe propriétaire pour lever les restrictions ultérieurement."
+  "protect_err_need_owner_pwd": "Veuillez définir un mot de passe propriétaire pour lever les restrictions ultérieurement.",
+  "protect_confirm_owner_pwd_placeholder": "Confirmer le mot de passe de gestion",
+  "protect_err_owner_pwd_mismatch": "Les mots de passe de gestion ne correspondent pas",
+  "protect_pwd_matched": "Les mots de passe correspondent",
+  "protect_pwd_mismatched": "Les mots de passe ne correspondent pas"
 }
