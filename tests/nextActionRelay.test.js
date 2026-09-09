@@ -21,7 +21,7 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
     sanitize: ['protect', 'watermark', 'compress', 'sign', 'vault'],
     unlock: ['split', 'organize', 'compress', 'watermark', 'sign'],
     sign: ['protect', 'compress', 'watermark', 'vault'],
-    image_to_pdf: ['compress', 'organize', 'protect', 'sign', 'vault']
+    image_to_pdf: ['watermark', 'compress', 'protect', 'sign', 'vault']
   };
 
   it('should define targeted recommendations for all 10 tools', () => {

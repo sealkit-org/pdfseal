@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div 
     v-if="file" 
     class="bg-gradient-to-r from-emerald-500/10 via-blue-500/10 to-indigo-500/10 border border-emerald-200/80 rounded-2xl p-3 sm:p-3.5 flex flex-wrap items-center justify-between gap-2.5 shadow-xs animate-in fade-in slide-in-from-bottom-2 duration-300 select-none"
@@ -105,7 +105,7 @@ const priorityMap = {
   sanitize: ['protect', 'watermark', 'compress', 'sign', 'vault'],
   unlock: ['split', 'organize', 'compress', 'watermark', 'sign'],
   sign: ['protect', 'compress', 'watermark', 'vault'],
-  image_to_pdf: ['compress', 'organize', 'protect', 'sign', 'vault']
+  image_to_pdf: ['watermark', 'compress', 'protect', 'sign', 'vault']
 };
 
 const suggestedActions = computed(() => {
