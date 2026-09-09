@@ -338,7 +338,7 @@
               class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3 py-1 rounded-xl border border-emerald-200 transition cursor-pointer flex items-center space-x-1"
             >
               <Plus class="w-3.5 h-3.5" />
-              <span>{{ t('split_btn_add_range') || '+ Add Range' }}</span>
+              <span>{{ t('split_btn_add_range') || 'Add Range' }}</span>
             </button>
           </div>
         </div>
@@ -436,6 +436,39 @@
               >
             </div>
 
+            <!-- Delivery Format Selector (Visible for multi-file operations) -->
+            <div v-if="isDeliveryToggleVisible" class="flex items-center space-x-1.5 pl-1 sm:border-l sm:border-slate-200">
+              <span class="text-xs text-slate-500 font-semibold shrink-0">{{ t('split_delivery_format_label') || '交付形式：' }}</span>
+              <div class="flex items-center space-x-1 bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/70 text-xs">
+                <button 
+                  type="button" 
+                  @click="deliveryFormat = 'zip'"
+                  :class="[
+                    'px-2.5 py-1 rounded-lg font-bold flex items-center space-x-1 transition cursor-pointer',
+                    deliveryFormat === 'zip' 
+                      ? 'bg-white text-emerald-700 shadow-2xs border border-slate-200/60' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  ]"
+                >
+                  <Package class="w-3.5 h-3.5 text-emerald-600" />
+                  <span>{{ t('split_delivery_zip_pill') || '📦 ZIP 打包' }}</span>
+                </button>
+                <button 
+                  type="button" 
+                  @click="deliveryFormat = 'separate'"
+                  :class="[
+                    'px-2.5 py-1 rounded-lg font-bold flex items-center space-x-1 transition cursor-pointer',
+                    deliveryFormat === 'separate' 
+                      ? 'bg-white text-emerald-700 shadow-2xs border border-slate-200/60' 
+                      : 'text-slate-500 hover:text-slate-700'
+                  ]"
+                >
+                  <Files class="w-3.5 h-3.5 text-slate-600" />
+                  <span>{{ t('split_delivery_separate_pill') || '📄 独立 PDF' }}</span>
+                </button>
+              </div>
+            </div>
+
             <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
               <input 
                 type="checkbox" 
@@ -455,7 +488,7 @@
             <span v-if="!isProcessing">
               {{ primaryButtonText }}
             </span>
-            <span v-else>{{ t('loading') || 'Processing...' }}</span>
+            <span v-else>{{ deliveryStatusMessage || t('loading') || 'Processing...' }}</span>
             <Download v-if="!isProcessing" class="w-4 h-4" />
             <Loader2 v-else class="w-4 h-4 animate-spin" />
           </button>
@@ -635,6 +668,13 @@ const pendingFileName = ref('');
 let pendingFileObj = null;
 let unlockedPassword = '';
 
+// Delivery Format State ('zip' | 'separate')
+const deliveryFormat = ref('zip');
+
+const isDeliveryToggleVisible = computed(() => {
+  return activeMode.value !== 'extract' || extractFormat.value === 'separate';
+});
+
 // Delivery Modal State
 const isDeliveryModalOpen = ref(false);
 const isDelivering = ref(false);
@@ -665,18 +705,26 @@ const primaryButtonText = computed(() => {
     if (extractFormat.value === 'merge') {
       return `${t('extract_selected') || '🦭 Extract Selected'} (${selectedIndices.value.size})`;
     }
-    return `${t('split_btn_execute') || '🦭 Split & Export'} (${selectedIndices.value.size} ${t('pages_label') || 'pages'})`;
+    const prefix = deliveryFormat.value === 'zip' 
+      ? (t('split_btn_execute_zip') || '🦭 打包下载 ZIP') 
+      : (t('split_btn_execute_separate') || '🦭 逐个下载 PDF');
+    return `${prefix} (${selectedIndices.value.size} ${t('pages_label') || 'pages'})`;
   }
+
+  const prefix = deliveryFormat.value === 'zip' 
+    ? (t('split_btn_execute_zip') || '🦭 打包下载 ZIP') 
+    : (t('split_btn_execute_separate') || '🦭 逐个下载 PDF');
+
   if (activeMode.value === 'burst') {
-    return `${t('split_btn_execute') || '🦭 Split & Export'} (${totalPages.value} ${t('pages_label') || 'pages'})`;
+    return `${prefix} (${totalPages.value} ${t('pages_label') || 'pages'})`;
   }
   if (activeMode.value === 'interval') {
-    return `${t('split_btn_execute') || '🦭 Split & Export'} (${computedIntervalPlan.value.length} files)`;
+    return `${prefix} (${computedIntervalPlan.value.length} files)`;
   }
   if (activeMode.value === 'multi_range') {
-    return `${t('split_btn_execute') || '🦭 Split & Export'} (${customRanges.value.length} ranges)`;
+    return `${prefix} (${customRanges.value.length} ranges)`;
   }
-  return t('split_btn_execute') || '🦭 Split & Export';
+  return prefix;
 });
 
 const isExecutionDisabled = computed(() => {
@@ -934,6 +982,7 @@ function reset() {
   extractFormat.value = 'merge';
   intervalCount.value = 2;
   customRanges.value = [{ id: 1, from: 1, to: 2 }];
+  deliveryFormat.value = 'zip';
   isDeliveryModalOpen.value = false;
   pendingSplitPlan.value = [];
 }
@@ -1044,8 +1093,8 @@ async function buildSplitOutputFiles() {
 
 /**
  * Handles Primary Split Button Click:
- * - If 1 output file: executes immediate download & Vault archiving.
- * - If multiple output files: opens delivery choice modal (ZIP vs Separate).
+ * - If Mode 1 & merge: executes direct single-file PDF download & Vault archiving.
+ * - Otherwise: executes delivery immediately according to deliveryFormat ('zip' or 'separate').
  */
 async function handlePrimarySplitClick() {
   if (!docBytes.value || isExecutionDisabled.value) return;
@@ -1055,7 +1104,7 @@ async function handlePrimarySplitClick() {
     const files = await buildSplitOutputFiles();
     if (files.length === 0) return;
 
-    if (files.length === 1) {
+    if (activeMode.value === 'extract' && extractFormat.value === 'merge') {
       // Direct single-file download
       const singleFile = files[0];
       triggerDownload(new Blob([singleFile.data], { type: 'application/pdf' }), singleFile.name);
@@ -1070,11 +1119,12 @@ async function handlePrimarySplitClick() {
         });
         logger.info('VAULT', `Split result auto-saved to Vault: ${singleFile.name}`);
       }
-    } else {
-      // Multi-file delivery choice
-      pendingSplitPlan.value = files;
-      isDeliveryModalOpen.value = true;
+      return;
     }
+
+    // Direct execution of selected delivery format (ZIP or separate)
+    pendingSplitPlan.value = files;
+    await executeDelivery(deliveryFormat.value);
   } catch (err) {
     logger.error('SPLIT', `Split execution failed: ${err.message}`);
     alert('Failed to split PDF: ' + err.message);
@@ -1096,7 +1146,9 @@ async function executeDelivery(type) {
     if (type === 'zip') {
       deliveryStatusMessage.value = t('split_delivery_downloading_zip') || 'Compressing into ZIP and downloading...';
       const zipName = `${baseCleanName}_Split_Bundle.zip`;
-      await createAndDownloadZip(pendingSplitPlan.value, zipName);
+      await createAndDownloadZip(pendingSplitPlan.value, zipName, (pct) => {
+        deliveryStatusMessage.value = `${t('split_delivery_downloading_zip') || 'Compressing ZIP'} (${pct}%)`;
+      });
     } else {
       // Sequential separate download with anti-choke delay
       const total = pendingSplitPlan.value.length;
