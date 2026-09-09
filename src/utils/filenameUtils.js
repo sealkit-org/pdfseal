@@ -24,10 +24,15 @@ export function sanitizeBaseFileName(fileName, { prefix = null, stripSecurityTag
     base = base.replace(/^(unlocked|protected|encrypted|locked|需密码|已加密|已解锁)$/gi, '');
   }
 
-  // Strip leading prefix to prevent cascading 'PDFSeal_ToolA_PDFSeal_ToolB_...'
+  // Strip prefix to prevent cascading 'PDFSeal_ToolA_PDFSeal_ToolB_...'
   if (effectivePrefix) {
-    const prefixRegex = new RegExp(`^${effectivePrefix}[_-]+`, 'i');
-    base = base.replace(prefixRegex, '');
+    const prefixStartRegex = new RegExp(`^${effectivePrefix}[_-]+`, 'i');
+    base = base.replace(prefixStartRegex, '');
+    const prefixInnerRegex = new RegExp(`[_-]+${effectivePrefix}([_-]+|$)`, 'gi');
+    base = base.replace(prefixInnerRegex, '$1');
+    if (base.toLowerCase() === effectivePrefix.toLowerCase()) {
+      base = 'Document';
+    }
   }
 
   // Clean trailing/leading underscores and hyphens
