@@ -556,6 +556,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'protect'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Bottom Execution & Output Settings Bar -->
         <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <div class="flex flex-wrap items-center gap-3">
@@ -650,8 +660,12 @@ import { generateExportFileName } from '../utils/filenameUtils';
 import { consumePendingFile } from '../utils/toolBridge';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import PasswordModal from '../components/PasswordModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
 
 const emit = defineEmits(['send-to-tool', 'open-enterprise']);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
@@ -841,6 +855,8 @@ async function loadFile(file, password = '') {
     protectError.value = '';
 
     customOutputBaseName.value = generateExportFileName(file.name, 'Protected');
+    showNextActions.value = false;
+    lastExportedFile.value = null;
 
     // Count pages
     try {
@@ -891,6 +907,8 @@ function reset() {
   protectError.value = '';
   customOutputBaseName.value = '';
   activePreset.value = 'confidential';
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 function formatErrorMessage(err) {
@@ -990,6 +1008,12 @@ async function executeProtect() {
     triggerDownload(new Blob([encryptedBytes], { type: 'application/pdf' }), outName);
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
     logger.info('PROTECT', `PDF encrypted and protected successfully: ${outName}`);
+
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: encryptedBytes.buffer ? encryptedBytes.buffer.slice(encryptedBytes.byteOffset, encryptedBytes.byteOffset + encryptedBytes.byteLength) : encryptedBytes
+    };
+    showNextActions.value = true;
 
     // 5. Auto-save to Vault if checked
     if (autoSaveToVault.value) {

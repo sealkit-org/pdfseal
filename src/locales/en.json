@@ -821,5 +821,16 @@
   "protect_confirm_owner_pwd_placeholder": "Confirm management password",
   "protect_err_owner_pwd_mismatch": "Management passwords do not match",
   "protect_pwd_matched": "Passwords match",
-  "protect_pwd_mismatched": "Passwords do not match"
+  "protect_pwd_mismatched": "Passwords do not match",
+  "next_action_title": "Done! What's your next step:",
+  "next_action_desc": "In-memory relay directly to next tool without re-uploading",
+  "next_action_sign": "Sign",
+  "next_action_compress": "Compress",
+  "next_action_protect": "Protect",
+  "next_action_watermark": "Watermark",
+  "next_action_split": "Split",
+  "next_action_organize": "Organize",
+  "next_action_sanitize": "Sanitize",
+  "next_action_merge": "Merge",
+  "next_action_vault": "Vault"
 }

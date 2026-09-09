@@ -229,6 +229,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'merge'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Bottom Execution & Output Settings Bar -->
         <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Output Filename & Vault Auto-Save Setting -->
@@ -308,8 +318,11 @@ import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
+
+const emit = defineEmits(['send-to-tool']);
 
 const fileInputRef = ref(null);
 const files = ref([]);
@@ -321,6 +334,10 @@ const isVaultPickerOpen = ref(false);
 
 const customOutputBaseName = ref(`${userSettings.defaultExportPrefix || 'PDFSeal'}_Merged_${new Date().toISOString().slice(0, 10)}`);
 const autoSaveToVault = ref(userSettings.autoSaveToVault !== false);
+
+// Next Action Relay State
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 watch(() => userSettings.autoSaveToVault, (newVal) => {
   autoSaveToVault.value = Boolean(newVal);
@@ -353,6 +370,8 @@ function handleVaultFilesSelected(vaultFiles) {
 }
 
 async function addFiles(newFiles, defaultSource = 'local') {
+  showNextActions.value = false;
+  lastExportedFile.value = null;
   const list = Array.from(newFiles || []);
   for (const f of list) {
     if (f.type === 'application/pdf' || f.name.endsWith('.pdf')) {
@@ -396,6 +415,8 @@ function clearAll() {
   files.value = [];
   filePasswords.value = {};
   encryptedFiles.value.clear();
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 watch(files, () => {
@@ -420,7 +441,6 @@ function openUnlockForFile(file) {
   pendingFileName.value = file.name;
   pendingFileObj = file;
   passwordError.value = '';
-  isAwaitingPasswordForMerge = false;
   isPasswordOpen.value = true;
 }
 
@@ -430,19 +450,13 @@ async function generateMergedBytes() {
     return null;
   }
 
-  // 1. Phase 1: Security Pre-validation (Prompt password if needed)
+  // 1. Phase 1: Security Scan
   for (const file of files.value) {
     const arrayBuffer = await file.arrayBuffer();
-    const pwd = filePasswords.value[file.name] || '';
-    const security = await verifyPdfSecurity(arrayBuffer, pwd);
-
-    if (security.isEncrypted && (!security.isValid || (security.isOpenPasswordRequired && !pwd))) {
-      logger.info('MERGE_SECURITY', `Prompting password for encrypted file: ${file.name}`);
-      pendingFileName.value = file.name;
-      pendingFileObj = file;
-      passwordError.value = '';
+    const security = await verifyPdfSecurity(arrayBuffer, filePasswords.value[file.name] || '');
+    if (security.isEncrypted && !security.isValid) {
       isAwaitingPasswordForMerge = true;
-      isPasswordOpen.value = true;
+      openUnlockForFile(file);
       return null;
     }
   }
@@ -483,6 +497,14 @@ async function executeMerge() {
 
     // Download merged result
     triggerDownload(new Blob([mergedBytes], { type: 'application/pdf' }), finalName);
+
+    lastExportedFile.value = {
+      name: finalName,
+      arrayBuffer: mergedBytes,
+      size: mergedBytes.byteLength
+    };
+    showNextActions.value = true;
+
     logger.info('MERGE_SUCCESS', `Merged PDF generated: ${finalName} (${(mergedBytes.byteLength / 1024).toFixed(1)} KB, ${pageCount} pages)`);
 
     // Auto-archive in Vault if enabled

@@ -420,6 +420,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'split'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- 5. Bottom Action & Export Configuration Bar -->
         <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Left: Output Filename & Auto-save Checkbox -->
@@ -625,6 +635,12 @@ import { generateExportFileName, sanitizeBaseFileName } from '../utils/filenameU
 import { createAndDownloadZip } from '../utils/zipUtils';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
+
+const emit = defineEmits(['send-to-tool']);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
@@ -791,6 +807,8 @@ async function loadFile(file, password = '') {
   docBytes.value = new Uint8Array(rawBuffer);
   selectedIndices.value.clear();
   rangeInput.value = '';
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 
   try {
     const pdfDataForViewer = new Uint8Array(rawBuffer.slice(0));
@@ -985,6 +1003,8 @@ function reset() {
   deliveryFormat.value = 'zip';
   isDeliveryModalOpen.value = false;
   pendingSplitPlan.value = [];
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 /**
@@ -1104,11 +1124,17 @@ async function handlePrimarySplitClick() {
     const files = await buildSplitOutputFiles();
     if (files.length === 0) return;
 
-    if (activeMode.value === 'extract' && extractFormat.value === 'merge') {
+    if (files.length === 1 || (activeMode.value === 'extract' && extractFormat.value === 'merge')) {
       // Direct single-file download
       const singleFile = files[0];
       triggerDownload(new Blob([singleFile.data], { type: 'application/pdf' }), singleFile.name);
       
+      lastExportedFile.value = {
+        name: singleFile.name,
+        arrayBuffer: singleFile.data.buffer ? singleFile.data.buffer.slice(singleFile.data.byteOffset, singleFile.data.byteOffset + singleFile.data.byteLength) : singleFile.data
+      };
+      showNextActions.value = true;
+
       if (autoSaveToVault.value) {
         await saveFile({
           name: singleFile.name,

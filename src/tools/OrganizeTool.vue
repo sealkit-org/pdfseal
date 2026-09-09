@@ -215,6 +215,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'organize'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Assembly Bottom Action & Export Configuration Bar -->
         <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Left: Output Filename & Auto-save Checkbox -->
@@ -303,6 +313,12 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
+
+const emit = defineEmits(['send-to-tool']);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 const fileInputRef = ref(null);
 const gridRef = ref(null);
@@ -362,6 +378,8 @@ async function loadFile(file, password = '') {
   const prefix = userSettings.defaultExportPrefix || 'PDFSeal_Organized_';
   const cleanBase = file.name.replace(/\.pdf$/i, '');
   customOutputBaseName.value = `${prefix}${cleanBase}`;
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 
   const rawBuffer = await file.arrayBuffer();
 
@@ -484,6 +502,8 @@ function reset() {
   pages.value = [];
   unlockedPassword = '';
   customOutputBaseName.value = '';
+  showNextActions.value = false;
+  lastExportedFile.value = null;
   if (sortableInstance) {
     sortableInstance.destroy();
     sortableInstance = null;
@@ -574,6 +594,12 @@ async function executeExport() {
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
     logger.info('ORGANIZE', `Exported organized PDF: ${outName} (${(outBytes.byteLength / 1024).toFixed(1)} KB, ${pageCount} pages)`);
+
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+    };
+    showNextActions.value = true;
 
     // Auto-archive in Vault if enabled
     if (autoSaveToVault.value) {

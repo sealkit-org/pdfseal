@@ -364,6 +364,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'sign'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Bottom Execution & Output Settings Bar (Matching PDFSeal Standard) -->
         <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Left: Output Filename & Vault Auto-Save Setting -->
@@ -450,6 +460,12 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
+
+const emit = defineEmits(['send-to-tool']);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 const fileInputRef = ref(null);
 const stampImageInputRef = ref(null);
@@ -609,6 +625,8 @@ async function loadFile(file, password = '') {
   const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
   const cleanBase = file.name.replace(/\.[^/.]+$/, '');
   customOutputBaseName.value = `${prefix}_Signed_${cleanBase}`;
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 
   currentPage.value = 1;
   placedSignatures.value = [];
@@ -955,6 +973,12 @@ async function executeSign() {
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
     logger.info('SIGN', `PDF signed successfully with ${placedSignatures.value.length} signature(s): ${outName}`);
 
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+    };
+    showNextActions.value = true;
+
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {
       await saveFile({
@@ -997,6 +1021,8 @@ function reset() {
   customOutputBaseName.value = '';
   placedSignatures.value = [];
   clearDrawCanvas();
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 function checkIncomingFile() {

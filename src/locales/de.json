@@ -821,5 +821,16 @@
   "protect_confirm_owner_pwd_placeholder": "Verwaltungspasswort bestätigen",
   "protect_err_owner_pwd_mismatch": "Verwaltungspasswörter stimmen nicht überein",
   "protect_pwd_matched": "Passwörter stimmen überein",
-  "protect_pwd_mismatched": "Passwörter stimmen nicht überein"
+  "protect_pwd_mismatched": "Passwörter stimmen nicht überein",
+  "next_action_title": "Fertig! Ihr nächster Schritt:",
+  "next_action_desc": "Direkt im Speicher weiterleiten ohne erneuten Upload",
+  "next_action_sign": "Signieren",
+  "next_action_compress": "Komprimieren",
+  "next_action_protect": "Schützen",
+  "next_action_watermark": "Wasserzeichen",
+  "next_action_split": "Teilen",
+  "next_action_organize": "Organisieren",
+  "next_action_sanitize": "Bereinigen",
+  "next_action_merge": "Zusammenführen",
+  "next_action_vault": "Tresor"
 }

@@ -249,6 +249,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'image_to_pdf'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Bottom Execution & Output Settings Bar -->
         <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Output Filename & Vault Auto-Save Setting -->
@@ -313,6 +323,12 @@ import { triggerDownload } from '../utils/download';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
+import NextActionBanner from '../components/NextActionBanner.vue';
+
+const emit = defineEmits(['send-to-tool']);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 const fileInputRef = ref(null);
 const isDragOver = ref(false);
@@ -374,6 +390,8 @@ async function onDrop(e) {
 }
 
 async function processAddedFiles(files) {
+  showNextActions.value = false;
+  lastExportedFile.value = null;
   for (const f of files) {
     const previewUrl = URL.createObjectURL(f);
     const { width, height } = await getImageDimensions(previewUrl);
@@ -415,6 +433,8 @@ function clearAll() {
   imageList.value.forEach(img => URL.revokeObjectURL(img.previewUrl));
   imageList.value = [];
   customOutputBaseName.value = '';
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 function rotateImage(idx) {
@@ -540,6 +560,12 @@ async function executeExport() {
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
     logger.info('IMG2PDF', `Images successfully converted to PDF: ${outName} (${imageList.value.length} pages)`);
+
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+    };
+    showNextActions.value = true;
 
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {

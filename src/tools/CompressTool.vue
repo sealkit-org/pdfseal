@@ -234,6 +234,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'compress'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Bottom Execution & Output Settings Bar (Identical to MergeTool) -->
         <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Output Filename & Vault Auto-Save Setting -->
@@ -317,6 +327,9 @@ import { logger } from '../utils/logger';
 import { generateExportFileName } from '../utils/filenameUtils';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
+
+const emit = defineEmits(['send-to-tool']);
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
@@ -337,6 +350,10 @@ const progressMessage = ref('');
 // Export options
 const customOutputBaseName = ref('');
 const autoSaveToVault = ref(userSettings.autoSaveToVault);
+
+// Next Action Relay State
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 watch(() => userSettings.autoSaveToVault, (newVal) => {
   autoSaveToVault.value = Boolean(newVal);
@@ -375,6 +392,8 @@ function handleVaultFilesSelected(selectedFiles) {
 }
 
 async function loadFile(file, password = '') {
+  showNextActions.value = false;
+  lastExportedFile.value = null;
   pendingFileName.value = file.name;
   pendingFileObj = file;
 
@@ -455,6 +474,8 @@ function reset() {
   customOutputBaseName.value = '';
   progressPercent.value = 0;
   progressMessage.value = '';
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 async function executeCompress() {
@@ -484,6 +505,13 @@ async function executeCompress() {
     }
 
     triggerDownload(new Blob([compressedBytes], { type: 'application/pdf' }), outName);
+
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: compressedBytes,
+      size: compressedBytes.byteLength
+    };
+    showNextActions.value = true;
 
     const compressedMb = (compressedBytes.byteLength / (1024 * 1024)).toFixed(2);
     const savedPercent = Math.max(0, Math.round((1 - compressedBytes.byteLength / docBytes.value.byteLength) * 100));
