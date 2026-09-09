@@ -95,8 +95,70 @@ export async function executeSplitNode(items, params = {}, onProgress = () => {}
             pageCount: 1
           });
         }
+      } else if (mode === 'interval') {
+        // Split into chunks of N pages
+        const interval = Math.max(1, parseInt(params.interval || 2, 10));
+        let partIndex = 1;
+        for (let p = 0; p < totalPages; p += interval) {
+          const chunkIndices = [];
+          for (let c = p; c < Math.min(totalPages, p + interval); c++) {
+            chunkIndices.push(c);
+          }
+          const chunkDoc = await PDFDocument.create();
+          const copiedPages = await chunkDoc.copyPages(srcDoc, chunkIndices);
+          copiedPages.forEach(cp => chunkDoc.addPage(cp));
+          const chunkBytes = await chunkDoc.save({ useObjectStreams: true });
+
+          result.push({
+            id: `${item.id}_part${partIndex}`,
+            name: `${baseName}_Part_${partIndex}.pdf`,
+            data: chunkBytes,
+            mimeType: 'application/pdf',
+            pageCount: chunkIndices.length
+          });
+          partIndex++;
+        }
+      } else if (mode === 'multi_range') {
+        // Split by multiple custom ranges
+        const ranges = Array.isArray(params.ranges) ? params.ranges : [expr];
+        for (let r = 0; r < ranges.length; r++) {
+          const rangeItem = ranges[r];
+          const rangeExpr = typeof rangeItem === 'string' ? rangeItem : `${rangeItem.from}-${rangeItem.to}`;
+          const pageIndices = parseRangeExpression(rangeExpr, totalPages);
+          if (pageIndices.length === 0) continue;
+
+          const rangeDoc = await PDFDocument.create();
+          const copiedPages = await rangeDoc.copyPages(srcDoc, pageIndices);
+          copiedPages.forEach(cp => rangeDoc.addPage(cp));
+          const rangeBytes = await rangeDoc.save({ useObjectStreams: true });
+
+          result.push({
+            id: `${item.id}_range${r + 1}`,
+            name: `${baseName}_Range_${r + 1}.pdf`,
+            data: rangeBytes,
+            mimeType: 'application/pdf',
+            pageCount: pageIndices.length
+          });
+        }
+      } else if (mode === 'extract_separate') {
+        // Extract specified range into individual single-page documents
+        const pageIndices = parseRangeExpression(expr, totalPages);
+        for (const p of pageIndices) {
+          const singleDoc = await PDFDocument.create();
+          const [copiedPage] = await singleDoc.copyPages(srcDoc, [p]);
+          singleDoc.addPage(copiedPage);
+          const singleBytes = await singleDoc.save({ useObjectStreams: true });
+
+          result.push({
+            id: `${item.id}_p${p + 1}`,
+            name: `${baseName}_Page_${p + 1}.pdf`,
+            data: singleBytes,
+            mimeType: 'application/pdf',
+            pageCount: 1
+          });
+        }
       } else {
-        // Extract specified range
+        // Default: Extract specified range into 1 combined document
         const pageIndices = parseRangeExpression(expr, totalPages);
         if (pageIndices.length > 0) {
           const newDoc = await PDFDocument.create();

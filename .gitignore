@@ -17,3 +17,8 @@ build/
 # Private Issuer Cryptographic Keys (DO NOT COMMIT)
 .keys/
 *.private.json
+
+# E2E Test Temp Artifacts
+temp_e2e_test/
+e2e_screenshots/
+
