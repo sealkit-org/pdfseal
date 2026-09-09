@@ -275,6 +275,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'watermark'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Assembly Bottom Action & Export Configuration Bar -->
         <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Left: Output Filename & Auto-save Checkbox -->
@@ -363,6 +373,12 @@ import { logger } from '../utils/logger';
 import { generateExportFileName } from '../utils/filenameUtils';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
+
+const emit = defineEmits(['send-to-tool']);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 const fileInputRef = ref(null);
 const previewCanvasRef = ref(null);
@@ -459,6 +475,8 @@ async function loadFile(file, password = '') {
   pendingFileObj = file;
 
   customOutputBaseName.value = generateExportFileName(file.name, 'Watermarked');
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 
   const rawBuffer = await file.arrayBuffer();
 
@@ -577,6 +595,8 @@ function reset() {
   totalPages.value = 0;
   page1Canvas = null;
   unlockedPassword = '';
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 async function generateWatermarkedBytes() {
@@ -644,6 +664,12 @@ async function executeWatermark() {
     const { outBytes, outName, pageCount } = result;
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
+
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+    };
+    showNextActions.value = true;
 
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {

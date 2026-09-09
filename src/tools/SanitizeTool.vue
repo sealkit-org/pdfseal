@@ -227,6 +227,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'sanitize'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Assembly Bottom Action & Export Configuration Bar -->
         <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Left: Output Filename & Auto-save Checkbox -->
@@ -317,6 +327,12 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
+
+const emit = defineEmits(['send-to-tool']);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
@@ -426,6 +442,8 @@ async function loadFile(file, password = '') {
     const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
     const baseWithoutExt = file.name.replace(/\.[^/.]+$/, '');
     customOutputBaseName.value = `${prefix}_Sanitized_${baseWithoutExt}`;
+    showNextActions.value = false;
+    lastExportedFile.value = null;
 
     const n = noneText.value;
     let title = '';
@@ -511,6 +529,8 @@ function reset() {
   rawMetadata.value = {};
   unlockedPassword = '';
   pendingFileObj = null;
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 async function generateSanitizedBytes() {
@@ -522,12 +542,12 @@ async function generateSanitizedBytes() {
   });
   pdfDoc.updateMetadata = false;
 
-  // 1. Physically delete all fields from Info dictionary and remove from context
+  // Clear Document Info Dictionary
   try {
     const infoRef = pdfDoc.context.trailerInfo?.Info;
     if (infoRef) {
       const infoDict = pdfDoc.context.lookup(infoRef);
-      if (infoDict && infoDict.delete) {
+      if (infoDict && infoDict.set) {
         infoDict.delete(PDFName.of('Title'));
         infoDict.delete(PDFName.of('Author'));
         infoDict.delete(PDFName.of('Subject'));
@@ -536,43 +556,44 @@ async function generateSanitizedBytes() {
         infoDict.delete(PDFName.of('Producer'));
         infoDict.delete(PDFName.of('CreationDate'));
         infoDict.delete(PDFName.of('ModDate'));
-        infoDict.delete(PDFName.of('Trapped'));
-        infoDict.delete(PDFName.of('PTEX.Fullbanner'));
-        infoDict.delete(PDFName.of('GTS_PDFXVersion'));
       }
-      pdfDoc.context.delete(infoRef);
     }
-    if (pdfDoc.context.trailerInfo) {
-      delete pdfDoc.context.trailerInfo.Info;
-    }
-  } catch (infoErr) {
-    console.warn('Info dict strip warning:', infoErr);
+  } catch (e) {
+    console.warn('SANITIZE', `Failed to purge info dictionary: ${e.message}`);
   }
 
-  // 2. Clear standard document information getters/setters
-  pdfDoc.setTitle('');
-  pdfDoc.setAuthor('');
-  pdfDoc.setSubject('');
-  pdfDoc.setKeywords([]);
-  pdfDoc.setProducer('');
-  pdfDoc.setCreator('');
-
-  // 3. Strip deep XMP metadata streams and piece info from Catalog
+  // Clear XMP Metadata
   try {
     const catalog = pdfDoc.catalog;
-    const metadataKey = PDFName.of('Metadata');
-    if (catalog && catalog.has(metadataKey)) {
-      catalog.delete(metadataKey);
+    if (catalog && catalog.has(PDFName.of('Metadata'))) {
+      catalog.delete(PDFName.of('Metadata'));
     }
-    const pieceInfoKey = PDFName.of('PieceInfo');
-    if (catalog && catalog.has(pieceInfoKey)) {
-      catalog.delete(pieceInfoKey);
-    }
-  } catch (xmpErr) {
-    console.warn('XMP metadata stream strip notice:', xmpErr);
+  } catch (e) {
+    console.warn('SANITIZE', `Failed to purge XMP Metadata: ${e.message}`);
   }
 
-  // 4. Purge Annotations, Comments, Hyperlinks, and Interactive Forms
+  // Clear Javascript / Actions / OpenAction
+  try {
+    const catalog = pdfDoc.catalog;
+    if (catalog) {
+      if (catalog.has(PDFName.of('Names'))) {
+        const namesDict = catalog.lookup(PDFName.of('Names'));
+        if (namesDict && namesDict.has && namesDict.has(PDFName.of('JavaScript'))) {
+          namesDict.delete(PDFName.of('JavaScript'));
+        }
+      }
+      if (catalog.has(PDFName.of('OpenAction'))) {
+        catalog.delete(PDFName.of('OpenAction'));
+      }
+      if (catalog.has(PDFName.of('AA'))) {
+        catalog.delete(PDFName.of('AA'));
+      }
+    }
+  } catch (e) {
+    console.warn('SANITIZE', `Failed to delete JavaScript/Actions: ${e.message}`);
+  }
+
+  // Clear Annots & Flatten Forms
   try {
     const form = pdfDoc.getForm();
     if (form) {
@@ -611,6 +632,12 @@ async function executeSanitize() {
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
     logger.info('SANITIZE', `PDF sanitized and downloaded: ${outName}`);
 
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+    };
+    showNextActions.value = true;
+
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {
       await saveFile({
@@ -639,4 +666,5 @@ function checkIncomingFile() {
 }
 
 onMounted(checkIncomingFile);
+onActivated(checkIncomingFile);
 </script>

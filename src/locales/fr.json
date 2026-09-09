@@ -821,5 +821,16 @@
   "protect_confirm_owner_pwd_placeholder": "Confirmer le mot de passe de gestion",
   "protect_err_owner_pwd_mismatch": "Les mots de passe de gestion ne correspondent pas",
   "protect_pwd_matched": "Les mots de passe correspondent",
-  "protect_pwd_mismatched": "Les mots de passe ne correspondent pas"
+  "protect_pwd_mismatched": "Les mots de passe ne correspondent pas",
+  "next_action_title": "Terminé ! Quelle est la prochaine étape :",
+  "next_action_desc": "Relayer directement en mémoire sans re-téléverser",
+  "next_action_sign": "Signer",
+  "next_action_compress": "Compresser",
+  "next_action_protect": "Protéger",
+  "next_action_watermark": "Filigrane",
+  "next_action_split": "Diviser",
+  "next_action_organize": "Organiser",
+  "next_action_sanitize": "Nettoyer",
+  "next_action_merge": "Fusionner",
+  "next_action_vault": "Coffre"
 }

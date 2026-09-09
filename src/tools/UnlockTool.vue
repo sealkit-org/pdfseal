@@ -164,6 +164,16 @@
           </div>
         </div>
 
+        <!-- Next Action Relay Banner -->
+        <NextActionBanner 
+          v-if="showNextActions && lastExportedFile"
+          :current-tool="'unlock'"
+          :file="lastExportedFile"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+          @close="showNextActions = false"
+          class="mb-3"
+        />
+
         <!-- Bottom Execution & Output Settings Bar -->
         <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Output Filename & Vault Auto-Save Setting -->
@@ -243,6 +253,12 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import { generateExportFileName } from '../utils/filenameUtils';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import NextActionBanner from '../components/NextActionBanner.vue';
+
+const emit = defineEmits(['send-to-tool']);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
@@ -303,6 +319,8 @@ async function loadFile(file, password = '') {
   hasAffirmedRight.value = false;
 
   customOutputBaseName.value = generateExportFileName(file.name, '');
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 
   // Analyze encryption
   const sec = await verifyPdfSecurity(rawBuffer, password);
@@ -336,6 +354,8 @@ function reset() {
   unlockError.value = '';
   hasAffirmedRight.value = false;
   customOutputBaseName.value = '';
+  showNextActions.value = false;
+  lastExportedFile.value = null;
 }
 
 async function executeUnlock() {
@@ -365,6 +385,12 @@ async function executeUnlock() {
 
     triggerDownload(new Blob([unlockedBytes], { type: 'application/pdf' }), outName);
     logger.info('UNLOCK', `PDF unlocked successfully: ${outName}`);
+
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: unlockedBytes.buffer ? unlockedBytes.buffer.slice(unlockedBytes.byteOffset, unlockedBytes.byteOffset + unlockedBytes.byteLength) : unlockedBytes
+    };
+    showNextActions.value = true;
 
     // Auto-save to Vault if checked (with isEncrypted: false)
     if (autoSaveToVault.value) {

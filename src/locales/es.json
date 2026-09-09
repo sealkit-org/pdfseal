@@ -821,5 +821,16 @@
   "protect_confirm_owner_pwd_placeholder": "Confirmar contraseña de gestión",
   "protect_err_owner_pwd_mismatch": "Las contraseñas de gestión no coinciden",
   "protect_pwd_matched": "Las contraseñas coinciden",
-  "protect_pwd_mismatched": "Las contraseñas no coinciden"
+  "protect_pwd_mismatched": "Las contraseñas no coinciden",
+  "next_action_title": "¡Completado! Su siguiente paso:",
+  "next_action_desc": "Reenviar directamente en memoria sin volver a subir",
+  "next_action_sign": "Firmar",
+  "next_action_compress": "Comprimir",
+  "next_action_protect": "Proteger",
+  "next_action_watermark": "Marca de agua",
+  "next_action_split": "Dividir",
+  "next_action_organize": "Organizar",
+  "next_action_sanitize": "Desinfectar",
+  "next_action_merge": "Combinar",
+  "next_action_vault": "Baúl"
 }

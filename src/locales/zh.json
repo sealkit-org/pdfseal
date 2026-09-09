@@ -821,5 +821,16 @@
   "protect_confirm_owner_pwd_placeholder": "再次确认管理密码",
   "protect_err_owner_pwd_mismatch": "两次输入的管理密码不一致",
   "protect_pwd_matched": "密码一致",
-  "protect_pwd_mismatched": "两次输入的密码不一致"
+  "protect_pwd_mismatched": "两次输入的密码不一致",
+  "next_action_title": "处理完成！接下来你可以继续：",
+  "next_action_desc": "纯前端内存直传，免去重新上传",
+  "next_action_sign": "去签名",
+  "next_action_compress": "压体积",
+  "next_action_protect": "加密码",
+  "next_action_watermark": "加水印",
+  "next_action_split": "去拆分",
+  "next_action_organize": "去重排",
+  "next_action_sanitize": "抹隐私",
+  "next_action_merge": "去合并",
+  "next_action_vault": "收纳箱"
 }
