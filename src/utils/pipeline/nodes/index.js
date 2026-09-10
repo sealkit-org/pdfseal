@@ -6,6 +6,7 @@ import { executeWatermarkNode } from './watermarkNode';
 import { executeSanitizeNode } from './sanitizeNode';
 import { executeSignNode } from './signNode';
 import { executeImg2PdfNode } from './img2pdfNode';
+import { executePdf2ImgNode } from './pdf2imgNode';
 import { executeOrganizeNode } from './organizeNode';
 import { executeProtectNode } from './protectNode';
 
@@ -18,6 +19,7 @@ export const NODE_EXECUTORS = {
   node_sanitize: executeSanitizeNode,
   node_sign: executeSignNode,
   node_img2pdf: executeImg2PdfNode,
+  node_pdf2img: executePdf2ImgNode,
   node_organize: executeOrganizeNode,
   node_protect: executeProtectNode
 };

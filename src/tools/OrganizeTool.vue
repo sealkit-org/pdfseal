@@ -186,17 +186,27 @@
               </span>
               <div class="flex items-center space-x-1">
                 <!-- Rotate 90° -->
-                <button 
-                  @click.stop="rotatePage(idx, 90)" 
-                  title="Rotate 90° Clockwise" 
+                <button
+                  @click.stop="rotatePage(idx, 90)"
+                  title="Rotate 90° Clockwise"
                   class="p-1 hover:bg-slate-200/80 rounded-md text-slate-600 transition cursor-pointer"
                 >
                   <RotateCw class="w-3.5 h-3.5" />
                 </button>
+                <!-- Download this page as image -->
+                <button
+                  @click.stop="downloadPageAsImage(idx)"
+                  :disabled="downloadingPageIdx !== null"
+                  :title="t('p2i_download_page')"
+                  class="p-1 hover:bg-cyan-100 text-slate-400 hover:text-cyan-600 rounded-md transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  <Loader2 v-if="downloadingPageIdx === idx" class="w-3.5 h-3.5 animate-spin text-cyan-600" />
+                  <ImageDown v-else class="w-3.5 h-3.5" />
+                </button>
                 <!-- Delete Page -->
-                <button 
-                  @click.stop="deletePage(idx)" 
-                  title="Delete Page" 
+                <button
+                  @click.stop="deletePage(idx)"
+                  title="Delete Page"
                   class="p-1 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-md transition cursor-pointer"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
@@ -287,7 +297,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onActivated } from 'vue';
+import { ref, watch, nextTick, onMounted, onActivated, onDeactivated } from 'vue';
 import { 
   LayoutGrid, 
   Plus, 
@@ -297,8 +307,9 @@ import {
   Loader2, 
   FolderLock, 
   Lock, 
-  Unlock, 
+  Unlock,
   RefreshCw,
+  ImageDown,
   Wand2
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
@@ -347,6 +358,19 @@ let pendingFileObj = null;
 let unlockedPassword = '';
 
 let sortableInstance = null;
+
+// Live pdf.js document handle for on-demand "download page as image" re-rendering
+let pdfDoc = null;
+const downloadingPageIdx = ref(null);
+
+async function destroyPdfDoc() {
+  if (pdfDoc) {
+    try {
+      await pdfDoc.destroy();
+    } catch (e) {}
+    pdfDoc = null;
+  }
+}
 
 function onFileSelected(e) {
   const file = e.target.files[0];
@@ -399,16 +423,18 @@ async function loadFile(file, password = '') {
   docBytes.value = new Uint8Array(rawBuffer);
 
   try {
+    await destroyPdfDoc();
     const pdfDataForViewer = new Uint8Array(rawBuffer.slice(0));
-    const loadingTask = pdfjsLib.getDocument({ 
+    const loadingTask = pdfjsLib.getDocument({
       data: pdfDataForViewer,
       password: password || undefined,
       cMapUrl: typeof window !== 'undefined' ? (window.location.origin + '/cmaps/') : '/cmaps/',
       cMapPacked: true,
       standardFontDataUrl: typeof window !== 'undefined' ? (window.location.origin + '/standard_fonts/') : '/standard_fonts/'
     });
-    
+
     const pdf = await loadingTask.promise;
+    pdfDoc = pdf;
     pages.value = [];
     unlockedPassword = password;
     isPasswordOpen.value = false;
@@ -504,9 +530,48 @@ function reset() {
   customOutputBaseName.value = '';
   showNextActions.value = false;
   lastExportedFile.value = null;
+  downloadingPageIdx.value = null;
+  destroyPdfDoc();
   if (sortableInstance) {
     sortableInstance.destroy();
     sortableInstance = null;
+  }
+}
+
+async function downloadPageAsImage(idx) {
+  const item = pages.value[idx];
+  if (!item || !pdfDoc || downloadingPageIdx.value !== null) return;
+  downloadingPageIdx.value = idx;
+  try {
+    const page = await pdfDoc.getPage(item.pageIndex + 1);
+    const rotation = ((page.rotate || 0) + (item.rotation || 0)) % 360;
+    const viewport = page.getViewport({ scale: 150 / 72, rotation });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    await page.render({
+      canvasContext: ctx,
+      viewport,
+      intent: 'print'
+    }).promise;
+
+    const blob = await new Promise((resolve, reject) => {
+      canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('canvas.toBlob returned null'))), 'image/png');
+    });
+
+    const cleanBase = (customOutputBaseName.value?.trim() || filename.value || 'PDFSeal').replace(/\.pdf$/i, '');
+    const pageNum = String(idx + 1).padStart(2, '0');
+    const outName = `${cleanBase}_page_${pageNum}.png`;
+    triggerDownload(blob, outName);
+    logger.info('ORGANIZE', `Exported page ${idx + 1} as PNG image: ${outName}`);
+  } catch (err) {
+    logger.error('ORGANIZE', `Failed to export page ${idx + 1} as image: ${err.message}`);
+    alert((t('p2i_err_export') || 'Export failed:') + ' ' + err.message);
+  } finally {
+    downloadingPageIdx.value = null;
   }
 }
 
@@ -630,4 +695,7 @@ function checkIncomingFile() {
 
 onMounted(checkIncomingFile);
 onActivated(checkIncomingFile);
+onDeactivated(() => {
+  destroyPdfDoc();
+});
 </script>

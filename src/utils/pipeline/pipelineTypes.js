@@ -32,6 +32,22 @@ export const AVAILABLE_NODES = {
     }
   },
 
+  node_pdf2img: {
+    id: 'node_pdf2img',
+    nameKey: 'tab_pdf_to_image',
+    defaultName: 'PDF 转图片',
+    descKey: 'node_pdf2img_desc',
+    defaultDesc: '将 PDF 每页渲染导出为 PNG / JPG 图片，支持 150 / 300 DPI',
+    category: 'output_convert',
+    inputs: [DATA_TYPES.PDF_DOCS],
+    outputs: [DATA_TYPES.IMAGE_DOCS],
+    topology: TOPOLOGY_MODES.EXPLODE,
+    defaultParams: {
+      format: 'png', // 'png' | 'jpg'
+      dpi: 150        // 150 (Standard) | 300 (Print)
+    }
+  },
+
   node_unlock: {
     id: 'node_unlock',
     nameKey: 'tab_unlock',
@@ -212,6 +228,13 @@ export function checkNodeCompatibility(upstreamNodeId, downstreamNodeId) {
         compatible: false,
         reason: `上游节点【${up.defaultName}】产出的是图片，而下游节点【${down.defaultName}】需要 PDF 文档作为输入。`,
         suggestion: '请在中间插入【图片转 PDF】节点'
+      };
+    }
+    if (up.outputs.includes(DATA_TYPES.PDF_DOCS) && down.inputs.includes(DATA_TYPES.IMAGE_DOCS)) {
+      return {
+        compatible: false,
+        reason: `上游节点【${up.defaultName}】产出的是 PDF 文档，而下游节点【${down.defaultName}】需要图片作为输入。`,
+        suggestion: '请在中间插入【PDF 转图片】节点'
       };
     }
     return {

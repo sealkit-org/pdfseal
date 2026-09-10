@@ -11,6 +11,7 @@ export const TOOL_ROUTES = {
   protect: '/protect-pdf',
   unlock: '/unlock-pdf',
   image_to_pdf: '/image-to-pdf',
+  pdf_to_image: '/pdf-to-image',
   watermark: '/watermark-pdf',
   sanitize: '/sanitize-pdf',
   pipeline: '/pipeline',

@@ -5,6 +5,7 @@ import OrganizeTool from '../tools/OrganizeTool.vue';
 import SplitTool from '../tools/SplitTool.vue';
 import SignTool from '../tools/SignTool.vue';
 import ImageToPdfTool from '../tools/ImageToPdfTool.vue';
+import PdfToImageTool from '../tools/PdfToImageTool.vue';
 import UnlockTool from '../tools/UnlockTool.vue';
 import ProtectTool from '../tools/ProtectTool.vue';
 import WatermarkTool from '../tools/WatermarkTool.vue';
@@ -81,6 +82,13 @@ const routes = [
     name: 'image_to_pdf',
     component: ImageToPdfTool,
     meta: { toolId: 'image_to_pdf' }
+  },
+  {
+    path: '/pdf-to-image',
+    alias: ['/pdf-to-png', '/pdf-to-jpg', '/pdf-to-images'],
+    name: 'pdf_to_image',
+    component: PdfToImageTool,
+    meta: { toolId: 'pdf_to_image' }
   },
   {
     path: '/watermark-pdf',

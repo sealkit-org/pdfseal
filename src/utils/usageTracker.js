@@ -7,6 +7,7 @@ export const DEFAULT_WEIGHTS = {
   merge: 100,
   compress: 90,
   image_to_pdf: 80,
+  pdf_to_image: 75,
   sign: 70,
   split: 60,
   organize: 50,

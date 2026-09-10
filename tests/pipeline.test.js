@@ -89,6 +89,21 @@ describe('Pipeline Automation & Policy Engine', () => {
       expect(checkNodeCompatibility('node_sanitize', 'node_compress').compatible).toBe(true);
     });
 
+    it('should define the pdf2img node with explode topology and image output', () => {
+      const node = AVAILABLE_NODES.node_pdf2img;
+      expect(node).toBeDefined();
+      expect(node.outputs).toContain('image_docs');
+      expect(node.topology).toBe('explode');
+      expect(node.defaultParams).toEqual({ format: 'png', dpi: 150 });
+    });
+
+    it('should suggest inserting a pdf2img node when feeding image consumer from PDF producer', () => {
+      // e.g. Split (PDF out) -> Image to PDF (expects images in) is incompatible
+      const check = checkNodeCompatibility('node_split', 'node_img2pdf');
+      expect(check.compatible).toBe(false);
+      expect(check.suggestion).toContain('PDF 转图片');
+    });
+
     it('should accurately parse range expression in split node', () => {
       expect(parseRangeExpression('1-3, 5', 10)).toEqual([0, 1, 2, 4]);
       expect(parseRangeExpression('2', 5)).toEqual([1]);

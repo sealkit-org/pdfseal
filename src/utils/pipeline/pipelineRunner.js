@@ -137,8 +137,12 @@ export async function runPipeline(pipelineDef, inputFiles, options = {}, maybeOn
         .replace(/\{date\}/g, dateStr)
         .replace(/\{index\}/g, String(idx + 1).padStart(2, '0'));
 
-      if (!finalName.endsWith('.pdf')) {
-        finalName += '.pdf';
+      // Respect the item's real type: image outputs keep .png/.jpg, PDFs get .pdf
+      const itemExt = item.mimeType === 'image/png'
+        ? '.png'
+        : (item.mimeType === 'image/jpeg' || item.mimeType === 'image/jpg') ? '.jpg' : '.pdf';
+      if (!finalName.toLowerCase().endsWith(itemExt)) {
+        finalName = finalName.replace(/\.[^/.]+$/, '') + itemExt;
       }
       return {
         ...item,

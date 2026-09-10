@@ -63,9 +63,10 @@ import {
   Scissors, 
   Layers, 
   ShieldCheck, 
-  Files, 
-  FolderLock, 
-  X 
+  Files,
+  FolderLock,
+  ImageDown,
+  X
 } from 'lucide-vue-next';
 import { t } from '../i18n';
 import { dispatchToTool } from '../utils/toolBridge';
@@ -91,15 +92,16 @@ const actionCatalog = [
   { id: 'split', labelKey: 'next_action_split', icon: Scissors, color: 'text-teal-700 bg-teal-50 border-teal-200 hover:bg-teal-100' },
   { id: 'organize', labelKey: 'next_action_organize', icon: Layers, color: 'text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100' },
   { id: 'sanitize', labelKey: 'next_action_sanitize', icon: ShieldCheck, color: 'text-cyan-700 bg-cyan-50 border-cyan-200 hover:bg-cyan-100' },
+  { id: 'pdf_to_image', labelKey: 'next_action_pdf_to_image', icon: ImageDown, color: 'text-teal-700 bg-teal-50 border-teal-200 hover:bg-teal-100' },
   { id: 'merge', labelKey: 'next_action_merge', icon: Files, color: 'text-slate-700 bg-slate-100 border-slate-200 hover:bg-slate-200' },
   { id: 'vault', labelKey: 'next_action_vault', icon: FolderLock, color: 'text-blue-700 bg-blue-50 border-blue-200 hover:bg-blue-100' }
 ];
 
 const priorityMap = {
-  merge: ['compress', 'sign', 'protect', 'watermark', 'vault'],
-  compress: ['protect', 'sign', 'watermark', 'split', 'vault'],
-  organize: ['compress', 'sign', 'protect', 'watermark', 'vault'],
-  split: ['compress', 'sign', 'protect', 'watermark', 'vault'],
+  merge: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
+  compress: ['protect', 'sign', 'watermark', 'pdf_to_image', 'vault'],
+  organize: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
+  split: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
   watermark: ['protect', 'compress', 'sign', 'vault'],
   protect: ['watermark', 'compress', 'vault'],
   sanitize: ['protect', 'watermark', 'compress', 'sign', 'vault'],
