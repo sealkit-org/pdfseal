@@ -17,14 +17,18 @@
   <a href="https://pdf.sealkit.org"><b>🌐 Launch Official Web App (pdf.sealkit.org) →</b></a>
 </p>
 
+<p align="center">
+  English | <a href="./README.zh-CN.md">简体中文</a>
+</p>
+
 ---
 
 ## 📖 The Story Behind PDFSeal & Our Mascot 🦭
 
 Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 
-1. **The Security Seal (封条 / 印章)**: Your documents are *strictly sealed* inside your local device's browser memory. Zero bytes are ever uploaded to any cloud server.
-2. **The Seal Mascot (小海豹 🦭)**: Meet **Sammy the Seal**, our friendly document guardian! Sammy ensures your private tax forms, legal contracts, and financial receipts remain strictly confidential and untracked.
+1. **The Security Seal**: Your documents are *strictly sealed* inside your local device's browser memory. Zero bytes are ever uploaded to any cloud server.
+2. **The Seal Mascot 🦭**: Meet **Sammy the Seal**, our friendly document guardian! Sammy ensures your private tax forms, legal contracts, and financial receipts remain strictly confidential and untracked.
 
 > *"Drop your files in, let the little seal organize and process them, and leave with complete privacy peace of mind."*
 
@@ -32,7 +36,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 
 ## ✨ Features & Architecture
 
-### 🛠️ 10 Core Local PDF Utilities (100% Free & Unlimited)
+### 🛠️ 11 Core Local PDF Utilities (100% Free & Unlimited)
 
 *All atomic tools run entirely client-side in browser RAM with no arbitrary limits or watermark penalties:*
 
@@ -43,6 +47,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **Watermark & Protect**: High-DPI transparent canvas watermarks supporting multi-language typography and optional owner-level permissions locking.
 - **Sign & Stamp**: Embed handwritten signatures or official seals with instant placement presets (*Last Page Bottom Right*, *First Page*, etc.).
 - **Image to PDF**: Convert PNG, JPG, and WebP images into standard A4 or auto-fitted multi-page PDF documents.
+- **PDF to Image**: Render each PDF page as a crisp PNG or JPG at *Standard 150 DPI* or *print-grade 300 DPI* — download single pages or the entire batch as a ZIP, right from the page thumbnails.
 - **Unlock & Strip Restrictions**: Decrypt password-protected files and permanently strip printing/copying permission locks.
 - **Deep Metadata Sanitizer**: Permanently purge document author, editing software, creation timestamps, GPS data, and embedded thumbnails.
 - **Local Privacy Vault**: Secure in-browser document archive powered by IndexedDB with Web Crypto SHA-256 duplicate detection.
@@ -95,7 +100,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **PDF Engine**: [pdf-lib](https://pdf-lib.js.org/) & [pdfjs-dist](https://mozilla.github.io/pdf.js/)
 - **Security & Cryptography**: Native Web Crypto API (SubtleCrypto AES-GCM-256, SHA-256)
 - **Local Storage**: IndexedDB with structured transactional stores
-- **Testing**: [Vitest](https://vitest.dev/) (17 test suites, 44 unit tests)
+- **Testing**: [Vitest](https://vitest.dev/) (26 test suites, 95 unit tests)
 
 ---
 
@@ -118,6 +123,23 @@ npm test
 # 5. Build for production (generates PWA Service Worker)
 npm run build
 ```
+
+---
+
+## 🗺️ Roadmap
+
+**Recently shipped**
+
+- ✅ **PDF to Image converter** — PNG/JPG export at 150/300 DPI with single-page and batch ZIP download
+- ✅ **Automated batch pipeline** — drag-and-drop node builder with presets and live compatibility validation
+
+**Planned next**
+
+- 🔜 **Signature tool upgrade** — apply initials across all pages in one click, a locally saved signature/seal library, and automatic white-background removal for photographed signatures
+- 🔜 **Organize tool upgrade** — Shift / box multi-select for batch rotate & delete, insert blank pages or append external files anywhere
+- 🔜 More interface languages (community contributions welcome!)
+
+> Have a feature idea? [Open an issue](https://github.com/sealkit-org/pdfseal/issues) — feedback from real privacy-conscious users shapes this roadmap.
 
 ---
 
