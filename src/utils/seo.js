@@ -1,5 +1,6 @@
 import { t, currentLang, onLanguageChange } from '../i18n';
 import { trackVirtualPageView } from './analytics';
+import { TOOL_ROUTES } from '../router/toolRoutes';
 
 let lastToolId = 'merge';
 
@@ -40,16 +41,18 @@ export function updateSeoMeta(routeOrToolId) {
   if (typeof document === 'undefined') return;
 
   let toolId = 'merge';
-  let path = '/merge-pdf';
 
   if (typeof routeOrToolId === 'string') {
     toolId = routeOrToolId;
   } else if (routeOrToolId && typeof routeOrToolId === 'object') {
     toolId = routeOrToolId.meta?.toolId || routeOrToolId.name || 'merge';
-    path = routeOrToolId.path || window.location?.pathname || '/merge-pdf';
   }
 
   lastToolId = toolId;
+
+  // 始终用主路由生成 canonical/og:url：别名路由（如 /jpg-to-pdf）与
+  // 语言切换（字符串入参）都会归一到 /image-to-pdf 等规范路径，避免重复页面
+  const path = TOOL_ROUTES[toolId] || '/merge-pdf';
 
   const titleKey = `seo_title_${toolId}`;
   const descKey = `seo_desc_${toolId}`;

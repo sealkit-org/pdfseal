@@ -321,6 +321,7 @@ import confetti from 'canvas-confetti';
 import { t } from '../i18n';
 import { generateSendKey, exportKeyUrlSafe, encryptFilePayload } from '../utils/cryptoSend';
 import { uploadEncryptedPayload, fetchServiceStatus, MAX_FILE_BYTES } from '../utils/sendApi';
+import { siteConfig } from '../config/siteConfig';
 import { logger } from '../utils/logger';
 
 const props = defineProps({
@@ -463,7 +464,7 @@ async function executeGenerateShare() {
     // 4. Construct URL with key in #hash (Zero-knowledge: # is not sent over HTTP)
     const base = typeof window !== 'undefined'
       ? `${window.location.origin}${window.location.pathname}`.replace(/\/+$/, '')
-      : 'https://pdfseal.com';
+      : siteConfig.officialUrl;
     const fullUrl = `${base}/#share=${uploadRes.id}&key=${keyUrlSafe}`;
 
     shareResult.value = {
