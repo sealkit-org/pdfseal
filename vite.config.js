@@ -1,12 +1,13 @@
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import { VitePWA } from 'vite-plugin-pwa';
-import { readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { TOOL_ROUTES } from './src/router/toolRoutes.js';
 
-// 官方品牌 OG 图（含 pdf.sealkit.org 字样，属官方部署专属资产，默认不随自建构建分发）
-const OG_IMAGE_PATH = resolve(import.meta.dirname, 'brand/og-image.png');
+// OG 社交分享图由 public/og-image.png 提供（进 Git，Vite 自动拷贝到 dist 根目录），
+// index.html 的 og:image 引用 %SITE_URL%/og-image.png
+const OG_IMAGE_PUBLIC_PATH = resolve(import.meta.dirname, 'public/og-image.png');
 
 /**
  * SEO 静态资源插件：域名唯一来源是 VITE_OFFICIAL_URL（.env.local / CI 环境变量）
@@ -18,14 +19,9 @@ const OG_IMAGE_PATH = resolve(import.meta.dirname, 'brand/og-image.png');
  */
 function seoStaticFilesPlugin(siteUrl) {
   const enabled = Boolean(siteUrl);
-  // 品牌图为本地私有资产（brand/ 已 gitignore）。缺失时仅告警不阻断构建，
-  // 自建用户可将自有 1200x630 的 og-image.png 放入 brand/ 或 public/ 提供社交分享图
-  let ogImage = null;
-  try {
-    ogImage = readFileSync(OG_IMAGE_PATH);
-  } catch {}
-  if (enabled && !ogImage) {
-    console.warn('[pdfseal-seo] VITE_OFFICIAL_URL is set but brand/og-image.png not found. Social share image will 404 unless you provide one in public/og-image.png.');
+  // 缺失时仅告警不阻断构建：自建用户可放置自有 1200x630 的 og-image.png 到 public/
+  if (enabled && !existsSync(OG_IMAGE_PUBLIC_PATH)) {
+    console.warn('[pdfseal-seo] VITE_OFFICIAL_URL is set but public/og-image.png not found. Social share image will 404 unless you provide one.');
   }
   const today = new Date().toISOString().slice(0, 10);
   const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
