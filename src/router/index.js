@@ -14,26 +14,10 @@ import VaultTool from '../tools/VaultTool.vue';
 import ShareReceiveTool from '../tools/ShareReceiveTool.vue';
 import { updateSeoMeta } from '../utils/seo';
 import { recordToolUsage } from '../utils/usageTracker';
+import { TOOL_ROUTES, ROUTE_TO_TOOL } from './toolRoutes';
 
-export const TOOL_ROUTES = {
-  merge: '/merge-pdf',
-  compress: '/compress-pdf',
-  organize: '/organize-pdf',
-  split: '/split-pdf',
-  sign: '/sign-pdf',
-  protect: '/protect-pdf',
-  unlock: '/unlock-pdf',
-  image_to_pdf: '/image-to-pdf',
-  watermark: '/watermark-pdf',
-  sanitize: '/sanitize-pdf',
-  pipeline: '/pipeline',
-  vault: '/vault',
-  receive: '/receive'
-};
-
-export const ROUTE_TO_TOOL = Object.fromEntries(
-  Object.entries(TOOL_ROUTES).map(([toolId, path]) => [path, toolId])
-);
+// 保持既有导入路径（../router）兼容，规范数据源见 ./toolRoutes.js
+export { TOOL_ROUTES, ROUTE_TO_TOOL };
 
 const routes = [
   {
