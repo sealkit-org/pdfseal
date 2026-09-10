@@ -1,0 +1,200 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+  <defs>
+    <!-- Background Gradient -->
+    <linearGradient id="bg-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a" />
+      <stop offset="50%" stop-color="#090d16" />
+      <stop offset="100%" stop-color="#020617" />
+    </linearGradient>
+
+    <!-- Glowing Orb Gradients -->
+    <radialGradient id="cyan-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#06b6d4" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="indigo-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0" />
+    </radialGradient>
+
+    <radialGradient id="blue-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.25" />
+      <stop offset="100%" stop-color="#3b82f6" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Text Gradients -->
+    <linearGradient id="brand-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#818cf8" />
+    </linearGradient>
+
+    <linearGradient id="card-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1e293b" stop-opacity="0.85" />
+      <stop offset="100%" stop-color="#0f172a" stop-opacity="0.9" />
+    </linearGradient>
+
+    <linearGradient id="badge-green" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#10b981" />
+    </linearGradient>
+
+    <!-- Soft Drop Shadows -->
+    <filter id="glow-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#0284c7" flood-opacity="0.2" />
+    </filter>
+
+    <filter id="card-shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="16" stdDeviation="24" flood-color="#000000" flood-opacity="0.5" />
+    </filter>
+  </defs>
+
+  <!-- Background Base -->
+  <rect width="1200" height="630" fill="url(#bg-grad)" />
+
+  <!-- Ambient Light Orbs -->
+  <circle cx="150" cy="120" r="320" fill="url(#cyan-glow)" />
+  <circle cx="1050" cy="500" r="360" fill="url(#indigo-glow)" />
+  <circle cx="650" cy="200" r="280" fill="url(#blue-glow)" />
+
+  <!-- Subtle Blueprint Tech Grid Pattern -->
+  <g opacity="0.05" stroke="#94a3b8" stroke-width="1">
+    <line x1="0" y1="90" x2="1200" y2="90" />
+    <line x1="0" y1="180" x2="1200" y2="180" />
+    <line x1="0" y1="270" x2="1200" y2="270" />
+    <line x1="0" y1="360" x2="1200" y2="360" />
+    <line x1="0" y1="450" x2="1200" y2="450" />
+    <line x1="0" y1="540" x2="1200" y2="540" />
+    <line x1="120" y1="0" x2="120" y2="630" />
+    <line x1="240" y1="0" x2="240" y2="630" />
+    <line x1="360" y1="0" x2="360" y2="630" />
+    <line x1="480" y1="0" x2="480" y2="630" />
+    <line x1="600" y1="0" x2="600" y2="630" />
+    <line x1="720" y1="0" x2="720" y2="630" />
+    <line x1="840" y1="0" x2="840" y2="630" />
+    <line x1="960" y1="0" x2="960" y2="630" />
+    <line x1="1080" y1="0" x2="1080" y2="630" />
+  </g>
+
+  <!-- Top Left: Mascot & Brand Header -->
+  <g transform="translate(80, 75)">
+    <!-- Mascot Sammy Circle Badge -->
+    <rect x="0" y="0" width="88" height="88" rx="28" fill="#1e293b" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.4" filter="url(#glow-shadow)" />
+    <text x="44" y="60" font-size="52" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">🦭</text>
+    
+    <!-- Brand Title -->
+    <text x="110" y="52" font-size="48" font-weight="900" fill="url(#brand-grad)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" letter-spacing="-1">PDFSeal</text>
+    
+    <!-- Trust Pill -->
+    <g transform="translate(320, 16)">
+      <rect x="0" y="0" width="168" height="34" rx="17" fill="#064e3b" stroke="#10b981" stroke-width="1.5" stroke-opacity="0.6" />
+      <circle cx="18" cy="17" r="5" fill="#34d399" />
+      <text x="32" y="22" font-size="13" font-weight="700" fill="#ecfdf5" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">100% In-Browser</text>
+    </g>
+  </g>
+
+  <!-- Main Hero Tagline -->
+  <g transform="translate(80, 220)">
+    <text x="0" y="0" font-size="54" font-weight="800" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" letter-spacing="-1.5">
+      The Private PDF Toolkit
+    </text>
+    <text x="0" y="58" font-size="34" font-weight="600" fill="#38bdf8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+      Zero Cloud Uploads. Instant Speed.
+    </text>
+    
+    <text x="0" y="112" font-size="19" font-weight="400" fill="#94a3b8" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+      Merge, Compress, Organize, Sign, Watermark &amp; Encrypt PDFs locally in RAM.
+    </text>
+
+    <!-- Trust Features Row -->
+    <g transform="translate(0, 155)">
+      <!-- Feature 1 -->
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="160" height="42" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="20" y="26" font-size="14" font-weight="600" fill="#e2e8f0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">🔒 Zero Server I/O</text>
+      </g>
+      <!-- Feature 2 -->
+      <g transform="translate(175, 0)">
+        <rect x="0" y="0" width="168" height="42" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="20" y="26" font-size="14" font-weight="600" fill="#e2e8f0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">⚡ In-Memory Fast</text>
+      </g>
+      <!-- Feature 3 -->
+      <g transform="translate(358, 0)">
+        <rect x="0" y="0" width="160" height="42" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="20" y="26" font-size="14" font-weight="600" fill="#e2e8f0" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">🛡️ AES-256 E2EE</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Right Side Interactive Showcase Graphic Card -->
+  <g transform="translate(710, 85)">
+    <!-- Container Mockup Glass Card -->
+    <rect x="0" y="0" width="410" height="440" rx="24" fill="url(#card-grad)" stroke="#334155" stroke-width="1.5" filter="url(#card-shadow)" />
+    
+    <!-- Top Card Bar -->
+    <rect x="0" y="0" width="410" height="48" rx="24" fill="#0f172a" />
+    <circle cx="28" cy="24" r="6" fill="#ef4444" opacity="0.8" />
+    <circle cx="48" cy="24" r="6" fill="#f59e0b" opacity="0.8" />
+    <circle cx="68" cy="24" r="6" fill="#10b981" opacity="0.8" />
+    <text x="205" y="30" font-size="13" font-weight="600" fill="#64748b" text-anchor="middle" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">pdfseal.com · Client-Side RAM</text>
+
+    <!-- Tool Items Showcase List -->
+    <g transform="translate(24, 72)">
+      <!-- Item 1: Merge -->
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="362" height="46" rx="12" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.3" />
+        <text x="18" y="28" font-size="18">📑</text>
+        <text x="50" y="28" font-size="15" font-weight="700" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Merge PDF Files</text>
+        <text x="340" y="28" font-size="12" font-weight="700" fill="#38bdf8" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Lossless</text>
+      </g>
+
+      <!-- Item 2: Compress -->
+      <g transform="translate(0, 58)">
+        <rect x="0" y="0" width="362" height="46" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="18" y="28" font-size="18">🗜️</text>
+        <text x="50" y="28" font-size="15" font-weight="700" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Compress PDF</text>
+        <text x="340" y="28" font-size="12" font-weight="700" fill="#34d399" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">-70% Size</text>
+      </g>
+
+      <!-- Item 3: Organize -->
+      <g transform="translate(0, 116)">
+        <rect x="0" y="0" width="362" height="46" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="18" y="28" font-size="18">🔄</text>
+        <text x="50" y="28" font-size="15" font-weight="700" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Reorder &amp; Rotate Pages</text>
+        <text x="340" y="28" font-size="12" font-weight="700" fill="#a78bfa" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Visual</text>
+      </g>
+
+      <!-- Item 4: Sign -->
+      <g transform="translate(0, 174)">
+        <rect x="0" y="0" width="362" height="46" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="18" y="28" font-size="18">✍️</text>
+        <text x="50" y="28" font-size="15" font-weight="700" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Sign &amp; Digital Stamp</text>
+        <text x="340" y="28" font-size="12" font-weight="700" fill="#f472b6" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Vector</text>
+      </g>
+
+      <!-- Item 5: Protect & Sanitize -->
+      <g transform="translate(0, 232)">
+        <rect x="0" y="0" width="362" height="46" rx="12" fill="#1e293b" stroke="#334155" stroke-width="1" />
+        <text x="18" y="28" font-size="18">🛡️</text>
+        <text x="50" y="28" font-size="15" font-weight="700" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Protect &amp; Sanitize</text>
+        <text x="340" y="28" font-size="12" font-weight="700" fill="#fbbf24" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">AES-256</text>
+      </g>
+
+      <!-- Item 6: Pipeline -->
+      <g transform="translate(0, 290)">
+        <rect x="0" y="0" width="362" height="46" rx="12" fill="#1e293b" stroke="#6366f1" stroke-width="1.5" stroke-opacity="0.5" />
+        <text x="18" y="28" font-size="18">⚡</text>
+        <text x="50" y="28" font-size="15" font-weight="700" fill="#ffffff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Automated Batch Pipeline</text>
+        <text x="340" y="28" font-size="12" font-weight="700" fill="#818cf8" text-anchor="end" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">Chain</text>
+      </g>
+    </g>
+  </g>
+
+  <!-- Bottom Global Trust Strip -->
+  <g transform="translate(80, 568)">
+    <text x="0" y="0" font-size="15" font-weight="500" fill="#64748b" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif">
+      🔒 Zero Cookie Tracking · 🛡️ GDPR / CCPA Compliant · 🦭 Open Source AGPLv3 · Built for Maximum Privacy
+    </text>
+  </g>
+</svg>
