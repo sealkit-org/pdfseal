@@ -11,11 +11,12 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
     clearPendingFile();
   });
 
+  // Mirrors NextActionBanner.vue priorityMap — keep in sync when updating the component
   const priorityMap = {
-    merge: ['compress', 'sign', 'protect', 'watermark', 'vault'],
-    compress: ['protect', 'sign', 'watermark', 'split', 'vault'],
-    organize: ['compress', 'sign', 'protect', 'watermark', 'vault'],
-    split: ['compress', 'sign', 'protect', 'watermark', 'vault'],
+    merge: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
+    compress: ['protect', 'sign', 'watermark', 'pdf_to_image', 'vault'],
+    organize: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
+    split: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
     watermark: ['protect', 'compress', 'sign', 'vault'],
     protect: ['watermark', 'compress', 'vault'],
     sanitize: ['protect', 'watermark', 'compress', 'sign', 'vault'],
@@ -24,14 +25,18 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
     image_to_pdf: ['watermark', 'compress', 'protect', 'sign', 'vault']
   };
 
-  it('should define targeted recommendations for all 10 tools', () => {
-    const tools = ['merge', 'compress', 'organize', 'split', 'watermark', 'protect', 'sanitize', 'unlock', 'sign', 'image_to_pdf'];
+  it('should define targeted recommendations for all 11 tools', () => {
+    const tools = ['merge', 'compress', 'organize', 'split', 'watermark', 'protect', 'sanitize', 'unlock', 'sign', 'image_to_pdf', 'pdf_to_image'];
     for (const tool of tools) {
+      if (tool === 'pdf_to_image') continue; // relay target only; no banner is rendered inside the tool page yet
       expect(priorityMap[tool]).toBeDefined();
       expect(priorityMap[tool].length).toBeGreaterThanOrEqual(3);
       // Tool should not recommend itself
       expect(priorityMap[tool]).not.toContain(tool);
     }
+    // New tool must appear as a relay target of the core PDF tools
+    expect(priorityMap.merge).toContain('pdf_to_image');
+    expect(priorityMap.compress).toContain('pdf_to_image');
   });
 
   it('should seamlessly relay exported file from one tool to another via toolBridge', () => {
@@ -88,7 +93,8 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
       'next_action_organize',
       'next_action_sanitize',
       'next_action_merge',
-      'next_action_vault'
+      'next_action_vault',
+      'next_action_pdf_to_image'
     ];
 
     const locales = { zh, en, de, es, fr };

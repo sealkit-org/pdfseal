@@ -64,10 +64,10 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
     };
   });
 
-  it('should define all 13 semantic tool routes', () => {
+  it('should define all 14 semantic tool routes', () => {
     const expectedTools = [
       'merge', 'compress', 'organize', 'split', 'sign',
-      'protect', 'unlock', 'image_to_pdf', 'watermark',
+      'protect', 'unlock', 'image_to_pdf', 'pdf_to_image', 'watermark',
       'sanitize', 'pipeline', 'vault', 'receive'
     ];
 
@@ -84,6 +84,7 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
     expect(TOOL_ROUTES['protect']).toBe('/protect-pdf');
     expect(TOOL_ROUTES['unlock']).toBe('/unlock-pdf');
     expect(TOOL_ROUTES['image_to_pdf']).toBe('/image-to-pdf');
+    expect(TOOL_ROUTES['pdf_to_image']).toBe('/pdf-to-image');
     expect(TOOL_ROUTES['watermark']).toBe('/watermark-pdf');
     expect(TOOL_ROUTES['sanitize']).toBe('/sanitize-pdf');
     expect(TOOL_ROUTES['pipeline']).toBe('/pipeline');

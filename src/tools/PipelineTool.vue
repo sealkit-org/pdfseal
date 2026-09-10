@@ -761,6 +761,36 @@
             </div>
           </div>
 
+          <!-- 5. Pdf2Img Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_pdf2img'" class="space-y-3.5">
+            <div class="p-4 rounded-xl border border-slate-200 space-y-2.5">
+              <span class="text-slate-800 font-bold block">{{ t('p2i_format_label') }}</span>
+              <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-5">
+                <label class="inline-flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" value="png" v-model="editingStepDraft.format" class="text-indigo-600 w-4 h-4" />
+                  <span class="font-semibold text-slate-700">{{ t('p2i_format_png') }}</span>
+                </label>
+                <label class="inline-flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" value="jpg" v-model="editingStepDraft.format" class="text-indigo-600 w-4 h-4" />
+                  <span class="font-semibold text-slate-700">{{ t('p2i_format_jpg') }}</span>
+                </label>
+              </div>
+            </div>
+            <div class="p-4 rounded-xl border border-slate-200 space-y-2.5">
+              <span class="text-slate-800 font-bold block">{{ t('p2i_dpi_label') }}</span>
+              <div class="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-5">
+                <label class="inline-flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" :value="150" v-model="editingStepDraft.dpi" class="text-indigo-600 w-4 h-4" />
+                  <span class="font-semibold text-slate-700">{{ t('p2i_dpi_standard') }}</span>
+                </label>
+                <label class="inline-flex items-center space-x-2 cursor-pointer">
+                  <input type="radio" :value="300" v-model="editingStepDraft.dpi" class="text-indigo-600 w-4 h-4" />
+                  <span class="font-semibold text-slate-700">{{ t('p2i_dpi_high') }}</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
           <!-- 5. Unlock Parameters -->
           <div v-else-if="currentEditingStepNodeId === 'node_unlock'" class="space-y-2">
             <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_unlock_pwd') }}</label>
@@ -2077,6 +2107,11 @@ function getStepSummary(step) {
       const sz = step.params.pageSize === 'a4' ? 'A4' : t('pipe_sz_fit', 'Original');
       return `${merge} · ${sz}`;
     }
+    case 'node_pdf2img': {
+      const fmt = (step.params.format || 'png').toUpperCase();
+      const dpi = Number(step.params.dpi) === 300 ? 300 : 150;
+      return `${fmt} · ${dpi} DPI`;
+    }
     case 'node_sign': {
       let txt = step.params.stampDataUrl ? t('pipe_pwd_set', 'Set') : t('pipe_pwd_unset', 'Not Set');
       if (step.params.placement === 'last_page_bottom_right') txt += ' · ' + (t('param_sign_place_last') || 'Last Page');
@@ -2128,6 +2163,8 @@ function getStepTagClass(nodeId) {
       return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
     case 'node_img2pdf':
       return 'bg-purple-50 text-purple-700 border-purple-200/80';
+    case 'node_pdf2img':
+      return 'bg-teal-50 text-teal-700 border-teal-200/80';
     case 'node_unlock':
       return 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
     case 'node_organize':
