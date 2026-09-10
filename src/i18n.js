@@ -27,6 +27,11 @@ function getInitialLang() {
 
 export const currentLang = ref(getInitialLang());
 
+let onLanguageChangeCallback = null;
+export function onLanguageChange(cb) {
+  onLanguageChangeCallback = cb;
+}
+
 export function setLanguage(lang) {
   if (dictionaries[lang]) {
     currentLang.value = lang;
@@ -36,6 +41,9 @@ export function setLanguage(lang) {
       } catch (e) {}
     }
     updateTitle();
+    if (onLanguageChangeCallback) {
+      try { onLanguageChangeCallback(lang); } catch (e) {}
+    }
   }
 }
 

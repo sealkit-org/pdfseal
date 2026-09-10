@@ -101,6 +101,13 @@ export const siteConfig = reactive({
   // Verification Gateway Endpoints
   licenseApiEndpoint: import.meta.env.VITE_LICENSE_API_ENDPOINT || 'https://api.lemonsqueezy.com/v1/licenses',
 
+  // Privacy-first, cookie-free web analytics (Cloudflare Web Analytics or Umami)
+  analytics: {
+    cloudflareBeaconToken: import.meta.env.VITE_CF_BEACON_TOKEN || '',
+    umamiSiteId: import.meta.env.VITE_UMAMI_SITE_ID || '',
+    umamiScriptUrl: import.meta.env.VITE_UMAMI_SCRIPT_URL || ''
+  },
+
   // Dynamic Feature Toggles: Strictly content-driven (Only active when official mode is on AND URL is configured)
   features: {
     // Show official community support & coffee donation button:
