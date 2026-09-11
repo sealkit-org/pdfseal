@@ -124,6 +124,14 @@ npm test
 npm run build
 ```
 
+### 🐳 Docker 一键自建
+
+```bash
+# 使用 Docker Compose 一键启动（访问 http://localhost:8080）
+docker compose up -d
+```
+
+
 ---
 
 ## 🗺️ 路线图

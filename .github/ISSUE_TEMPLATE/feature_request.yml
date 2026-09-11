@@ -1,0 +1,61 @@
+name: "💡 Feature Request"
+description: Suggest an idea or feature enhancement for PDFSeal
+title: "[Feature]: "
+labels: ["enhancement", "feature-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an idea to make PDFSeal better! 🦭  
+        
+        *Please note: In alignment with PDFSeal's core philosophy, all new features must be capable of running 100% client-side in the user's browser without sending documents to third-party servers.*
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is your feature request related to a problem or pain point?
+      description: A clear description of what problem you are facing.
+      placeholder: I'm always frustrated when I need to sign 20 pages of a contract individually...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution & Experience
+      description: Describe what you want to happen and how you envision using this feature.
+      placeholder: Add a 'Batch Sign' button that applies the signature to all pages at once...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: target_area
+    attributes:
+      label: Target Feature Area
+      description: Which part of the application does this enhance?
+      options:
+        - "Existing Tool Enhancement"
+        - "Brand New PDF Tool"
+        - "Pipeline Workflow Node"
+        - "UI / UX / Accessibility"
+        - "PWA & Offline Capability"
+        - "Internationalization (New Language)"
+        - "Self-Hosting / Docker"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: privacy_considerations
+    attributes:
+      label: Client-Side & Privacy Verification
+      description: Can this feature run entirely inside the user's browser without cloud server processing?
+      placeholder: Yes, this can be calculated using Canvas / pdf-lib in browser memory.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Any alternative solutions or workarounds you've considered.

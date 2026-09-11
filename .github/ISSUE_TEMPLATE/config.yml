@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🌐 Live Web App (pdf.sealkit.org)
+    url: https://pdf.sealkit.org
+    about: Experience PDFSeal online directly in your browser with 100% client-side privacy.
+  - name: 🐟 Support Sammy on Ko-fi
+    url: https://ko-fi.com/muffin27
+    about: Buy Sammy the seal a fish to help keep the project free, independent, and open source!
+  - name: 🔒 Security & Privacy Inquiries
+    url: https://github.com/sealkit-org/pdfseal/security/policy
+    about: Report sensitive vulnerabilities directly to the maintainers.
