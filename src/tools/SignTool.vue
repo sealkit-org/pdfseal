@@ -242,19 +242,19 @@
                   <button 
                     @click="addDrawnSignature"
                     :disabled="!hasDrawn"
-                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                    class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                   >
-                    <Plus class="w-3.5 h-3.5" />
-                    <span>{{ t('sign_add_draw', 'Add drawn signature to page') }}</span>
+                    <Plus class="w-3.5 h-3.5 shrink-0" />
+                    <span class="whitespace-nowrap">{{ t('sign_add_draw', 'Add to Page') }}</span>
                   </button>
                   <button
                     @click="saveDrawnToLibrary"
                     :disabled="!hasDrawn"
-                    class="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                    class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
                     :title="t('sign_btn_save_library')"
                   >
-                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                    <span class="hidden sm:inline">{{ t('sign_btn_save_library') }}</span>
+                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                    <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
                   </button>
                 </div>
               </div>
@@ -303,19 +303,19 @@
                   <button 
                     @click="addTypedSignature"
                     :disabled="!typedName.trim()"
-                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                    class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                   >
-                    <Plus class="w-3.5 h-3.5" />
-                    <span>{{ t('sign_add_type', 'Add typed signature to page') }}</span>
+                    <Plus class="w-3.5 h-3.5 shrink-0" />
+                    <span class="whitespace-nowrap">{{ t('sign_add_type', 'Add to Page') }}</span>
                   </button>
                   <button
                     @click="saveTypedToLibrary"
                     :disabled="!typedName.trim()"
-                    class="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                    class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
                     :title="t('sign_btn_save_library')"
                   >
-                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                    <span class="hidden sm:inline">{{ t('sign_btn_save_library') }}</span>
+                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                    <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
                   </button>
                 </div>
               </div>
@@ -420,19 +420,19 @@
                   <button 
                     @click="addUploadedSignature"
                     :disabled="!uploadedStampDataUrl || isProcessingStamp"
-                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                    class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                   >
-                    <Plus class="w-3.5 h-3.5" />
-                    <span>{{ t('sign_add_upload', 'Add uploaded image to page') }}</span>
+                    <Plus class="w-3.5 h-3.5 shrink-0" />
+                    <span class="whitespace-nowrap">{{ t('sign_add_upload', 'Add to Page') }}</span>
                   </button>
                   <button
                     @click="saveUploadedToLibrary"
                     :disabled="!uploadedStampDataUrl || isProcessingStamp"
-                    class="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                    class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
                     :title="t('sign_btn_save_library')"
                   >
-                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                    <span class="hidden sm:inline">{{ t('sign_btn_save_library') }}</span>
+                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                    <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
                   </button>
                 </div>
               </div>
@@ -455,10 +455,10 @@
                 </div>
                 <button 
                   @click="addDateStamp"
-                  class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                  class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                 >
-                  <Plus class="w-3.5 h-3.5" />
-                  <span>{{ t('sign_add_date', 'Add date stamp to page') }}</span>
+                  <Plus class="w-3.5 h-3.5 shrink-0" />
+                  <span class="whitespace-nowrap">{{ t('sign_add_date', 'Add Date') }}</span>
                 </button>
               </div>
             </div>
