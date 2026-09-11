@@ -128,30 +128,39 @@
           <div class="lg:col-span-4 bg-slate-50/80 rounded-2xl p-3 border border-slate-200/80 flex flex-col justify-between space-y-2.5">
             <div>
               <!-- Tab Selector -->
-              <div class="flex items-center space-x-1 p-1 bg-slate-200/60 rounded-xl mb-3 text-xs font-semibold text-slate-600">
+              <div class="grid grid-cols-5 gap-1 p-1 bg-slate-200/60 rounded-xl mb-3 text-[11px] font-semibold text-slate-600">
                 <button 
                   @click="activeSignTab = 'draw'"
-                  :class="['flex-1 py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'draw' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'draw' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
                 >
                   {{ t('sign_tab_draw') }}
                 </button>
                 <button 
                   @click="activeSignTab = 'type'"
-                  :class="['flex-1 py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'type' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'type' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
                 >
                   {{ t('sign_tab_type') }}
                 </button>
                 <button 
                   @click="activeSignTab = 'upload'"
-                  :class="['flex-1 py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'upload' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'upload' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
                 >
                   {{ t('sign_tab_upload') }}
                 </button>
                 <button 
                   @click="activeSignTab = 'date'"
-                  :class="['flex-1 py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'date' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'date' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
                 >
                   {{ t('sign_tab_date') }}
+                </button>
+                <button 
+                  @click="activeSignTab = 'library'"
+                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer relative', activeSignTab === 'library' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                >
+                  <span>{{ t('sign_tab_library') }}</span>
+                  <span v-if="savedStamps.length > 0" class="ml-0.5 inline-flex items-center px-1 py-0.2 rounded-full text-[9px] font-bold bg-indigo-600 text-white">
+                    {{ savedStamps.length }}
+                  </span>
                 </button>
               </div>
 
@@ -193,14 +202,25 @@
                     {{ t('sign_btn_clear') }}
                   </button>
                 </div>
-                <button 
-                  @click="addDrawnSignature"
-                  :disabled="!hasDrawn"
-                  class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
-                >
-                  <Plus class="w-3.5 h-3.5" />
-                  <span>{{ t('sign_add_draw', 'Add drawn signature to page') }}</span>
-                </button>
+                <div class="flex items-center gap-2">
+                  <button 
+                    @click="addDrawnSignature"
+                    :disabled="!hasDrawn"
+                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <Plus class="w-3.5 h-3.5" />
+                    <span>{{ t('sign_add_draw', 'Add drawn signature to page') }}</span>
+                  </button>
+                  <button
+                    @click="saveDrawnToLibrary"
+                    :disabled="!hasDrawn"
+                    class="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                    :title="t('sign_btn_save_library')"
+                  >
+                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    <span class="hidden sm:inline">{{ t('sign_btn_save_library') }}</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Content 2: Type Cursive Signature -->
@@ -243,14 +263,25 @@
                     {{ typedName || t('sign_typed_preview', 'Your artistic signature') }}
                   </span>
                 </div>
-                <button 
-                  @click="addTypedSignature"
-                  :disabled="!typedName.trim()"
-                  class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
-                >
-                  <Plus class="w-3.5 h-3.5" />
-                  <span>{{ t('sign_add_type', 'Add typed signature to page') }}</span>
-                </button>
+                <div class="flex items-center gap-2">
+                  <button 
+                    @click="addTypedSignature"
+                    :disabled="!typedName.trim()"
+                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <Plus class="w-3.5 h-3.5" />
+                    <span>{{ t('sign_add_type', 'Add typed signature to page') }}</span>
+                  </button>
+                  <button
+                    @click="saveTypedToLibrary"
+                    :disabled="!typedName.trim()"
+                    class="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                    :title="t('sign_btn_save_library')"
+                  >
+                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    <span class="hidden sm:inline">{{ t('sign_btn_save_library') }}</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Content 3: Upload Signature Stamp Image -->
@@ -258,30 +289,116 @@
                 <input 
                   ref="stampImageInputRef" 
                   type="file" 
-                  accept="image/png,image/jpeg,image/webp" 
+                  accept="image/png,image/jpeg,image/webp,image/jpg" 
                   class="hidden" 
                   @change="onStampFileSelected"
                 >
                 <div 
                   @click="stampImageInputRef.click()"
-                  class="h-[95px] bg-white border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-xl flex flex-col items-center justify-center p-2.5 text-center cursor-pointer transition"
+                  class="h-[90px] relative bg-white border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-xl flex flex-col items-center justify-center p-2 text-center cursor-pointer transition overflow-hidden"
+                  :style="uploadedStampDataUrl ? { backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '8px 8px' } : {}"
                 >
-                  <div v-if="uploadedStampDataUrl" class="h-full flex items-center justify-center overflow-hidden">
+                  <div v-if="uploadedStampDataUrl" class="h-full w-full flex items-center justify-center overflow-hidden relative">
                     <img :src="uploadedStampDataUrl" class="max-h-full max-w-full object-contain" />
+                    <div v-if="isProcessingStamp" class="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
+                      <Loader2 class="w-5 h-5 animate-spin text-indigo-600" />
+                    </div>
                   </div>
                   <div v-else class="text-slate-400 text-xs flex flex-col items-center">
                     <Upload class="w-5 h-5 mb-1 text-slate-400" />
                     <span>{{ t('sign_upload_hint', 'Click to upload transparent PNG signature or stamp') }}</span>
                   </div>
                 </div>
-                <button 
-                  @click="addUploadedSignature"
-                  :disabled="!uploadedStampDataUrl"
-                  class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
-                >
-                  <Plus class="w-3.5 h-3.5" />
-                  <span>{{ t('sign_add_upload', 'Add uploaded image to page') }}</span>
-                </button>
+
+                <!-- Anti-shadow & Transparency Controls -->
+                <div v-if="rawStampDataUrl" class="space-y-2 bg-white p-2 rounded-xl border border-slate-200/80">
+                  <!-- Auto Remove Background Toggle -->
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-1.5">
+                      <Wand2 class="w-3.5 h-3.5 text-indigo-600" />
+                      <span class="text-[11px] font-bold text-slate-700">{{ t('sign_bg_remove') }}</span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                      <input type="checkbox" v-model="autoRemoveBg" class="sr-only peer" />
+                      <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                  </div>
+
+                  <div v-if="autoRemoveBg" class="space-y-2 pt-1 border-t border-slate-100">
+                    <!-- Shadow Removal Option Pills -->
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between text-[10.5px]">
+                        <span class="font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_shadow_removal') }}</span>
+                      </div>
+                      <div class="grid grid-cols-4 gap-1 p-0.5 bg-slate-100 rounded-lg text-[10px] font-semibold">
+                        <button 
+                          type="button" 
+                          v-for="opt in shadowOptions" 
+                          :key="opt.id"
+                          @click="uploadShadowRemoval = opt.id"
+                          :class="['py-0.5 rounded-md transition text-center cursor-pointer', uploadShadowRemoval === opt.id ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800']"
+                        >
+                          {{ opt.label }}
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Ink Color Override -->
+                    <div class="space-y-1">
+                      <div class="flex items-center justify-between text-[10.5px]">
+                        <span class="font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_ink_override') }}</span>
+                      </div>
+                      <div class="grid grid-cols-4 gap-1 p-0.5 bg-slate-100 rounded-lg text-[10px] font-semibold">
+                        <button 
+                          type="button" 
+                          v-for="ink in inkColorOptions" 
+                          :key="ink.id"
+                          @click="uploadInkColor = ink.id"
+                          :class="['py-0.5 rounded-md transition text-center flex items-center justify-center space-x-1 cursor-pointer', uploadInkColor === ink.id ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800']"
+                        >
+                          <span class="w-2 h-2 rounded-full border border-slate-300 shrink-0" :style="{ backgroundColor: ink.color }"></span>
+                          <span class="truncate">{{ ink.label }}</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Sensitivity Slider -->
+                    <div class="space-y-0.5">
+                      <div class="flex items-center justify-between text-[10.5px] text-slate-500">
+                        <span class="font-bold uppercase tracking-wider">{{ t('sign_threshold_label') }}</span>
+                        <span class="font-mono text-slate-700 font-bold">{{ uploadSensitivity }}%</span>
+                      </div>
+                      <input 
+                        type="range" 
+                        v-model.number="uploadSensitivity" 
+                        min="50" 
+                        max="98" 
+                        step="1"
+                        class="w-full accent-indigo-600 h-1 bg-slate-200 rounded-lg cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2">
+                  <button 
+                    @click="addUploadedSignature"
+                    :disabled="!uploadedStampDataUrl || isProcessingStamp"
+                    class="flex-1 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                  >
+                    <Plus class="w-3.5 h-3.5" />
+                    <span>{{ t('sign_add_upload', 'Add uploaded image to page') }}</span>
+                  </button>
+                  <button
+                    @click="saveUploadedToLibrary"
+                    :disabled="!uploadedStampDataUrl || isProcessingStamp"
+                    class="px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                    :title="t('sign_btn_save_library')"
+                  >
+                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
+                    <span class="hidden sm:inline">{{ t('sign_btn_save_library') }}</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Content 4: Date Stamp -->
@@ -307,6 +424,56 @@
                   <Plus class="w-3.5 h-3.5" />
                   <span>{{ t('sign_add_date', 'Add date stamp to page') }}</span>
                 </button>
+              </div>
+
+              <!-- Content 5: Saved Stamp Library -->
+              <div v-show="activeSignTab === 'library'" class="space-y-2">
+                <div v-if="savedStamps.length === 0" class="h-[140px] flex flex-col items-center justify-center text-center p-3 bg-white border border-slate-200 rounded-xl text-slate-400">
+                  <Star class="w-6 h-6 mb-1.5 text-amber-400/80 stroke-1" />
+                  <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-[220px]">
+                    {{ t('sign_library_empty') }}
+                  </p>
+                </div>
+                <div v-else class="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
+                  <div 
+                    v-for="stamp in savedStamps" 
+                    :key="stamp.id"
+                    class="group relative bg-white border border-slate-200 hover:border-indigo-400 rounded-xl p-2 flex items-center justify-between transition shadow-2xs"
+                  >
+                    <div 
+                      @click="placeSavedStamp(stamp)" 
+                      class="flex items-center space-x-2.5 flex-1 min-w-0 cursor-pointer"
+                      :title="stamp.title"
+                    >
+                      <div 
+                        class="w-12 h-8 shrink-0 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center bg-slate-50"
+                        :style="{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '6px 6px' }"
+                      >
+                        <img :src="stamp.dataUrl" class="max-w-full max-h-full object-contain" />
+                      </div>
+                      <div class="min-w-0 flex-1">
+                        <p class="text-xs font-bold text-slate-800 truncate">{{ stamp.title }}</p>
+                        <p class="text-[10px] text-slate-400 font-mono">{{ formatDate(stamp.createdAt) }}</p>
+                      </div>
+                    </div>
+                    <div class="flex items-center space-x-1 shrink-0 ml-1.5">
+                      <button 
+                        @click="placeSavedStamp(stamp)"
+                        class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer"
+                        :title="t('sign_add_draw')"
+                      >
+                        <Plus class="w-4 h-4" />
+                      </button>
+                      <button 
+                        @click="deleteStamp(stamp.id)"
+                        class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
+                        :title="t('sign_library_delete')"
+                      >
+                        <Trash2 class="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -343,6 +510,16 @@
               >
                 <!-- Render Stamp Image -->
                 <img :src="sig.dataUrl" class="w-full h-full object-contain pointer-events-none select-none" />
+
+                <!-- Multi-Page Batch Apply Badge (Top Left, when totalPages > 1) -->
+                <button 
+                  v-if="totalPages > 1"
+                  @click.stop="openBatchModal(sig)"
+                  class="absolute -top-2.5 -left-2.5 w-5 h-5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md transition cursor-pointer z-10"
+                  :title="t('sign_batch_action')"
+                >
+                  <Layers class="w-3 h-3" />
+                </button>
 
                 <!-- Delete Badge -->
                 <button 
@@ -432,6 +609,141 @@
       @select-files="handleVaultFilesSelected"
       @close="isVaultPickerOpen = false"
     />
+
+    <!-- Batch Apply Modal -->
+    <div 
+      v-if="isBatchModalOpen && batchTargetSig"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs"
+      @click.self="isBatchModalOpen = false"
+    >
+      <div class="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 flex flex-col space-y-4 animate-in fade-in zoom-in-95 duration-150">
+        <!-- Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center space-x-2.5">
+            <div class="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+              <Layers class="w-5 h-5" />
+            </div>
+            <div>
+              <h3 class="text-sm sm:text-base font-bold text-slate-800">{{ t('sign_batch_modal_title') }}</h3>
+              <p class="text-[11px] text-slate-400 font-medium">{{ t('sign_batch_modal_desc') }}</p>
+            </div>
+          </div>
+          <button 
+            @click="isBatchModalOpen = false"
+            class="text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+          >
+            <X class="w-4 h-4" />
+          </button>
+        </div>
+
+        <!-- Target Stamp Preview -->
+        <div class="p-2.5 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center space-x-3">
+          <div 
+            class="w-16 h-10 bg-white rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center shrink-0"
+            :style="{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '6px 6px' }"
+          >
+            <img :src="batchTargetSig.dataUrl" class="max-w-full max-h-full object-contain" />
+          </div>
+          <div class="text-xs text-slate-600 min-w-0">
+            <p class="font-bold text-slate-800">Page {{ currentPage }} Signature / Initial</p>
+            <p class="text-[11px] text-slate-400 font-mono">X: {{ batchTargetSig.x }}px, Y: {{ batchTargetSig.y }}px ({{ batchTargetSig.width }}x{{ batchTargetSig.height }}px)</p>
+          </div>
+        </div>
+
+        <!-- Preset Options -->
+        <div class="space-y-1.5">
+          <label 
+            v-for="mode in batchModes" 
+            :key="mode.id"
+            @click="selectedBatchPreset = mode.id"
+            :class="[
+              'w-full flex items-center justify-between p-2.5 rounded-xl border text-xs transition cursor-pointer',
+              selectedBatchPreset === mode.id ? 'bg-indigo-50 border-indigo-400 text-indigo-950 font-bold shadow-2xs' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+            ]"
+          >
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <input 
+                type="radio" 
+                :value="mode.id" 
+                v-model="selectedBatchPreset" 
+                class="w-3.5 h-3.5 text-indigo-600 focus:ring-indigo-500 cursor-pointer" 
+              />
+              <span class="truncate">{{ mode.label }}</span>
+            </div>
+            <span v-if="mode.badge" class="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-indigo-100 text-indigo-700 shrink-0">
+              {{ mode.badge }}
+            </span>
+          </label>
+        </div>
+
+        <!-- Custom Range Input if 'custom' -->
+        <div v-if="selectedBatchPreset === 'custom'" class="pt-0.5">
+          <input 
+            v-model="customBatchRange" 
+            type="text" 
+            :placeholder="t('sign_batch_custom_placeholder')" 
+            class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-700 outline-hidden focus:bg-white focus:ring-2 focus:ring-indigo-500 font-mono"
+          />
+        </div>
+
+        <!-- Target Pages Preview Tags -->
+        <div class="p-2.5 bg-slate-100/70 rounded-xl text-xs flex flex-col space-y-1.5">
+          <div class="flex items-center justify-between text-[11px] text-slate-500 font-semibold">
+            <span>{{ t('pages_label', 'Pages') }} ({{ computedBatchTargetPages.length }}):</span>
+          </div>
+          <div class="flex flex-wrap gap-1 max-h-18 overflow-y-auto">
+            <span 
+              v-for="p in computedBatchTargetPages" 
+              :key="p"
+              :class="['px-2 py-0.5 rounded-md font-mono text-[11px]', p === currentPage ? 'bg-indigo-600 text-white font-bold' : 'bg-white text-slate-700 border border-slate-200']"
+            >
+              P.{{ p }}
+            </span>
+            <span v-if="computedBatchTargetPages.length === 0" class="text-slate-400 italic text-[11px]">
+              No pages selected
+            </span>
+          </div>
+        </div>
+
+        <!-- Footer Actions -->
+        <div class="flex items-center justify-end space-x-2 pt-2 border-t border-slate-100">
+          <button 
+            type="button" 
+            @click="isBatchModalOpen = false"
+            class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-100 transition cursor-pointer"
+          >
+            {{ t('sign_batch_btn_cancel') }}
+          </button>
+          <button 
+            type="button" 
+            @click="executeBatchApply"
+            :disabled="computedBatchTargetPages.length === 0"
+            class="px-5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 transition shadow-md hover:shadow-indigo-600/25 cursor-pointer flex items-center space-x-1.5"
+          >
+            <Layers class="w-3.5 h-3.5" />
+            <span>{{ t('sign_batch_btn_apply', { count: computedBatchTargetPages.length }) }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Floating Toast Notification -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 translate-y-2"
+    >
+      <div 
+        v-if="statusToast" 
+        class="fixed bottom-6 right-6 z-50 bg-slate-900/90 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-lg backdrop-blur-xs flex items-center space-x-2 pointer-events-none"
+      >
+        <CheckCircle2 class="w-4 h-4 text-emerald-400 shrink-0" />
+        <span>{{ statusToast }}</span>
+      </div>
+    </Transition>
   </section>
 </template>
 
@@ -447,7 +759,11 @@ import {
   ChevronRight, 
   X, 
   Upload, 
-  CheckCircle2 
+  CheckCircle2,
+  Star,
+  Trash2,
+  Layers,
+  Wand2
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
@@ -458,6 +774,13 @@ import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
+import { 
+  processImageToTransparentDataUrl,
+  loadSavedStamps,
+  saveStampToLibrary,
+  deleteSavedStamp,
+  calculateBatchTargetPages
+} from '../utils/imageProcess';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import NextActionBanner from '../components/NextActionBanner.vue';
@@ -481,7 +804,7 @@ const isDragOver = ref(false);
 const isProcessing = ref(false);
 const isVaultPickerOpen = ref(false);
 
-const activeSignTab = ref('draw'); // 'draw' | 'type' | 'upload' | 'date'
+const activeSignTab = ref('draw'); // 'draw' | 'type' | 'upload' | 'date' | 'library'
 const activeColor = ref('#0f172a');
 const colorOptions = [
   { value: '#0f172a', label: t('sign_color_black', 'Black') },
@@ -527,7 +850,84 @@ const selectedSignatureStyle = ref('xingkai');
 const currentSignatureStyle = computed(() => signatureStyles.find(s => s.id === selectedSignatureStyle.value) || signatureStyles[0]);
 
 // Upload Tab State
+const rawStampDataUrl = ref('');
 const uploadedStampDataUrl = ref('');
+const autoRemoveBg = ref(true);
+const uploadShadowRemoval = ref('medium'); // 'none' | 'low' | 'medium' | 'high'
+const uploadInkColor = ref('original'); // 'original' | 'black' | 'blue' | 'red'
+const uploadSensitivity = ref(80); // 50 - 98
+const isProcessingStamp = ref(false);
+
+const shadowOptions = computed(() => [
+  { id: 'none', label: t('sign_shadow_none') },
+  { id: 'low', label: t('sign_shadow_low') },
+  { id: 'medium', label: t('sign_shadow_med') },
+  { id: 'high', label: t('sign_shadow_high') }
+]);
+
+const inkColorOptions = computed(() => [
+  { id: 'original', label: t('sign_ink_original'), color: '#94a3b8' },
+  { id: 'black', label: t('sign_ink_black'), color: '#0f172a' },
+  { id: 'blue', label: t('sign_ink_blue'), color: '#1e3a8a' },
+  { id: 'red', label: t('sign_ink_red'), color: '#dc2626' }
+]);
+
+// Saved Stamps Library State
+const savedStamps = ref([]);
+
+// Multi-Page Batch Apply State
+const isBatchModalOpen = ref(false);
+const batchTargetSig = ref(null);
+const selectedBatchPreset = ref('except_last');
+const customBatchRange = ref('');
+
+const batchModes = computed(() => [
+  {
+    id: 'all',
+    label: t('sign_batch_preset_all', { total: totalPages.value }),
+    badge: null
+  },
+  {
+    id: 'except_last',
+    label: t('sign_batch_preset_except_last', { prev: Math.max(1, totalPages.value - 1) }),
+    badge: 'Initials'
+  },
+  {
+    id: 'even',
+    label: t('sign_batch_preset_even'),
+    badge: null
+  },
+  {
+    id: 'odd',
+    label: t('sign_batch_preset_odd'),
+    badge: null
+  },
+  {
+    id: 'custom',
+    label: t('sign_batch_preset_custom'),
+    badge: null
+  }
+]);
+
+const computedBatchTargetPages = computed(() => {
+  return calculateBatchTargetPages(
+    selectedBatchPreset.value,
+    totalPages.value,
+    currentPage.value,
+    customBatchRange.value
+  );
+});
+
+// Toast State
+const statusToast = ref('');
+let toastTimer = null;
+function showToast(msg) {
+  statusToast.value = msg;
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    statusToast.value = '';
+  }, 2500);
+}
 
 // Date Tab State
 const selectedDateFormat = ref('us');
@@ -762,6 +1162,13 @@ function addDrawnSignature() {
   placeNewSignature(dataUrl, 140, 60);
 }
 
+function saveDrawnToLibrary() {
+  const canvas = drawCanvasRef.value;
+  if (!canvas || !hasDrawn.value) return;
+  const dataUrl = canvas.toDataURL('image/png');
+  saveCurrentStamp(dataUrl, 'Handwritten Signature', 'draw');
+}
+
 // ----------------- TYPE SIGNATURE ENGINE -----------------
 function addTypedSignature() {
   if (!typedName.value.trim()) return;
@@ -790,13 +1197,66 @@ function addTypedSignature() {
   placeNewSignature(dataUrl, 160, 60);
 }
 
+function saveTypedToLibrary() {
+  if (!typedName.value.trim()) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 500;
+  canvas.height = 180;
+  const ctx = canvas.getContext('2d');
+
+  const st = currentSignatureStyle.value;
+  const isItalic = st.slant ? 'italic' : 'normal';
+  ctx.font = `${isItalic} 54px ${st.fontFamily}`;
+  ctx.fillStyle = activeColor.value;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  if (st.slant) {
+    ctx.transform(1, 0, -0.08, 1, 0, 0);
+  }
+
+  ctx.fillText(typedName.value.trim(), 250, 90);
+
+  const dataUrl = canvas.toDataURL('image/png');
+  saveCurrentStamp(dataUrl, typedName.value.trim(), 'type');
+}
+
 // ----------------- UPLOAD STAMP ENGINE -----------------
+async function updateProcessedStamp() {
+  if (!rawStampDataUrl.value) return;
+  if (!autoRemoveBg.value) {
+    uploadedStampDataUrl.value = rawStampDataUrl.value;
+    return;
+  }
+  isProcessingStamp.value = true;
+  try {
+    uploadedStampDataUrl.value = await processImageToTransparentDataUrl(rawStampDataUrl.value, {
+      threshold: uploadSensitivity.value,
+      shadowRemoval: uploadShadowRemoval.value,
+      inkColor: uploadInkColor.value
+    });
+  } catch (err) {
+    logger.warn('SIGN', `Failed to process stamp image: ${err.message}`);
+    uploadedStampDataUrl.value = rawStampDataUrl.value;
+  } finally {
+    isProcessingStamp.value = false;
+  }
+}
+
+watch([autoRemoveBg, uploadShadowRemoval, uploadInkColor, uploadSensitivity], () => {
+  if (rawStampDataUrl.value) {
+    updateProcessedStamp();
+  }
+});
+
 function onStampFileSelected(e) {
   const file = e.target.files?.[0];
   if (!file) return;
   const reader = new FileReader();
-  reader.onload = (evt) => {
-    uploadedStampDataUrl.value = evt.target.result;
+  reader.onload = async (evt) => {
+    rawStampDataUrl.value = evt.target.result;
+    await updateProcessedStamp();
   };
   reader.readAsDataURL(file);
   e.target.value = '';
@@ -804,7 +1264,49 @@ function onStampFileSelected(e) {
 
 function addUploadedSignature() {
   if (!uploadedStampDataUrl.value) return;
-  placeNewSignature(uploadedStampDataUrl.value, 120, 80);
+  placeNewSignature(uploadedStampDataUrl.value, 140, 65);
+}
+
+function saveUploadedToLibrary() {
+  if (!uploadedStampDataUrl.value) return;
+  saveCurrentStamp(uploadedStampDataUrl.value, 'Uploaded Stamp', 'upload');
+}
+
+// ----------------- STAMP LIBRARY ENGINE -----------------
+function refreshSavedStamps() {
+  savedStamps.value = loadSavedStamps();
+}
+
+function saveCurrentStamp(dataUrl, title = 'Signature Stamp', type = 'custom') {
+  if (!dataUrl) return;
+  saveStampToLibrary({
+    title,
+    type,
+    dataUrl,
+    defaultWidth: 140,
+    defaultHeight: 60
+  });
+  refreshSavedStamps();
+  showToast(t('sign_library_saved_toast'));
+}
+
+function placeSavedStamp(stamp) {
+  if (!stamp || !stamp.dataUrl) return;
+  placeNewSignature(stamp.dataUrl, stamp.defaultWidth || 140, stamp.defaultHeight || 60);
+}
+
+function deleteStamp(stampId) {
+  savedStamps.value = deleteSavedStamp(stampId);
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  try {
+    const d = new Date(iso);
+    return `${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  } catch (e) {
+    return '';
+  }
 }
 
 // ----------------- DATE STAMP ENGINE -----------------
@@ -847,6 +1349,54 @@ function placeNewSignature(dataUrl, defaultW = 140, defaultH = 60) {
 
 function removeSignature(id) {
   placedSignatures.value = placedSignatures.value.filter(s => s.id !== id);
+}
+
+// ----------------- BATCH APPLY ENGINE -----------------
+function openBatchModal(sig) {
+  batchTargetSig.value = sig;
+  if (totalPages.value > 1) {
+    selectedBatchPreset.value = 'except_last';
+  } else {
+    selectedBatchPreset.value = 'all';
+  }
+  isBatchModalOpen.value = true;
+}
+
+function executeBatchApply() {
+  if (!batchTargetSig.value) return;
+  const targetPages = computedBatchTargetPages.value;
+  if (!targetPages || targetPages.length === 0) return;
+
+  const baseSig = batchTargetSig.value;
+
+  for (const pageNum of targetPages) {
+    if (pageNum === baseSig.pageIndex) {
+      continue;
+    }
+
+    const existingIndex = placedSignatures.value.findIndex(
+      s => s.pageIndex === pageNum && Math.abs(s.x - baseSig.x) < 5 && Math.abs(s.y - baseSig.y) < 5
+    );
+
+    if (existingIndex >= 0) {
+      placedSignatures.value[existingIndex].dataUrl = baseSig.dataUrl;
+      placedSignatures.value[existingIndex].width = baseSig.width;
+      placedSignatures.value[existingIndex].height = baseSig.height;
+    } else {
+      placedSignatures.value.push({
+        id: `sig_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        pageIndex: pageNum,
+        x: baseSig.x,
+        y: baseSig.y,
+        width: baseSig.width,
+        height: baseSig.height,
+        dataUrl: baseSig.dataUrl
+      });
+    }
+  }
+
+  isBatchModalOpen.value = false;
+  showToast(t('sign_batch_badge_applied', { count: targetPages.length }));
 }
 
 // Drag Signature
@@ -930,6 +1480,9 @@ async function executeSign() {
     const cleanDoc = await loadCleanPdfDocument(docBytes.value, unlockedPassword);
     const pages = cleanDoc.getPages();
 
+    // Cache embedded PNGs so multi-page reused stamps are embedded only once
+    const pngCache = new Map();
+
     // Group signatures by pageIndex
     for (const sig of placedSignatures.value) {
       const targetPageIndex = sig.pageIndex - 1;
@@ -947,15 +1500,19 @@ async function executeSign() {
       // In PDF, (0, 0) is bottom-left, so pdfY = pdfPageHeight - (domY + domH)
       const pdfY = pdfPageHeight - ((sig.y + sig.height) * scaleY);
 
-      // Convert dataUrl to binary PNG
-      const base64Data = sig.dataUrl.split(',')[1];
-      const binaryStr = atob(base64Data);
-      const pngBytes = new Uint8Array(binaryStr.length);
-      for (let k = 0; k < binaryStr.length; k++) {
-        pngBytes[k] = binaryStr.charCodeAt(k);
+      let embeddedPng = pngCache.get(sig.dataUrl);
+      if (!embeddedPng) {
+        // Convert dataUrl to binary PNG
+        const base64Data = sig.dataUrl.split(',')[1];
+        const binaryStr = atob(base64Data);
+        const pngBytes = new Uint8Array(binaryStr.length);
+        for (let k = 0; k < binaryStr.length; k++) {
+          pngBytes[k] = binaryStr.charCodeAt(k);
+        }
+        embeddedPng = await cleanDoc.embedPng(pngBytes);
+        pngCache.set(sig.dataUrl, embeddedPng);
       }
 
-      const embeddedPng = await cleanDoc.embedPng(pngBytes);
       targetPage.drawImage(embeddedPng, {
         x: pdfX,
         y: pdfY,
@@ -1020,6 +1577,10 @@ function reset() {
   unlockedPassword = '';
   customOutputBaseName.value = '';
   placedSignatures.value = [];
+  rawStampDataUrl.value = '';
+  uploadedStampDataUrl.value = '';
+  isBatchModalOpen.value = false;
+  batchTargetSig.value = null;
   clearDrawCanvas();
   showNextActions.value = false;
   lastExportedFile.value = null;
@@ -1041,6 +1602,7 @@ function handleWindowResize() {
 
 onMounted(() => {
   checkIncomingFile();
+  refreshSavedStamps();
   window.addEventListener('resize', handleWindowResize);
 });
 onUnmounted(() => {
