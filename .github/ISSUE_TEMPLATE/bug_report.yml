@@ -1,0 +1,96 @@
+name: "🐛 Bug Report"
+description: File a bug report or report an unexpected behavior in PDFSeal
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve PDFSeal! 🦭
+        
+        > **Privacy Warning**: Never attach confidential, sensitive, or personal PDFs to public GitHub issues. If reporting an issue with a specific document, please reproduce it using a sanitized or dummy PDF.
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Affected Tool
+      description: Which tool in PDFSeal is experiencing this issue?
+      options:
+        - "Merge PDFs (MergeTool)"
+        - "Smart Compress (CompressTool)"
+        - "Reorder & Rotate (OrganizeTool)"
+        - "Split & Extract (SplitTool)"
+        - "Watermark & Stamp (WatermarkTool)"
+        - "Sign & Stamp (SignTool)"
+        - "Image to PDF (ImageToPdfTool)"
+        - "PDF to Image (PdfToImageTool)"
+        - "Protect & Encrypt (ProtectTool)"
+        - "Unlock & Strip Restrictions (UnlockTool)"
+        - "Metadata Sanitizer (SanitizeTool)"
+        - "Privacy Vault (VaultTool)"
+        - "Pipeline Automation (PipelineTool)"
+        - "PWA / Offline / General UI"
+        - "Docker / Self-Hosting"
+        - "Other"
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug Description
+      description: A clear and concise description of what the bug is.
+      placeholder: When I try to compress a 15-page document with images, the output file is...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this issue locally?
+      placeholder: |
+        1. Open https://pdf.sealkit.org/#/split (or local instance)
+        2. Upload a 5-page PDF document
+        3. Choose 'Burst into individual pages'
+        4. Click 'Split PDF'
+        5. See error in browser console
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs Actual Behavior
+      description: What did you expect to happen, and what happened instead?
+      placeholder: Expected a ZIP containing 5 single-page PDFs, but only 1 file downloaded.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: offline_status
+    attributes:
+      label: Does this occur in Offline mode?
+      description: PDFSeal is 100% client-side. Does the issue persist with Wi-Fi / Network disconnected?
+      options:
+        - "Yes, reproduces offline (completely disconnected)"
+        - "No, only occurs online"
+        - "Haven't tested offline yet"
+    validations:
+      required: false
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment & Browser
+      description: Operating System, Browser name, and version.
+      placeholder: e.g. Chrome 128 on macOS Sonoma / Firefox 130 on Windows 11
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Browser Console Logs
+      description: Copy and paste any error logs from your browser's Developer Tools (F12 -> Console).
+      render: shell

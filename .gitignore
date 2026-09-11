@@ -1,24 +1,86 @@
-# Logs & Environment
+# ==========================================
+# 🦭 PDFSeal .gitignore
+# ==========================================
+
+# --- Environment & Secret Variables ---
 .env
 .env.local
-*.log
+.env.*.local
+*.env
+*.local
 
-# OS / Editor files
-.DS_Store
-Thumbs.db
-.vscode/
-.idea/
-
-# Dependencies & Build artifacts (if any in future)
-node_modules/
-dist/
-build/
-
-# Private Issuer Cryptographic Keys (DO NOT COMMIT)
+# --- Private Cryptographic Keys (STRICTLY PRIVATE) ---
 .keys/
 *.private.json
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+*.secret
 
-# E2E Test Temp Artifacts
+# --- Dependencies & Package Managers ---
+node_modules/
+.pnp/
+.pnp.js
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Build Artifacts & Bundler Caches ---
+dist/
+dist-ssr/
+build/
+.output/
+.vite/
+.turbo/
+*.tsbuildinfo
+.eslintcache
+.stylelintcache
+
+# --- Cloudflare & Serverless Cache ---
+.wrangler/
+.mf/
+
+# --- E2E Tests, Screenshots & Fixtures ---
+coverage/
+.nyc_output/
 temp_e2e_test/
 e2e_screenshots/
+*.lcov
 
+# --- OS & System Junk ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+[Dd]esktop.ini
+
+# --- IDE & Editor Artifacts ---
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*~
+
+# --- Internal Marketing & Non-Public Kits ---
+promotion-kit/
+marketing/
+internal/
+drafts/
+
+# --- Temporary & Scratch Files ---
+tmp/
+temp/
+scratch/
+*.tmp
+*.bak
+*.old

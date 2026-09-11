@@ -124,6 +124,14 @@ npm test
 npm run build
 ```
 
+### 🐳 Self-Host with Docker
+
+```bash
+# One-click start with Docker Compose (serves on http://localhost:8080)
+docker compose up -d
+```
+
+
 ---
 
 ## 🗺️ Roadmap
