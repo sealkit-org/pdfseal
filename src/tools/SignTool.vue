@@ -127,40 +127,76 @@
           <!-- Left: Signature Studio Panel (4 cols) -->
           <div class="lg:col-span-4 bg-slate-50/80 rounded-2xl p-3 border border-slate-200/80 flex flex-col justify-between space-y-2.5">
             <div>
-              <!-- Tab Selector -->
-              <div class="grid grid-cols-5 gap-1 p-1 bg-slate-200/60 rounded-xl mb-3 text-[11px] font-semibold text-slate-600">
+              <!-- Quick Shelf: Saved Stamps (Shown if user has saved stamps) -->
+              <div v-if="savedStamps.length > 0" class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-2 mb-2.5">
+                <div class="flex items-center justify-between mb-1.5 px-0.5">
+                  <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-700">
+                    <Star class="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                    <span>{{ t('sign_quick_shelf_title') }}</span>
+                    <span class="text-[10px] text-slate-400 font-mono">({{ savedStamps.length }}/6)</span>
+                  </div>
+                  <span class="text-[10px] text-indigo-600 font-medium">{{ t('sign_quick_place_hint') }}</span>
+                </div>
+                <!-- Horizontal scrollable chips -->
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                  <div 
+                    v-for="stamp in savedStamps" 
+                    :key="stamp.id"
+                    class="group relative shrink-0 bg-white border border-slate-200 hover:border-indigo-500 hover:shadow-xs rounded-lg p-1 transition cursor-pointer flex items-center space-x-1.5 select-none"
+                    @click="placeSavedStamp(stamp)"
+                    :title="`${stamp.title} - ${t('sign_quick_place_hint')}`"
+                  >
+                    <div 
+                      class="w-10 h-7 rounded border border-slate-100 overflow-hidden flex items-center justify-center bg-slate-50 shrink-0"
+                      :style="{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '6px 6px' }"
+                    >
+                      <img :src="stamp.dataUrl" class="max-w-full max-h-full object-contain pointer-events-none" />
+                    </div>
+                    <span class="text-[11px] font-bold text-slate-700 max-w-[65px] truncate">{{ stamp.title }}</span>
+                    <button 
+                      @click.stop="deleteStamp(stamp.id)" 
+                      class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded p-0.5 transition cursor-pointer"
+                      :title="t('sign_library_delete')"
+                    >
+                      <X class="w-3 h-3" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab Selector (Clean 4 Creation Modes) -->
+              <div class="grid grid-cols-4 gap-1 p-1 bg-slate-200/60 rounded-xl mb-3 text-[11px] font-semibold text-slate-600">
                 <button 
                   @click="activeSignTab = 'draw'"
-                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'draw' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :class="['py-1.5 px-1 rounded-lg transition text-center flex items-center justify-center space-x-1 cursor-pointer min-w-0', activeSignTab === 'draw' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :title="t('sign_tab_draw')"
                 >
-                  {{ t('sign_tab_draw') }}
+                  <PenTool class="w-3.5 h-3.5 shrink-0" />
+                  <span class="truncate">{{ t('sign_tab_draw') }}</span>
                 </button>
                 <button 
                   @click="activeSignTab = 'type'"
-                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'type' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :class="['py-1.5 px-1 rounded-lg transition text-center flex items-center justify-center space-x-1 cursor-pointer min-w-0', activeSignTab === 'type' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :title="t('sign_tab_type')"
                 >
-                  {{ t('sign_tab_type') }}
+                  <Type class="w-3.5 h-3.5 shrink-0" />
+                  <span class="truncate">{{ t('sign_tab_type') }}</span>
                 </button>
                 <button 
                   @click="activeSignTab = 'upload'"
-                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'upload' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :class="['py-1.5 px-1 rounded-lg transition text-center flex items-center justify-center space-x-1 cursor-pointer min-w-0', activeSignTab === 'upload' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :title="t('sign_tab_upload')"
                 >
-                  {{ t('sign_tab_upload') }}
+                  <Upload class="w-3.5 h-3.5 shrink-0" />
+                  <span class="truncate">{{ t('sign_tab_upload') }}</span>
                 </button>
                 <button 
                   @click="activeSignTab = 'date'"
-                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer', activeSignTab === 'date' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :class="['py-1.5 px-1 rounded-lg transition text-center flex items-center justify-center space-x-1 cursor-pointer min-w-0', activeSignTab === 'date' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
+                  :title="t('sign_tab_date')"
                 >
-                  {{ t('sign_tab_date') }}
-                </button>
-                <button 
-                  @click="activeSignTab = 'library'"
-                  :class="['py-1.5 rounded-lg transition text-center cursor-pointer relative', activeSignTab === 'library' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
-                >
-                  <span>{{ t('sign_tab_library') }}</span>
-                  <span v-if="savedStamps.length > 0" class="ml-0.5 inline-flex items-center px-1 py-0.2 rounded-full text-[9px] font-bold bg-indigo-600 text-white">
-                    {{ savedStamps.length }}
-                  </span>
+                  <Calendar class="w-3.5 h-3.5 shrink-0" />
+                  <span class="truncate">{{ t('sign_tab_date') }}</span>
                 </button>
               </div>
 
@@ -424,56 +460,6 @@
                   <Plus class="w-3.5 h-3.5" />
                   <span>{{ t('sign_add_date', 'Add date stamp to page') }}</span>
                 </button>
-              </div>
-
-              <!-- Content 5: Saved Stamp Library -->
-              <div v-show="activeSignTab === 'library'" class="space-y-2">
-                <div v-if="savedStamps.length === 0" class="h-[140px] flex flex-col items-center justify-center text-center p-3 bg-white border border-slate-200 rounded-xl text-slate-400">
-                  <Star class="w-6 h-6 mb-1.5 text-amber-400/80 stroke-1" />
-                  <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-[220px]">
-                    {{ t('sign_library_empty') }}
-                  </p>
-                </div>
-                <div v-else class="space-y-1.5 max-h-[220px] overflow-y-auto pr-1">
-                  <div 
-                    v-for="stamp in savedStamps" 
-                    :key="stamp.id"
-                    class="group relative bg-white border border-slate-200 hover:border-indigo-400 rounded-xl p-2 flex items-center justify-between transition shadow-2xs"
-                  >
-                    <div 
-                      @click="placeSavedStamp(stamp)" 
-                      class="flex items-center space-x-2.5 flex-1 min-w-0 cursor-pointer"
-                      :title="stamp.title"
-                    >
-                      <div 
-                        class="w-12 h-8 shrink-0 rounded-lg border border-slate-200 overflow-hidden flex items-center justify-center bg-slate-50"
-                        :style="{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '6px 6px' }"
-                      >
-                        <img :src="stamp.dataUrl" class="max-w-full max-h-full object-contain" />
-                      </div>
-                      <div class="min-w-0 flex-1">
-                        <p class="text-xs font-bold text-slate-800 truncate">{{ stamp.title }}</p>
-                        <p class="text-[10px] text-slate-400 font-mono">{{ formatDate(stamp.createdAt) }}</p>
-                      </div>
-                    </div>
-                    <div class="flex items-center space-x-1 shrink-0 ml-1.5">
-                      <button 
-                        @click="placeSavedStamp(stamp)"
-                        class="p-1 text-indigo-600 hover:bg-indigo-50 rounded-lg transition cursor-pointer"
-                        :title="t('sign_add_draw')"
-                      >
-                        <Plus class="w-4 h-4" />
-                      </button>
-                      <button 
-                        @click="deleteStamp(stamp.id)"
-                        class="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer"
-                        :title="t('sign_library_delete')"
-                      >
-                        <Trash2 class="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
@@ -763,7 +749,9 @@ import {
   Star,
   Trash2,
   Layers,
-  Wand2
+  Wand2,
+  Type,
+  Calendar
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
