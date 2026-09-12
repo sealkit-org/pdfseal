@@ -522,6 +522,7 @@ import { triggerDownload } from '../utils/download';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
+import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import { generateExportFileName } from '../utils/filenameUtils';
 import { applyPageNumbers, interpolatePageNumber, calculatePageNumberGeometry } from '../utils/pageNumberEngine';
@@ -552,8 +553,12 @@ let unlockedPassword = '';
 
 // Vault Picker & Auto-save
 const isVaultPickerOpen = ref(false);
-const autoSaveToVault = ref(false);
+const autoSaveToVault = ref(userSettings.autoSaveToVault !== false);
 const customOutputBaseName = ref('');
+
+watch(() => userSettings.autoSaveToVault, (newVal) => {
+  autoSaveToVault.value = Boolean(newVal);
+});
 
 // Export & Next Action
 const lastExportedFile = ref(null);
