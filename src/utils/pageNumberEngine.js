@@ -1,6 +1,119 @@
 import { StandardFonts, rgb } from 'pdf-lib';
+import * as pdfjsLib from 'pdfjs-dist';
 import { loadCleanPdfDocument } from './pdfSecurity';
 import { logger } from './logger';
+
+/**
+ * Detects the dominant background color from a rendered page canvas or context.
+ * Samples along top, bottom, and side margins to avoid foreground text,
+ * filters out low-luminance (dark text) and highly saturated pixels (stamps/logos),
+ * and quantizes light pixels to find the background tone.
+ * 
+ * @param {HTMLCanvasElement|CanvasRenderingContext2D|Object} canvasOrCtx
+ * @returns {string} hex color string e.g. '#ffffff' or '#fbf9f4'
+ */
+export function detectDominantBackgroundColor(canvasOrCtx) {
+  if (!canvasOrCtx) return '#ffffff';
+
+  let ctx = null;
+  let w = 0;
+  let h = 0;
+
+  if (typeof canvasOrCtx.getContext === 'function') {
+    ctx = canvasOrCtx.getContext('2d');
+    w = canvasOrCtx.width || 0;
+    h = canvasOrCtx.height || 0;
+  } else if (canvasOrCtx.canvas) {
+    ctx = canvasOrCtx;
+    w = ctx.canvas.width || 0;
+    h = ctx.canvas.height || 0;
+  } else if (typeof canvasOrCtx.getImageData === 'function') {
+    ctx = canvasOrCtx;
+    w = canvasOrCtx.width || 595;
+    h = canvasOrCtx.height || 842;
+  }
+
+  if (!ctx || !w || !h) return '#ffffff';
+
+  const samplePoints = [];
+  const numSamplesPerEdge = 16;
+
+  // Bottom edge samples (where page numbers most often go)
+  for (let i = 1; i <= numSamplesPerEdge; i++) {
+    const x = Math.round((i / (numSamplesPerEdge + 1)) * w);
+    samplePoints.push({ x, y: Math.max(0, Math.min(h - 1, Math.round(h * 0.96))) });
+    samplePoints.push({ x, y: Math.max(0, Math.min(h - 1, Math.round(h * 0.93))) });
+  }
+
+  // Top edge samples
+  for (let i = 1; i <= numSamplesPerEdge; i++) {
+    const x = Math.round((i / (numSamplesPerEdge + 1)) * w);
+    samplePoints.push({ x, y: Math.max(0, Math.min(h - 1, Math.round(h * 0.04))) });
+    samplePoints.push({ x, y: Math.max(0, Math.min(h - 1, Math.round(h * 0.07))) });
+  }
+
+  // Left & Right margin samples
+  for (let i = 1; i <= 8; i++) {
+    const y = Math.max(0, Math.min(h - 1, Math.round((i / 9) * h)));
+    samplePoints.push({ x: Math.max(0, Math.min(w - 1, Math.round(w * 0.04))), y });
+    samplePoints.push({ x: Math.max(0, Math.min(w - 1, Math.round(w * 0.96))), y });
+  }
+
+  const colorBuckets = new Map();
+
+  for (const pt of samplePoints) {
+    try {
+      const pixel = ctx.getImageData(pt.x, pt.y, 1, 1).data;
+      const a = pixel[3];
+      if (a < 50) {
+        // Transparent is treated as white
+        colorBuckets.set('255,255,255', (colorBuckets.get('255,255,255') || 0) + 1);
+        continue;
+      }
+
+      const r = pixel[0];
+      const g = pixel[1];
+      const b = pixel[2];
+
+      // Relative luminance (standard Rec. 709)
+      const lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+      if (lum < 0.65) continue; // Filter out dark text, lines, borders
+
+      // Filter out high-saturation colors (red stamps, blue logos)
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const saturation = maxC === 0 ? 0 : (maxC - minC) / maxC;
+      if (saturation > 0.35) continue;
+
+      // Quantize to step of 6
+      const qr = Math.min(255, Math.round(r / 6) * 6);
+      const qg = Math.min(255, Math.round(g / 6) * 6);
+      const qb = Math.min(255, Math.round(b / 6) * 6);
+      const key = `${qr},${qg},${qb}`;
+      colorBuckets.set(key, (colorBuckets.get(key) || 0) + 1);
+    } catch {
+      // Ignore sampling errors
+    }
+  }
+
+  if (colorBuckets.size === 0) return '#ffffff';
+
+  let bestKey = '255,255,255';
+  let maxCount = -1;
+  for (const [key, count] of colorBuckets) {
+    if (count > maxCount) {
+      maxCount = count;
+      bestKey = key;
+    }
+  }
+
+  const [br, bg, bb] = bestKey.split(',').map(Number);
+  const hexR = br.toString(16).padStart(2, '0');
+  const hexG = bg.toString(16).padStart(2, '0');
+  const hexB = bb.toString(16).padStart(2, '0');
+
+  return `#${hexR}${hexG}${hexB}`;
+}
 
 /**
  * Converts a hex color string (#rrggbb or #rgb) to pdf-lib rgb(r, g, b) normalized [0, 1].
@@ -195,8 +308,39 @@ export async function applyPageNumbers(docBytes, options = {}) {
 
   const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
   const textRgb = hexToRgb(textColor);
-  const maskRgb = hexToRgb(maskColor);
 
+  let effectiveMaskColor = maskColor;
+  if (effectiveMaskColor === 'auto') {
+    effectiveMaskColor = '#ffffff';
+    if (typeof document !== 'undefined' && typeof document.createElement === 'function' && typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
+      try {
+        const rawData = docBytes instanceof Uint8Array ? docBytes : new Uint8Array(docBytes);
+        const loadingTask = pdfjsLib.getDocument({
+          data: rawData.slice(0),
+          password: password || undefined,
+          cMapUrl: '/cmaps/',
+          cMapPacked: true,
+          standardFontDataUrl: '/standard_fonts/'
+        });
+        const doc = await loadingTask.promise;
+        const pageIdxToSample = (skipCover && doc.numPages > 1) ? 2 : 1;
+        const pdfPage = await doc.getPage(pageIdxToSample);
+        const viewport = pdfPage.getViewport({ scale: 0.5 });
+        const sampleCanvas = document.createElement('canvas');
+        sampleCanvas.width = viewport.width;
+        sampleCanvas.height = viewport.height;
+        const sctx = sampleCanvas.getContext('2d');
+        await pdfPage.render({ canvasContext: sctx, viewport }).promise;
+        effectiveMaskColor = detectDominantBackgroundColor(sampleCanvas);
+        logger.info('PAGE_NUMBER', `Auto-detected background mask color: ${effectiveMaskColor}`);
+      } catch (err) {
+        logger.warn('PAGE_NUMBER', `Failed to auto-detect background color: ${err.message}, falling back to #ffffff`);
+        effectiveMaskColor = '#ffffff';
+      }
+    }
+  }
+
+  const maskRgb = hexToRgb(effectiveMaskColor);
   const hasCanvas = typeof document !== 'undefined' && typeof document.createElement === 'function';
 
   for (let i = 0; i < totalPages; i++) {

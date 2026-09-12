@@ -150,7 +150,7 @@ export const AVAILABLE_NODES = {
       fontSize: 10,
       textColor: '#334155',
       maskMode: 'full_ribbon',
-      maskColor: '#ffffff',
+      maskColor: 'auto',
       margin: 24
     }
   },

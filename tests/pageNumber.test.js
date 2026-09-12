@@ -5,7 +5,8 @@ import {
   isPureAscii, 
   interpolatePageNumber, 
   calculatePageNumberGeometry, 
-  applyPageNumbers 
+  applyPageNumbers,
+  detectDominantBackgroundColor
 } from '../src/utils/pageNumberEngine';
 import { executePageNumberNode } from '../src/utils/pipeline/nodes/pageNumberNode';
 
@@ -41,6 +42,48 @@ describe('Page Numbering Engine & Pipeline Integration', () => {
       expect(isPureAscii('1 / 5')).toBe(true);
       expect(isPureAscii('第 1 页，共 5 页')).toBe(false);
       expect(isPureAscii('Seite 1 von 5')).toBe(true);
+    });
+
+    it('should correctly detect dominant background color from canvas and filter out foreground text/stamps', () => {
+      // Null / empty fallback
+      expect(detectDominantBackgroundColor(null)).toBe('#ffffff');
+      expect(detectDominantBackgroundColor({})).toBe('#ffffff');
+
+      // Mock canvas with dominant parchment background (#fbf9f4) and some black text pixels
+      const mockCanvas = {
+        width: 100,
+        height: 100,
+        getContext: () => ({
+          getImageData: (x, y) => {
+            // Simulate 10% black text / stamp pixels, 90% parchment paper background
+            if (x === 10 && y === 10) {
+              return { data: [0, 0, 0, 255] }; // Black text
+            }
+            if (x === 50 && y === 50) {
+              return { data: [220, 38, 38, 255] }; // Red stamp
+            }
+            return { data: [251, 249, 244, 255] }; // Dominant parchment
+          }
+        })
+      };
+
+      const detected = detectDominantBackgroundColor(mockCanvas);
+      // Expected: parchment color quantized to step of 6 -> close to #fcfaf4 or #fbf9f4
+      expect(detected).toMatch(/^#[0-9a-f]{6}$/i);
+      const rgbVal = hexToRgb(detected);
+      expect(rgbVal.r).toBeGreaterThan(0.9);
+      expect(rgbVal.g).toBeGreaterThan(0.9);
+      expect(rgbVal.b).toBeGreaterThan(0.85);
+
+      // Mock canvas with transparent background (should default to #ffffff)
+      const transparentCanvas = {
+        width: 100,
+        height: 100,
+        getContext: () => ({
+          getImageData: () => ({ data: [0, 0, 0, 0] })
+        })
+      };
+      expect(detectDominantBackgroundColor(transparentCanvas)).toBe('#ffffff');
     });
   });
 
@@ -218,10 +261,23 @@ describe('Page Numbering Engine & Pipeline Integration', () => {
       expect(result.pageCount).toBe(2);
       expect(result.outBytes.length).toBeGreaterThan(0);
     });
+
+    it('should handle maskColor: "auto" gracefully with fallback', async () => {
+      const testBytes = await createTestPdf(2);
+      const result = await applyPageNumbers(testBytes, {
+        format: 'Page {n} of {total}',
+        position: 'bottom_center',
+        maskColor: 'auto'
+      });
+
+      expect(result.pageCount).toBe(2);
+      const parsed = await PDFDocument.load(result.outBytes);
+      expect(parsed.getPageCount()).toBe(2);
+    });
   });
 
   describe('Pipeline Node Execution', () => {
-    it('should execute executePageNumberNode on batch items', async () => {
+    it('should execute executePageNumberNode on batch items with maskColor: "auto"', async () => {
       const pdfA = await createTestPdf(2);
       const pdfB = await createTestPdf(3);
 
@@ -234,7 +290,8 @@ describe('Page Numbering Engine & Pipeline Integration', () => {
         format: 'Page {n} of {total}',
         position: 'bottom_center',
         skipCover: false,
-        maskMode: 'full_ribbon'
+        maskMode: 'full_ribbon',
+        maskColor: 'auto'
       });
 
       expect(processed.length).toBe(2);

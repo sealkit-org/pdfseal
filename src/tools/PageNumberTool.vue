@@ -242,50 +242,87 @@
                 </div>
 
                 <!-- Mask Color Picker & Pipette -->
-                <div v-if="pnMaskMode !== 'none'" class="mt-2 flex flex-wrap items-center gap-2">
-                  <span class="text-[11px] text-slate-600 font-semibold">{{ t('pn_mask_color_label') }}:</span>
+                <!-- Mask Color Picker & Auto Detection -->
+                <div v-if="pnMaskMode !== 'none'" class="mt-2 space-y-1.5">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[11px] text-slate-600 font-semibold">{{ t('pn_mask_color_label') }}:</span>
+                    <span 
+                      v-if="pnMaskColorMode === 'auto'" 
+                      class="text-[10px] font-mono font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-md flex items-center space-x-1"
+                    >
+                      <span class="w-2 h-2 rounded-full border border-slate-300" :style="{ backgroundColor: detectedAutoColor }"></span>
+                      <span>{{ t('pn_mask_color_detected') }}: {{ detectedAutoColor }}</span>
+                    </span>
+                  </div>
                   
-                  <div class="flex items-center space-x-1.5">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <!-- Smart Auto button -->
+                    <button 
+                      type="button" 
+                      @click="setMaskColorPreset('auto')" 
+                      class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1 font-semibold cursor-pointer"
+                      :class="[
+                        pnMaskColorMode === 'auto'
+                          ? 'border-violet-600 bg-violet-100/90 text-violet-900 font-bold shadow-2xs'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      ]"
+                    >
+                      <Sparkles class="w-3 h-3 text-violet-600" />
+                      <span>{{ t('pn_mask_color_auto') }}</span>
+                    </button>
+
                     <!-- White swatch -->
                     <button 
                       type="button" 
-                      @click="setMaskColor('#ffffff')" 
-                      class="w-5 h-5 rounded-full bg-white border border-slate-300 shadow-2xs transition hover:scale-110" 
-                      :class="{ 'ring-2 ring-violet-600': pnMaskColor.toLowerCase() === '#ffffff' }"
-                      :title="t('pn_mask_color_white')"
-                    ></button>
+                      @click="setMaskColorPreset('white')" 
+                      class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1.5 font-semibold cursor-pointer"
+                      :class="[
+                        pnMaskColorMode === 'white'
+                          ? 'border-violet-600 bg-violet-100/90 text-violet-900 font-bold shadow-2xs'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      ]"
+                    >
+                      <span class="w-3 h-3 rounded-full bg-white border border-slate-300 shadow-2xs"></span>
+                      <span>{{ t('pn_mask_color_white') }}</span>
+                    </button>
 
                     <!-- Cream / Parchment swatch -->
                     <button 
                       type="button" 
-                      @click="setMaskColor('#fbf9f4')" 
-                      class="w-5 h-5 rounded-full bg-[#fbf9f4] border border-amber-200 shadow-2xs transition hover:scale-110" 
-                      :class="{ 'ring-2 ring-violet-600': pnMaskColor.toLowerCase() === '#fbf9f4' }"
-                      :title="t('pn_mask_color_cream')"
-                    ></button>
-                  </div>
-
-                  <!-- Custom Color Picker -->
-                  <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
-                    <input 
-                      type="color" 
-                      v-model="pnMaskColor" 
-                      @input="renderPreview"
-                      class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                      @click="setMaskColorPreset('cream')" 
+                      class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1.5 font-semibold cursor-pointer"
+                      :class="[
+                        pnMaskColorMode === 'cream'
+                          ? 'border-violet-600 bg-violet-100/90 text-violet-900 font-bold shadow-2xs'
+                          : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                      ]"
                     >
-                    <div class="w-full h-full" :style="{ backgroundColor: pnMaskColor }"></div>
-                  </div>
+                      <span class="w-3 h-3 rounded-full bg-[#fbf9f4] border border-amber-200 shadow-2xs"></span>
+                      <span>{{ t('pn_mask_color_cream') }}</span>
+                    </button>
 
-                  <!-- Auto-sample Pipette Button -->
-                  <button 
-                    type="button" 
-                    @click="sampleCurrentPageBackground"
-                    class="text-[10px] bg-slate-100 hover:bg-violet-50 text-slate-700 hover:text-violet-700 px-2 py-1 rounded-lg border border-slate-200 transition flex items-center space-x-1 font-semibold cursor-pointer"
-                    :title="t('pn_mask_color_sample')"
-                  >
-                    <Pipette class="w-3 h-3 text-violet-600" />
-                    <span>{{ t('pn_mask_color_sample') }}</span>
-                  </button>
+                    <!-- Custom Color Picker -->
+                    <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
+                      <input 
+                        type="color" 
+                        v-model="pnMaskColor" 
+                        @input="onCustomMaskColorInput"
+                        class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                      >
+                      <div class="w-full h-full" :style="{ backgroundColor: getEffectiveMaskColor() }"></div>
+                    </div>
+
+                    <!-- Auto-sample Pipette Button -->
+                    <button 
+                      type="button" 
+                      @click="samplePipetteOrScreen"
+                      class="text-[10px] bg-slate-100 hover:bg-violet-50 text-slate-700 hover:text-violet-700 px-2 py-1 rounded-lg border border-slate-200 transition flex items-center space-x-1 font-semibold cursor-pointer"
+                      :title="t('pn_mask_color_sample')"
+                    >
+                      <Pipette class="w-3 h-3 text-violet-600" />
+                      <span>{{ t('pn_mask_color_sample') }}</span>
+                    </button>
+                  </div>
                 </div>
               </div>
 
@@ -514,7 +551,8 @@ import {
   FolderLock, 
   Unlock, 
   RefreshCw,
-  Pipette
+  Pipette,
+  Sparkles
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { t, onLanguageChange } from '../i18n';
@@ -525,7 +563,12 @@ import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import { generateExportFileName } from '../utils/filenameUtils';
-import { applyPageNumbers, interpolatePageNumber, calculatePageNumberGeometry } from '../utils/pageNumberEngine';
+import { 
+  applyPageNumbers, 
+  interpolatePageNumber, 
+  calculatePageNumberGeometry, 
+  detectDominantBackgroundColor 
+} from '../utils/pageNumberEngine';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import NextActionBanner from '../components/NextActionBanner.vue';
@@ -570,7 +613,9 @@ const pnStartNumber = ref(1);
 const pnSkipCover = ref(false);
 const pnPosition = ref('bottom_center');
 const pnMaskMode = ref('full_ribbon');
+const pnMaskColorMode = ref('auto'); // 'auto' | 'white' | 'cream' | 'custom'
 const pnMaskColor = ref('#ffffff');
+const detectedAutoColor = ref('#ffffff');
 const pnFontSize = ref(10);
 const pnTextColor = ref('#334155');
 const pnMargin = ref(24);
@@ -641,9 +686,48 @@ function setMaskMode(mode) {
   renderPreview();
 }
 
-function setMaskColor(hex) {
-  pnMaskColor.value = hex;
+function setMaskColorPreset(mode) {
+  pnMaskColorMode.value = mode;
+  if (mode === 'auto') {
+    sampleCurrentPageBackground();
+  } else if (mode === 'white') {
+    pnMaskColor.value = '#ffffff';
+    renderPreview();
+  } else if (mode === 'cream') {
+    pnMaskColor.value = '#fbf9f4';
+    renderPreview();
+  }
+}
+
+function onCustomMaskColorInput(e) {
+  pnMaskColorMode.value = 'custom';
+  pnMaskColor.value = e.target.value;
   renderPreview();
+}
+
+function getEffectiveMaskColor() {
+  if (pnMaskColorMode.value === 'auto') {
+    return detectedAutoColor.value || '#ffffff';
+  }
+  return pnMaskColor.value || '#ffffff';
+}
+
+async function samplePipetteOrScreen() {
+  if (window.EyeDropper) {
+    try {
+      const eyeDropper = new window.EyeDropper();
+      const result = await eyeDropper.open();
+      if (result && result.sRGBHex) {
+        pnMaskColorMode.value = 'custom';
+        pnMaskColor.value = result.sRGBHex;
+        renderPreview();
+        return;
+      }
+    } catch {
+      // User dismissed
+    }
+  }
+  sampleCurrentPageBackground();
 }
 
 function setTextColor(hex) {
@@ -722,6 +806,10 @@ async function loadFile(fileObj, password = '') {
       const ctx1 = c1.getContext('2d');
       await page1.render({ canvasContext: ctx1, viewport: vp1 }).promise;
       renderedPageCanvases.set(0, c1);
+      detectedAutoColor.value = detectDominantBackgroundColor(c1);
+      if (pnMaskColorMode.value === 'auto') {
+        pnMaskColor.value = detectedAutoColor.value;
+      }
     } catch (renderErr) {
       logger.warn('PAGE_NUMBER', `Pre-render page 1 error: ${renderErr.message}`);
     }
@@ -764,22 +852,14 @@ function handlePasswordCancel() {
  * Samples the background pixel color from the current rendered page canvas.
  */
 function sampleCurrentPageBackground() {
-  const baseCanvas = renderedPageCanvases.get(previewPageIndex.value);
+  const baseCanvas = renderedPageCanvases.get(previewPageIndex.value) || renderedPageCanvases.get(0);
   if (!baseCanvas) return;
 
-  const ctx = baseCanvas.getContext('2d');
-  // Sample near bottom center where old page numbers reside
-  const sampleX = Math.round(baseCanvas.width / 2);
-  const sampleY = Math.round(baseCanvas.height - 20 * (baseCanvas.width / 595));
-
   try {
-    const pixel = ctx.getImageData(sampleX, sampleY, 1, 1).data;
-    // Check alpha
-    if (pixel[3] > 0) {
-      const r = pixel[0].toString(16).padStart(2, '0');
-      const g = pixel[1].toString(16).padStart(2, '0');
-      const b = pixel[2].toString(16).padStart(2, '0');
-      pnMaskColor.value = `#${r}${g}${b}`;
+    const detected = detectDominantBackgroundColor(baseCanvas);
+    if (detected) {
+      detectedAutoColor.value = detected;
+      pnMaskColor.value = detected;
       renderPreview();
     }
   } catch (e) {
@@ -869,11 +949,13 @@ async function renderPreview() {
 
     let textY = isTop ? marginPx + fontPt : canvas.height - marginPx;
 
+    const effectiveColor = getEffectiveMaskColor();
+
     // 3. Draw Mask Rectangle
     if (pnMaskMode.value === 'full_ribbon') {
       const ribbonHeight = Math.max(34 * scale, marginPx * 1.8);
       const ribbonY = isTop ? 0 : canvas.height - ribbonHeight;
-      ctx.fillStyle = pnMaskColor.value;
+      ctx.fillStyle = effectiveColor;
       ctx.fillRect(0, ribbonY, canvas.width, ribbonHeight);
     } else if (pnMaskMode.value === 'local_box') {
       const padX = 14 * scale;
@@ -882,7 +964,7 @@ async function renderPreview() {
       const boxHeight = fontPt + padY * 2;
       const boxX = isCenter ? (canvas.width - boxWidth) / 2 : (isRight ? canvas.width - marginPx - boxWidth : marginPx - padX / 2);
       const boxY = textY - fontPt - padY / 2;
-      ctx.fillStyle = pnMaskColor.value;
+      ctx.fillStyle = effectiveColor;
       ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
     }
 
@@ -914,7 +996,7 @@ async function executePageNumber() {
       fontSize: pnFontSize.value,
       textColor: pnTextColor.value,
       maskMode: pnMaskMode.value,
-      maskColor: pnMaskColor.value,
+      maskColor: getEffectiveMaskColor(),
       margin: pnMargin.value,
       password: unlockedPassword || ''
     });
