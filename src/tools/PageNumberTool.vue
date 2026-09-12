@@ -615,6 +615,8 @@ const maskOptions = [
 // Current page canvas cache
 let activePdfDoc = null;
 let renderedPageCanvases = new Map();
+let isRendering = false;
+let renderPending = false;
 
 const currentInterpolatedPreview = computed(() => {
   const sample = interpolatePageNumber(pnFormat.value, previewPageIndex.value, totalPages.value || 10, {
@@ -710,11 +712,23 @@ async function loadFile(fileObj, password = '') {
     previewPageIndex.value = 0;
     renderedPageCanvases.clear();
 
+    // Pre-render Page 1 base canvas into memory cache while loading
+    try {
+      const page1 = await activePdfDoc.getPage(1);
+      const vp1 = page1.getViewport({ scale: 1.5 });
+      const c1 = document.createElement('canvas');
+      c1.width = vp1.width;
+      c1.height = vp1.height;
+      const ctx1 = c1.getContext('2d');
+      await page1.render({ canvasContext: ctx1, viewport: vp1 }).promise;
+      renderedPageCanvases.set(0, c1);
+    } catch (renderErr) {
+      logger.warn('PAGE_NUMBER', `Pre-render page 1 error: ${renderErr.message}`);
+    }
+
     unlockedPassword = password;
     isPasswordOpen.value = false;
     passwordError.value = '';
-
-    await renderPreview();
   } catch (err) {
     if (err.name === 'PasswordException' || err.message?.toLowerCase().includes('password')) {
       docBytes.value = null;
@@ -728,6 +742,8 @@ async function loadFile(fileObj, password = '') {
   } finally {
     isLoading.value = false;
     isUnlocking.value = false;
+    await nextTick();
+    await renderPreview();
   }
 }
 
@@ -777,82 +793,112 @@ function sampleCurrentPageBackground() {
 async function renderPreview() {
   if (!activePdfDoc || !previewCanvasRef.value) return;
 
-  const pageIdx = previewPageIndex.value;
-  let baseCanvas = renderedPageCanvases.get(pageIdx);
-
-  if (!baseCanvas) {
-    const pdfPage = await activePdfDoc.getPage(pageIdx + 1);
-    const viewport = pdfPage.getViewport({ scale: 1.5 });
-
-    baseCanvas = document.createElement('canvas');
-    baseCanvas.width = viewport.width;
-    baseCanvas.height = viewport.height;
-    const bctx = baseCanvas.getContext('2d');
-    await pdfPage.render({ canvasContext: bctx, viewport }).promise;
-    renderedPageCanvases.set(pageIdx, baseCanvas);
+  if (isRendering) {
+    renderPending = true;
+    return;
   }
+  isRendering = true;
 
-  const canvas = previewCanvasRef.value;
-  const ctx = canvas.getContext('2d');
-  canvas.width = baseCanvas.width;
-  canvas.height = baseCanvas.height;
+  try {
+    const pageIdx = previewPageIndex.value;
+    let baseCanvas = renderedPageCanvases.get(pageIdx);
 
-  // 1. Draw base page
-  ctx.drawImage(baseCanvas, 0, 0);
+    if (!baseCanvas) {
+      const pdfPage = await activePdfDoc.getPage(pageIdx + 1);
+      const viewport = pdfPage.getViewport({ scale: 1.5 });
 
-  // 2. Interpolate page number text
-  const text = interpolatePageNumber(pnFormat.value, pageIdx, totalPages.value, {
-    startNumber: pnStartNumber.value,
-    skipCover: pnSkipCover.value
-  });
+      baseCanvas = document.createElement('canvas');
+      baseCanvas.width = viewport.width;
+      baseCanvas.height = viewport.height;
+      const bctx = baseCanvas.getContext('2d');
+      await pdfPage.render({ canvasContext: bctx, viewport }).promise;
+      renderedPageCanvases.set(pageIdx, baseCanvas);
 
-  // If cover page is skipped, do not draw overlay
-  if (!text) return;
+      if (renderedPageCanvases.size > 20) {
+        for (const [key] of renderedPageCanvases) {
+          if (key !== 0 && key !== pageIdx) {
+            renderedPageCanvases.delete(key);
+          }
+        }
+      }
+    }
 
-  const scale = canvas.width / 595.28; // Standard A4 width reference ratio
-  const fontPt = pnFontSize.value * scale * 1.35;
-  const marginPx = pnMargin.value * scale;
+    if (pageIdx !== previewPageIndex.value) {
+      return;
+    }
 
-  ctx.font = `bold ${fontPt}px "PingFang SC", "Microsoft YaHei", "Segoe UI", -apple-system, sans-serif`;
-  const textMetrics = ctx.measureText(text);
-  const textWidth = textMetrics.width;
+    const canvas = previewCanvasRef.value;
+    if (!canvas || !baseCanvas) return;
 
-  const isTop = pnPosition.value.startsWith('top');
-  const isCenter = pnPosition.value.endsWith('center');
-  const isRight = pnPosition.value.endsWith('right');
+    const ctx = canvas.getContext('2d');
+    canvas.width = baseCanvas.width;
+    canvas.height = baseCanvas.height;
 
-  let textX = 0;
-  if (isCenter) {
-    textX = (canvas.width - textWidth) / 2;
-  } else if (isRight) {
-    textX = canvas.width - marginPx - textWidth;
-  } else {
-    textX = marginPx;
+    // 1. Draw base page
+    ctx.drawImage(baseCanvas, 0, 0);
+
+    // 2. Interpolate page number text
+    const text = interpolatePageNumber(pnFormat.value, pageIdx, totalPages.value, {
+      startNumber: pnStartNumber.value,
+      skipCover: pnSkipCover.value
+    });
+
+    // If cover page is skipped, do not draw overlay
+    if (!text) return;
+
+    const scale = canvas.width / 595.28; // Standard A4 width reference ratio
+    const fontPt = pnFontSize.value * scale * 1.35;
+    const marginPx = pnMargin.value * scale;
+
+    ctx.font = `bold ${fontPt}px "PingFang SC", "Microsoft YaHei", "Segoe UI", -apple-system, sans-serif`;
+    const textMetrics = ctx.measureText(text);
+    const textWidth = textMetrics.width;
+
+    const isTop = pnPosition.value.startsWith('top');
+    const isCenter = pnPosition.value.endsWith('center');
+    const isRight = pnPosition.value.endsWith('right');
+
+    let textX = 0;
+    if (isCenter) {
+      textX = (canvas.width - textWidth) / 2;
+    } else if (isRight) {
+      textX = canvas.width - marginPx - textWidth;
+    } else {
+      textX = marginPx;
+    }
+
+    let textY = isTop ? marginPx + fontPt : canvas.height - marginPx;
+
+    // 3. Draw Mask Rectangle
+    if (pnMaskMode.value === 'full_ribbon') {
+      const ribbonHeight = Math.max(34 * scale, marginPx * 1.8);
+      const ribbonY = isTop ? 0 : canvas.height - ribbonHeight;
+      ctx.fillStyle = pnMaskColor.value;
+      ctx.fillRect(0, ribbonY, canvas.width, ribbonHeight);
+    } else if (pnMaskMode.value === 'local_box') {
+      const padX = 14 * scale;
+      const padY = 5 * scale;
+      const boxWidth = Math.max(textWidth + padX * 2, 60 * scale);
+      const boxHeight = fontPt + padY * 2;
+      const boxX = isCenter ? (canvas.width - boxWidth) / 2 : (isRight ? canvas.width - marginPx - boxWidth : marginPx - padX / 2);
+      const boxY = textY - fontPt - padY / 2;
+      ctx.fillStyle = pnMaskColor.value;
+      ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
+    }
+
+    // 4. Draw Text
+    ctx.fillStyle = pnTextColor.value;
+    ctx.textBaseline = 'alphabetic';
+    ctx.fillText(text, textX, textY);
+  } catch (err) {
+    logger.error('PAGE_NUMBER', `Render preview error: ${err.message}`);
+  } finally {
+    isRendering = false;
+    if (renderPending) {
+      renderPending = false;
+      renderPreview();
+    }
   }
-
-  let textY = isTop ? marginPx + fontPt : canvas.height - marginPx;
-
-  // 3. Draw Mask Rectangle
-  if (pnMaskMode.value === 'full_ribbon') {
-    const ribbonHeight = Math.max(34 * scale, marginPx * 1.8);
-    const ribbonY = isTop ? 0 : canvas.height - ribbonHeight;
-    ctx.fillStyle = pnMaskColor.value;
-    ctx.fillRect(0, ribbonY, canvas.width, ribbonHeight);
-  } else if (pnMaskMode.value === 'local_box') {
-    const padX = 14 * scale;
-    const padY = 5 * scale;
-    const boxWidth = Math.max(textWidth + padX * 2, 60 * scale);
-    const boxHeight = fontPt + padY * 2;
-    const boxX = isCenter ? (canvas.width - boxWidth) / 2 : (isRight ? canvas.width - marginPx - boxWidth : marginPx - padX / 2);
-    const boxY = textY - fontPt - padY / 2;
-    ctx.fillStyle = pnMaskColor.value;
-    ctx.fillRect(boxX, boxY, boxWidth, boxHeight);
-  }
-
-  // 4. Draw Text
-  ctx.fillStyle = pnTextColor.value;
-  ctx.textBaseline = 'alphabetic';
-  ctx.fillText(text, textX, textY);
 }
 
 async function executePageNumber() {
@@ -913,9 +959,15 @@ function reset() {
   previewPageIndex.value = 0;
   activePdfDoc = null;
   renderedPageCanvases.clear();
+  isRendering = false;
+  renderPending = false;
   unlockedPassword = '';
   showNextActions.value = false;
   lastExportedFile.value = null;
+  if (previewCanvasRef.value) {
+    const ctx = previewCanvasRef.value.getContext('2d');
+    ctx.clearRect(0, 0, previewCanvasRef.value.width, previewCanvasRef.value.height);
+  }
 }
 
 function checkIncomingFile() {
