@@ -80,37 +80,32 @@
           {{ t('result_auto_downloaded_hint') || '文件已自动下载至您的设备 · 100% 浏览器本地运算零上传' }}
         </p>
 
-        <!-- Artifact Information Card -->
-        <div class="w-full bg-slate-50/90 hover:bg-slate-50 rounded-2xl border border-slate-200/80 p-3.5 sm:p-4 mb-5 text-left transition shadow-2xs">
-          <div class="flex items-center justify-between gap-3">
-            <div class="flex items-center space-x-3 min-w-0">
-              <div class="w-10 h-10 rounded-xl bg-red-100 text-red-600 flex items-center justify-center font-black text-xs shrink-0 shadow-2xs border border-red-200/60">
-                PDF
-              </div>
-              <div class="min-w-0">
-                <p class="text-xs sm:text-sm font-extrabold text-slate-800 truncate" :title="file.name">
-                  {{ file.name }}
-                </p>
-                <div class="flex items-center space-x-2 text-[11px] text-slate-500 font-medium mt-0.5">
-                  <span class="font-mono">{{ formattedSize }}</span>
-                  <span v-if="pageCount" class="text-slate-300">·</span>
-                  <span v-if="pageCount">{{ pageCount }} {{ t('page_unit', '页') }}</span>
-                </div>
-              </div>
+        <!-- Artifact Information Card (Refined & Centered) -->
+        <div class="w-full bg-slate-50/80 hover:bg-slate-50 rounded-2xl border border-slate-200/80 p-4 sm:p-4.5 mb-5 text-center transition shadow-2xs">
+          <!-- File Identity (Centered) -->
+          <div class="flex items-center justify-center space-x-2.5 max-w-full min-w-0">
+            <div class="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-black text-[10px] shrink-0 border border-red-200/60 shadow-2xs">
+              PDF
             </div>
-
-            <!-- Optional Extra Action (e.g. Diff Preview Trigger) -->
-            <div v-if="$slots['extra-actions']" class="shrink-0">
-              <slot name="extra-actions" />
-            </div>
+            <p class="text-xs sm:text-sm font-extrabold text-slate-800 truncate max-w-[280px] sm:max-w-md" :title="file.name">
+              {{ file.name }}
+            </p>
           </div>
 
-          <!-- Dynamic Feature Metric Slot (e.g. Compress Saved % / Merge Source Count) -->
-          <div v-if="$slots.metrics || metricText" class="pt-2.5 mt-2.5 border-t border-slate-200/60 flex flex-wrap items-center gap-2">
+          <!-- File Attributes: Size & Page Count (Centered) -->
+          <div class="flex items-center justify-center space-x-2 text-[11px] text-slate-500 font-medium mt-1">
+            <span class="font-mono font-semibold text-slate-600">{{ formattedSize }}</span>
+            <span v-if="pageCount" class="text-slate-300">·</span>
+            <span v-if="pageCount">{{ pageCount }} {{ t('page_unit', '页') }}</span>
+          </div>
+
+          <!-- Dynamic Feature Metric Slot & Extra Actions (Centered) -->
+          <div v-if="$slots.metrics || metricText || $slots['extra-actions']" class="pt-2.5 mt-2.5 border-t border-slate-200/60 flex flex-wrap items-center justify-center gap-2">
             <span v-if="metricText" class="text-xs font-semibold text-slate-600">
               {{ metricText }}
             </span>
             <slot name="metrics" />
+            <slot name="extra-actions" />
           </div>
         </div>
 
