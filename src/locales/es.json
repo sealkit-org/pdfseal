@@ -710,7 +710,7 @@
   "sign_upload_hint": "Haga clic para subir firma o sello PNG transparente",
   "sign_add_upload": "Añadir a página",
   "sign_add_date": "Añadir fecha",
-  "sign_drag_hint": "Las firmas pueden arrastrarse para moverlas y redimensionarse desde la esquina inferior derecha.",
+  "sign_drag_hint": "Las firmas pueden arrastrarse y redimensionarse. En PDFs de varias páginas, haga clic en 'Multirréplica' para aplicarlas en todas las páginas.",
   "sign_action_delete": "Eliminar",
   "sign_action_resize": "Redimensionar",
   "sign_color_black": "Negro",

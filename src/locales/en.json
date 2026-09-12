@@ -710,7 +710,7 @@
   "sign_upload_hint": "Click to upload transparent PNG signature or stamp",
   "sign_add_upload": "Add to Page",
   "sign_add_date": "Add Date",
-  "sign_drag_hint": "Signatures can be dragged to move and resized from the bottom-right corner.",
+  "sign_drag_hint": "Signatures can be dragged and resized. For multi-page PDFs, click 'Batch Apply' on the stamp to replicate across pages.",
   "sign_action_delete": "Delete",
   "sign_action_resize": "Resize",
   "sign_color_black": "Black",

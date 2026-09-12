@@ -709,7 +709,7 @@
   "sign_upload_hint": "点击上传透明 PNG 签名或印章",
   "sign_add_upload": "添加到页面",
   "sign_add_date": "添加日期",
-  "sign_drag_hint": "签名放置后可直接在页面上拖拽移动位置，拖动右下角可任意缩放大小。",
+  "sign_drag_hint": "印章放置后可在页面上拖拽移动与缩放；多页文档点击印章上方「多页复用」即可一键批量应用到全部页面（简签）。",
   "sign_action_delete": "删除",
   "sign_action_resize": "缩放大小",
   "sign_color_black": "碳黑",

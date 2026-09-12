@@ -310,7 +310,7 @@ export function calculateBatchTargetPages(mode, totalPages, customRange = '', so
   } else if (mode === 'odd') {
     for (let p = 1; p <= totalPages; p += 2) pages.add(p);
   } else if (mode === 'custom' && customRange) {
-    const parts = customRange.split(',').map(s => s.trim()).filter(Boolean);
+    const parts = String(customRange).split(',').map(s => s.trim()).filter(Boolean);
     for (const part of parts) {
       if (part.includes('-')) {
         const [startStr, endStr] = part.split('-').map(s => parseInt(s.trim(), 10));
