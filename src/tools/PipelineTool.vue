@@ -728,7 +728,7 @@
             <!-- Masking Mode & Mask Color -->
             <div>
               <label class="block text-slate-700 font-bold mb-1.5">{{ t('pn_mask_label') || 'Background Whiteout Mask' }}</label>
-              <div class="grid grid-cols-3 gap-1.5 mb-2.5">
+              <div class="grid grid-cols-3 gap-1.5 mb-2">
                 <button 
                   type="button" 
                   v-for="mask in [
@@ -749,13 +749,55 @@
                 </button>
               </div>
 
-              <div v-if="editingStepDraft.maskMode !== 'none'" class="flex items-center space-x-2 pt-1">
+              <!-- Mask Color Picker & Pipette matching PageNumberTool -->
+              <div v-if="editingStepDraft.maskMode !== 'none'" class="mt-2 flex flex-wrap items-center gap-2">
                 <span class="text-[11px] text-slate-600 font-semibold">{{ t('pn_mask_color_label') || 'Mask Color' }}:</span>
-                <div class="relative w-6 h-6 rounded-md border border-slate-300 overflow-hidden cursor-pointer shadow-2xs">
-                  <input type="color" v-model="editingStepDraft.maskColor" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                
+                <div class="flex items-center space-x-1.5">
+                  <!-- White swatch -->
+                  <button 
+                    type="button" 
+                    @click="editingStepDraft.maskColor = '#ffffff'" 
+                    class="w-5 h-5 rounded-full bg-white border border-slate-300 shadow-2xs transition hover:scale-110 cursor-pointer" 
+                    :class="{ 'ring-2 ring-indigo-600': (editingStepDraft.maskColor || '#ffffff').toLowerCase() === '#ffffff' }"
+                    :title="t('pn_mask_color_white') || 'White'"
+                  ></button>
+
+                  <!-- Cream / Parchment swatch -->
+                  <button 
+                    type="button" 
+                    @click="editingStepDraft.maskColor = '#fbf9f4'" 
+                    class="w-5 h-5 rounded-full bg-[#fbf9f4] border border-amber-200 shadow-2xs transition hover:scale-110 cursor-pointer" 
+                    :class="{ 'ring-2 ring-indigo-600': (editingStepDraft.maskColor || '').toLowerCase() === '#fbf9f4' }"
+                    :title="t('pn_mask_color_cream') || 'Parchment / Cream'"
+                  ></button>
+                </div>
+
+                <!-- Custom Color Picker Box -->
+                <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
+                  <input 
+                    ref="pipelineMaskColorInputRef"
+                    type="color" 
+                    v-model="editingStepDraft.maskColor" 
+                    class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" 
+                  />
                   <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.maskColor || '#ffffff' }"></div>
                 </div>
-                <span class="font-mono text-[11px] text-slate-600 uppercase font-bold">{{ editingStepDraft.maskColor || '#ffffff' }}</span>
+
+                <!-- Auto-sample Pipette Button -->
+                <button 
+                  type="button" 
+                  @click="samplePipelineMaskColor"
+                  class="text-[10px] bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 px-2 py-1 rounded-lg border border-slate-200 transition flex items-center space-x-1 font-semibold cursor-pointer"
+                  :title="t('pn_mask_color_sample') || 'Sample Background'"
+                >
+                  <Pipette class="w-3 h-3 text-indigo-600" />
+                  <span>{{ t('pn_mask_color_sample') || 'Sample Background' }}</span>
+                </button>
+
+                <span class="font-mono text-[11px] text-slate-500 uppercase font-bold ml-1">
+                  {{ editingStepDraft.maskColor || '#ffffff' }}
+                </span>
               </div>
             </div>
 
@@ -776,15 +818,45 @@
               </div>
 
               <div>
-                <label class="block text-slate-700 font-bold mb-1.5">{{ t('pn_text_color') || 'Text Color' }}</label>
+                <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                  <span>{{ t('pn_text_color') || 'Text Color' }}</span>
+                  <span class="font-mono text-[11px] text-slate-500 uppercase font-bold">{{ editingStepDraft.textColor || '#334155' }}</span>
+                </div>
                 <div class="flex items-center space-x-2">
-                  <div class="relative w-7 h-7 rounded-lg border border-slate-300 overflow-hidden cursor-pointer shadow-2xs">
+                  <div class="relative w-7 h-7 rounded-lg border border-slate-300 overflow-hidden cursor-pointer shadow-2xs flex items-center justify-center">
                     <input type="color" v-model="editingStepDraft.textColor" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
                     <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.textColor || '#334155' }"></div>
                   </div>
-                  <span class="font-mono text-[11px] text-slate-700 font-bold uppercase">{{ editingStepDraft.textColor || '#334155' }}</span>
+                  <div class="flex items-center space-x-1">
+                    <button 
+                      v-for="c in ['#334155', '#000000', '#1e293b', '#1d4ed8']" 
+                      :key="c"
+                      type="button"
+                      @click="editingStepDraft.textColor = c"
+                      :style="{ backgroundColor: c }"
+                      :class="[
+                        'w-4 h-4 rounded-full transition cursor-pointer',
+                        (editingStepDraft.textColor || '#334155').toLowerCase() === c.toLowerCase() ? 'ring-2 ring-indigo-600 scale-110' : 'opacity-80 hover:opacity-100'
+                      ]"
+                    ></button>
+                  </div>
                 </div>
               </div>
+            </div>
+
+            <!-- Margin Slider -->
+            <div>
+              <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                <span>{{ t('pn_margin') || 'Edge Margin' }}</span>
+                <span class="text-indigo-600 font-mono">{{ editingStepDraft.margin || 24 }}pt</span>
+              </div>
+              <input 
+                type="range" 
+                min="12" 
+                max="48" 
+                v-model.number="editingStepDraft.margin" 
+                class="w-full accent-indigo-600 cursor-pointer"
+              />
             </div>
           </div>
 
@@ -2088,7 +2160,8 @@ import {
   FileEdit,
   PenLine,
   Star,
-  Calendar
+  Calendar,
+  Pipette
 } from 'lucide-vue-next';
 import { PRESET_PIPELINES } from '../utils/pipeline/presetPipelines';
 import { AVAILABLE_NODES } from '../utils/pipeline/pipelineTypes';
@@ -2123,6 +2196,7 @@ const showProtectOwnerPwd = ref(false);
 const isProtectAdvancedOpen = ref(false);
 const protectConfigError = ref('');
 const signPreviewOrientation = ref('portrait'); // 'portrait' | 'landscape' (pure preview toggle)
+const pipelineMaskColorInputRef = ref(null);
 
 // Flow persistence & selection
 const savedUserFlows = ref(loadUserPipelines());
@@ -2425,6 +2499,22 @@ function resetStepToDefault() {
         protectConfigError.value = '';
       }
     }
+  }
+}
+
+async function samplePipelineMaskColor() {
+  if (window.EyeDropper) {
+    try {
+      const eyeDropper = new window.EyeDropper();
+      const result = await eyeDropper.open();
+      if (result && result.sRGBHex && editingStepDraft.value) {
+        editingStepDraft.value.maskColor = result.sRGBHex;
+      }
+    } catch (e) {
+      // User cancelled or dismissed picker
+    }
+  } else if (pipelineMaskColorInputRef.value) {
+    pipelineMaskColorInputRef.value.click();
   }
 }
 
