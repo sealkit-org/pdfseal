@@ -36,7 +36,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 
 ## ✨ Features & Architecture
 
-### 🛠️ 11 Core Local PDF Utilities (100% Free & Unlimited)
+### 🛠️ 12 Core Local PDF Utilities (100% Free & Unlimited)
 
 *All atomic tools run entirely client-side in browser RAM with no arbitrary limits or watermark penalties:*
 
@@ -45,6 +45,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **Reorder & Rotate**: Visual thumbnail grid to reorder, rotate pages 90°/180°, or delete unneeded pages.
 - **Split & Extract**: Select individual pages or custom page ranges (e.g. `1-3, 5, 8-end`) to export instantly.
 - **Watermark & Protect**: High-DPI transparent canvas watermarks supporting multi-language typography and optional owner-level permissions locking.
+- **Dynamic Page Numbering**: Add customizable page numbers (`{n}`, `{total}`, `Page {n} of {total}`) with full-ribbon or local whiteout masking to cover legacy numbers, parchment/canvas color auto-sampling, and cover page skipping.
 - **Sign & Stamp**: Embed handwritten signatures or official seals with instant placement presets (*Last Page Bottom Right*, *First Page*, etc.).
 - **Image to PDF**: Convert PNG, JPG, and WebP images into standard A4 or auto-fitted multi-page PDF documents.
 - **PDF to Image**: Render each PDF page as a crisp PNG or JPG at *Standard 150 DPI* or *print-grade 300 DPI* — download single pages or the entire batch as a ZIP, right from the page thumbnails.

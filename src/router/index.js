@@ -9,6 +9,7 @@ import PdfToImageTool from '../tools/PdfToImageTool.vue';
 import UnlockTool from '../tools/UnlockTool.vue';
 import ProtectTool from '../tools/ProtectTool.vue';
 import WatermarkTool from '../tools/WatermarkTool.vue';
+import PageNumberTool from '../tools/PageNumberTool.vue';
 import SanitizeTool from '../tools/SanitizeTool.vue';
 import PipelineTool from '../tools/PipelineTool.vue';
 import VaultTool from '../tools/VaultTool.vue';
@@ -95,6 +96,13 @@ const routes = [
     name: 'watermark',
     component: WatermarkTool,
     meta: { toolId: 'watermark' }
+  },
+  {
+    path: '/page-number',
+    alias: ['/page-numbers', '/add-page-numbers'],
+    name: 'page_number',
+    component: PageNumberTool,
+    meta: { toolId: 'page_number' }
   },
   {
     path: '/sanitize-pdf',

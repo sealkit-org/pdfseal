@@ -66,6 +66,7 @@ import {
   Files,
   FolderLock,
   ImageDown,
+  ListOrdered,
   X
 } from 'lucide-vue-next';
 import { t } from '../i18n';
@@ -85,6 +86,7 @@ const props = defineProps({
 const emit = defineEmits(['send-to-tool', 'close']);
 
 const actionCatalog = [
+  { id: 'page_number', labelKey: 'next_action_page_number', icon: ListOrdered, color: 'text-violet-700 bg-violet-50 border-violet-200 hover:bg-violet-100' },
   { id: 'protect', labelKey: 'next_action_protect', icon: Lock, color: 'text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100' },
   { id: 'sign', labelKey: 'next_action_sign', icon: PenTool, color: 'text-indigo-700 bg-indigo-50 border-indigo-200 hover:bg-indigo-100' },
   { id: 'compress', labelKey: 'next_action_compress', icon: Minimize2, color: 'text-amber-700 bg-amber-50 border-amber-200 hover:bg-amber-100' },
@@ -98,16 +100,17 @@ const actionCatalog = [
 ];
 
 const priorityMap = {
-  merge: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
-  compress: ['protect', 'sign', 'watermark', 'pdf_to_image', 'vault'],
-  organize: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
-  split: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
-  watermark: ['protect', 'compress', 'sign', 'vault'],
+  merge: ['page_number', 'compress', 'sign', 'protect', 'vault'],
+  compress: ['page_number', 'protect', 'sign', 'watermark', 'vault'],
+  organize: ['page_number', 'compress', 'sign', 'protect', 'vault'],
+  split: ['page_number', 'compress', 'sign', 'protect', 'vault'],
+  page_number: ['compress', 'protect', 'sign', 'pdf_to_image', 'vault'],
+  watermark: ['page_number', 'protect', 'compress', 'sign', 'vault'],
   protect: ['watermark', 'compress', 'vault'],
-  sanitize: ['protect', 'watermark', 'compress', 'sign', 'vault'],
-  unlock: ['split', 'organize', 'compress', 'watermark', 'sign'],
+  sanitize: ['page_number', 'protect', 'watermark', 'compress', 'vault'],
+  unlock: ['page_number', 'split', 'organize', 'compress', 'sign'],
   sign: ['protect', 'compress', 'watermark', 'vault'],
-  image_to_pdf: ['watermark', 'compress', 'protect', 'sign', 'vault']
+  image_to_pdf: ['page_number', 'watermark', 'compress', 'protect', 'vault']
 };
 
 const suggestedActions = computed(() => {

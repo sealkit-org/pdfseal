@@ -9,6 +9,7 @@ import { executeImg2PdfNode } from './img2pdfNode';
 import { executePdf2ImgNode } from './pdf2imgNode';
 import { executeOrganizeNode } from './organizeNode';
 import { executeProtectNode } from './protectNode';
+import { executePageNumberNode } from './pageNumberNode';
 
 export const NODE_EXECUTORS = {
   node_unlock: executeUnlockNode,
@@ -16,6 +17,7 @@ export const NODE_EXECUTORS = {
   node_split: executeSplitNode,
   node_compress: executeCompressNode,
   node_watermark: executeWatermarkNode,
+  node_page_number: executePageNumberNode,
   node_sanitize: executeSanitizeNode,
   node_sign: executeSignNode,
   node_img2pdf: executeImg2PdfNode,

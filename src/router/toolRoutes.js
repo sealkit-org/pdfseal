@@ -13,6 +13,7 @@ export const TOOL_ROUTES = {
   image_to_pdf: '/image-to-pdf',
   pdf_to_image: '/pdf-to-image',
   watermark: '/watermark-pdf',
+  page_number: '/page-number',
   sanitize: '/sanitize-pdf',
   pipeline: '/pipeline',
   vault: '/vault',
