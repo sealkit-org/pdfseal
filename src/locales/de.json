@@ -969,6 +969,7 @@
   "page_number_desc": "Seitenzahlen formatieren, alte Nummern mit Abdeckstreifen überdecken und Deckblatt überspringen.",
   "page_number_drop_title": "PDF zum Nummerieren auswählen",
   "page_number_drop_subtitle": "Seitenzahlen lokal im Browser mit flexiblen Makros und Weißband-Maskierung anbringen",
+  "pn_controls": "Seitenzahlen-Einstellungen",
   "pn_format_label": "Zahlenformat",
   "pn_format_placeholder": "z. B. Seite {n} von {total}",
   "pn_preset_page_n": "Seite {n}",

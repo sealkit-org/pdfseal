@@ -969,6 +969,7 @@
   "page_number_desc": "Inserta números de página personalizados, oculta números anteriores con máscara blanca y vista previa en vivo.",
   "page_number_drop_title": "Selecciona un PDF para numerar",
   "page_number_drop_subtitle": "Añade números de página secuenciales con macros flexibles y cintas correctoras",
+  "pn_controls": "Controles de numeración",
   "pn_format_label": "Formato de número",
   "pn_format_placeholder": "ej. Página {n} de {total}",
   "pn_preset_page_n": "Página {n}",

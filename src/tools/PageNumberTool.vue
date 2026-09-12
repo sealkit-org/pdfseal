@@ -1,9 +1,9 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Card Container -->
-    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Integrated Header with Badge -->
-      <div class="flex items-center justify-between pb-3 mb-2.5 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-9 h-9 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center font-bold shadow-2xs">
             <ListOrdered class="w-4.5 h-4.5" />
@@ -70,7 +70,7 @@
       <!-- State B: Active Document Workspace -->
       <div v-else class="flex-1 flex flex-col justify-between overflow-hidden">
         <!-- Top Toolbar & Status Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100 shrink-0">
+        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 shrink-0">
           <div class="flex items-center space-x-2 min-w-0 flex-1">
             <span class="text-xs bg-violet-50 text-violet-700 font-extrabold px-2.5 py-1 rounded-lg border border-violet-200 shrink-0">
               {{ totalPages }} {{ t('pages_label') || 'pages' }}
@@ -131,14 +131,14 @@
           <span>{{ t('rendering_pages') }}...</span>
         </div>
 
-        <!-- Center Workspace: Controls & Live Preview -->
-        <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-4 my-2.5 flex-1 items-stretch min-h-0 overflow-hidden">
+        <!-- Center Workspace: Controls & Live Preview (Calibrated Height to Prevent Page Scroll & Keep Footer in Sight) -->
+        <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 my-2 flex-1 items-stretch min-h-0 max-h-[460px] overflow-hidden">
           <!-- Left Controls (5 cols on lg) -->
-          <div class="lg:col-span-5 bg-slate-50/80 rounded-2xl p-3.5 sm:p-4 border border-slate-200/80 flex flex-col justify-between overflow-y-auto custom-scrollbar">
-            <div class="space-y-3">
-              <div class="flex items-center space-x-2 font-bold text-slate-800 text-xs border-b border-slate-200/70 pb-1.5">
+          <div class="lg:col-span-5 bg-slate-50/80 rounded-2xl p-2.5 sm:p-3 border border-slate-200/80 flex flex-col justify-between overflow-y-auto custom-scrollbar min-h-0">
+            <div class="space-y-2">
+              <div class="flex items-center space-x-1.5 font-bold text-slate-800 text-xs border-b border-slate-200/70 pb-1">
                 <Sliders class="w-3.5 h-3.5 text-violet-600" />
-                <span>{{ t('page_number_title') }}</span>
+                <span>{{ t('pn_controls') || 'Page Number Controls' }}</span>
               </div>
 
               <!-- Format Macro Input & Presets -->
@@ -154,16 +154,16 @@
                   @input="renderPreview"
                   type="text" 
                   :placeholder="t('pn_format_placeholder', 'e.g. Page {n} of {total}')"
-                  class="w-full text-xs bg-white border border-slate-300 rounded-xl px-3 py-1.5 focus:ring-2 focus:ring-violet-500 outline-hidden font-medium shadow-2xs"
+                  class="w-full text-xs bg-white border border-slate-300 rounded-xl px-2.5 py-1 focus:ring-2 focus:ring-violet-500 outline-hidden font-medium shadow-2xs"
                 >
-                <div class="flex flex-wrap gap-1.5 mt-1.5">
+                <div class="flex flex-wrap gap-1 mt-1">
                   <button 
                     type="button" 
                     v-for="preset in formatPresets" 
                     :key="preset.val"
                     @click="setFormat(preset.val)"
                     :class="[
-                      'text-[10px] px-2 py-0.5 rounded-lg border transition font-mono cursor-pointer',
+                      'text-[10px] px-1.5 py-0.5 rounded-lg border transition font-mono cursor-pointer',
                       pnFormat === preset.val
                         ? 'bg-violet-100 text-violet-800 border-violet-300 font-bold shadow-2xs'
                         : 'bg-white hover:bg-slate-100 text-slate-600 border-slate-200'
@@ -175,27 +175,27 @@
               </div>
 
               <!-- Start Number & Skip Cover -->
-              <div class="grid grid-cols-2 gap-3">
+              <div class="grid grid-cols-2 gap-2.5">
                 <div>
-                  <label class="block text-[11px] font-semibold text-slate-700 mb-1">{{ t('pn_start_number') }}</label>
+                  <label class="block text-[11px] font-semibold text-slate-700 mb-0.5">{{ t('pn_start_number') }}</label>
                   <input 
                     v-model.number="pnStartNumber" 
                     @input="renderPreview"
                     type="number" 
                     min="1" 
-                    class="w-full text-xs bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 focus:ring-2 focus:ring-violet-500 outline-hidden font-medium shadow-2xs"
+                    class="w-full text-xs bg-white border border-slate-300 rounded-xl px-2.5 py-1 focus:ring-2 focus:ring-violet-500 outline-hidden font-medium shadow-2xs"
                   >
                 </div>
 
                 <div class="flex flex-col justify-end">
-                  <label class="flex items-center space-x-1.5 text-xs text-slate-700 font-semibold cursor-pointer select-none py-1.5">
+                  <label class="flex items-center space-x-1.5 text-xs text-slate-700 font-semibold cursor-pointer select-none py-1">
                     <input 
                       type="checkbox" 
                       v-model="pnSkipCover" 
                       @change="renderPreview"
-                      class="w-4 h-4 text-violet-600 rounded-md border-slate-300 focus:ring-violet-500 cursor-pointer"
+                      class="w-3.5 h-3.5 text-violet-600 rounded-md border-slate-300 focus:ring-violet-500 cursor-pointer"
                     >
-                    <span>{{ t('pn_skip_cover') }}</span>
+                    <span class="text-[11px]">{{ t('pn_skip_cover') }}</span>
                   </label>
                 </div>
               </div>
@@ -203,14 +203,14 @@
               <!-- 6-Anchor Position Grid -->
               <div>
                 <label class="block text-[11px] font-semibold text-slate-700 mb-1">{{ t('pn_position_label') }}</label>
-                <div class="grid grid-cols-3 gap-1.5">
+                <div class="grid grid-cols-3 gap-1">
                   <button 
                     type="button" 
                     v-for="pos in positionOptions" 
                     :key="pos.id"
                     @click="setPosition(pos.id)"
                     :class="[
-                      'text-[11px] py-1.5 px-2 rounded-xl border text-center transition font-semibold cursor-pointer',
+                      'text-[10.5px] py-1 px-1.5 rounded-lg border text-center transition font-semibold cursor-pointer',
                       pnPosition === pos.id 
                         ? 'border-violet-600 bg-violet-100/80 text-violet-900 font-bold shadow-2xs' 
                         : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -224,14 +224,14 @@
               <!-- Background Whiteout Mask Mode -->
               <div>
                 <label class="block text-[11px] font-semibold text-slate-700 mb-1">{{ t('pn_mask_label') }}</label>
-                <div class="grid grid-cols-3 gap-1.5">
+                <div class="grid grid-cols-3 gap-1">
                   <button 
                     type="button" 
                     v-for="m in maskOptions" 
                     :key="m.id"
                     @click="setMaskMode(m.id)"
                     :class="[
-                      'text-[10px] py-1.5 px-1 rounded-xl border text-center transition font-semibold cursor-pointer',
+                      'text-[10px] py-1 px-1 rounded-lg border text-center transition font-semibold cursor-pointer',
                       pnMaskMode === m.id 
                         ? 'border-violet-600 bg-violet-100/80 text-violet-900 font-bold shadow-2xs' 
                         : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
@@ -241,33 +241,32 @@
                   </button>
                 </div>
 
-                <!-- Mask Color Picker & Pipette -->
                 <!-- Mask Color Picker & Auto Detection -->
-                <div v-if="pnMaskMode !== 'none'" class="mt-2 space-y-1.5">
-                  <div class="flex items-center justify-between">
-                    <span class="text-[11px] text-slate-600 font-semibold">{{ t('pn_mask_color_label') }}:</span>
+                <div v-if="pnMaskMode !== 'none'" class="mt-1.5 space-y-1">
+                  <div class="flex items-center justify-between text-[10.5px]">
+                    <span class="text-slate-600 font-semibold">{{ t('pn_mask_color_label') }}:</span>
                     <span 
                       v-if="pnMaskColorMode === 'auto'" 
-                      class="text-[10px] font-mono font-bold text-violet-700 bg-violet-50 border border-violet-200 px-2 py-0.5 rounded-md flex items-center space-x-1"
+                      class="text-[9.5px] font-mono font-bold text-violet-700 bg-violet-50 border border-violet-200 px-1.5 py-0.2 rounded-md flex items-center space-x-1"
                     >
                       <span class="w-2 h-2 rounded-full border border-slate-300" :style="{ backgroundColor: detectedAutoColor }"></span>
                       <span>{{ t('pn_mask_color_detected') }}: {{ detectedAutoColor }}</span>
                     </span>
                   </div>
                   
-                  <div class="flex flex-wrap items-center gap-1.5">
+                  <div class="flex flex-wrap items-center gap-1">
                     <!-- Smart Auto button -->
                     <button 
                       type="button" 
                       @click="setMaskColorPreset('auto')" 
-                      class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1 font-semibold cursor-pointer"
+                      class="text-[9.5px] px-2 py-0.5 rounded-lg border transition flex items-center space-x-1 font-semibold cursor-pointer"
                       :class="[
                         pnMaskColorMode === 'auto'
                           ? 'border-violet-600 bg-violet-100/90 text-violet-900 font-bold shadow-2xs'
                           : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                       ]"
                     >
-                      <Sparkles class="w-3 h-3 text-violet-600" />
+                      <Sparkles class="w-2.5 h-2.5 text-violet-600" />
                       <span>{{ t('pn_mask_color_auto') }}</span>
                     </button>
 
@@ -275,14 +274,14 @@
                     <button 
                       type="button" 
                       @click="setMaskColorPreset('white')" 
-                      class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1.5 font-semibold cursor-pointer"
+                      class="text-[9.5px] px-2 py-0.5 rounded-lg border transition flex items-center space-x-1 font-semibold cursor-pointer"
                       :class="[
                         pnMaskColorMode === 'white'
                           ? 'border-violet-600 bg-violet-100/90 text-violet-900 font-bold shadow-2xs'
                           : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                       ]"
                     >
-                      <span class="w-3 h-3 rounded-full bg-white border border-slate-300 shadow-2xs"></span>
+                      <span class="w-2.5 h-2.5 rounded-full bg-white border border-slate-300 shadow-2xs"></span>
                       <span>{{ t('pn_mask_color_white') }}</span>
                     </button>
 
@@ -290,19 +289,19 @@
                     <button 
                       type="button" 
                       @click="setMaskColorPreset('cream')" 
-                      class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1.5 font-semibold cursor-pointer"
+                      class="text-[9.5px] px-2 py-0.5 rounded-lg border transition flex items-center space-x-1 font-semibold cursor-pointer"
                       :class="[
                         pnMaskColorMode === 'cream'
                           ? 'border-violet-600 bg-violet-100/90 text-violet-900 font-bold shadow-2xs'
                           : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                       ]"
                     >
-                      <span class="w-3 h-3 rounded-full bg-[#fbf9f4] border border-amber-200 shadow-2xs"></span>
+                      <span class="w-2.5 h-2.5 rounded-full bg-[#fbf9f4] border border-amber-200 shadow-2xs"></span>
                       <span>{{ t('pn_mask_color_cream') }}</span>
                     </button>
 
                     <!-- Custom Color Picker -->
-                    <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
+                    <div class="relative w-5 h-5 rounded-md border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
                       <input 
                         type="color" 
                         v-model="pnMaskColor" 
@@ -316,40 +315,58 @@
                     <button 
                       type="button" 
                       @click="samplePipetteOrScreen"
-                      class="text-[10px] bg-slate-100 hover:bg-violet-50 text-slate-700 hover:text-violet-700 px-2 py-1 rounded-lg border border-slate-200 transition flex items-center space-x-1 font-semibold cursor-pointer"
+                      class="text-[9.5px] bg-slate-100 hover:bg-violet-50 text-slate-700 hover:text-violet-700 px-1.5 py-0.5 rounded-lg border border-slate-200 transition flex items-center space-x-1 font-semibold cursor-pointer"
                       :title="t('pn_mask_color_sample')"
                     >
-                      <Pipette class="w-3 h-3 text-violet-600" />
+                      <Pipette class="w-2.5 h-2.5 text-violet-600" />
                       <span>{{ t('pn_mask_color_sample') }}</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              <!-- Typography: Font Size & Text Color -->
-              <div class="grid grid-cols-2 gap-3 pt-1 border-t border-slate-200/70">
-                <div>
-                  <div class="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                    <span>{{ t('wm_size_label') || 'Font Size' }}</span>
-                    <span class="text-violet-700 font-mono font-bold">{{ pnFontSize }}pt</span>
+              <!-- Typography & Margins: Sliders paired side-by-side -->
+              <div class="pt-1.5 border-t border-slate-200/70 space-y-1.5">
+                <div class="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <div class="flex justify-between text-[10.5px] font-semibold text-slate-700 mb-0.5">
+                      <span>{{ t('wm_size_label') || 'Font Size' }}</span>
+                      <span class="text-violet-700 font-mono font-bold">{{ pnFontSize }}pt</span>
+                    </div>
+                    <input 
+                      v-model.number="pnFontSize" 
+                      @input="renderPreview"
+                      type="range" 
+                      min="8" 
+                      max="22" 
+                      class="w-full accent-violet-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                    >
                   </div>
-                  <input 
-                    v-model.number="pnFontSize" 
-                    @input="renderPreview"
-                    type="range" 
-                    min="8" 
-                    max="22" 
-                    class="w-full accent-violet-600 cursor-pointer"
-                  >
+
+                  <div>
+                    <div class="flex justify-between text-[10.5px] font-semibold text-slate-700 mb-0.5">
+                      <span>{{ t('pn_margin') || 'Edge Margin' }}</span>
+                      <span class="text-slate-500 font-mono font-bold">{{ pnMargin }}pt</span>
+                    </div>
+                    <input 
+                      v-model.number="pnMargin" 
+                      @input="renderPreview"
+                      type="range" 
+                      min="12" 
+                      max="48" 
+                      class="w-full accent-violet-600 cursor-pointer h-1.5 bg-slate-200 rounded-lg"
+                    >
+                  </div>
                 </div>
 
-                <div>
-                  <div class="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                    <span>{{ t('pn_text_color') }}</span>
-                    <span class="text-slate-500 font-mono uppercase text-[10px]">{{ pnTextColor }}</span>
+                <!-- Text Color Row -->
+                <div class="flex items-center justify-between text-[10.5px]">
+                  <div class="flex items-center space-x-1.5">
+                    <span class="font-semibold text-slate-700">{{ t('pn_text_color') }}:</span>
+                    <span class="text-slate-500 font-mono uppercase text-[9.5px]">{{ pnTextColor }}</span>
                   </div>
-                  <div class="flex items-center space-x-2">
-                    <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
+                  <div class="flex items-center space-x-1.5">
+                    <div class="relative w-5 h-5 rounded-md border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
                       <input 
                         type="color" 
                         v-model="pnTextColor" 
@@ -362,11 +379,11 @@
                       <button 
                         v-for="c in ['#334155', '#000000', '#1e293b', '#1d4ed8']" 
                         :key="c"
-                        type="button"
+                        type="button" 
                         @click="setTextColor(c)"
                         :style="{ backgroundColor: c }"
                         :class="[
-                          'w-4 h-4 rounded-full transition cursor-pointer',
+                          'w-3.5 h-3.5 rounded-full transition cursor-pointer',
                           pnTextColor.toLowerCase() === c.toLowerCase() ? 'ring-2 ring-violet-600 scale-110' : 'opacity-80 hover:opacity-100'
                         ]"
                       ></button>
@@ -374,29 +391,13 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Margin Slider -->
-              <div>
-                <div class="flex justify-between text-[11px] font-semibold text-slate-700 mb-1">
-                  <span>{{ t('pn_margin') || 'Edge Margin' }}</span>
-                  <span class="text-slate-500 font-mono font-bold">{{ pnMargin }}pt</span>
-                </div>
-                <input 
-                  v-model.number="pnMargin" 
-                  @input="renderPreview"
-                  type="range" 
-                  min="12" 
-                  max="48" 
-                  class="w-full accent-violet-600 cursor-pointer"
-                >
-              </div>
             </div>
           </div>
 
           <!-- Right Live Canvas Preview (7 cols on lg) -->
-          <div class="lg:col-span-7 bg-slate-100/70 rounded-2xl p-3 sm:p-4 border border-slate-200/80 flex flex-col justify-between overflow-hidden min-h-0">
+          <div class="lg:col-span-7 bg-slate-100/70 rounded-2xl p-2.5 sm:p-3 border border-slate-200/80 flex flex-col justify-between overflow-hidden min-h-0">
             <!-- Preview Header & Page Switcher -->
-            <div class="flex items-center justify-between gap-2 mb-2 shrink-0">
+            <div class="flex items-center justify-between gap-2 mb-1.5 shrink-0">
               <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-700">
                 <span class="w-2 h-2 rounded-full bg-violet-600"></span>
                 <span>{{ t('pn_live_preview') }} · P.{{ previewPageIndex + 1 }}</span>
@@ -408,18 +409,18 @@
                   type="button" 
                   :disabled="previewPageIndex <= 0" 
                   @click="changePreviewPage(previewPageIndex - 1)"
-                  class="px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold disabled:opacity-40 transition cursor-pointer"
+                  class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold disabled:opacity-40 transition cursor-pointer"
                 >
                   ◀
                 </button>
-                <span class="font-mono font-bold text-slate-800 px-2 py-0.5 bg-white rounded-md border border-slate-200">
+                <span class="font-mono font-bold text-slate-800 px-2 py-0.5 bg-white rounded-md border border-slate-200 text-xs">
                   {{ previewPageIndex + 1 }} / {{ totalPages }}
                 </span>
                 <button 
                   type="button" 
                   :disabled="previewPageIndex >= totalPages - 1" 
                   @click="changePreviewPage(previewPageIndex + 1)"
-                  class="px-2 py-1 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold disabled:opacity-40 transition cursor-pointer"
+                  class="px-2 py-0.5 rounded-lg bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 font-bold disabled:opacity-40 transition cursor-pointer"
                 >
                   ▶
                 </button>
@@ -429,7 +430,7 @@
                   <button 
                     type="button" 
                     @click="changePreviewPage(0)"
-                    :class="['px-2 py-0.5 rounded-md text-[10px] font-semibold border transition cursor-pointer', previewPageIndex === 0 ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']"
+                    :class="['px-1.5 py-0.5 rounded-md text-[10px] font-semibold border transition cursor-pointer', previewPageIndex === 0 ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']"
                   >
                     {{ t('pn_quick_cover', 'Cover') }}
                   </button>
@@ -437,7 +438,7 @@
                     v-if="totalPages > 1"
                     type="button" 
                     @click="changePreviewPage(1)"
-                    :class="['px-2 py-0.5 rounded-md text-[10px] font-semibold border transition cursor-pointer', previewPageIndex === 1 ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']"
+                    :class="['px-1.5 py-0.5 rounded-md text-[10px] font-semibold border transition cursor-pointer', previewPageIndex === 1 ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']"
                   >
                     P.2
                   </button>
@@ -445,7 +446,7 @@
                     v-if="totalPages > 2"
                     type="button" 
                     @click="changePreviewPage(totalPages - 1)"
-                    :class="['px-2 py-0.5 rounded-md text-[10px] font-semibold border transition cursor-pointer', previewPageIndex === totalPages - 1 ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']"
+                    :class="['px-1.5 py-0.5 rounded-md text-[10px] font-semibold border transition cursor-pointer', previewPageIndex === totalPages - 1 ? 'bg-violet-600 text-white border-violet-600' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50']"
                   >
                     P.{{ totalPages }}
                   </button>
@@ -455,7 +456,7 @@
 
             <!-- Canvas Container -->
             <div class="bg-white p-2 rounded-2xl shadow-md border border-slate-200/80 max-w-full flex-1 w-full overflow-hidden flex items-center justify-center relative min-h-0">
-              <canvas ref="previewCanvasRef" class="max-h-[380px] max-w-full object-contain rounded-lg shadow-2xs"></canvas>
+              <canvas ref="previewCanvasRef" class="max-h-[350px] max-w-full object-contain rounded-lg shadow-2xs"></canvas>
 
               <!-- Cover Skipped Indicator Overlay -->
               <div 
@@ -480,7 +481,7 @@
         />
 
         <!-- Assembly Bottom Action & Export Configuration Bar -->
-        <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
           <!-- Left: Output Filename & Auto-save Checkbox -->
           <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center space-x-1.5">
@@ -491,7 +492,7 @@
                 v-model="customOutputBaseName"
                 type="text" 
                 :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
-                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-violet-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
+                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 focus:bg-white focus:ring-2 focus:ring-violet-500 outline-hidden font-medium text-slate-700 w-44 sm:w-60"
               >
             </div>
 
@@ -499,7 +500,7 @@
               <input 
                 type="checkbox" 
                 v-model="autoSaveToVault" 
-                class="w-4 h-4 text-violet-600 rounded-md border-slate-300 focus:ring-violet-500 cursor-pointer"
+                class="w-3.5 h-3.5 text-violet-600 rounded-md border-slate-300 focus:ring-violet-500 cursor-pointer"
               >
               <span>{{ t('vault_autosave_checkbox') }}</span>
             </label>
@@ -509,7 +510,7 @@
           <button 
             :disabled="isProcessing || isLoading"
             @click="executePageNumber" 
-            class="bg-violet-600 hover:bg-violet-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-violet-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+            class="bg-violet-600 hover:bg-violet-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-5 py-2 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-violet-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
             <span v-if="!isProcessing">{{ t('pn_download_btn') }}</span>
             <span v-else>{{ t('loading') || 'Processing...' }}</span>

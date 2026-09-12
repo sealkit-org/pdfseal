@@ -969,6 +969,7 @@
   "page_number_desc": "Insert custom page numbers, wipe legacy numbers with whiteout masks, and preview live.",
   "page_number_drop_title": "Select PDF to Number",
   "page_number_drop_subtitle": "Add sequential page numbers with flexible format macros and whiteout ribbons",
+  "pn_controls": "Page Number Controls",
   "pn_format_label": "Number Format",
   "pn_format_placeholder": "e.g. Page {n} of {total}",
   "pn_preset_page_n": "Page {n}",
