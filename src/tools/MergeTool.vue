@@ -76,9 +76,12 @@
 
       <!-- 2. ACTIVE ASSEMBLY WORKSPACE OR UNIFIED RESULT DELIVERY -->
       <div v-else class="flex-1 flex flex-col justify-between pt-4">
-        <!-- 2A. Unified Result Delivery View upon Completion -->
+        <!-- 2A. Unified Processing & Result Delivery View -->
         <ResultDeliveryView 
-          v-if="lastExportedFile && !isProcessing"
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
           :file="lastExportedFile"
           source-tool="merge"
           :page-count="lastExportedPageCount"
@@ -352,6 +355,8 @@ const autoSaveToVault = ref(userSettings.autoSaveToVault !== false);
 const lastExportedFile = ref(null);
 const lastExportedPageCount = ref(0);
 const showNextActions = ref(false);
+const progressPercent = ref(0);
+const progressMessage = ref('');
 
 function handleReDownload() {
   if (!lastExportedFile.value) return;
@@ -366,12 +371,16 @@ function handleNewTask() {
   lastExportedFile.value = null;
   lastExportedPageCount.value = 0;
   showNextActions.value = false;
+  progressPercent.value = 0;
+  progressMessage.value = '';
   customOutputBaseName.value = `${userSettings.defaultExportPrefix || 'PDFSeal'}_Merged_${new Date().toISOString().slice(0, 10)}`;
 }
 
 function handleBackToEdit() {
   lastExportedFile.value = null;
   showNextActions.value = false;
+  progressPercent.value = 0;
+  progressMessage.value = '';
 }
 
 watch(() => userSettings.autoSaveToVault, (newVal) => {
@@ -479,13 +488,16 @@ function openUnlockForFile(file) {
   isPasswordOpen.value = true;
 }
 
-async function generateMergedBytes() {
+async function generateMergedBytes(onProgress = null) {
   if (files.value.length < 2) {
     alert(t('alert_min_2_files'));
     return null;
   }
 
   // 1. Phase 1: Security Scan
+  if (onProgress) onProgress(10, t('merge_progress_check') || '正在安全校验输入文档...');
+  await new Promise(r => setTimeout(r, 60));
+
   for (const file of files.value) {
     const arrayBuffer = await file.arrayBuffer();
     const security = await verifyPdfSecurity(arrayBuffer, filePasswords.value[file.name] || '');
@@ -498,7 +510,15 @@ async function generateMergedBytes() {
 
   // 2. Phase 2: In-Memory Infallible Decryption & Page Assembly
   const mergedPdf = await PDFDocument.create();
-  for (const file of files.value) {
+  const totalFiles = files.value.length;
+  for (let i = 0; i < totalFiles; i++) {
+    const file = files.value[i];
+    const pct = Math.min(85, Math.round(20 + ((i + 1) / totalFiles) * 60));
+    if (onProgress) {
+      onProgress(pct, t('merge_progress_assembling', { current: i + 1, total: totalFiles, name: file.name }));
+    }
+    await new Promise(r => setTimeout(r, 80));
+
     const arrayBuffer = await file.arrayBuffer();
     const pwd = filePasswords.value[file.name] || '';
 
@@ -507,10 +527,14 @@ async function generateMergedBytes() {
     copiedPages.forEach(p => mergedPdf.addPage(p));
   }
 
+  if (onProgress) onProgress(90, t('merge_progress_saving') || '正在完成文档封印与保存...');
+  await new Promise(r => setTimeout(r, 60));
+
   const mergedBytes = await mergedPdf.save();
   const cleanBase = (customOutputBaseName.value?.trim() || `PDFSeal_Merged_${Date.now()}`).replace(/\.pdf$/i, '');
   const finalName = `${cleanBase}.pdf`;
 
+  if (onProgress) onProgress(100, t('merge_progress_done') || '合并完成！');
   return { mergedBytes, finalName, pageCount: mergedPdf.getPageCount() };
 }
 
@@ -521,12 +545,19 @@ async function executeMerge() {
   }
 
   isProcessing.value = true;
+  progressPercent.value = 10;
+  progressMessage.value = t('merge_progress_check') || '正在安全校验输入文档...';
+
   logger.info('MERGE_START', `Executing merge for ${files.value.length} files`, {
     fileList: files.value.map(f => f.name)
   });
 
   try {
-    const result = await generateMergedBytes();
+    const onProgress = (pct, msg) => {
+      progressPercent.value = pct;
+      if (msg) progressMessage.value = msg;
+    };
+    const result = await generateMergedBytes(onProgress);
     if (!result) return;
     const { mergedBytes, finalName, pageCount } = result;
 

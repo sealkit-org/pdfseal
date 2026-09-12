@@ -187,6 +187,11 @@ async function runMergeBusinessTest() {
     console.log(`  ✓ Found execution button: "${btnText}". Clicking...`);
     await mergeEl.click();
     console.log('  ✓ Clicked Merge button. Processing in local browser memory...');
+    await new Promise(r => setTimeout(r, 70));
+    try {
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'merge_02b_processing_state.png') });
+      console.log('  📷 Screenshot saved: merge_02b_processing_state.png');
+    } catch (e) {}
 
     // Wait for file download or captured bytes in memory
     console.log('  ⏳ Awaiting downloaded merged PDF file...');

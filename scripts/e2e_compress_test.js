@@ -242,6 +242,11 @@ async function runCompressBusinessTest() {
     if (!actionEl) throw new Error('Compress execution action button not found');
     await actionEl.click();
     console.log('  ✓ Clicked "立即压缩并下载 PDF". Processing pages in browser memory...');
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'compress_02b_processing_state.png') });
+      console.log('  📷 Screenshot saved: compress_02b_processing_state.png');
+    } catch (e) {}
 
     // Await download completion
     console.log('  ⏳ Awaiting compressed PDF file output...');
