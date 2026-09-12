@@ -13,16 +13,17 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
 
   // Mirrors NextActionBanner.vue priorityMap — keep in sync when updating the component
   const priorityMap = {
-    merge: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
-    compress: ['protect', 'sign', 'watermark', 'pdf_to_image', 'vault'],
-    organize: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
-    split: ['compress', 'sign', 'protect', 'pdf_to_image', 'vault'],
-    watermark: ['protect', 'compress', 'sign', 'vault'],
-    protect: ['watermark', 'compress', 'vault'],
-    sanitize: ['protect', 'watermark', 'compress', 'sign', 'vault'],
+    merge: ['compress', 'sign', 'protect', 'pdf_to_image', 'page_number'],
+    compress: ['protect', 'sign', 'watermark', 'pdf_to_image', 'page_number'],
+    organize: ['compress', 'sign', 'protect', 'pdf_to_image', 'page_number'],
+    split: ['compress', 'sign', 'protect', 'pdf_to_image', 'organize'],
+    page_number: ['compress', 'protect', 'sign', 'pdf_to_image', 'watermark'],
+    watermark: ['protect', 'compress', 'sign', 'sanitize', 'page_number'],
+    protect: ['watermark', 'compress', 'sign', 'sanitize', 'page_number'],
+    sanitize: ['protect', 'watermark', 'compress', 'sign', 'page_number'],
     unlock: ['split', 'organize', 'compress', 'watermark', 'sign'],
-    sign: ['protect', 'compress', 'watermark', 'vault'],
-    image_to_pdf: ['watermark', 'compress', 'protect', 'sign', 'vault']
+    sign: ['protect', 'compress', 'watermark', 'page_number', 'pdf_to_image'],
+    image_to_pdf: ['watermark', 'compress', 'protect', 'sign', 'page_number']
   };
 
   it('should define targeted recommendations for all 11 tools', () => {
@@ -33,6 +34,8 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
       expect(priorityMap[tool].length).toBeGreaterThanOrEqual(3);
       // Tool should not recommend itself
       expect(priorityMap[tool]).not.toContain(tool);
+      // Tool relay chain should only recommend processing tools, not storage vault
+      expect(priorityMap[tool]).not.toContain('vault');
     }
     // New tool must appear as a relay target of the core PDF tools
     expect(priorityMap.merge).toContain('pdf_to_image');
@@ -94,7 +97,11 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
       'next_action_sanitize',
       'next_action_merge',
       'next_action_vault',
-      'next_action_pdf_to_image'
+      'next_action_pdf_to_image',
+      'vault_status_saved',
+      'vault_status_view',
+      'vault_btn_save_now',
+      'vault_status_saving'
     ];
 
     const locales = { zh, en, de, es, fr };
