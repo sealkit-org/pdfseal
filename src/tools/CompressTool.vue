@@ -125,51 +125,8 @@
             </button>
           </div>
 
-          <!-- If compressed and collapsed: Show sleek summary pill -->
-          <div 
-            v-if="lastExportedFile && !isConfigExpanded" 
-            class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3 animate-in fade-in duration-200 text-xs"
-          >
-            <div class="flex items-center space-x-2.5 min-w-0">
-              <div class="w-7 h-7 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
-                ⚙️
-              </div>
-              <div class="flex items-center space-x-2 truncate">
-                <span class="font-bold text-slate-700">{{ t('compress_mode_active_label') }}:</span>
-                <span class="font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-800">
-                  {{ currentLevelTitle }}
-                </span>
-                <span v-if="selectedLevel === 'target'" class="font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">
-                  ≤ {{ targetSizeMb }} MB
-                </span>
-              </div>
-            </div>
-
-            <button 
-              type="button" 
-              @click="isConfigExpanded = true"
-              class="text-xs text-indigo-600 hover:text-indigo-800 font-bold px-3 py-1.5 rounded-xl hover:bg-indigo-50 border border-indigo-200 transition cursor-pointer flex items-center space-x-1 shrink-0"
-            >
-              <span>{{ t('compress_btn_edit_params') }}</span>
-              <span>✏️</span>
-            </button>
-          </div>
-
-          <!-- If not compressed, OR user clicked [修改参数]: Show full 4 cards & Target size panel -->
-          <div v-else class="space-y-3">
-            <div v-if="lastExportedFile" class="flex items-center justify-between text-xs pb-0.5">
-              <span class="font-bold text-slate-700">{{ t('compress_choose_mode', '选择压缩模式') }}</span>
-              <button 
-                type="button" 
-                @click="isConfigExpanded = false"
-                class="text-[11px] text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
-              >
-                {{ t('compress_btn_collapse') }} ▲
-              </button>
-            </div>
-
-            <!-- Compression Preset Selector Cards (4 Options) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <!-- Compression Preset Selector Cards (4 Options) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               <!-- 1. Balanced Compression (Recommended) -->
               <div 
                 @click="selectedLevel = 'balanced'"
@@ -362,7 +319,6 @@
                 💡 <strong>{{ t('compress_scanned_warn_title', 'Scanned Document Hint') }}</strong>: {{ t('compress_scanned_warn_desc', 'This document consists mostly of images. "Lossless" mode will NOT compress image pixels. To significantly reduce size, please switch to "High Quality (200~300 DPI)", which preserves print quality while shrinking the file by 50%~75%!') }}
               </p>
             </div>
-          </div>
 
           <!-- Progress Bar during compression -->
           <div v-if="isProcessing" class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 animate-in fade-in duration-200">
@@ -558,15 +514,6 @@ const savedPercent = ref(0);
 const detectedType = ref(null); // 'vector' | 'scanned'
 const selectedLevel = ref('balanced'); // 'extreme' | 'balanced' | 'target' | 'lossless'
 const targetSizeMb = ref(2.0);
-const isConfigExpanded = ref(true);
-
-const currentLevelTitle = computed(() => {
-  if (selectedLevel.value === 'balanced') return t('compress_level_balanced');
-  if (selectedLevel.value === 'extreme') return t('compress_level_extreme');
-  if (selectedLevel.value === 'target') return t('compress_level_target');
-  if (selectedLevel.value === 'lossless') return t('compress_level_lossless');
-  return '';
-});
 
 // Diff Preview Modal & Thumbnails State
 const isDiffModalOpen = ref(false);
@@ -624,7 +571,6 @@ function handleVaultFilesSelected(selectedFiles) {
 async function loadFile(file, password = '') {
   showNextActions.value = false;
   lastExportedFile.value = null;
-  isConfigExpanded.value = true;
   pendingFileName.value = file.name;
   pendingFileObj = file;
 
@@ -721,7 +667,6 @@ function reset() {
   originalThumbnailUrl.value = '';
   compressedThumbnailUrl.value = '';
   isDiffModalOpen.value = false;
-  isConfigExpanded.value = true;
 }
 
 function handleReDownload() {
@@ -768,7 +713,6 @@ async function executeCompress() {
       arrayBuffer: compressedBytes,
       size: compressedBytes.byteLength
     };
-    isConfigExpanded.value = false;
     showNextActions.value = true;
 
     compressedSizeMb.value = (compressedBytes.byteLength / (1024 * 1024)).toFixed(2);
