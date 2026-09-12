@@ -663,7 +663,7 @@
               <div class="flex flex-wrap gap-1.5 mt-2">
                 <button 
                   type="button" 
-                  v-for="macro in ['{n}', '{n} / {total}', 'Page {n} of {total}', '第 {n} 页，共 {total} 页']"
+                  v-for="macro in ['{n}', '{n} / {total}', t('pn_preset_page_n'), t('pn_preset_page_n_of_total')]"
                   :key="macro"
                   @click="editingStepDraft.format = macro"
                   class="text-[11px] px-2 py-0.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-mono transition cursor-pointer"
