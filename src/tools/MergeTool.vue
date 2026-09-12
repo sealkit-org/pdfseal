@@ -74,174 +74,184 @@
         </div>
       </div>
 
-      <!-- 2. ACTIVE ASSEMBLY WORKSPACE -->
+      <!-- 2. ACTIVE ASSEMBLY WORKSPACE OR UNIFIED RESULT DELIVERY -->
       <div v-else class="flex-1 flex flex-col justify-between pt-4">
-        <!-- Assembly Control Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 shrink-0">
-          <div class="flex items-center space-x-2">
-            <span class="text-xs sm:text-sm font-extrabold text-slate-800">
-              {{ t('merge_selected_title') }} ({{ files.length }})
-            </span>
-            <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">
-              {{ t('merge_selected_hint') }}
-            </span>
-          </div>
-
-          <!-- Quick Action Buttons -->
-          <div class="flex items-center space-x-1.5 sm:space-x-2">
-            <!-- Add from Computer -->
-            <button 
-              @click="fileInputRef.click()"
-              class="text-xs text-blue-600 hover:bg-blue-50 font-semibold px-2.5 py-1.5 rounded-xl border border-blue-200 transition flex items-center space-x-1 cursor-pointer"
-            >
-              <Plus class="w-3.5 h-3.5" />
-              <span>{{ t('merge_btn_from_local') }}</span>
-            </button>
-
-            <!-- Add from Vault -->
-            <button 
-              @click="isVaultPickerOpen = true"
-              class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
-            >
-              <FolderLock class="w-3.5 h-3.5 text-blue-600" />
-              <span>{{ t('merge_btn_from_vault') }}</span>
-            </button>
-
-            <!-- Reverse Order -->
-            <button 
-              @click="reverseFiles" 
-              class="text-xs text-slate-600 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
-              :title="t('merge_btn_reverse')"
-            >
-              <ArrowUpDown class="w-3.5 h-3.5" />
-              <span class="hidden sm:inline">{{ t('merge_btn_reverse') }}</span>
-            </button>
-
-            <!-- Clear All -->
-            <button 
-              @click="clearAll" 
-              class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
-            >
-              {{ t('btn_clear_all') }}
-            </button>
-          </div>
-        </div>
-
-        <input 
-          ref="fileInputRef" 
-          type="file" 
-          multiple 
-          accept="application/pdf" 
-          class="hidden" 
-          @change="onFileSelected" 
+        <!-- 2A. Unified Result Delivery View upon Completion -->
+        <ResultDeliveryView 
+          v-if="lastExportedFile && !isProcessing"
+          :file="lastExportedFile"
+          source-tool="merge"
+          :page-count="lastExportedPageCount"
+          @redownload="handleReDownload"
+          @new-task="handleNewTask"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
         >
+          <template #metrics>
+            <span class="inline-flex items-center space-x-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/60 shadow-2xs">
+              <Layers class="w-3.5 h-3.5 text-blue-600" />
+              <span>{{ t('result_metric_merged', { count: files.length }) || `由 ${files.length} 份独立文件合并而成` }}</span>
+            </span>
+          </template>
+        </ResultDeliveryView>
 
-        <!-- Sortable Assembly Cards Board -->
-        <div class="flex-1 my-3 overflow-y-auto max-h-[460px] pr-1 space-y-2">
-          <div 
-            v-for="(f, idx) in files" 
-            :key="f.id || f.name + idx"
-            class="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-white border border-slate-200/80 hover:border-blue-300 hover:shadow-md transition cursor-grab active:cursor-grabbing group select-none"
-          >
-            <!-- Left Info & Sequence -->
-            <div class="flex items-center space-x-3 min-w-0 flex-1">
-              <!-- Drag Handle -->
-              <GripVertical class="w-4 h-4 text-slate-400 group-hover:text-slate-700 shrink-0" />
-              
-              <!-- Sequence Number -->
-              <div class="w-8 h-8 rounded-xl bg-blue-100/80 text-blue-700 flex items-center justify-center font-extrabold text-xs font-mono shrink-0 shadow-2xs">
-                {{ String(idx + 1).padStart(2, '0') }}
-              </div>
-
-              <!-- Details -->
-              <div class="min-w-0 truncate">
-                <div class="flex items-center space-x-2">
-                  <p class="text-xs font-bold text-slate-800 truncate" :title="f.name">
-                    {{ f.name }}
-                  </p>
-                  <!-- Source Indicator -->
-                  <span 
-                    v-if="f.source === 'vault'" 
-                    class="text-[9px] font-bold px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200/60 rounded-md shrink-0"
-                  >
-                    🗂️ {{ t('source_vault') }}
-                  </span>
-                  <span 
-                    v-else 
-                    class="text-[9px] font-bold px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded-md shrink-0"
-                  >
-                    💻 {{ t('source_local') }}
-                  </span>
-                </div>
-
-                <div class="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center space-x-2">
-                  <span>{{ (f.size / 1024 / 1024).toFixed(2) }} MB</span>
-                  <span>•</span>
-                  <!-- Encryption / Unlock Badge -->
-                  <button 
-                    type="button"
-                    v-if="encryptedFiles.has(f.name) && !filePasswords[f.name]" 
-                    @click.stop="openUnlockForFile(f)"
-                    class="text-[10px] bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 px-2 py-0.2 rounded-md font-bold cursor-pointer transition flex items-center space-x-0.5"
-                  >
-                    <Lock class="w-2.5 h-2.5 mr-0.5" />
-                    <span>{{ t('badge_pwd_required') }}</span>
-                  </button>
-                  <span v-else-if="filePasswords[f.name]" class="text-[10px] bg-emerald-50 text-emerald-800 border border-emerald-200 px-2 py-0.2 rounded-md font-bold flex items-center space-x-0.5">
-                    <Unlock class="w-2.5 h-2.5 mr-0.5" />
-                    <span>{{ t('badge_unlocked') }}</span>
-                  </span>
-                </div>
-              </div>
+        <!-- 2B. Staging Workspace & Bottom Execution Bar -->
+        <div v-else class="flex-1 flex flex-col justify-between min-h-0">
+          <!-- Assembly Control Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 shrink-0">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs sm:text-sm font-extrabold text-slate-800">
+                {{ t('merge_selected_title') }} ({{ files.length }})
+              </span>
+              <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">
+                {{ t('merge_selected_hint') }}
+              </span>
             </div>
 
-            <!-- Right Nudge & Delete Actions -->
-            <div class="flex items-center space-x-1 shrink-0 ml-3">
-              <!-- Move Up -->
+            <!-- Quick Action Buttons -->
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
+              <!-- Add from Computer -->
               <button 
-                @click.stop="moveUp(idx)" 
-                :disabled="idx === 0"
-                class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-25 disabled:hover:bg-transparent transition cursor-pointer"
-                :title="t('action_move_up', 'Move Up')"
+                @click="fileInputRef.click()"
+                class="text-xs text-blue-600 hover:bg-blue-50 font-semibold px-2.5 py-1.5 rounded-xl border border-blue-200 transition flex items-center space-x-1 cursor-pointer"
               >
-                <ArrowUp class="w-3.5 h-3.5" />
+                <Plus class="w-3.5 h-3.5" />
+                <span>{{ t('merge_btn_from_local') }}</span>
               </button>
 
-              <!-- Move Down -->
+              <!-- Add from Vault -->
               <button 
-                @click.stop="moveDown(idx)" 
-                :disabled="idx === files.length - 1"
-                class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-25 disabled:hover:bg-transparent transition cursor-pointer"
-                :title="t('action_move_down', 'Move Down')"
+                @click="isVaultPickerOpen = true"
+                class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
               >
-                <ArrowDown class="w-3.5 h-3.5" />
+                <FolderLock class="w-3.5 h-3.5 text-blue-600" />
+                <span>{{ t('merge_btn_from_vault') }}</span>
               </button>
 
-              <!-- Remove -->
+              <!-- Reverse Order -->
               <button 
-                @click.stop="removeFile(idx)" 
-                class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer ml-1"
-                :title="t('btn_delete')"
+                @click="reverseFiles" 
+                class="text-xs text-slate-600 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
+                :title="t('merge_btn_reverse')"
               >
-                <Trash2 class="w-3.5 h-3.5" />
+                <ArrowUpDown class="w-3.5 h-3.5" />
+                <span class="hidden sm:inline">{{ t('merge_btn_reverse') }}</span>
+              </button>
+
+              <!-- Clear All -->
+              <button 
+                @click="clearAll" 
+                class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
+              >
+                {{ t('btn_clear_all') }}
               </button>
             </div>
           </div>
-        </div>
 
-        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
-        <div class="shrink-0 space-y-2.5 pt-2">
-          <!-- Next Action Relay Banner -->
-          <NextActionBanner 
-            v-if="showNextActions && lastExportedFile"
-            :current-tool="'merge'"
-            :file="lastExportedFile"
-            @send-to-tool="(tId) => emit('send-to-tool', tId)"
-            @close="showNextActions = false"
-          />
+          <input 
+            ref="fileInputRef" 
+            type="file" 
+            multiple 
+            accept="application/pdf" 
+            class="hidden" 
+            @change="onFileSelected" 
+          >
+
+          <!-- Sortable Assembly Cards Board -->
+          <div class="flex-1 my-3 overflow-y-auto max-h-[460px] pr-1 space-y-2">
+            <div 
+              v-for="(f, idx) in files" 
+              :key="f.id || f.name + idx"
+              class="flex items-center justify-between p-3 rounded-2xl bg-slate-50/80 hover:bg-white border border-slate-200/80 hover:border-blue-300 hover:shadow-md transition cursor-grab active:cursor-grabbing group select-none"
+            >
+              <!-- Left Info & Sequence -->
+              <div class="flex items-center space-x-3 min-w-0 flex-1">
+                <!-- Drag Handle -->
+                <GripVertical class="w-4 h-4 text-slate-400 group-hover:text-slate-700 shrink-0" />
+                
+                <!-- Sequence Number -->
+                <div class="w-8 h-8 rounded-xl bg-blue-100/80 text-blue-700 flex items-center justify-center font-extrabold text-xs font-mono shrink-0 shadow-2xs">
+                  {{ String(idx + 1).padStart(2, '0') }}
+                </div>
+
+                <!-- Details -->
+                <div class="min-w-0 truncate">
+                  <div class="flex items-center space-x-2">
+                    <p class="text-xs font-bold text-slate-800 truncate" :title="f.name">
+                      {{ f.name }}
+                    </p>
+                    <!-- Source Indicator -->
+                    <span 
+                      v-if="f.source === 'vault'" 
+                      class="text-[9px] font-bold px-1.5 py-0.2 bg-blue-50 text-blue-700 border border-blue-200/60 rounded-md shrink-0"
+                    >
+                      🗂️ {{ t('source_vault') }}
+                    </span>
+                    <span 
+                      v-else 
+                      class="text-[9px] font-bold px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded-md shrink-0"
+                    >
+                      💻 {{ t('source_local') }}
+                    </span>
+                  </div>
+
+                  <div class="text-[11px] text-slate-400 font-mono mt-0.5 flex items-center space-x-2">
+                    <span>{{ (f.size / 1024 / 1024).toFixed(2) }} MB</span>
+                    <span>•</span>
+                    <!-- Encryption / Unlock Badge -->
+                    <span 
+                      v-if="encryptedFiles.has(f.name)" 
+                      class="inline-flex items-center space-x-1 text-emerald-600 font-semibold"
+                    >
+                      <Unlock class="w-3 h-3 text-emerald-600" />
+                      <span>{{ t('state_unlocked') }}</span>
+                    </span>
+                    <span 
+                      v-else 
+                      class="text-slate-400"
+                    >
+                      {{ t('state_no_password') }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Reordering & Removal Controls -->
+              <div class="flex items-center space-x-1 shrink-0 ml-3">
+                <!-- Move Up -->
+                <button 
+                  @click.stop="moveUp(idx)" 
+                  :disabled="idx === 0"
+                  class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-25 disabled:hover:bg-transparent transition cursor-pointer"
+                  :title="t('action_move_up', 'Move Up')"
+                >
+                  <ArrowUp class="w-3.5 h-3.5" />
+                </button>
+
+                <!-- Move Down -->
+                <button 
+                  @click.stop="moveDown(idx)" 
+                  :disabled="idx === files.length - 1"
+                  class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg disabled:opacity-25 disabled:hover:bg-transparent transition cursor-pointer"
+                  :title="t('action_move_down', 'Move Down')"
+                >
+                  <ArrowDown class="w-3.5 h-3.5" />
+                </button>
+
+                <!-- Remove -->
+                <button 
+                  @click.stop="removeFile(idx)" 
+                  class="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition cursor-pointer ml-1"
+                  :title="t('btn_delete')"
+                >
+                  <Trash2 class="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </div>
+          </div>
 
           <!-- Bottom Execution & Output Settings Bar -->
-          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
             <!-- Output Filename & Vault Auto-Save Setting -->
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex items-center space-x-1.5">
@@ -309,7 +319,7 @@
 import { ref, watch, nextTick, onMounted, onActivated } from 'vue';
 import { 
   Files, Plus, GripVertical, Trash2, Lock, Unlock, Download, 
-  Loader2, FolderLock, ArrowUpDown, ArrowUp, ArrowDown 
+  Loader2, FolderLock, ArrowUpDown, ArrowUp, ArrowDown, Layers
 } from 'lucide-vue-next';
 import { PDFDocument } from 'pdf-lib';
 import Sortable from 'sortablejs';
@@ -321,6 +331,7 @@ import { saveFile } from '../utils/vaultDb';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import NextActionBanner from '../components/NextActionBanner.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 
@@ -337,9 +348,31 @@ const isVaultPickerOpen = ref(false);
 const customOutputBaseName = ref(`${userSettings.defaultExportPrefix || 'PDFSeal'}_Merged_${new Date().toISOString().slice(0, 10)}`);
 const autoSaveToVault = ref(userSettings.autoSaveToVault !== false);
 
-// Next Action Relay State
+// Next Action Relay State & Result View
 const lastExportedFile = ref(null);
+const lastExportedPageCount = ref(0);
 const showNextActions = ref(false);
+
+function handleReDownload() {
+  if (!lastExportedFile.value) return;
+  triggerDownload(
+    new Blob([lastExportedFile.value.arrayBuffer], { type: 'application/pdf' }),
+    lastExportedFile.value.name
+  );
+}
+
+function handleNewTask() {
+  clearAll();
+  lastExportedFile.value = null;
+  lastExportedPageCount.value = 0;
+  showNextActions.value = false;
+  customOutputBaseName.value = `${userSettings.defaultExportPrefix || 'PDFSeal'}_Merged_${new Date().toISOString().slice(0, 10)}`;
+}
+
+function handleBackToEdit() {
+  lastExportedFile.value = null;
+  showNextActions.value = false;
+}
 
 watch(() => userSettings.autoSaveToVault, (newVal) => {
   autoSaveToVault.value = Boolean(newVal);
@@ -500,6 +533,7 @@ async function executeMerge() {
     // Download merged result
     triggerDownload(new Blob([mergedBytes], { type: 'application/pdf' }), finalName);
 
+    lastExportedPageCount.value = pageCount;
     lastExportedFile.value = {
       name: finalName,
       arrayBuffer: mergedBytes,

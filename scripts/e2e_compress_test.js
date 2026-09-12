@@ -298,10 +298,15 @@ async function runCompressBusinessTest() {
     // ---------------------------------------------------------------------------------
     console.log('\n📍 [Step 8] PART B: Testing Vector Document Workflow & Reset State...');
     
-    // Click Reset Button
+    // Click Reset / New Task Button
     const resetBtn = await page.evaluateHandle(() => {
       const btns = Array.from(document.querySelectorAll('button'));
-      return btns.find(b => b.textContent && (b.textContent.includes('重置') || b.textContent.includes('Reset'))) || null;
+      return btns.find(b => b.textContent && (
+        b.textContent.includes('压缩其他') ||
+        b.textContent.includes('新任务') ||
+        b.textContent.includes('重置') || 
+        b.textContent.includes('Reset')
+      )) || null;
     });
     const resetEl = resetBtn.asElement();
     if (!resetEl) throw new Error('Reset button not found');
