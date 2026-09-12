@@ -999,25 +999,29 @@
             </div>
 
             <!-- Miniature Live Page Preview Card -->
-            <div class="p-2.5 bg-slate-50/90 rounded-2xl border border-slate-200/80 flex items-center space-x-3.5">
-              <!-- Mini Page Representation (A4 Ratio) -->
-              <div class="w-18 h-24 bg-white border border-slate-300 rounded-md shadow-2xs relative overflow-hidden shrink-0 flex flex-col justify-between p-1 select-none">
-                <div class="space-y-1 opacity-25">
-                  <div class="h-0.5 bg-slate-400 rounded w-3/4"></div>
-                  <div class="h-0.5 bg-slate-300 rounded w-full"></div>
-                  <div class="h-0.5 bg-slate-300 rounded w-5/6"></div>
-                  <div class="h-0.5 bg-slate-300 rounded w-4/5"></div>
-                  <div class="h-0.5 bg-slate-300 rounded w-2/3"></div>
+            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center space-x-3.5">
+              <!-- Mini Page Representation (A4 Standard 1:1.414, 76px x 108px) -->
+              <div 
+                class="bg-white border border-slate-300 rounded-lg shadow-xs relative overflow-hidden shrink-0 flex flex-col justify-between p-2 select-none"
+                style="width: 76px; height: 108px; min-width: 76px;"
+              >
+                <!-- Document Skeleton Lines -->
+                <div class="space-y-1.5 opacity-20 pointer-events-none w-full">
+                  <div class="h-1 bg-slate-500 rounded-full w-3/4"></div>
+                  <div class="h-1 bg-slate-400 rounded-full w-full"></div>
+                  <div class="h-1 bg-slate-400 rounded-full w-full"></div>
+                  <div class="h-1 bg-slate-400 rounded-full w-4/5"></div>
+                  <div class="h-1 bg-slate-400 rounded-full w-2/3"></div>
                 </div>
 
                 <!-- Positioned Miniature Stamp Indicator -->
                 <div 
-                  class="absolute transition-all duration-200 flex items-center justify-center"
+                  class="absolute transition-all duration-200 flex items-center justify-center pointer-events-none"
                   :style="{
-                    width: `${Math.round(24 * ((editingStepDraft.scale || 0.5) / 0.5))}px`,
-                    height: `${Math.round(12 * ((editingStepDraft.scale || 0.5) / 0.5))}px`,
-                    right: (editingStepDraft.position === 'mid_right' ? '2px' : (editingStepDraft.position === 'bottom_center' ? 'calc(50% - 12px)' : '3px')),
-                    bottom: (editingStepDraft.position === 'mid_right' ? 'calc(50% - 6px)' : '3px'),
+                    width: `${Math.max(20, Math.min(56, Math.round(32 * ((editingStepDraft.scale || 0.5) / 0.5))))}px`,
+                    height: `${Math.max(12, Math.min(28, Math.round(15 * ((editingStepDraft.scale || 0.5) / 0.5))))}px`,
+                    right: (editingStepDraft.position === 'mid_right' ? '2px' : (editingStepDraft.position === 'bottom_center' ? `calc(50% - ${Math.round(16 * ((editingStepDraft.scale || 0.5) / 0.5))}px)` : '4px')),
+                    bottom: (editingStepDraft.position === 'mid_right' ? `calc(50% - ${Math.round(7.5 * ((editingStepDraft.scale || 0.5) / 0.5))}px)` : '6px'),
                   }"
                 >
                   <img 
@@ -1025,28 +1029,28 @@
                     :src="editingStepDraft.stampDataUrl" 
                     class="max-w-full max-h-full object-contain drop-shadow-xs" 
                   />
-                  <div v-else class="w-full h-full border border-dashed border-indigo-500 bg-indigo-100/60 rounded-xs flex items-center justify-center text-[7px] text-indigo-700 font-bold">
+                  <div v-else class="w-full h-full border border-dashed border-indigo-500 bg-indigo-100/70 rounded-xs flex items-center justify-center text-[8px] text-indigo-700 font-bold">
                     印
                   </div>
                 </div>
               </div>
 
               <!-- Preview Explanation Text -->
-              <div class="text-[11px] text-slate-500 space-y-0.5 min-w-0 flex-1">
-                <p class="font-bold text-slate-700 flex items-center space-x-1">
+              <div class="text-[11px] text-slate-500 space-y-1 min-w-0 flex-1">
+                <p class="font-bold text-slate-700 flex items-center space-x-1.5">
                   <Eye class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
                   <span>{{ t('param_sign_preview_title') }}</span>
                 </p>
-                <p class="text-slate-500 text-[10.5px] leading-relaxed">
+                <p class="text-slate-600 text-[10.5px] leading-relaxed">
                   {{ editingStepDraft.position === 'mid_right' 
                     ? '右侧中缝骑缝位（垂直居中，距右 15 pt，简签经典防调页区）' 
                     : (editingStepDraft.position === 'bottom_center' 
                         ? '页面底部居中（正中公章区，距底 40 pt）' 
                         : '页面右下角（商业合同标准落款，距边 40 pt）') }}
                 </p>
-                <p class="text-slate-400 text-[10px]">
+                <div class="inline-block px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 text-[10px] font-mono">
                   预估尺寸: {{ Math.round(140 * ((editingStepDraft.scale || 0.5) / 0.5)) }} × {{ Math.round(60 * ((editingStepDraft.scale || 0.5) / 0.5)) }} pt（约占页宽 {{ Math.round((editingStepDraft.scale || 0.5) * 48) }}%）
-                </p>
+                </div>
               </div>
             </div>
 
