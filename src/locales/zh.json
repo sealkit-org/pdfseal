@@ -772,6 +772,8 @@
   "param_sign_place_last": "仅最后一页 (右下角)",
   "param_sign_place_first": "仅第一页 (右下角)",
   "param_sign_place_all": "所有页面 (右下角)",
+  "param_sign_place_except_last": "除尾页外全部 (标准骑缝简签)",
+  "pipeline_sign_pick_stamp": "从常用印章库快捷选择：",
   "param_sign_scale": "印章缩放比例",
   "param_sign_add_date": "附加日期印迹",
   "param_sign_add_date_desc": "自动在签名下方添加当前日期 (如 2026-09-05)",
@@ -912,5 +914,8 @@
   "sign_batch_btn_apply": "一键应用到 {count} 个页面",
   "sign_batch_btn_cancel": "取消",
   "sign_batch_action": "多页复用",
-  "sign_batch_badge_applied": "已批量加盖至 {count} 个页面"
+  "sign_batch_badge_applied": "已批量加盖至 {count} 个页面",
+  "sign_batch_target_info": "第 {page} 页签名 / 简签",
+  "sign_batch_badge_initials": "骑缝简签",
+  "sign_batch_no_pages": "未选择任何页面"
 }

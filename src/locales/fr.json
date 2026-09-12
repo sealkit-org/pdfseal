@@ -770,9 +770,11 @@
   "param_sign_stamp_hint": "Upload a transparent PNG image for your signature or company stamp.",
   "param_sign_stamp_upload": "Upload Image",
   "param_sign_placement": "Placement",
-  "param_sign_place_last": "Last Page (Bottom Right)",
-  "param_sign_place_first": "First Page (Bottom Right)",
-  "param_sign_place_all": "All Pages (Bottom Right)",
+  "param_sign_place_last": "Dernière page (en bas à droite)",
+  "param_sign_place_first": "Première page (en bas à droite)",
+  "param_sign_place_all": "Toutes les pages (en bas à droite)",
+  "param_sign_place_except_last": "Toutes sauf dernière page (Paraphes)",
+  "pipeline_sign_pick_stamp": "Choisir parmi les tampons enregistrés :",
   "param_sign_scale": "Stamp Scale",
   "param_sign_add_date": "Append Date Stamp",
   "param_sign_add_date_desc": "Automatically add today's date below the signature.",
@@ -912,5 +914,8 @@
   "sign_batch_btn_apply": "Appliquer à {count} pages",
   "sign_batch_btn_cancel": "Annuler",
   "sign_batch_action": "Appliquer en lot",
-  "sign_batch_badge_applied": "Appliquée sur {count} pages"
+  "sign_batch_badge_applied": "Appliquée sur {count} pages",
+  "sign_batch_target_info": "Page {page} Signature / Paraphe",
+  "sign_batch_badge_initials": "Paraphes",
+  "sign_batch_no_pages": "Aucune page sélectionnée"
 }

@@ -909,20 +909,49 @@
 
           <!-- Sign Parameters -->
           <div v-else-if="currentEditingStepNodeId === 'node_sign'" class="space-y-4">
+            <!-- Saved Stamp Quick Pick (if any in library) -->
+            <div v-if="savedStampsForPipeline.length > 0" class="p-2.5 bg-indigo-50/50 rounded-2xl border border-indigo-100/80 space-y-1.5">
+              <span class="text-[11px] font-bold text-slate-700 flex items-center space-x-1">
+                <Star class="w-3.5 h-3.5 text-amber-500 fill-amber-500 shrink-0" />
+                <span>{{ t('pipeline_sign_pick_stamp') }}</span>
+              </span>
+              <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                <button
+                  type="button"
+                  v-for="stamp in savedStampsForPipeline"
+                  :key="stamp.id"
+                  @click="editingStepDraft.stampDataUrl = stamp.dataUrl"
+                  :class="[
+                    'p-1.5 rounded-xl border bg-white cursor-pointer transition flex items-center space-x-1.5 shrink-0 shadow-2xs',
+                    editingStepDraft.stampDataUrl === stamp.dataUrl ? 'border-indigo-600 ring-2 ring-indigo-200' : 'border-slate-200 hover:border-indigo-300'
+                  ]"
+                  :title="stamp.title"
+                >
+                  <div 
+                    class="w-9 h-6 rounded border border-slate-100 overflow-hidden flex items-center justify-center bg-slate-50 shrink-0"
+                    :style="{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '4px 4px' }"
+                  >
+                    <img :src="stamp.dataUrl" class="max-w-full max-h-full object-contain pointer-events-none" />
+                  </div>
+                  <span class="text-[10px] font-bold text-slate-700 max-w-[70px] truncate">{{ stamp.title }}</span>
+                </button>
+              </div>
+            </div>
+
             <!-- Stamp Image Upload -->
             <div>
               <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_sign_stamp') }}</label>
-              <div v-if="editingStepDraft.stampDataUrl" class="relative group rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center p-4 bg-slate-50/50 h-32">
-                <img :src="editingStepDraft.stampDataUrl" class="max-h-full max-w-full object-contain mix-blend-multiply drop-shadow-sm" />
+              <div v-if="editingStepDraft.stampDataUrl" class="relative group rounded-xl border border-slate-200 overflow-hidden flex items-center justify-center p-4 bg-slate-50/50 h-28">
+                <img :src="editingStepDraft.stampDataUrl" class="max-h-full max-w-full object-contain drop-shadow-sm" />
                 <div class="absolute inset-0 bg-slate-900/60 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                   <button type="button" @click="editingStepDraft.stampDataUrl = ''" class="bg-red-500 hover:bg-red-600 text-white rounded-full p-2 cursor-pointer shadow-lg transform hover:scale-105 transition">
                     <Trash2 class="w-4 h-4" />
                   </button>
                 </div>
               </div>
-              <label v-else class="cursor-pointer flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition group h-32 text-slate-500 hover:text-indigo-600">
-                <input type="file" accept="image/png, image/jpeg" class="hidden" @change="e => handleStampUpload(e, editingStepDraft)" />
-                <Plus class="w-6 h-6 mb-2 group-hover:scale-110 transition" />
+              <label v-else class="cursor-pointer flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 transition group h-28 text-slate-500 hover:text-indigo-600">
+                <input type="file" accept="image/png, image/jpeg, image/webp" class="hidden" @change="e => handleStampUpload(e, editingStepDraft)" />
+                <Plus class="w-6 h-6 mb-1 group-hover:scale-110 transition" />
                 <span class="text-xs font-bold">{{ t('param_sign_stamp_upload') }}</span>
               </label>
               <p class="text-[10px] text-slate-400 mt-1.5 leading-relaxed">{{ t('param_sign_stamp_hint') }}</p>
@@ -935,6 +964,7 @@
                 <option value="last_page_bottom_right">{{ t('param_sign_place_last') }}</option>
                 <option value="first_page">{{ t('param_sign_place_first') }}</option>
                 <option value="all_pages">{{ t('param_sign_place_all') }}</option>
+                <option value="except_last">{{ t('param_sign_place_except_last') }}</option>
               </select>
             </div>
 
@@ -1744,12 +1774,14 @@ import {
   EyeOff,
   Printer,
   FileEdit,
-  PenLine
+  PenLine,
+  Star
 } from 'lucide-vue-next';
 import { PRESET_PIPELINES } from '../utils/pipeline/presetPipelines';
 import { AVAILABLE_NODES } from '../utils/pipeline/pipelineTypes';
 import { runPipeline } from '../utils/pipeline/pipelineRunner';
 import { loadUserPipelines, saveUserPipeline, deleteUserPipeline } from '../utils/pipeline/userPipelines';
+import { loadSavedStamps } from '../utils/imageProcess';
 import confetti from 'canvas-confetti';
 import { saveFile } from '../utils/vaultDb';
 import { siteConfig } from '../config/siteConfig';
@@ -1780,6 +1812,13 @@ const protectConfigError = ref('');
 
 // Flow persistence & selection
 const savedUserFlows = ref(loadUserPipelines());
+const savedStampsForPipeline = computed(() => {
+  try {
+    return loadSavedStamps();
+  } catch (e) {
+    return [];
+  }
+});
 const activeFlowSelectionKey = ref('preset_' + PRESET_PIPELINES[0].id);
 
 // Active Step List State

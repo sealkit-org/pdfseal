@@ -773,6 +773,8 @@
   "param_sign_place_last": "Last Page (Bottom Right)",
   "param_sign_place_first": "First Page (Bottom Right)",
   "param_sign_place_all": "All Pages (Bottom Right)",
+  "param_sign_place_except_last": "All Except Last Page (Initials)",
+  "pipeline_sign_pick_stamp": "Quick pick from saved stamps:",
   "param_sign_scale": "Stamp Scale",
   "param_sign_add_date": "Append Date Stamp",
   "param_sign_add_date_desc": "Automatically add today's date below the signature.",
@@ -912,5 +914,8 @@
   "sign_batch_btn_apply": "Apply to {count} Pages",
   "sign_batch_btn_cancel": "Cancel",
   "sign_batch_action": "Batch Apply",
-  "sign_batch_badge_applied": "Applied to {count} pages"
+  "sign_batch_badge_applied": "Applied to {count} pages",
+  "sign_batch_target_info": "Page {page} Signature / Initial",
+  "sign_batch_badge_initials": "Initials",
+  "sign_batch_no_pages": "No pages selected"
 }
