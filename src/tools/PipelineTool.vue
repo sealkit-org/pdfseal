@@ -1000,17 +1000,26 @@
 
             <!-- Miniature Live Page Preview Card -->
             <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center space-x-3.5">
-              <!-- Mini Page Representation (A4 Standard 1:1.414, 76px x 108px) -->
+              <!-- Mini Page Representation (A4 Standard 1:1.414, 76x108 Portrait vs 108x76 Landscape) -->
               <div 
-                class="bg-white border border-slate-300 rounded-lg shadow-xs relative overflow-hidden shrink-0 flex flex-col justify-between p-2 select-none"
-                style="width: 76px; height: 108px; min-width: 76px;"
+                class="bg-white border border-slate-300 rounded-lg shadow-xs relative overflow-hidden shrink-0 flex flex-col justify-between p-2 select-none transition-all duration-200"
+                :style="{
+                  width: signPreviewOrientation === 'landscape' ? '108px' : '76px',
+                  height: signPreviewOrientation === 'landscape' ? '76px' : '108px',
+                  minWidth: signPreviewOrientation === 'landscape' ? '108px' : '76px',
+                }"
               >
-                <!-- Document Skeleton Lines -->
-                <div class="space-y-1.5 opacity-20 pointer-events-none w-full">
+                <!-- Document Skeleton Lines (Adapts to orientation) -->
+                <div v-if="signPreviewOrientation === 'portrait'" class="space-y-1.5 opacity-20 pointer-events-none w-full">
                   <div class="h-1 bg-slate-500 rounded-full w-3/4"></div>
                   <div class="h-1 bg-slate-400 rounded-full w-full"></div>
                   <div class="h-1 bg-slate-400 rounded-full w-full"></div>
                   <div class="h-1 bg-slate-400 rounded-full w-4/5"></div>
+                  <div class="h-1 bg-slate-400 rounded-full w-2/3"></div>
+                </div>
+                <div v-else class="space-y-1.5 opacity-20 pointer-events-none w-full">
+                  <div class="h-1 bg-slate-500 rounded-full w-1/2"></div>
+                  <div class="h-1 bg-slate-400 rounded-full w-3/4"></div>
                   <div class="h-1 bg-slate-400 rounded-full w-2/3"></div>
                 </div>
 
@@ -1035,21 +1044,50 @@
                 </div>
               </div>
 
-              <!-- Preview Explanation Text -->
+              <!-- Preview Explanation Text & Pure View Mode Toggle -->
               <div class="text-[11px] text-slate-500 space-y-1 min-w-0 flex-1">
-                <p class="font-bold text-slate-700 flex items-center space-x-1.5">
-                  <Eye class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                  <span>{{ t('param_sign_preview_title') }}</span>
-                </p>
+                <div class="flex items-center justify-between gap-1">
+                  <p class="font-bold text-slate-700 flex items-center space-x-1.5">
+                    <Eye class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                    <span>{{ t('param_sign_preview_title') }}</span>
+                  </p>
+
+                  <!-- Pure View Orientation Switch (Does not alter pipeline config) -->
+                  <div class="inline-flex items-center p-0.5 bg-slate-200/80 rounded-md text-[10px] font-medium shrink-0">
+                    <button 
+                      type="button"
+                      @click="signPreviewOrientation = 'portrait'"
+                      :class="[
+                        'px-1.5 py-0.5 rounded transition-all cursor-pointer flex items-center space-x-0.5',
+                        signPreviewOrientation === 'portrait' ? 'bg-white text-indigo-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                      ]"
+                    >
+                      <span>📄</span>
+                      <span>{{ t('img2pdf_orient_portrait') }}</span>
+                    </button>
+                    <button 
+                      type="button"
+                      @click="signPreviewOrientation = 'landscape'"
+                      :class="[
+                        'px-1.5 py-0.5 rounded transition-all cursor-pointer flex items-center space-x-0.5',
+                        signPreviewOrientation === 'landscape' ? 'bg-white text-indigo-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                      ]"
+                    >
+                      <span>📑</span>
+                      <span>{{ t('img2pdf_orient_landscape') }}</span>
+                    </button>
+                  </div>
+                </div>
+
                 <p class="text-slate-600 text-[10.5px] leading-relaxed">
                   {{ editingStepDraft.position === 'mid_right' 
-                    ? '右侧中缝骑缝位（垂直居中，距右 15 pt，简签经典防调页区）' 
+                    ? (signPreviewOrientation === 'landscape' ? '横版右侧短边中缝（在横向报表/证书右侧垂直居中，距边 15 pt）' : '右侧中缝骑缝位（垂直居中，距右 15 pt，简签经典防调页区）')
                     : (editingStepDraft.position === 'bottom_center' 
-                        ? '页面底部居中（正中公章区，距底 40 pt）' 
+                        ? (signPreviewOrientation === 'landscape' ? '横版长边底部正中（正中公章区，距底 40 pt）' : '页面底部居中（正中公章区，距底 40 pt）') 
                         : '页面右下角（商业合同标准落款，距边 40 pt）') }}
                 </p>
                 <div class="inline-block px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 text-[10px] font-mono">
-                  预估尺寸: {{ Math.round(140 * ((editingStepDraft.scale || 0.5) / 0.5)) }} × {{ Math.round(60 * ((editingStepDraft.scale || 0.5) / 0.5)) }} pt（约占页宽 {{ Math.round((editingStepDraft.scale || 0.5) * 48) }}%）
+                  预估尺寸: {{ Math.round(140 * ((editingStepDraft.scale || 0.5) / 0.5)) }} × {{ Math.round(60 * ((editingStepDraft.scale || 0.5) / 0.5)) }} pt（约占{{ signPreviewOrientation === 'landscape' ? '横向页宽' : '页宽' }} {{ Math.round((editingStepDraft.scale || 0.5) * (signPreviewOrientation === 'landscape' ? 34 : 48)) }}%）
                 </div>
               </div>
             </div>
@@ -1937,6 +1975,7 @@ const showProtectUserPwd = ref(false);
 const showProtectOwnerPwd = ref(false);
 const isProtectAdvancedOpen = ref(false);
 const protectConfigError = ref('');
+const signPreviewOrientation = ref('portrait'); // 'portrait' | 'landscape' (pure preview toggle)
 
 // Flow persistence & selection
 const savedUserFlows = ref(loadUserPipelines());
@@ -2148,6 +2187,7 @@ function openStepConfigModal(idx) {
   editingStepIndex.value = idx;
   const step = activeWorkflowSteps.value[idx];
   editingStepDraft.value = JSON.parse(JSON.stringify(step.params || {}));
+  signPreviewOrientation.value = 'portrait';
 
   if (step.nodeId === 'node_protect') {
     showProtectUserPwd.value = false;
