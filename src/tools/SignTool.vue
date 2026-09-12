@@ -632,7 +632,7 @@
             <img :src="batchTargetSig.dataUrl" class="max-w-full max-h-full object-contain" />
           </div>
           <div class="text-xs text-slate-600 min-w-0">
-            <p class="font-bold text-slate-800">Page {{ currentPage }} Signature / Initial</p>
+            <p class="font-bold text-slate-800">{{ t('sign_batch_target_info', { page: currentPage }) }}</p>
             <p class="text-[11px] text-slate-400 font-mono">X: {{ batchTargetSig.x }}px, Y: {{ batchTargetSig.y }}px ({{ batchTargetSig.width }}x{{ batchTargetSig.height }}px)</p>
           </div>
         </div>
@@ -687,7 +687,7 @@
               P.{{ p }}
             </span>
             <span v-if="computedBatchTargetPages.length === 0" class="text-slate-400 italic text-[11px]">
-              No pages selected
+              {{ t('sign_batch_no_pages') }}
             </span>
           </div>
         </div>
@@ -879,7 +879,7 @@ const batchModes = computed(() => [
   {
     id: 'except_last',
     label: t('sign_batch_preset_except_last', { prev: Math.max(1, totalPages.value - 1) }),
-    badge: 'Initials'
+    badge: t('sign_batch_badge_initials')
   },
   {
     id: 'even',

@@ -16,7 +16,7 @@ export const PIPELINE_POLICY = {
     nodeLimits: {
       node_sign: {
         maxFiles: 1,                // Batch stamping restricted to 1 file for trial
-        allowedPlacements: ['last_page_bottom_right']
+        allowedPlacements: ['last_page_bottom_right', 'except_last']
       },
       node_compress: {
         allowedLevels: ['balanced'] // Balanced (300 DPI) only; Extreme and Lossless are Pro
@@ -41,7 +41,7 @@ export const PIPELINE_POLICY = {
     nodeLimits: {
       node_sign: {
         maxFiles: Infinity,
-        allowedPlacements: ['last_page_bottom_right', 'first_page', 'all_pages', 'custom']
+        allowedPlacements: ['last_page_bottom_right', 'first_page', 'all_pages', 'except_last', 'custom']
       },
       node_compress: {
         allowedLevels: ['balanced', 'extreme', 'lossless']
@@ -64,7 +64,7 @@ export const PIPELINE_POLICY = {
     allowCustomNamingTemplates: true,
     allowWorkflowExportImport: true, // Export/import JSON configs for team sharing
     nodeLimits: {
-      node_sign: { maxFiles: Infinity, allowedPlacements: ['last_page_bottom_right', 'first_page', 'all_pages', 'custom'] },
+      node_sign: { maxFiles: Infinity, allowedPlacements: ['last_page_bottom_right', 'first_page', 'all_pages', 'except_last', 'custom'] },
       node_compress: { allowedLevels: ['balanced', 'extreme', 'lossless'] },
       node_split: { maxPagesPerFile: Infinity },
       node_watermark: { allowOwnerPasswordLock: true }

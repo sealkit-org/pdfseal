@@ -50,6 +50,8 @@ export async function executeSignNode(items, params = {}, onProgress = () => {})
           targetPages.push(pages[0]);
         } else if (placement === 'all_pages') {
           targetPages.push(...pages);
+        } else if (placement === 'except_last') {
+          targetPages.push(...pages.slice(0, Math.max(1, pages.length - 1)));
         } else {
           // 'last_page_bottom_right' (default)
           targetPages.push(pages[pages.length - 1]);
