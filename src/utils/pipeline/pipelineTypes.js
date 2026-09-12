@@ -126,7 +126,7 @@ export const AVAILABLE_NODES = {
     defaultParams: {
       text: 'CONFIDENTIAL',
       size: 48,
-      opacity: 0.3,
+      opacity: 0.15,
       rotation: -45,
       color: '#dc2626'
     }
@@ -144,7 +144,8 @@ export const AVAILABLE_NODES = {
     topology: TOPOLOGY_MODES.MAP,
     defaultParams: {
       stampDataUrl: '',
-      placement: 'last_page_bottom_right', // 'last_page_bottom_right' | 'first_page' | 'all_pages'
+      placement: 'last_page_bottom_right', // 'last_page_bottom_right' | 'first_page' | 'all_pages' | 'except_last'
+      position: 'bottom_right',
       scale: 0.5,
       addDateStamp: false
     }

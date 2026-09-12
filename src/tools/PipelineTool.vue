@@ -208,7 +208,7 @@
                   <!-- Parameter Summary Pill -->
                   <span 
                     class="px-2 py-0.5 rounded-md text-[10px] font-medium border truncate max-w-[140px] hidden sm:inline-block"
-                    :class="getStepTagClass(st.nodeId)"
+                    :class="getStepTagClass(st.nodeId, st)"
                     :title="getStepSummary(st)"
                   >
                     {{ getStepSummary(st) }}
@@ -961,7 +961,11 @@
             <div class="space-y-2.5">
               <div>
                 <label class="block text-slate-700 font-bold mb-1 text-xs">{{ t('param_sign_placement') }}</label>
-                <select v-model="editingStepDraft.placement" class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-2xs cursor-pointer bg-white">
+                <select 
+                  v-model="editingStepDraft.placement" 
+                  @change="handlePlacementChange"
+                  class="w-full px-3 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-2xs cursor-pointer bg-white"
+                >
                   <option value="last_page_bottom_right">{{ t('param_sign_place_last') }}</option>
                   <option value="except_last">{{ t('param_sign_place_except_last') }}</option>
                   <option value="all_pages">{{ t('param_sign_place_all') }}</option>
@@ -2193,6 +2197,12 @@ function openStepConfigModal(idx) {
   editingStepDraft.value = JSON.parse(JSON.stringify(step.params || {}));
   signPreviewOrientation.value = 'portrait';
 
+  if (step.nodeId === 'node_sign') {
+    if (!editingStepDraft.value.position) {
+      editingStepDraft.value.position = editingStepDraft.value.placement === 'except_last' ? 'mid_right' : 'bottom_right';
+    }
+  }
+
   if (step.nodeId === 'node_protect') {
     showProtectUserPwd.value = false;
     showProtectOwnerPwd.value = false;
@@ -2324,8 +2334,9 @@ function getStepSummary(step) {
       return `${fmt} · ${dpi} DPI`;
     }
     case 'node_sign': {
-      let txt = step.params.stampDataUrl ? t('pipe_pwd_set', 'Set') : t('pipe_pwd_unset', 'Not Set');
+      let txt = step.params.stampDataUrl ? t('pipe_pwd_set', 'Set') : '⚠️ ' + t('pipe_pwd_unset', 'Not Set');
       if (step.params.placement === 'last_page_bottom_right') txt += ' · ' + (t('param_sign_place_last') || 'Last Page');
+      else if (step.params.placement === 'except_last') txt += ' · ' + (t('param_sign_place_except_last') || 'Initials');
       else if (step.params.placement === 'first_page') txt += ' · ' + (t('param_sign_place_first') || 'First Page');
       else if (step.params.placement === 'all_pages') txt += ' · ' + (t('param_sign_place_all') || 'All Pages');
       return txt;
@@ -2364,8 +2375,12 @@ function getStepSummary(step) {
   }
 }
 
-function getStepTagClass(nodeId) {
+function getStepTagClass(nodeId, step) {
   switch (nodeId) {
+    case 'node_sign':
+      return !step?.params?.stampDataUrl 
+        ? 'bg-amber-50 text-amber-700 border-amber-300' 
+        : 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
     case 'node_watermark':
       return 'bg-amber-50 text-amber-700 border-amber-200/80';
     case 'node_compress':
@@ -2384,6 +2399,15 @@ function getStepTagClass(nodeId) {
       return 'bg-rose-50 text-rose-700 border-rose-200/80';
     default:
       return 'bg-slate-100 text-slate-600 border-slate-200';
+  }
+}
+
+function handlePlacementChange() {
+  if (!editingStepDraft.value) return;
+  if (editingStepDraft.value.placement === 'except_last' && (!editingStepDraft.value.position || editingStepDraft.value.position === 'bottom_right')) {
+    editingStepDraft.value.position = 'mid_right';
+  } else if (editingStepDraft.value.placement === 'last_page_bottom_right' && editingStepDraft.value.position === 'mid_right') {
+    editingStepDraft.value.position = 'bottom_right';
   }
 }
 
@@ -2647,6 +2671,13 @@ function formatSize(bytes) {
 
 async function startExecution() {
   if (inputFiles.value.length === 0 || activeWorkflowSteps.value.length === 0) return;
+
+  // Check if any node_sign step is missing a stamp image
+  const missingStampStep = activeWorkflowSteps.value.find(s => s.nodeId === 'node_sign' && !s.params?.stampDataUrl);
+  if (missingStampStep) {
+    const proceed = confirm(t('pipeline_warn_missing_stamp'));
+    if (!proceed) return;
+  }
 
   outputResults.value = [];
   isRunning.value = true;

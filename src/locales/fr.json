@@ -797,6 +797,7 @@
   "sign_scale_medium": "Standard",
   "sign_scale_large": "Grand",
   "pipeline_sign_pick_stamp": "Choisir parmi les tampons enregistrés :",
+  "pipeline_warn_missing_stamp": "Une ou plusieurs étapes de signature n'ont pas d'image de tampon et seront ignorées. Continuer quand même ?",
   "param_sign_scale": "Stamp Scale",
   "param_sign_add_date": "Append Date Stamp",
   "param_sign_add_date_desc": "Automatically add today's date below the signature.",

@@ -100,6 +100,7 @@ export const PRESET_PIPELINES = [
         nodeId: 'node_sign',
         params: {
           placement: 'last_page_bottom_right',
+          position: 'bottom_right',
           scale: 0.5
         }
       },
