@@ -560,7 +560,7 @@
       ></div>
 
       <!-- Drawer Panel -->
-      <div class="relative w-full max-w-sm sm:max-w-md bg-white shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-300 ease-out border-l border-slate-200">
+      <div class="relative w-full max-w-sm sm:max-w-lg bg-white shadow-2xl flex flex-col h-full animate-in slide-in-from-right duration-300 ease-out border-l border-slate-200">
         <!-- Drawer Header -->
         <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 bg-slate-50/50 shrink-0">
           <div>
@@ -972,122 +972,125 @@
               <!-- Alignment Position Selector -->
               <div>
                 <label class="block text-slate-700 font-bold mb-1 text-xs">{{ t('param_sign_align') }}</label>
-                <div class="grid grid-cols-3 gap-1.5 text-[11px] font-semibold">
+                <div class="grid grid-cols-3 gap-2 text-center">
                   <button
                     type="button"
                     @click="editingStepDraft.position = 'bottom_right'"
-                    :class="['py-1.5 px-2 rounded-xl border transition cursor-pointer flex items-center justify-center space-x-1 shadow-2xs', (!editingStepDraft.position || editingStepDraft.position === 'bottom_right') ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50']"
+                    :class="['py-2 px-1.5 rounded-xl border transition cursor-pointer flex flex-col items-center justify-center shadow-2xs', (!editingStepDraft.position || editingStepDraft.position === 'bottom_right') ? 'bg-indigo-50/80 border-indigo-500 text-indigo-700 font-bold shadow-xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50']"
                   >
-                    <span>{{ t('param_sign_pos_bottom_right') }}</span>
+                    <span class="text-xs font-bold leading-tight">{{ t('param_sign_pos_bottom_right_title') }}</span>
+                    <span class="text-[10px] opacity-75 mt-0.5 leading-none">{{ t('param_sign_pos_bottom_right_sub') }}</span>
                   </button>
                   <button
                     type="button"
                     @click="editingStepDraft.position = 'mid_right'"
-                    :class="['py-1.5 px-2 rounded-xl border transition cursor-pointer flex items-center justify-center space-x-1 shadow-2xs', editingStepDraft.position === 'mid_right' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50']"
+                    :class="['py-2 px-1.5 rounded-xl border transition cursor-pointer flex flex-col items-center justify-center shadow-2xs', editingStepDraft.position === 'mid_right' ? 'bg-indigo-50/80 border-indigo-500 text-indigo-700 font-bold shadow-xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50']"
                   >
-                    <span>{{ t('param_sign_pos_mid_right') }}</span>
+                    <span class="text-xs font-bold leading-tight">{{ t('param_sign_pos_mid_right_title') }}</span>
+                    <span class="text-[10px] opacity-75 mt-0.5 leading-none">{{ t('param_sign_pos_mid_right_sub') }}</span>
                   </button>
                   <button
                     type="button"
                     @click="editingStepDraft.position = 'bottom_center'"
-                    :class="['py-1.5 px-2 rounded-xl border transition cursor-pointer flex items-center justify-center space-x-1 shadow-2xs', editingStepDraft.position === 'bottom_center' ? 'bg-indigo-50 border-indigo-500 text-indigo-700 font-bold' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50']"
+                    :class="['py-2 px-1.5 rounded-xl border transition cursor-pointer flex flex-col items-center justify-center shadow-2xs', editingStepDraft.position === 'bottom_center' ? 'bg-indigo-50/80 border-indigo-500 text-indigo-700 font-bold shadow-xs' : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-50']"
                   >
-                    <span>{{ t('param_sign_pos_bottom_center') }}</span>
+                    <span class="text-xs font-bold leading-tight">{{ t('param_sign_pos_bottom_center_title') }}</span>
+                    <span class="text-[10px] opacity-75 mt-0.5 leading-none">{{ t('param_sign_pos_bottom_center_sub') }}</span>
                   </button>
                 </div>
               </div>
             </div>
 
             <!-- Miniature Live Page Preview Card -->
-            <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center space-x-3.5">
-              <!-- Mini Page Representation (A4 Standard 1:1.414, 76x108 Portrait vs 108x76 Landscape) -->
-              <div 
-                class="bg-white border border-slate-300 rounded-lg shadow-xs relative overflow-hidden shrink-0 flex flex-col justify-between p-2 select-none transition-all duration-200"
-                :style="{
-                  width: signPreviewOrientation === 'landscape' ? '108px' : '76px',
-                  height: signPreviewOrientation === 'landscape' ? '76px' : '108px',
-                  minWidth: signPreviewOrientation === 'landscape' ? '108px' : '76px',
-                }"
-              >
-                <!-- Document Skeleton Lines (Adapts to orientation) -->
-                <div v-if="signPreviewOrientation === 'portrait'" class="space-y-1.5 opacity-20 pointer-events-none w-full">
-                  <div class="h-1 bg-slate-500 rounded-full w-3/4"></div>
-                  <div class="h-1 bg-slate-400 rounded-full w-full"></div>
-                  <div class="h-1 bg-slate-400 rounded-full w-full"></div>
-                  <div class="h-1 bg-slate-400 rounded-full w-4/5"></div>
-                  <div class="h-1 bg-slate-400 rounded-full w-2/3"></div>
-                </div>
-                <div v-else class="space-y-1.5 opacity-20 pointer-events-none w-full">
-                  <div class="h-1 bg-slate-500 rounded-full w-1/2"></div>
-                  <div class="h-1 bg-slate-400 rounded-full w-3/4"></div>
-                  <div class="h-1 bg-slate-400 rounded-full w-2/3"></div>
-                </div>
+            <div class="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2.5">
+              <!-- Preview Header: Title + Pure View Switch -->
+              <div class="flex items-center justify-between gap-2">
+                <p class="font-bold text-slate-700 text-xs flex items-center space-x-1.5">
+                  <Eye class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>{{ t('param_sign_preview_title') }}</span>
+                </p>
 
-                <!-- Positioned Miniature Stamp Indicator -->
-                <div 
-                  class="absolute transition-all duration-200 flex items-center justify-center pointer-events-none"
-                  :style="{
-                    width: `${Math.max(20, Math.min(56, Math.round(32 * ((editingStepDraft.scale || 0.5) / 0.5))))}px`,
-                    height: `${Math.max(12, Math.min(28, Math.round(15 * ((editingStepDraft.scale || 0.5) / 0.5))))}px`,
-                    right: (editingStepDraft.position === 'mid_right' ? '2px' : (editingStepDraft.position === 'bottom_center' ? `calc(50% - ${Math.round(16 * ((editingStepDraft.scale || 0.5) / 0.5))}px)` : '4px')),
-                    bottom: (editingStepDraft.position === 'mid_right' ? `calc(50% - ${Math.round(7.5 * ((editingStepDraft.scale || 0.5) / 0.5))}px)` : '6px'),
-                  }"
-                >
-                  <img 
-                    v-if="editingStepDraft.stampDataUrl" 
-                    :src="editingStepDraft.stampDataUrl" 
-                    class="max-w-full max-h-full object-contain drop-shadow-xs" 
-                  />
-                  <div v-else class="w-full h-full border border-dashed border-indigo-500 bg-indigo-100/70 rounded-xs flex items-center justify-center text-[8px] text-indigo-700 font-bold">
-                    印
-                  </div>
+                <!-- Pure View Orientation Switch (Does not alter pipeline config) -->
+                <div class="inline-flex items-center p-0.5 bg-slate-200/80 rounded-md text-[10px] font-medium shrink-0">
+                  <button 
+                    type="button"
+                    @click="signPreviewOrientation = 'portrait'"
+                    :class="[
+                      'px-2 py-0.5 rounded transition-all cursor-pointer flex items-center space-x-1',
+                      signPreviewOrientation === 'portrait' ? 'bg-white text-indigo-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                    ]"
+                  >
+                    <span>📄</span>
+                    <span>{{ t('img2pdf_orient_portrait') }}</span>
+                  </button>
+                  <button 
+                    type="button"
+                    @click="signPreviewOrientation = 'landscape'"
+                    :class="[
+                      'px-2 py-0.5 rounded transition-all cursor-pointer flex items-center space-x-1',
+                      signPreviewOrientation === 'landscape' ? 'bg-white text-indigo-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
+                    ]"
+                  >
+                    <span>📑</span>
+                    <span>{{ t('img2pdf_orient_landscape') }}</span>
+                  </button>
                 </div>
               </div>
 
-              <!-- Preview Explanation Text & Pure View Mode Toggle -->
-              <div class="text-[11px] text-slate-500 space-y-1 min-w-0 flex-1">
-                <div class="flex items-center justify-between gap-1">
-                  <p class="font-bold text-slate-700 flex items-center space-x-1.5">
-                    <Eye class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                    <span>{{ t('param_sign_preview_title') }}</span>
-                  </p>
+              <!-- Content: Miniature Page + Description & Estimated Size -->
+              <div class="flex items-center space-x-3.5">
+                <!-- Mini Page Representation (Standard A4 ratio: 65x92 Portrait vs 92x65 Landscape) -->
+                <div 
+                  class="bg-white border border-slate-300 rounded-lg shadow-xs relative overflow-hidden shrink-0 flex flex-col justify-between p-1.5 select-none transition-all duration-200"
+                  :style="{
+                    width: signPreviewOrientation === 'landscape' ? '92px' : '65px',
+                    height: signPreviewOrientation === 'landscape' ? '65px' : '92px',
+                    minWidth: signPreviewOrientation === 'landscape' ? '92px' : '65px',
+                  }"
+                >
+                  <!-- Document Skeleton Lines (Adapts to orientation) -->
+                  <div v-if="signPreviewOrientation === 'portrait'" class="space-y-1 opacity-20 pointer-events-none w-full">
+                    <div class="h-1 bg-slate-500 rounded-full w-3/4"></div>
+                    <div class="h-1 bg-slate-400 rounded-full w-full"></div>
+                    <div class="h-1 bg-slate-400 rounded-full w-full"></div>
+                    <div class="h-1 bg-slate-400 rounded-full w-4/5"></div>
+                    <div class="h-1 bg-slate-400 rounded-full w-2/3"></div>
+                  </div>
+                  <div v-else class="space-y-1 opacity-20 pointer-events-none w-full">
+                    <div class="h-1 bg-slate-500 rounded-full w-1/2"></div>
+                    <div class="h-1 bg-slate-400 rounded-full w-3/4"></div>
+                    <div class="h-1 bg-slate-400 rounded-full w-2/3"></div>
+                  </div>
 
-                  <!-- Pure View Orientation Switch (Does not alter pipeline config) -->
-                  <div class="inline-flex items-center p-0.5 bg-slate-200/80 rounded-md text-[10px] font-medium shrink-0">
-                    <button 
-                      type="button"
-                      @click="signPreviewOrientation = 'portrait'"
-                      :class="[
-                        'px-1.5 py-0.5 rounded transition-all cursor-pointer flex items-center space-x-0.5',
-                        signPreviewOrientation === 'portrait' ? 'bg-white text-indigo-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-                      ]"
-                    >
-                      <span>📄</span>
-                      <span>{{ t('img2pdf_orient_portrait') }}</span>
-                    </button>
-                    <button 
-                      type="button"
-                      @click="signPreviewOrientation = 'landscape'"
-                      :class="[
-                        'px-1.5 py-0.5 rounded transition-all cursor-pointer flex items-center space-x-0.5',
-                        signPreviewOrientation === 'landscape' ? 'bg-white text-indigo-700 font-bold shadow-2xs' : 'text-slate-500 hover:text-slate-800'
-                      ]"
-                    >
-                      <span>📑</span>
-                      <span>{{ t('img2pdf_orient_landscape') }}</span>
-                    </button>
+                  <!-- Positioned Miniature Stamp Indicator -->
+                  <div 
+                    class="absolute transition-all duration-200 flex items-center justify-center pointer-events-none"
+                    :style="{
+                      width: `${Math.max(18, Math.min(48, Math.round(26 * ((editingStepDraft.scale || 0.5) / 0.5))))}px`,
+                      height: `${Math.max(10, Math.min(24, Math.round(12 * ((editingStepDraft.scale || 0.5) / 0.5))))}px`,
+                      right: (editingStepDraft.position === 'mid_right' ? '2px' : (editingStepDraft.position === 'bottom_center' ? `calc(50% - ${Math.round(13 * ((editingStepDraft.scale || 0.5) / 0.5))}px)` : '4px')),
+                      bottom: (editingStepDraft.position === 'mid_right' ? `calc(50% - ${Math.round(6 * ((editingStepDraft.scale || 0.5) / 0.5))}px)` : '5px'),
+                    }"
+                  >
+                    <img 
+                      v-if="editingStepDraft.stampDataUrl" 
+                      :src="editingStepDraft.stampDataUrl" 
+                      class="max-w-full max-h-full object-contain drop-shadow-xs" 
+                    />
+                    <div v-else class="w-full h-full border border-dashed border-indigo-500 bg-indigo-100/70 rounded-xs flex items-center justify-center">
+                      <PenLine class="w-2.5 h-2.5 text-indigo-600" />
+                    </div>
                   </div>
                 </div>
 
-                <p class="text-slate-600 text-[10.5px] leading-relaxed">
-                  {{ editingStepDraft.position === 'mid_right' 
-                    ? (signPreviewOrientation === 'landscape' ? '横版右侧短边中缝（在横向报表/证书右侧垂直居中，距边 15 pt）' : '右侧中缝骑缝位（垂直居中，距右 15 pt，简签经典防调页区）')
-                    : (editingStepDraft.position === 'bottom_center' 
-                        ? (signPreviewOrientation === 'landscape' ? '横版长边底部正中（正中公章区，距底 40 pt）' : '页面底部居中（正中公章区，距底 40 pt）') 
-                        : '页面右下角（商业合同标准落款，距边 40 pt）') }}
-                </p>
-                <div class="inline-block px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 text-[10px] font-mono">
-                  预估尺寸: {{ Math.round(140 * ((editingStepDraft.scale || 0.5) / 0.5)) }} × {{ Math.round(60 * ((editingStepDraft.scale || 0.5) / 0.5)) }} pt（约占{{ signPreviewOrientation === 'landscape' ? '横向页宽' : '页宽' }} {{ Math.round((editingStepDraft.scale || 0.5) * (signPreviewOrientation === 'landscape' ? 34 : 48)) }}%）
+                <!-- Descriptive Information Column -->
+                <div class="text-[11px] text-slate-500 space-y-1.5 min-w-0 flex-1">
+                  <p class="text-slate-600 text-[11px] leading-relaxed font-medium">
+                    {{ getSignPositionDescription(editingStepDraft.position, signPreviewOrientation) }}
+                  </p>
+                  <div class="inline-flex items-center px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-500 text-[10px] font-mono shadow-2xs">
+                    {{ getSignEstimateSizeText(editingStepDraft.scale, signPreviewOrientation) }}
+                  </div>
                 </div>
               </div>
             </div>
@@ -1111,30 +1114,31 @@
                 />
               </div>
               <!-- Preset Scale Pills -->
-              <div class="flex items-center gap-1.5 pt-0.5 text-[10px] font-semibold">
+              <div class="grid grid-cols-3 gap-1.5 pt-0.5 text-[10px] font-semibold">
                 <button 
                   type="button" 
                   @click="editingStepDraft.scale = 0.3"
-                  :class="['px-2 py-0.5 rounded-md border transition cursor-pointer', Math.abs(editingStepDraft.scale - 0.3) < 0.04 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300']"
+                  :class="['py-1 px-1 text-center rounded-lg border transition cursor-pointer truncate', Math.abs(editingStepDraft.scale - 0.3) < 0.04 ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300']"
                 >
-                  30% ({{ t('sign_scale_small') }})
+                  30% · {{ t('sign_scale_small') }}
                 </button>
                 <button 
                   type="button" 
                   @click="editingStepDraft.scale = 0.5"
-                  :class="['px-2 py-0.5 rounded-md border transition cursor-pointer', Math.abs(editingStepDraft.scale - 0.5) < 0.04 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300']"
+                  :class="['py-1 px-1 text-center rounded-lg border transition cursor-pointer truncate', Math.abs(editingStepDraft.scale - 0.5) < 0.04 ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300']"
                 >
-                  50% ({{ t('sign_scale_medium') }})
+                  50% · {{ t('sign_scale_medium') }}
                 </button>
                 <button 
                   type="button" 
                   @click="editingStepDraft.scale = 0.7"
-                  :class="['px-2 py-0.5 rounded-md border transition cursor-pointer', Math.abs(editingStepDraft.scale - 0.7) < 0.04 ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300']"
+                  :class="['py-1 px-1 text-center rounded-lg border transition cursor-pointer truncate', Math.abs(editingStepDraft.scale - 0.7) < 0.04 ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300']"
                 >
-                  70% ({{ t('sign_scale_large') }})
+                  70% · {{ t('sign_scale_large') }}
                 </button>
               </div>
             </div>
+
 
             <!-- Row 2: Separate Date Stamp Card (Perfect Vertical Alignment) -->
             <div class="p-3 bg-slate-50 rounded-2xl border border-slate-200/80 flex items-center justify-between">
@@ -2401,6 +2405,32 @@ function handleStampUpload(e, draft) {
     draft.stampDataUrl = event.target.result;
   };
   reader.readAsDataURL(file);
+}
+
+function getSignPositionDescription(position, orientation) {
+  if (position === 'mid_right') {
+    return orientation === 'landscape'
+      ? t('param_sign_desc_mid_right_land')
+      : t('param_sign_desc_mid_right');
+  }
+  if (position === 'bottom_center') {
+    return orientation === 'landscape'
+      ? t('param_sign_desc_bottom_center_land')
+      : t('param_sign_desc_bottom_center');
+  }
+  return t('param_sign_desc_bottom_right');
+}
+
+function getSignEstimateSizeText(scale, orientation) {
+  const s = scale || 0.5;
+  const w = Math.round(140 * (s / 0.5));
+  const h = Math.round(60 * (s / 0.5));
+  const pct = Math.round(s * (orientation === 'landscape' ? 34 : 48));
+  const typeText = orientation === 'landscape' 
+    ? t('param_sign_est_pct_landscape') 
+    : t('param_sign_est_pct_portrait');
+  const label = t('param_sign_est_size_label');
+  return `${label}: ${w} × ${h} pt (${typeText} ${pct}%)`;
 }
 
 function resetCurrentFlow() {
