@@ -76,20 +76,42 @@
       <!-- 2. ACTIVE COMPRESSION WORKSPACE -->
       <div v-else class="flex-1 flex flex-col justify-between pt-4">
         <div class="space-y-4">
-          <!-- Top Loaded File Summary Bar -->
+          <!-- Top Loaded File Summary Bar (with integrated smart detection badge) -->
           <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80">
-            <div class="flex items-center space-x-3 min-w-0">
+            <div class="flex items-center space-x-3 min-w-0 flex-1">
               <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
                 PDF
               </div>
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-slate-800 truncate max-w-xs sm:max-w-md" :title="filename">
-                  {{ filename }}
-                </p>
-                <div class="flex items-center space-x-2 text-[11px] text-slate-400 font-mono mt-0.5">
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+                  <p class="text-xs font-bold text-slate-800 truncate max-w-xs sm:max-w-sm" :title="filename">
+                    {{ filename }}
+                  </p>
+                  <!-- Smart Auto-Detection Inline Badge -->
+                  <span 
+                    v-if="detectedType" 
+                    :class="[
+                      'inline-flex items-center space-x-1 px-2 py-0.5 rounded-md text-[10px] font-bold shrink-0 border transition',
+                      detectedType === 'vector' 
+                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200' 
+                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                    ]"
+                    :title="detectedType === 'vector' ? t('compress_detected_vector') : t('compress_detected_scanned')"
+                  >
+                    <Sparkles class="w-2.5 h-2.5" />
+                    <span>{{ detectedType === 'vector' ? t('compress_badge_vector', 'Vector') : t('compress_badge_scanned', 'Scanned') }}</span>
+                  </span>
+                </div>
+                <div class="flex items-center space-x-2 text-[11px] text-slate-400 font-mono mt-0.5 flex-wrap">
                   <span class="font-bold text-slate-600">{{ originalSizeMb }} MB</span>
                   <span>•</span>
                   <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
+                  <template v-if="detectedType">
+                    <span class="text-slate-300">•</span>
+                    <span class="text-slate-500 font-sans text-[10.5px]">
+                      {{ detectedType === 'vector' ? t('compress_detected_vector_short') : t('compress_detected_scanned_short') }}
+                    </span>
+                  </template>
                 </div>
               </div>
             </div>
@@ -97,226 +119,249 @@
             <!-- Replace Button -->
             <button 
               @click="reset" 
-              class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2.5 py-1.5 rounded-xl hover:bg-slate-200/60 transition cursor-pointer"
+              class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2.5 py-1.5 rounded-xl hover:bg-slate-200/60 transition cursor-pointer shrink-0 ml-2"
             >
               {{ t('btn_reset_file') || 'Reset / Change File' }}
             </button>
           </div>
 
-          <!-- Smart Auto-Detection Banner -->
+          <!-- If compressed and collapsed: Show sleek summary pill -->
           <div 
-            v-if="detectedType"
-            :class="[
-              'p-3.5 rounded-2xl border text-xs flex items-center justify-between gap-3 animate-in fade-in duration-200',
-              detectedType === 'vector' 
-                ? 'bg-emerald-50/80 border-emerald-200/80 text-emerald-800' 
-                : 'bg-amber-50/80 border-amber-200/80 text-amber-900'
-            ]"
+            v-if="lastExportedFile && !isConfigExpanded" 
+            class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3 animate-in fade-in duration-200 text-xs"
           >
-            <div class="flex items-start space-x-2">
-              <Sparkles class="w-4 h-4 shrink-0 mt-0.5" :class="detectedType === 'vector' ? 'text-emerald-600' : 'text-amber-600'" />
-              <span class="font-medium">
-                {{ detectedType === 'vector' ? t('compress_detected_vector') : t('compress_detected_scanned') }}
-              </span>
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-7 h-7 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
+                ⚙️
+              </div>
+              <div class="flex items-center space-x-2 truncate">
+                <span class="font-bold text-slate-700">{{ t('compress_mode_active_label') }}:</span>
+                <span class="font-bold px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-800">
+                  {{ currentLevelTitle }}
+                </span>
+                <span v-if="selectedLevel === 'target'" class="font-mono font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-1.5 py-0.5 rounded">
+                  ≤ {{ targetSizeMb }} MB
+                </span>
+              </div>
             </div>
-            <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white/80 border shrink-0 font-bold">
-              {{ detectedType === 'vector' ? t('compress_badge_vector', 'Vector') : t('compress_badge_scanned', 'Scanned') }}
-            </span>
+
+            <button 
+              type="button" 
+              @click="isConfigExpanded = true"
+              class="text-xs text-indigo-600 hover:text-indigo-800 font-bold px-3 py-1.5 rounded-xl hover:bg-indigo-50 border border-indigo-200 transition cursor-pointer flex items-center space-x-1 shrink-0"
+            >
+              <span>{{ t('compress_btn_edit_params') }}</span>
+              <span>✏️</span>
+            </button>
           </div>
 
-          <!-- Compression Preset Selector Cards (4 Options) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <!-- 1. Balanced Compression (Recommended) -->
-            <div 
-              @click="selectedLevel = 'balanced'"
-              :class="[
-                'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
-                selectedLevel === 'balanced' 
-                  ? 'border-amber-500 bg-amber-50/40 shadow-sm' 
-                  : 'border-slate-200 hover:border-amber-300 bg-white'
-              ]"
-            >
-              <div>
-                <div class="flex items-start justify-between gap-1.5 mb-1.5">
-                  <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
-                    <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1"></span>
-                    <span>{{ t('compress_level_balanced') }}</span>
-                  </div>
-                  <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60">
-                    -50% ~ -75%
-                  </span>
-                </div>
-                <p class="text-[11px] text-slate-400 leading-relaxed">
-                  {{ t('compress_level_balanced_desc') }}
-                </p>
-              </div>
+          <!-- If not compressed, OR user clicked [修改参数]: Show full 4 cards & Target size panel -->
+          <div v-else class="space-y-3">
+            <div v-if="lastExportedFile" class="flex items-center justify-between text-xs pb-0.5">
+              <span class="font-bold text-slate-700">{{ t('compress_choose_mode', '选择压缩模式') }}</span>
+              <button 
+                type="button" 
+                @click="isConfigExpanded = false"
+                class="text-[11px] text-slate-500 hover:text-slate-800 font-semibold cursor-pointer"
+              >
+                {{ t('compress_btn_collapse') }} ▲
+              </button>
             </div>
 
-            <!-- 2. Extreme Compression -->
-            <div 
-              @click="selectedLevel = 'extreme'"
-              :class="[
-                'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
-                selectedLevel === 'extreme' 
-                  ? 'border-rose-500 bg-rose-50/40 shadow-sm' 
-                  : 'border-slate-200 hover:border-rose-300 bg-white'
-              ]"
-            >
-              <div>
-                <div class="flex items-start justify-between gap-1.5 mb-1.5">
-                  <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
-                    <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1"></span>
-                    <span>{{ t('compress_level_extreme') }}</span>
-                  </div>
-                  <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-200/60">
-                    -75% ~ -90%
-                  </span>
-                </div>
-                <p class="text-[11px] text-slate-400 leading-relaxed">
-                  {{ t('compress_level_extreme_desc') }}
-                </p>
-              </div>
-            </div>
-
-            <!-- 3. Target Size Mode (Bisection Search) -->
-            <div 
-              @click="selectedLevel = 'target'"
-              :class="[
-                'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
-                selectedLevel === 'target' 
-                  ? 'border-indigo-500 bg-indigo-50/40 shadow-sm ring-1 ring-indigo-500/20' 
-                  : 'border-slate-200 hover:border-indigo-300 bg-white'
-              ]"
-            >
-              <div>
-                <div class="flex items-start justify-between gap-1.5 mb-1.5">
-                  <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
-                    <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0 mt-1"></span>
-                    <span>{{ t('compress_level_target') }}</span>
-                  </div>
-                  <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md border border-indigo-200/60">
-                    ≤ {{ targetSizeMb }} MB
-                  </span>
-                </div>
-                <p class="text-[11px] text-slate-400 leading-relaxed">
-                  {{ t('compress_level_target_desc') }}
-                </p>
-              </div>
-            </div>
-
-            <!-- 4. Lossless Structure Compression -->
-            <div 
-              @click="selectedLevel = 'lossless'"
-              :class="[
-                'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
-                selectedLevel === 'lossless' 
-                  ? 'border-emerald-500 bg-emerald-50/40 shadow-sm' 
-                  : 'border-slate-200 hover:border-emerald-300 bg-white'
-              ]"
-            >
-              <div>
-                <div class="flex items-start justify-between gap-1.5 mb-1.5">
-                  <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1"></span>
-                    <span>{{ t('compress_level_lossless') }}</span>
-                  </div>
-                  <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200/60">
-                    -15% ~ -35%
-                  </span>
-                </div>
-                <p class="text-[11px] text-slate-400 leading-relaxed">
-                  {{ t('compress_level_lossless_desc') }}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <!-- Target Size Configuration Panel (Active when selectedLevel === 'target') -->
-          <div 
-            v-if="selectedLevel === 'target'" 
-            class="p-4 sm:p-5 rounded-2xl bg-indigo-50/60 border-2 border-indigo-200 text-xs text-slate-800 space-y-3 animate-in fade-in duration-200"
-          >
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <div class="flex items-center space-x-2.5">
-                <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
-                  🎯
-                </div>
+            <!-- Compression Preset Selector Cards (4 Options) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <!-- 1. Balanced Compression (Recommended) -->
+              <div 
+                @click="selectedLevel = 'balanced'"
+                :class="[
+                  'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                  selectedLevel === 'balanced' 
+                    ? 'border-amber-500 bg-amber-50/40 shadow-sm' 
+                    : 'border-slate-200 hover:border-amber-300 bg-white'
+                ]"
+              >
                 <div>
-                  <div class="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center space-x-2">
-                    <span>{{ t('compress_target_size_label') }}</span>
+                  <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                    <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
+                      <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1"></span>
+                      <span>{{ t('compress_level_balanced') }}</span>
+                    </div>
+                    <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60">
+                      -50% ~ -75%
+                    </span>
                   </div>
-                  <p class="text-[11px] text-slate-500 mt-0.5">
-                    {{ t('compress_target_size_subtitle') }}
+                  <p class="text-[11px] text-slate-400 leading-relaxed">
+                    {{ t('compress_level_balanced_desc') }}
                   </p>
                 </div>
               </div>
 
-              <!-- Decimal Numeric Input Box -->
-              <div class="flex items-center space-x-2 bg-white px-3.5 py-2 rounded-xl border border-indigo-200 shadow-2xs">
-                <span class="text-xs text-slate-500 font-semibold">{{ t('compress_target_limit_symbol', '≤') }}</span>
-                <input 
-                  type="number" 
-                  v-model.number="targetSizeMb" 
-                  min="0.1" 
-                  max="100" 
-                  step="0.1"
-                  class="w-16 text-right font-mono font-bold text-indigo-700 text-sm focus:outline-none"
-                />
-                <span class="font-bold text-slate-600 text-xs">MB</span>
-              </div>
-            </div>
-
-            <!-- Quick Preset Pills -->
-            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-indigo-100/80">
-              <span class="text-[11px] font-bold text-slate-500 mr-1">{{ t('compress_quick_presets') }}:</span>
-              <button 
-                type="button" 
-                v-for="preset in [
-                  { mb: 1, label: '1 MB', tip: t('compress_preset_1mb') },
-                  { mb: 2, label: '2 MB', tip: t('compress_preset_2mb') },
-                  { mb: 5, label: '5 MB', tip: t('compress_preset_5mb') },
-                  { mb: 10, label: '10 MB', tip: t('compress_preset_10mb') }
-                ]" 
-                :key="preset.mb"
-                @click="targetSizeMb = preset.mb"
+              <!-- 2. Extreme Compression -->
+              <div 
+                @click="selectedLevel = 'extreme'"
                 :class="[
-                  'px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 border',
-                  targetSizeMb === preset.mb 
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' 
-                    : 'bg-white hover:bg-indigo-50/80 text-slate-700 border-indigo-200/80'
+                  'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                  selectedLevel === 'extreme' 
+                    ? 'border-rose-500 bg-rose-50/40 shadow-sm' 
+                    : 'border-slate-200 hover:border-rose-300 bg-white'
                 ]"
               >
-                <span class="font-mono font-bold">{{ preset.label }}</span>
-                <span :class="targetSizeMb === preset.mb ? 'text-indigo-200 text-[10px]' : 'text-slate-400 text-[10px]'">{{ preset.tip }}</span>
-              </button>
+                <div>
+                  <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                    <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
+                      <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1"></span>
+                      <span>{{ t('compress_level_extreme') }}</span>
+                    </div>
+                    <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-200/60">
+                      -75% ~ -90%
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 leading-relaxed">
+                    {{ t('compress_level_extreme_desc') }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- 3. Target Size Mode (Bisection Search) -->
+              <div 
+                @click="selectedLevel = 'target'"
+                :class="[
+                  'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                  selectedLevel === 'target' 
+                    ? 'border-indigo-500 bg-indigo-50/40 shadow-sm ring-1 ring-indigo-500/20' 
+                    : 'border-slate-200 hover:border-indigo-300 bg-white'
+                ]"
+              >
+                <div>
+                  <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                    <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
+                      <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0 mt-1"></span>
+                      <span>{{ t('compress_level_target') }}</span>
+                    </div>
+                    <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md border border-indigo-200/60">
+                      ≤ {{ targetSizeMb }} MB
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 leading-relaxed">
+                    {{ t('compress_level_target_desc') }}
+                  </p>
+                </div>
+              </div>
+
+              <!-- 4. Lossless Structure Compression -->
+              <div 
+                @click="selectedLevel = 'lossless'"
+                :class="[
+                  'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                  selectedLevel === 'lossless' 
+                    ? 'border-emerald-500 bg-emerald-50/40 shadow-sm' 
+                    : 'border-slate-200 hover:border-emerald-300 bg-white'
+                ]"
+              >
+                <div>
+                  <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                    <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1"></span>
+                      <span>{{ t('compress_level_lossless') }}</span>
+                    </div>
+                    <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200/60">
+                      -15% ~ -35%
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 leading-relaxed">
+                    {{ t('compress_level_lossless_desc') }}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <!-- Dynamic Comparison & Calculation Hint -->
-            <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-1 text-slate-600">
-              <div class="flex items-center space-x-1.5">
-                <span>{{ t('compress_target_current_size') }}: <strong class="font-mono text-slate-800">{{ originalSizeMb }} MB</strong></span>
-                <span>➔</span>
-                <span>{{ t('compress_target_goal') }}: <strong class="font-mono text-indigo-700">≤ {{ Number(targetSizeMb).toFixed(2) }} MB</strong></span>
+            <!-- Target Size Configuration Panel (Active when selectedLevel === 'target') -->
+            <div 
+              v-if="selectedLevel === 'target'" 
+              class="p-4 sm:p-5 rounded-2xl bg-indigo-50/60 border-2 border-indigo-200 text-xs text-slate-800 space-y-3 animate-in fade-in duration-200"
+            >
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+                    🎯
+                  </div>
+                  <div>
+                    <div class="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center space-x-2">
+                      <span>{{ t('compress_target_size_label') }}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5">
+                      {{ t('compress_target_size_subtitle') }}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Decimal Numeric Input Box -->
+                <div class="flex items-center space-x-2 bg-white px-3.5 py-2 rounded-xl border border-indigo-200 shadow-2xs">
+                  <span class="text-xs text-slate-500 font-semibold">{{ t('compress_target_limit_symbol', '≤') }}</span>
+                  <input 
+                    type="number" 
+                    v-model.number="targetSizeMb" 
+                    min="0.1" 
+                    max="100" 
+                    step="0.1"
+                    class="w-16 text-right font-mono font-bold text-indigo-700 text-sm focus:outline-none"
+                  />
+                  <span class="font-bold text-slate-600 text-xs">MB</span>
+                </div>
               </div>
-              <div v-if="Number(originalSizeMb) <= Number(targetSizeMb)" class="text-emerald-700 font-bold flex items-center space-x-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                <Sparkles class="w-3 h-3 text-emerald-600 shrink-0" />
-                <span>{{ t('compress_target_already_smaller') }}</span>
+
+              <!-- Quick Preset Pills -->
+              <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-indigo-100/80">
+                <span class="text-[11px] font-bold text-slate-500 mr-1">{{ t('compress_quick_presets') }}:</span>
+                <button 
+                  type="button" 
+                  v-for="preset in [
+                    { mb: 1, label: '1 MB', tip: t('compress_preset_1mb') },
+                    { mb: 2, label: '2 MB', tip: t('compress_preset_2mb') },
+                    { mb: 5, label: '5 MB', tip: t('compress_preset_5mb') },
+                    { mb: 10, label: '10 MB', tip: t('compress_preset_10mb') }
+                  ]" 
+                  :key="preset.mb"
+                  @click="targetSizeMb = preset.mb"
+                  :class="[
+                    'px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 border',
+                    targetSizeMb === preset.mb 
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' 
+                      : 'bg-white hover:bg-indigo-50/80 text-slate-700 border-indigo-200/80'
+                  ]"
+                >
+                  <span class="font-mono font-bold">{{ preset.label }}</span>
+                  <span :class="targetSizeMb === preset.mb ? 'text-indigo-200 text-[10px]' : 'text-slate-400 text-[10px]'">{{ preset.tip }}</span>
+                </button>
               </div>
-              <div v-else class="text-indigo-600 font-mono font-semibold">
-                {{ t('compress_target_expected_reduction') }}: ~{{ Math.round((1 - targetSizeMb / Number(originalSizeMb)) * 100) }}%
+
+              <!-- Dynamic Comparison & Calculation Hint -->
+              <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-1 text-slate-600">
+                <div class="flex items-center space-x-1.5">
+                  <span>{{ t('compress_target_current_size') }}: <strong class="font-mono text-slate-800">{{ originalSizeMb }} MB</strong></span>
+                  <span>➔</span>
+                  <span>{{ t('compress_target_goal') }}: <strong class="font-mono text-indigo-700">≤ {{ Number(targetSizeMb).toFixed(2) }} MB</strong></span>
+                </div>
+                <div v-if="Number(originalSizeMb) <= Number(targetSizeMb)" class="text-emerald-700 font-bold flex items-center space-x-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <Sparkles class="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span>{{ t('compress_target_already_smaller') }}</span>
+                </div>
+                <div v-else class="text-indigo-600 font-mono font-semibold">
+                  {{ t('compress_target_expected_reduction') }}: ~{{ Math.round((1 - targetSizeMb / Number(originalSizeMb)) * 100) }}%
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Scanned Doc Lossless Warning Tip -->
-          <div 
-            v-if="detectedType === 'scanned' && selectedLevel === 'lossless'" 
-            class="p-3 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 flex items-start space-x-2 animate-in fade-in duration-200"
-          >
-            <Sparkles class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <p class="leading-relaxed">
-              💡 <strong>{{ t('compress_scanned_warn_title', 'Scanned Document Hint') }}</strong>: {{ t('compress_scanned_warn_desc', 'This document consists mostly of images. "Lossless" mode will NOT compress image pixels. To significantly reduce size, please switch to "High Quality (200~300 DPI)", which preserves print quality while shrinking the file by 50%~75%!') }}
-            </p>
+            <!-- Scanned Doc Lossless Warning Tip -->
+            <div 
+              v-if="detectedType === 'scanned' && selectedLevel === 'lossless'" 
+              class="p-3 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 flex items-start space-x-2 animate-in fade-in duration-200"
+            >
+              <Sparkles class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <p class="leading-relaxed">
+                💡 <strong>{{ t('compress_scanned_warn_title', 'Scanned Document Hint') }}</strong>: {{ t('compress_scanned_warn_desc', 'This document consists mostly of images. "Lossless" mode will NOT compress image pixels. To significantly reduce size, please switch to "High Quality (200~300 DPI)", which preserves print quality while shrinking the file by 50%~75%!') }}
+              </p>
+            </div>
           </div>
 
           <!-- Progress Bar during compression -->
@@ -513,6 +558,15 @@ const savedPercent = ref(0);
 const detectedType = ref(null); // 'vector' | 'scanned'
 const selectedLevel = ref('balanced'); // 'extreme' | 'balanced' | 'target' | 'lossless'
 const targetSizeMb = ref(2.0);
+const isConfigExpanded = ref(true);
+
+const currentLevelTitle = computed(() => {
+  if (selectedLevel.value === 'balanced') return t('compress_level_balanced');
+  if (selectedLevel.value === 'extreme') return t('compress_level_extreme');
+  if (selectedLevel.value === 'target') return t('compress_level_target');
+  if (selectedLevel.value === 'lossless') return t('compress_level_lossless');
+  return '';
+});
 
 // Diff Preview Modal & Thumbnails State
 const isDiffModalOpen = ref(false);
@@ -570,6 +624,7 @@ function handleVaultFilesSelected(selectedFiles) {
 async function loadFile(file, password = '') {
   showNextActions.value = false;
   lastExportedFile.value = null;
+  isConfigExpanded.value = true;
   pendingFileName.value = file.name;
   pendingFileObj = file;
 
@@ -666,6 +721,7 @@ function reset() {
   originalThumbnailUrl.value = '';
   compressedThumbnailUrl.value = '';
   isDiffModalOpen.value = false;
+  isConfigExpanded.value = true;
 }
 
 function handleReDownload() {
@@ -712,6 +768,7 @@ async function executeCompress() {
       arrayBuffer: compressedBytes,
       size: compressedBytes.byteLength
     };
+    isConfigExpanded.value = false;
     showNextActions.value = true;
 
     compressedSizeMb.value = (compressedBytes.byteLength / (1024 * 1024)).toFixed(2);
