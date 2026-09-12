@@ -420,88 +420,90 @@
           </div>
         </div>
 
-        <!-- Next Action Relay Banner -->
-        <NextActionBanner 
-          v-if="showNextActions && lastExportedFile"
-          :current-tool="'split'"
-          :file="lastExportedFile"
-          @send-to-tool="(tId) => emit('send-to-tool', tId)"
-          @close="showNextActions = false"
-          class="mb-3"
-        />
+        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Next Action Relay Banner -->
+          <NextActionBanner 
+            v-if="showNextActions && lastExportedFile"
+            :current-tool="'split'"
+            :file="lastExportedFile"
+            @send-to-tool="(tId) => emit('send-to-tool', tId)"
+            @close="showNextActions = false"
+          />
 
-        <!-- 5. Bottom Action & Export Configuration Bar -->
-        <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <!-- Left: Output Filename & Auto-save Checkbox -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center space-x-1.5">
-              <label class="text-xs text-slate-500 font-semibold shrink-0">
-                {{ t('vault_field_name') }}:
-              </label>
-              <input 
-                v-model="customOutputBaseName"
-                type="text" 
-                :placeholder="defaultFileNamePlaceholder"
-                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
-              >
-            </div>
-
-            <!-- Delivery Format Selector (Visible for multi-file operations) -->
-            <div v-if="isDeliveryToggleVisible" class="flex items-center space-x-1.5 pl-1 sm:border-l sm:border-slate-200">
-              <span class="text-xs text-slate-500 font-semibold shrink-0">{{ t('split_delivery_format_label') || '交付形式：' }}</span>
-              <div class="flex items-center space-x-1 bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/70 text-xs">
-                <button 
-                  type="button" 
-                  @click="deliveryFormat = 'zip'"
-                  :class="[
-                    'px-2.5 py-1 rounded-lg font-bold flex items-center space-x-1 transition cursor-pointer',
-                    deliveryFormat === 'zip' 
-                      ? 'bg-white text-emerald-700 shadow-2xs border border-slate-200/60' 
-                      : 'text-slate-500 hover:text-slate-700'
-                  ]"
+          <!-- 5. Bottom Action & Export Configuration Bar -->
+          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <!-- Left: Output Filename & Auto-save Checkbox -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <label class="text-xs text-slate-500 font-semibold shrink-0">
+                  {{ t('vault_field_name') }}:
+                </label>
+                <input 
+                  v-model="customOutputBaseName"
+                  type="text" 
+                  :placeholder="defaultFileNamePlaceholder"
+                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-emerald-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
                 >
-                  <Package class="w-3.5 h-3.5 text-emerald-600" />
-                  <span>{{ t('split_delivery_zip_pill') || '📦 ZIP 打包' }}</span>
-                </button>
-                <button 
-                  type="button" 
-                  @click="deliveryFormat = 'separate'"
-                  :class="[
-                    'px-2.5 py-1 rounded-lg font-bold flex items-center space-x-1 transition cursor-pointer',
-                    deliveryFormat === 'separate' 
-                      ? 'bg-white text-emerald-700 shadow-2xs border border-slate-200/60' 
-                      : 'text-slate-500 hover:text-slate-700'
-                  ]"
-                >
-                  <Files class="w-3.5 h-3.5 text-slate-600" />
-                  <span>{{ t('split_delivery_separate_pill') || '📄 独立 PDF' }}</span>
-                </button>
               </div>
+
+              <!-- Delivery Format Selector (Visible for multi-file operations) -->
+              <div v-if="isDeliveryToggleVisible" class="flex items-center space-x-1.5 pl-1 sm:border-l sm:border-slate-200">
+                <span class="text-xs text-slate-500 font-semibold shrink-0">{{ t('split_delivery_format_label') || '交付形式：' }}</span>
+                <div class="flex items-center space-x-1 bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/70 text-xs">
+                  <button 
+                    type="button" 
+                    @click="deliveryFormat = 'zip'"
+                    :class="[
+                      'px-2.5 py-1 rounded-lg font-bold flex items-center space-x-1 transition cursor-pointer',
+                      deliveryFormat === 'zip' 
+                        ? 'bg-white text-emerald-700 shadow-2xs border border-slate-200/60' 
+                        : 'text-slate-500 hover:text-slate-700'
+                    ]"
+                  >
+                    <Package class="w-3.5 h-3.5 text-emerald-600" />
+                    <span>{{ t('split_delivery_zip_pill') || '📦 ZIP 打包' }}</span>
+                  </button>
+                  <button 
+                    type="button" 
+                    @click="deliveryFormat = 'separate'"
+                    :class="[
+                      'px-2.5 py-1 rounded-lg font-bold flex items-center space-x-1 transition cursor-pointer',
+                      deliveryFormat === 'separate' 
+                        ? 'bg-white text-emerald-700 shadow-2xs border border-slate-200/60' 
+                        : 'text-slate-500 hover:text-slate-700'
+                    ]"
+                  >
+                    <Files class="w-3.5 h-3.5 text-slate-600" />
+                    <span>{{ t('split_delivery_separate_pill') || '📄 独立 PDF' }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  v-model="autoSaveToVault" 
+                  class="w-4 h-4 text-emerald-600 rounded-md border-slate-300 focus:ring-emerald-500 cursor-pointer"
+                >
+                <span>{{ t('vault_autosave_checkbox') }}</span>
+              </label>
             </div>
 
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                v-model="autoSaveToVault" 
-                class="w-4 h-4 text-emerald-600 rounded-md border-slate-300 focus:ring-emerald-500 cursor-pointer"
-              >
-              <span>{{ t('vault_autosave_checkbox') }}</span>
-            </label>
+            <!-- Right: Execution Button -->
+            <button 
+              :disabled="isProcessing || isLoading || isExecutionDisabled"
+              @click="handlePrimarySplitClick" 
+              class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+            >
+              <span v-if="!isProcessing">
+                {{ primaryButtonText }}
+              </span>
+              <span v-else>{{ deliveryStatusMessage || t('loading') || 'Processing...' }}</span>
+              <Download v-if="!isProcessing" class="w-4 h-4" />
+              <Loader2 v-else class="w-4 h-4 animate-spin" />
+            </button>
           </div>
-
-          <!-- Right: Execution Button -->
-          <button 
-            :disabled="isProcessing || isLoading || isExecutionDisabled"
-            @click="handlePrimarySplitClick" 
-            class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25 disabled:opacity-50 cursor-pointer ml-auto"
-          >
-            <span v-if="!isProcessing">
-              {{ primaryButtonText }}
-            </span>
-            <span v-else>{{ deliveryStatusMessage || t('loading') || 'Processing...' }}</span>
-            <Download v-if="!isProcessing" class="w-4 h-4" />
-            <Loader2 v-else class="w-4 h-4 animate-spin" />
-          </button>
         </div>
       </div>
     </div>

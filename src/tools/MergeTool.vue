@@ -229,56 +229,58 @@
           </div>
         </div>
 
-        <!-- Next Action Relay Banner -->
-        <NextActionBanner 
-          v-if="showNextActions && lastExportedFile"
-          :current-tool="'merge'"
-          :file="lastExportedFile"
-          @send-to-tool="(tId) => emit('send-to-tool', tId)"
-          @close="showNextActions = false"
-          class="mb-3"
-        />
+        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Next Action Relay Banner -->
+          <NextActionBanner 
+            v-if="showNextActions && lastExportedFile"
+            :current-tool="'merge'"
+            :file="lastExportedFile"
+            @send-to-tool="(tId) => emit('send-to-tool', tId)"
+            @close="showNextActions = false"
+          />
 
-        <!-- Bottom Execution & Output Settings Bar -->
-        <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <!-- Output Filename & Vault Auto-Save Setting -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center space-x-1.5">
-              <span class="text-xs text-slate-500 font-semibold shrink-0">{{ t('merge_output_filename') }}:</span>
-              <div class="flex items-center shadow-2xs">
-                <input 
-                  v-model="customOutputBaseName" 
-                  type="text" 
-                  placeholder="PDFSeal_Merged"
-                  class="text-xs bg-slate-50 border border-slate-200 rounded-l-xl px-3 py-1.5 font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white outline-hidden w-44 sm:w-56 border-r-0"
-                >
-                <span class="bg-slate-100 border border-slate-200 rounded-r-xl px-2.5 py-1.5 text-slate-500 font-mono text-xs select-none font-bold">
-                  .pdf
-                </span>
+          <!-- Bottom Execution & Output Settings Bar -->
+          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <!-- Output Filename & Vault Auto-Save Setting -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <span class="text-xs text-slate-500 font-semibold shrink-0">{{ t('merge_output_filename') }}:</span>
+                <div class="flex items-center shadow-2xs">
+                  <input 
+                    v-model="customOutputBaseName" 
+                    type="text" 
+                    placeholder="PDFSeal_Merged"
+                    class="text-xs bg-slate-50 border border-slate-200 rounded-l-xl px-3 py-1.5 font-mono focus:ring-2 focus:ring-blue-500 focus:bg-white outline-hidden w-44 sm:w-56 border-r-0"
+                  >
+                  <span class="bg-slate-100 border border-slate-200 rounded-r-xl px-2.5 py-1.5 text-slate-500 font-mono text-xs select-none font-bold">
+                    .pdf
+                  </span>
+                </div>
               </div>
+
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  v-model="autoSaveToVault" 
+                  class="w-4 h-4 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500 cursor-pointer"
+                >
+                <span>{{ t('merge_save_to_vault_opt') }}</span>
+              </label>
             </div>
 
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                v-model="autoSaveToVault" 
-                class="w-4 h-4 text-blue-600 rounded-md border-slate-300 focus:ring-blue-500 cursor-pointer"
-              >
-              <span>{{ t('merge_save_to_vault_opt') }}</span>
-            </label>
+            <!-- Primary Merge Execution Button -->
+            <button 
+              :disabled="isProcessing || files.length < 2"
+              @click="executeMerge" 
+              class="bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-blue-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+            >
+              <span v-if="!isProcessing">{{ t('seal_and_merge') }}</span>
+              <span v-else>{{ t('loading') || 'Processing...' }}</span>
+              <Download v-if="!isProcessing" class="w-4 h-4" />
+              <Loader2 v-else class="w-4 h-4 animate-spin" />
+            </button>
           </div>
-
-          <!-- Primary Merge Execution Button -->
-          <button 
-            :disabled="isProcessing || files.length < 2"
-            @click="executeMerge" 
-            class="bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-blue-600/25 disabled:opacity-50 cursor-pointer ml-auto"
-          >
-            <span v-if="!isProcessing">{{ t('seal_and_merge') }}</span>
-            <span v-else>{{ t('loading') || 'Processing...' }}</span>
-            <Download v-if="!isProcessing" class="w-4 h-4" />
-            <Loader2 v-else class="w-4 h-4 animate-spin" />
-          </button>
         </div>
       </div>
     </div>
