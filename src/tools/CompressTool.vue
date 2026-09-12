@@ -1,9 +1,9 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
-    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
             <Minimize2 class="w-5 h-5" />
@@ -74,10 +74,10 @@
       </div>
 
       <!-- 2. ACTIVE COMPRESSION WORKSPACE -->
-      <div v-else class="flex-1 flex flex-col justify-between pt-4">
-        <div class="space-y-4">
+      <div v-else class="flex-1 flex flex-col justify-between pt-3 sm:pt-3.5">
+        <div class="space-y-2.5 sm:space-y-3">
           <!-- Top Loaded File Summary Bar (with integrated smart detection badge) -->
-          <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80">
+          <div class="flex items-center justify-between p-3 sm:p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80">
             <div class="flex items-center space-x-3 min-w-0 flex-1">
               <div class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-xs shrink-0">
                 PDF
@@ -126,12 +126,12 @@
           </div>
 
           <!-- Compression Preset Selector Cards (4 Options) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
               <!-- 1. Balanced Compression (Recommended) -->
               <div 
                 @click="selectedLevel = 'balanced'"
                 :class="[
-                  'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                  'p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
                   selectedLevel === 'balanced' 
                     ? 'border-amber-500 bg-amber-50/40 shadow-sm' 
                     : 'border-slate-200 hover:border-amber-300 bg-white'
@@ -157,7 +157,7 @@
               <div 
                 @click="selectedLevel = 'extreme'"
                 :class="[
-                  'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                  'p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
                   selectedLevel === 'extreme' 
                     ? 'border-rose-500 bg-rose-50/40 shadow-sm' 
                     : 'border-slate-200 hover:border-rose-300 bg-white'
@@ -183,7 +183,7 @@
               <div 
                 @click="selectedLevel = 'target'"
                 :class="[
-                  'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                  'p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
                   selectedLevel === 'target' 
                     ? 'border-indigo-500 bg-indigo-50/40 shadow-sm ring-1 ring-indigo-500/20' 
                     : 'border-slate-200 hover:border-indigo-300 bg-white'
@@ -209,7 +209,7 @@
               <div 
                 @click="selectedLevel = 'lossless'"
                 :class="[
-                  'p-3.5 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                  'p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
                   selectedLevel === 'lossless' 
                     ? 'border-emerald-500 bg-emerald-50/40 shadow-sm' 
                     : 'border-slate-200 hover:border-emerald-300 bg-white'
@@ -235,11 +235,11 @@
             <!-- Target Size Configuration Panel (Active when selectedLevel === 'target') -->
             <div 
               v-if="selectedLevel === 'target'" 
-              class="p-4 sm:p-5 rounded-2xl bg-indigo-50/60 border-2 border-indigo-200 text-xs text-slate-800 space-y-3 animate-in fade-in duration-200"
+              class="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/60 border-2 border-indigo-200 text-xs text-slate-800 space-y-2.5 animate-in fade-in duration-200"
             >
-              <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex flex-wrap items-center justify-between gap-2.5">
                 <div class="flex items-center space-x-2.5">
-                  <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+                  <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
                     🎯
                   </div>
                   <div>
@@ -253,7 +253,7 @@
                 </div>
 
                 <!-- Decimal Numeric Input Box -->
-                <div class="flex items-center space-x-2 bg-white px-3.5 py-2 rounded-xl border border-indigo-200 shadow-2xs">
+                <div class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-xl border border-indigo-200 shadow-2xs">
                   <span class="text-xs text-slate-500 font-semibold">{{ t('compress_target_limit_symbol', '≤') }}</span>
                   <input 
                     type="number" 
@@ -268,7 +268,7 @@
               </div>
 
               <!-- Quick Preset Pills -->
-              <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-indigo-100/80">
+              <div class="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-indigo-100/80">
                 <span class="text-[11px] font-bold text-slate-500 mr-1">{{ t('compress_quick_presets') }}:</span>
                 <button 
                   type="button" 
@@ -281,7 +281,7 @@
                   :key="preset.mb"
                   @click="targetSizeMb = preset.mb"
                   :class="[
-                    'px-2.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 border',
+                    'px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 border',
                     targetSizeMb === preset.mb 
                       ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' 
                       : 'bg-white hover:bg-indigo-50/80 text-slate-700 border-indigo-200/80'
@@ -293,7 +293,7 @@
               </div>
 
               <!-- Dynamic Comparison & Calculation Hint -->
-              <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-1 text-slate-600">
+              <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-0.5 text-slate-600">
                 <div class="flex items-center space-x-1.5">
                   <span>{{ t('compress_target_current_size') }}: <strong class="font-mono text-slate-800">{{ originalSizeMb }} MB</strong></span>
                   <span>➔</span>
@@ -312,7 +312,7 @@
             <!-- Scanned Doc Lossless Warning Tip -->
             <div 
               v-if="detectedType === 'scanned' && selectedLevel === 'lossless'" 
-              class="p-3 rounded-2xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 flex items-start space-x-2 animate-in fade-in duration-200"
+              class="p-2.5 sm:p-3 rounded-xl bg-amber-50/90 border border-amber-200 text-xs text-amber-900 flex items-start space-x-2 animate-in fade-in duration-200"
             >
               <Sparkles class="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
               <p class="leading-relaxed">
@@ -321,8 +321,8 @@
             </div>
 
           <!-- Progress Bar during compression -->
-          <div v-if="isProcessing" class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/80 animate-in fade-in duration-200">
-            <div class="flex items-center justify-between text-xs font-bold text-amber-900 mb-2">
+          <div v-if="isProcessing" class="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 animate-in fade-in duration-200">
+            <div class="flex items-center justify-between text-xs font-bold text-amber-900 mb-1.5">
               <span class="flex items-center space-x-2">
                 <Loader2 class="w-4 h-4 animate-spin text-amber-600" />
                 <span>{{ progressMessage || t('compress_status_processing') }}</span>
@@ -341,12 +341,12 @@
         <!-- Compact Success Result Banner (Clean & Lightweight, Zero Layout Shift) -->
         <div 
           v-if="lastExportedFile" 
-          class="my-3 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-indigo-50/60 border border-emerald-200/90 flex flex-wrap items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-300"
+          class="my-2.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-indigo-50/60 border border-emerald-200/90 flex flex-wrap items-center justify-between gap-2.5 shadow-2xs animate-in fade-in duration-300"
         >
           <!-- Left: Success Message & Size Info -->
-          <div class="flex items-center space-x-3 min-w-0">
-            <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
-              <CheckCircle2 class="w-5 h-5" />
+          <div class="flex items-center space-x-2.5 min-w-0">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+              <CheckCircle2 class="w-4.5 h-4.5" />
             </div>
             <div class="min-w-0">
               <div class="flex items-center space-x-2 flex-wrap">
@@ -370,7 +370,7 @@
               v-if="originalThumbnailUrl && compressedThumbnailUrl"
               type="button" 
               @click="isDiffModalOpen = true"
-              class="text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-50/90 px-3.5 py-2 rounded-xl border border-indigo-200/90 shadow-2xs hover:shadow-xs transition cursor-pointer flex items-center space-x-1.5 active:scale-98"
+              class="text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-50/90 px-3 py-1.5 rounded-xl border border-indigo-200/90 shadow-2xs hover:shadow-xs transition cursor-pointer flex items-center space-x-1.5 active:scale-98"
             >
               <Eye class="w-4 h-4 text-indigo-600" />
               <span>{{ t('compress_btn_view_diff') }}</span>
@@ -380,7 +380,7 @@
             <button 
               type="button" 
               @click="handleReDownload"
-              class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer flex items-center space-x-1.5 active:scale-98 shadow-2xs"
+              class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer flex items-center space-x-1.5 active:scale-98 shadow-2xs"
               :title="t('compress_btn_redownload')"
             >
               <Download class="w-3.5 h-3.5 text-slate-600" />
@@ -396,11 +396,11 @@
           :file="lastExportedFile"
           @send-to-tool="(tId) => emit('send-to-tool', tId)"
           @close="showNextActions = false"
-          class="mb-3"
+          class="mb-2.5"
         />
 
         <!-- Bottom Execution & Output Settings Bar (Identical to MergeTool) -->
-        <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div class="pt-3 sm:pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
           <!-- Output Filename & Vault Auto-Save Setting -->
           <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center space-x-1.5">
