@@ -75,9 +75,12 @@
 
       <!-- 2. ACTIVE COMPRESSION WORKSPACE OR UNIFIED RESULT DELIVERY -->
       <div v-else class="flex-1 flex flex-col justify-between pt-3 sm:pt-3.5">
-        <!-- 2A. Unified Result Delivery View upon Completion -->
+        <!-- 2A. Unified Processing & Result Delivery View upon Completion -->
         <ResultDeliveryView 
-          v-if="lastExportedFile && !isProcessing"
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
           :file="lastExportedFile"
           source-tool="compress"
           :page-count="totalPages"
@@ -355,23 +358,6 @@
               <p class="leading-relaxed">
                 💡 <strong>{{ t('compress_scanned_warn_title', 'Scanned Document Hint') }}</strong>: {{ t('compress_scanned_warn_desc', 'This document consists mostly of images. "Lossless" mode will NOT compress image pixels. To significantly reduce size, please switch to "High Quality (200~300 DPI)", which preserves print quality while shrinking the file by 50%~75%!') }}
               </p>
-            </div>
-
-            <!-- Progress Bar during compression -->
-            <div v-if="isProcessing" class="p-3 rounded-xl bg-amber-50/60 border border-amber-200/80 animate-in fade-in duration-200">
-              <div class="flex items-center justify-between text-xs font-bold text-amber-900 mb-1.5">
-                <span class="flex items-center space-x-2">
-                  <Loader2 class="w-4 h-4 animate-spin text-amber-600" />
-                  <span>{{ progressMessage || t('compress_status_processing') }}</span>
-                </span>
-                <span class="font-mono">{{ progressPercent }}%</span>
-              </div>
-              <div class="w-full bg-amber-200/60 h-2 rounded-full overflow-hidden">
-                <div 
-                  class="bg-amber-600 h-full transition-all duration-200 rounded-full" 
-                  :style="{ width: `${progressPercent}%` }"
-                ></div>
-              </div>
             </div>
           </div>
 

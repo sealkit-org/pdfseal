@@ -1,11 +1,72 @@
 <template>
   <div class="space-y-4 animate-in fade-in slide-in-from-bottom-3 duration-300">
-    <!-- Main Delivery Card -->
-    <div class="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs text-center relative overflow-hidden">
-      <!-- Decorative celebratory gradient background glow -->
-      <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-full max-w-lg h-36 bg-gradient-to-b from-emerald-100/70 via-teal-50/40 to-transparent blur-2xl pointer-events-none -z-0"></div>
+    <!-- Main Card (In-Place Transition: Processing <-> Delivery) -->
+    <div class="bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-7 shadow-xs text-center relative overflow-hidden transition-all duration-300">
+      
+      <!-- ======================================================== -->
+      <!-- STATE A: PROCESSING IN PROGRESS (Unified Progress View)  -->
+      <!-- ======================================================== -->
+      <div v-if="isProcessing" class="relative z-10 flex flex-col items-center max-w-lg mx-auto py-3 sm:py-6">
+        <!-- Gentle Blue/Indigo Pulse Aura -->
+        <div class="absolute -top-20 left-1/2 -translate-x-1/2 w-full max-w-md h-36 bg-gradient-to-b from-blue-100/70 via-indigo-50/40 to-transparent blur-2xl pointer-events-none -z-0"></div>
 
-      <div class="relative z-10 flex flex-col items-center max-w-xl mx-auto">
+        <!-- Animated Seal / Loading Badge -->
+        <div class="w-14 h-14 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-500/25 mb-3.5 ring-8 ring-blue-50 relative">
+          <span class="text-2xl animate-bounce select-none">🦭</span>
+        </div>
+
+        <!-- Headline -->
+        <h2 class="text-base sm:text-xl font-black text-slate-800 tracking-tight mb-1">
+          {{ resolvedProcessingTitle }}
+        </h2>
+        
+        <p class="text-xs text-slate-500 font-medium mb-4">
+          {{ t('result_auto_downloaded_hint_wait') || '运算完全在您的浏览器内存中执行 · 请稍候' }}
+        </p>
+
+        <!-- Progress Bar & Percentage Track -->
+        <div class="w-full max-w-sm space-y-1.5 my-1">
+          <div class="flex items-center justify-between text-xs font-bold text-slate-500 px-0.5">
+            <span class="text-[11px] font-semibold text-slate-400 font-mono tracking-wider">
+              {{ clampedPercent < 100 ? (t('processing_state_running') || 'PROCESSING') : (t('processing_state_finalizing') || 'FINALIZING') }}
+            </span>
+            <span class="font-mono text-blue-600 font-extrabold text-xs sm:text-sm">{{ clampedPercent }}%</span>
+          </div>
+
+          <!-- Progress Bar Track -->
+          <div class="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden p-0.5 border border-slate-200/70 shadow-inner">
+            <div 
+              class="h-full rounded-full bg-gradient-to-r from-blue-500 via-indigo-500 to-blue-600 transition-all duration-300 ease-out shadow-xs"
+              :style="{ width: `${clampedPercent}%` }"
+            ></div>
+          </div>
+        </div>
+
+        <!-- Dynamic Live Activity Capsule (Current Step / Micro-Message) -->
+        <div class="mt-4 max-w-full">
+          <div class="inline-flex items-center space-x-2 px-3.5 py-1.5 rounded-full bg-blue-50/90 border border-blue-200/80 text-blue-800 text-xs font-semibold max-w-full shadow-2xs">
+            <span class="relative flex h-2 w-2 shrink-0">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-600"></span>
+            </span>
+            <span class="truncate">{{ resolvedProgressMessage }}</span>
+          </div>
+        </div>
+
+        <!-- Privacy & Local Safety Guarantee -->
+        <div class="flex items-center justify-center space-x-1.5 text-[11px] text-slate-400 font-medium mt-6 pt-3 border-t border-slate-100 w-full max-w-xs">
+          <Lock class="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span>{{ t('processing_privacy_guarantee') || '纯前端内存运算 · 零文件上传 · 绝对隐私' }}</span>
+        </div>
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- STATE B: COMPLETED RESULT DELIVERY (Artifact & Next Steps) -->
+      <!-- ======================================================== -->
+      <div v-else-if="file" class="relative z-10 flex flex-col items-center max-w-xl mx-auto">
+        <!-- Decorative celebratory gradient background glow -->
+        <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-full max-w-lg h-36 bg-gradient-to-b from-emerald-100/70 via-teal-50/40 to-transparent blur-2xl pointer-events-none -z-0"></div>
+
         <!-- Success Icon with celebration aura -->
         <div class="w-14 h-14 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 mb-3 ring-8 ring-emerald-50">
           <CheckCircle2 class="w-7 h-7" />
@@ -88,13 +149,13 @@
       </div>
     </div>
 
-    <!-- Integrated Next Action Relay Banner (Anchored at Bottom of Result) -->
+    <!-- Integrated Next Action Relay Banner (Anchored at Bottom of Result, only when complete) -->
     <NextActionBanner 
+      v-if="!isProcessing && file && !isBannerDismissed"
       :current-tool="sourceTool"
       :file="file"
       @send-to-tool="(tId) => emit('send-to-tool', tId)"
       @close="isBannerDismissed = true"
-      v-if="!isBannerDismissed"
     />
   </div>
 </template>
@@ -105,15 +166,32 @@ import {
   CheckCircle2, 
   Download, 
   RotateCcw, 
-  Pencil 
+  Pencil,
+  Lock
 } from 'lucide-vue-next';
 import { t } from '../i18n';
 import NextActionBanner from './NextActionBanner.vue';
 
 const props = defineProps({
+  isProcessing: {
+    type: Boolean,
+    default: false
+  },
+  progressPercent: {
+    type: Number,
+    default: 0
+  },
+  progressMessage: {
+    type: String,
+    default: ''
+  },
+  processingTitle: {
+    type: String,
+    default: ''
+  },
   file: {
     type: Object,
-    required: true
+    default: null
   },
   sourceTool: {
     type: String,
@@ -141,6 +219,21 @@ const emit = defineEmits([
 ]);
 
 const isBannerDismissed = ref(false);
+
+const clampedPercent = computed(() => {
+  return Math.min(100, Math.max(0, Math.round(props.progressPercent || 0)));
+});
+
+const resolvedProcessingTitle = computed(() => {
+  if (props.processingTitle) return props.processingTitle;
+  const toolKey = `processing_title_${props.sourceTool}`;
+  return t(toolKey) || t('processing_title_default') || '正在本地极速处理中...';
+});
+
+const resolvedProgressMessage = computed(() => {
+  if (props.progressMessage) return props.progressMessage;
+  return t('processing_status_default') || '正在准备中...';
+});
 
 const resolvedTitle = computed(() => {
   if (props.title) return props.title;
