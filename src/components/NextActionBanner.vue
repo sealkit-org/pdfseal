@@ -9,15 +9,9 @@
         <Sparkles class="w-4 h-4 text-emerald-600 animate-pulse" />
       </div>
       <div class="min-w-0">
-        <div class="text-xs font-extrabold text-slate-800 flex items-center space-x-1.5 truncate">
-          <span class="shrink-0">{{ t('next_action_title') || 'Done! What\'s next:' }}</span>
-          <span 
-            class="inline-flex items-center text-xs text-emerald-800 bg-emerald-100/90 border border-emerald-200/80 px-2 py-0.5 rounded-md font-bold truncate max-w-[140px] sm:max-w-[220px] md:max-w-[260px] shrink-0"
-            :title="file.name"
-          >
-            <span class="truncate">{{ file.name }}</span>
-          </span>
-        </div>
+        <p class="text-xs font-extrabold text-slate-800 truncate">
+          {{ t('next_action_title') || 'Done! What\'s next:' }}
+        </p>
         <p class="text-[11px] text-slate-500 font-medium truncate hidden sm:block">
           {{ t('next_action_desc') || 'Relay directly in memory without re-uploading' }}
         </p>
