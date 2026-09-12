@@ -140,11 +140,13 @@ docker compose up -d
 
 - ✅ **PDF to Image converter** — PNG/JPG export at 150/300 DPI with single-page and batch ZIP download
 - ✅ **Automated batch pipeline** — drag-and-drop node builder with presets and live compatibility validation
+- ✅ **Signature tool upgrade** — apply initials across all pages in one click, a locally saved signature/seal library, and automatic white-background & shadow removal for photographed signatures
+- ✅ **Organize tool upgrade** — Shift / box multi-select for batch rotate & delete, insert blank pages (multilingual watermark) or append external files anywhere, with 30-step undo/redo stack
 
 **Planned next**
 
-- 🔜 **Signature tool upgrade** — apply initials across all pages in one click, a locally saved signature/seal library, and automatic white-background removal for photographed signatures
-- 🔜 **Organize tool upgrade** — Shift / box multi-select for batch rotate & delete, insert blank pages or append external files anywhere
+- 🔜 **Page Numbering system** — flexible format macros (`Page {n} of {total}`), cover page exclusion, and 6 header/footer alignment anchors
+- 🔜 **Target file size compression** — specify hard size caps (e.g. ≤ 2MB) with binary search auto-tuning
 - 🔜 More interface languages (community contributions welcome!)
 
 > Have a feature idea? [Open an issue](https://github.com/sealkit-org/pdfseal/issues) — feedback from real privacy-conscious users shapes this roadmap.
