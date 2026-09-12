@@ -74,14 +74,14 @@
 
       <!-- 2. ACTIVE ASSEMBLY WORKSPACE -->
       <div v-else class="flex-1 flex flex-col justify-between pt-4">
-        <!-- Assembly Control Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-slate-100 shrink-0">
-          <!-- Left Info Badges -->
+        <!-- Assembly Control Bar (Single-Row Streamlined Layout) -->
+        <div class="flex items-center justify-between gap-2.5 pb-3 border-b border-slate-100 shrink-0">
+          <!-- Left Info Badges & Document Operations -->
           <div class="flex items-center space-x-2 min-w-0">
             <span class="text-xs bg-indigo-50 text-indigo-700 font-extrabold px-2.5 py-1 rounded-xl border border-indigo-200/80 shrink-0">
               {{ pages.length }} {{ t('pages_label') || 'pages' }}
             </span>
-            <span class="text-xs font-bold text-slate-800 truncate max-w-[150px] sm:max-w-xs md:max-w-md" :title="filename">
+            <span class="text-xs font-bold text-slate-800 truncate max-w-[120px] sm:max-w-[160px] md:max-w-[200px]" :title="filename">
               {{ filename }}
             </span>
             <span 
@@ -91,10 +91,29 @@
               <Unlock class="w-3 h-3 mr-0.5" />
               {{ t('badge_unlocked') || 'Unlocked' }}
             </span>
+
+            <!-- Compact Document Actions: Replace & Clear -->
+            <div class="flex items-center space-x-1 pl-1.5 border-l border-slate-200/80">
+              <button 
+                @click="fileInputRef.click()"
+                class="text-xs text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 font-medium px-2 py-1 rounded-lg transition flex items-center space-x-1 cursor-pointer"
+                :title="t('btn_choose_another') || 'Replace File'"
+              >
+                <RefreshCw class="w-3.5 h-3.5" />
+                <span class="hidden lg:inline text-[11px]">{{ t('org_btn_replace_file') }}</span>
+              </button>
+              <button 
+                @click="reset" 
+                class="text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 font-medium p-1 rounded-lg transition cursor-pointer"
+                :title="t('btn_clear_all') || 'Clear All'"
+              >
+                <Trash2 class="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
 
-          <!-- Quick Action Buttons Toolbar -->
-          <div class="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <!-- Quick Action Buttons Toolbar (Streamlined Single-Row Layout) -->
+          <div class="flex items-center gap-1.5 sm:gap-2">
             <!-- Undo / Redo Buttons -->
             <div class="flex items-center space-x-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200/80">
               <button
@@ -126,22 +145,22 @@
               <span class="hidden md:inline">{{ selectedPageIds.size === pages.length && pages.length > 0 ? t('org_btn_deselect') : t('org_btn_select_all') }}</span>
             </button>
 
-            <!-- Insert Blank Page -->
+            <!-- Insert Blank Page (Concise: + Blank / + 空白页) -->
             <button 
               @click="insertBlankPageAt(null)" 
               class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-2.5 py-1.5 rounded-xl border border-amber-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
-              :title="t('org_btn_insert_blank')"
+              :title="t('org_insert_blank_here') || 'Insert blank A4 page'"
             >
               <FilePlus class="w-3.5 h-3.5 text-amber-600" />
               <span>{{ t('org_btn_insert_blank') }}</span>
             </button>
 
-            <!-- Append External File (Split Button: Local + Vault) -->
+            <!-- Append External File (Split Button: + File / + 外部文件) -->
             <div class="inline-flex rounded-xl shadow-2xs">
               <button 
                 @click="appendFileInputRef.click()" 
                 class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1.5 rounded-l-xl border border-indigo-200/80 transition flex items-center space-x-1 cursor-pointer"
-                :title="t('org_btn_append_file')"
+                :title="t('merge_btn_from_local') || 'Add from Computer'"
               >
                 <FileUp class="w-3.5 h-3.5 text-indigo-600" />
                 <span>{{ t('org_btn_append_file') }}</span>
@@ -149,57 +168,40 @@
               <button 
                 @click="isAppendVaultOpen = true" 
                 class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-1.5 rounded-r-xl border-t border-b border-r border-indigo-200/80 transition flex items-center cursor-pointer"
-                :title="t('merge_btn_from_vault')"
+                :title="t('merge_btn_from_vault') || 'Pick from Vault'"
               >
                 <FolderLock class="w-3.5 h-3.5 text-indigo-600" />
               </button>
             </div>
 
-            <!-- Rotate All 90° -->
+            <!-- Rotate All (Concise: Rotate All / 全部旋转) -->
             <button 
               @click="rotateAllPages(90)" 
               class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
               :title="t('rotate_all_90')"
             >
               <RotateCw class="w-3.5 h-3.5 text-slate-600" />
-              <span class="hidden sm:inline">{{ t('rotate_all_90') }}</span>
+              <span class="hidden sm:inline">{{ t('org_btn_rotate_all') }}</span>
             </button>
 
             <!-- Magic A4 -->
             <button 
               @click="magicStandardizeA4()" 
-              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
+              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
               title="Scale & Center to A4"
             >
               <Wand2 class="w-3.5 h-3.5 text-amber-600" />
               <span>A4</span>
             </button>
 
-            <!-- Magic Portrait -->
+            <!-- Magic Portrait (Concise: Portrait / 统一纵向) -->
             <button 
               @click="magicForcePortrait()" 
-              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
-              title="Force Portrait"
+              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
+              :title="t('org_btn_portrait_tip')"
             >
               <Wand2 class="w-3.5 h-3.5 text-emerald-600" />
-              <span class="hidden lg:inline">{{ t('param_org_or_port') || 'Portrait' }}</span>
-            </button>
-
-            <!-- Choose Another Local File -->
-            <button 
-              @click="fileInputRef.click()"
-              class="text-xs text-indigo-600 hover:bg-indigo-50 font-semibold px-2 py-1.5 rounded-xl border border-indigo-200 transition flex items-center space-x-1 cursor-pointer"
-            >
-              <RefreshCw class="w-3.5 h-3.5" />
-              <span class="hidden xl:inline">{{ t('btn_choose_another') || 'Choose Another' }}</span>
-            </button>
-
-            <!-- Clear / Reset -->
-            <button 
-              @click="reset" 
-              class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2 py-1.5 rounded-xl transition cursor-pointer"
-            >
-              {{ t('btn_clear_all') || 'Clear All' }}
+              <span class="hidden md:inline">{{ t('org_btn_portrait') }}</span>
             </button>
           </div>
         </div>
@@ -263,21 +265,6 @@
                 <span class="text-[11px] font-extrabold bg-slate-200/80 text-slate-700 px-1.5 py-0.5 rounded-md shrink-0">
                   {{ idx + 1 }}
                 </span>
-
-                <!-- Type Badges -->
-                <span 
-                  v-if="p.type === 'blank'"
-                  class="text-[9px] font-bold bg-amber-100 text-amber-800 px-1 py-0.5 rounded border border-amber-200 shrink-0"
-                >
-                  {{ t('org_blank_page_title') }}
-                </span>
-                <span 
-                  v-else-if="p.type === 'external'"
-                  class="text-[9px] font-bold bg-cyan-100 text-cyan-800 px-1 py-0.5 rounded border border-cyan-200 max-w-[50px] truncate shrink-0"
-                  :title="p.sourceName || t('org_source_external_badge')"
-                >
-                  {{ t('org_source_external_badge') }}
-                </span>
               </div>
 
               <!-- Header Action Buttons (no-drag) -->
@@ -326,6 +313,14 @@
                 :style="{ transform: `rotate(${p.rotation}deg)` }" 
                 class="max-h-full max-w-full object-contain transition-transform duration-200"
               >
+              <!-- External Document Badge (Bottom-left pill) -->
+              <span 
+                v-if="p.type === 'external'"
+                class="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-slate-900/75 text-slate-100 px-1.5 py-0.5 rounded-md backdrop-blur-xs max-w-[85%] truncate shadow-xs"
+                :title="p.sourceName || t('org_source_external_badge')"
+              >
+                {{ p.sourceName || t('org_source_external_badge') }}
+              </span>
             </div>
           </div>
         </div>
@@ -496,7 +491,7 @@ import {
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, PageSizes, degrees } from 'pdf-lib';
 import Sortable from 'sortablejs';
-import { t } from '../i18n';
+import { t, currentLang } from '../i18n';
 import { triggerDownload } from '../utils/download';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { consumePendingFile } from '../utils/toolBridge';
@@ -864,7 +859,7 @@ function insertBlankPageAt(targetIndex = null) {
     type: 'blank',
     pageIndex: -1,
     rotation: 0,
-    dataUrl: generateBlankPageThumbnail()
+    dataUrl: generateBlankPageThumbnail(t('org_blank_watermark') || 'BLANK')
   };
 
   pages.value.splice(insertIdx, 0, newBlankItem);
@@ -872,6 +867,15 @@ function insertBlankPageAt(targetIndex = null) {
   lastClickedIdx = insertIdx;
   logger.info('ORGANIZE', `Inserted blank A4 page at index ${insertIdx}`);
 }
+
+// Automatically update blank page watermarks when language changes
+watch(currentLang, () => {
+  pages.value.forEach(p => {
+    if (p.type === 'blank') {
+      p.dataUrl = generateBlankPageThumbnail(t('org_blank_watermark') || 'BLANK');
+    }
+  });
+});
 
 // Append External Files (Local or Vault)
 function onAppendFilesSelected(e) {

@@ -8,7 +8,7 @@ import { logger } from './logger';
  * 
  * @returns {string} dataURL
  */
-export function generateBlankPageThumbnail() {
+export function generateBlankPageThumbnail(text = 'BLANK') {
   if (typeof document === 'undefined') {
     return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
   }
@@ -26,12 +26,12 @@ export function generateBlankPageThumbnail() {
   ctx.lineWidth = 2;
   ctx.strokeRect(1, 1, canvas.width - 2, canvas.height - 2);
 
-  // Soft text "BLANK"
+  // Soft localized text watermark (e.g. BLANK / 空白页 / LEER)
   ctx.font = 'bold 12px sans-serif';
   ctx.fillStyle = '#cbd5e1';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
-  ctx.fillText('BLANK', canvas.width / 2, canvas.height / 2);
+  ctx.fillText(text || 'BLANK', canvas.width / 2, canvas.height / 2);
 
   return canvas.toDataURL('image/png');
 }
