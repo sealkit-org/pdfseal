@@ -13,16 +13,18 @@ import { logger } from '../../logger';
 export async function executeCompressNode(items, params = {}, onProgress = () => {}) {
   const result = [];
   const level = params.level || 'balanced';
+  const targetSizeMb = Number(params.targetSizeMb) || 2.0;
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
     const basePct = Math.round((i / items.length) * 100);
     const nextPct = Math.round(((i + 1) / items.length) * 100);
 
-    onProgress(basePct, `正在压缩 [${i + 1}/${items.length}]: ${item.name} (${level})`);
+    const levelDisplay = level === 'target' ? `≤ ${targetSizeMb} MB` : level;
+    onProgress(basePct, `正在压缩 [${i + 1}/${items.length}]: ${item.name} (${levelDisplay})`);
 
     try {
-      const compressedBytes = await compressPdf(item.data, level, {}, (cur, tot) => {
+      const compressedBytes = await compressPdf(item.data, level, { targetSizeMb }, (cur, tot) => {
         const subPct = basePct + Math.round((cur / tot) * (nextPct - basePct));
         onProgress(subPct, `正在压缩 [${i + 1}/${items.length}] 第 ${cur}/${tot} 页...`);
       });
