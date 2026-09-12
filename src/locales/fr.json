@@ -969,6 +969,7 @@
   "page_number_desc": "Insérez des numéros de page sur mesure, masquez les anciens numéros avec un ruban correcteur et prévisualisez en direct.",
   "page_number_drop_title": "Sélectionnez un PDF à numéroter",
   "page_number_drop_subtitle": "Numérotez vos pages localement dans le navigateur avec macros et masque correcteur",
+  "pn_controls": "Paramètres de numérotation",
   "pn_format_label": "Format du numéro",
   "pn_format_placeholder": "ex. Page {n} sur {total}",
   "pn_preset_page_n": "Page {n}",

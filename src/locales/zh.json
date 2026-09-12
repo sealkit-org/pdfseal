@@ -969,6 +969,7 @@
   "page_number_desc": "快速添加规范页码，支持灵活宏格式、白底遮罩覆盖原有错乱页码与跳过封面。",
   "page_number_drop_title": "选择需要添加页码的 PDF 文件",
   "page_number_drop_subtitle": "本地客户端极速编排，支持整行遮罩与智能吸色",
+  "pn_controls": "页码参数调节",
   "pn_format_label": "页码格式",
   "pn_format_placeholder": "例如：第 {n} 页，共 {total} 页",
   "pn_preset_page_n": "第 {n} 页",
