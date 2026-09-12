@@ -750,54 +750,87 @@
               </div>
 
               <!-- Mask Color Picker & Pipette matching PageNumberTool -->
-              <div v-if="editingStepDraft.maskMode !== 'none'" class="mt-2 flex flex-wrap items-center gap-2">
-                <span class="text-[11px] text-slate-600 font-semibold">{{ t('pn_mask_color_label') || 'Mask Color' }}:</span>
+              <div v-if="editingStepDraft.maskMode !== 'none'" class="mt-2 space-y-1.5">
+                <span class="block text-[11px] text-slate-600 font-semibold">{{ t('pn_mask_color_label') || 'Mask Color' }}:</span>
                 
-                <div class="flex items-center space-x-1.5">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <!-- Smart Auto button -->
+                  <button 
+                    type="button" 
+                    @click="editingStepDraft.maskColor = 'auto'"
+                    class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1 font-semibold cursor-pointer"
+                    :class="[
+                      editingStepDraft.maskColor === 'auto' || !editingStepDraft.maskColor
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs' 
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    ]"
+                  >
+                    <Sparkles class="w-3 h-3 text-indigo-600" />
+                    <span>{{ t('pn_mask_color_auto') || 'Smart Auto' }}</span>
+                  </button>
+
                   <!-- White swatch -->
                   <button 
                     type="button" 
                     @click="editingStepDraft.maskColor = '#ffffff'" 
-                    class="w-5 h-5 rounded-full bg-white border border-slate-300 shadow-2xs transition hover:scale-110 cursor-pointer" 
-                    :class="{ 'ring-2 ring-indigo-600': (editingStepDraft.maskColor || '#ffffff').toLowerCase() === '#ffffff' }"
-                    :title="t('pn_mask_color_white') || 'White'"
-                  ></button>
+                    class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1.5 font-semibold cursor-pointer"
+                    :class="[
+                      editingStepDraft.maskColor === '#ffffff'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs' 
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    ]"
+                  >
+                    <span class="w-3 h-3 rounded-full bg-white border border-slate-300 shadow-2xs"></span>
+                    <span>{{ t('pn_mask_color_white') || 'White' }}</span>
+                  </button>
 
                   <!-- Cream / Parchment swatch -->
                   <button 
                     type="button" 
                     @click="editingStepDraft.maskColor = '#fbf9f4'" 
-                    class="w-5 h-5 rounded-full bg-[#fbf9f4] border border-amber-200 shadow-2xs transition hover:scale-110 cursor-pointer" 
-                    :class="{ 'ring-2 ring-indigo-600': (editingStepDraft.maskColor || '').toLowerCase() === '#fbf9f4' }"
-                    :title="t('pn_mask_color_cream') || 'Parchment / Cream'"
-                  ></button>
+                    class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1.5 font-semibold cursor-pointer"
+                    :class="[
+                      editingStepDraft.maskColor === '#fbf9f4'
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs' 
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    ]"
+                  >
+                    <span class="w-3 h-3 rounded-full bg-[#fbf9f4] border border-amber-200 shadow-2xs"></span>
+                    <span>{{ t('pn_mask_color_cream') || 'Parchment / Cream' }}</span>
+                  </button>
+
+                  <!-- Custom Color Picker Box -->
+                  <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
+                    <input 
+                      ref="pipelineMaskColorInputRef"
+                      type="color" 
+                      :value="editingStepDraft.maskColor !== 'auto' ? (editingStepDraft.maskColor || '#ffffff') : '#ffffff'" 
+                      @input="e => editingStepDraft.maskColor = e.target.value"
+                      class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" 
+                    />
+                    <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.maskColor !== 'auto' ? (editingStepDraft.maskColor || '#ffffff') : '#ffffff' }"></div>
+                  </div>
+
+                  <!-- Auto-sample Pipette Button -->
+                  <button 
+                    type="button" 
+                    @click="samplePipelineMaskColor"
+                    class="text-[10px] bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 px-2 py-1 rounded-lg border border-slate-200 transition flex items-center space-x-1 font-semibold cursor-pointer"
+                    :title="t('pn_mask_color_sample') || 'Sample Background'"
+                  >
+                    <Pipette class="w-3 h-3 text-indigo-600" />
+                    <span>{{ t('pn_mask_color_sample') || 'Sample Background' }}</span>
+                  </button>
                 </div>
 
-                <!-- Custom Color Picker Box -->
-                <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
-                  <input 
-                    ref="pipelineMaskColorInputRef"
-                    type="color" 
-                    v-model="editingStepDraft.maskColor" 
-                    class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" 
-                  />
-                  <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.maskColor || '#ffffff' }"></div>
+                <!-- Auto mode hint -->
+                <div v-if="editingStepDraft.maskColor === 'auto' || !editingStepDraft.maskColor" class="text-[10.5px] text-indigo-600 flex items-center space-x-1 font-medium pt-0.5">
+                  <Sparkles class="w-3 h-3 shrink-0" />
+                  <span>{{ t('pn_mask_color_auto_hint') || 'Adapts to each document background at runtime' }}</span>
                 </div>
-
-                <!-- Auto-sample Pipette Button -->
-                <button 
-                  type="button" 
-                  @click="samplePipelineMaskColor"
-                  class="text-[10px] bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 px-2 py-1 rounded-lg border border-slate-200 transition flex items-center space-x-1 font-semibold cursor-pointer"
-                  :title="t('pn_mask_color_sample') || 'Sample Background'"
-                >
-                  <Pipette class="w-3 h-3 text-indigo-600" />
-                  <span>{{ t('pn_mask_color_sample') || 'Sample Background' }}</span>
-                </button>
-
-                <span class="font-mono text-[11px] text-slate-500 uppercase font-bold ml-1">
-                  {{ editingStepDraft.maskColor || '#ffffff' }}
-                </span>
+                <div v-else class="text-[10.5px] text-slate-500 font-mono font-bold pt-0.5">
+                  {{ editingStepDraft.maskColor }}
+                </div>
               </div>
             </div>
 
@@ -2539,7 +2572,10 @@ function getStepSummary(step) {
       };
       const pos = posMap[step.params.position] || step.params.position || 'Bottom Center';
       const cover = step.params.skipCover ? ` · ${t('pn_skip_cover_badge') || 'Skip Cover'}` : '';
-      return `${fmt} · ${pos}${cover}`;
+      const maskColorTxt = step.params.maskMode !== 'none'
+        ? (step.params.maskColor === 'auto' || !step.params.maskColor ? ` · ${t('pn_mask_color_auto') || 'Auto Mask'}` : ` · ${step.params.maskColor}`)
+        : '';
+      return `${fmt} · ${pos}${cover}${maskColorTxt}`;
     }
     case 'node_organize': {
       const parts = [];
