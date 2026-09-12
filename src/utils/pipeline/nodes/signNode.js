@@ -43,9 +43,14 @@ export async function executeSignNode(items, params = {}, onProgress = () => {})
       }
 
       if (stampImage) {
-        const stampDims = stampImage.scale(scaleRatio);
-        const targetPages = [];
+        // Standard signature width reference on A4 (595 pt width)
+        // At default scaleRatio 0.5: targetW is approx 140pt (about 24% of page width)
+        const aspect = stampImage.height / stampImage.width;
+        const baseWidth = Math.min(stampImage.width, 280);
+        const targetW = Math.max(30, Math.round(baseWidth * (scaleRatio / 0.5)));
+        const targetH = Math.max(15, Math.round(targetW * aspect));
 
+        const targetPages = [];
         if (placement === 'first_page') {
           targetPages.push(pages[0]);
         } else if (placement === 'all_pages') {
@@ -53,26 +58,58 @@ export async function executeSignNode(items, params = {}, onProgress = () => {})
         } else if (placement === 'except_last') {
           targetPages.push(...pages.slice(0, Math.max(1, pages.length - 1)));
         } else {
-          // 'last_page_bottom_right' (default)
+          // 'last_page' or 'last_page_bottom_right' (default)
           targetPages.push(pages[pages.length - 1]);
         }
 
+        // Determine effective position
+        const pos = params.position || (placement === 'except_last' ? 'mid_right' : 'bottom_right');
+
         for (const page of targetPages) {
           const { width, height } = page.getSize();
-          let posX = width - stampDims.width - 40;
-          let posY = 40; // bottom right margin
+          let posX = width - targetW - 40;
+          let posY = 40;
 
-          if (placement === 'first_page') {
-            posX = width - stampDims.width - 40;
-            posY = height - stampDims.height - 60;
+          if (pos === 'mid_right') {
+            posX = width - targetW - 15; // right edge initial margin
+            posY = Math.round((height - targetH) / 2);
+          } else if (pos === 'bottom_center') {
+            posX = Math.round((width - targetW) / 2);
+            posY = 40;
+          } else if (pos === 'bottom_left') {
+            posX = 40;
+            posY = 40;
+          } else if (placement === 'first_page' && !params.position) {
+            posX = width - targetW - 40;
+            posY = height - targetH - 60;
+          } else {
+            // 'bottom_right'
+            posX = width - targetW - 40;
+            posY = 40;
           }
 
           page.drawImage(stampImage, {
             x: Math.max(10, posX),
             y: Math.max(10, posY),
-            width: stampDims.width,
-            height: stampDims.height
+            width: targetW,
+            height: targetH
           });
+
+          if (params.addDateStamp) {
+            try {
+              const font = await doc.embedFont('Helvetica');
+              const now = new Date();
+              const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+              page.drawText(dateStr, {
+                x: Math.max(10, posX + Math.round((targetW - 55) / 2)),
+                y: Math.max(10, posY - 12),
+                size: 8,
+                font
+              });
+            } catch (err) {
+              // Ignore date font embedding error if any
+            }
+          }
         }
       }
 
