@@ -12,10 +12,10 @@
         <div class="text-xs font-extrabold text-slate-800 flex items-center space-x-1.5 truncate">
           <span class="shrink-0">{{ t('next_action_title') || 'Done! What\'s next:' }}</span>
           <span 
-            class="inline-flex items-center text-[10px] leading-none text-emerald-800 bg-emerald-100/90 border border-emerald-200/60 font-mono px-2 py-0.5 rounded-md font-bold truncate max-w-[140px] sm:max-w-[200px] shrink-0"
+            class="inline-flex items-center text-xs text-emerald-800 bg-emerald-100/90 border border-emerald-200/80 px-2 py-0.5 rounded-md font-bold truncate max-w-[140px] sm:max-w-[220px] md:max-w-[260px] shrink-0"
             :title="file.name"
           >
-            <span class="truncate leading-none">{{ file.name }}</span>
+            <span class="truncate">{{ file.name }}</span>
           </span>
         </div>
         <p class="text-[11px] text-slate-500 font-medium truncate hidden sm:block">
