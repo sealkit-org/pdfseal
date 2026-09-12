@@ -389,54 +389,56 @@
           </div>
         </div>
 
-        <!-- Next Action Relay Banner -->
-        <NextActionBanner 
-          v-if="showNextActions && lastExportedFile"
-          :current-tool="'compress'"
-          :file="lastExportedFile"
-          @send-to-tool="(tId) => emit('send-to-tool', tId)"
-          @close="showNextActions = false"
-          class="my-2.5"
-        />
+        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Next Action Relay Banner -->
+          <NextActionBanner 
+            v-if="showNextActions && lastExportedFile"
+            :current-tool="'compress'"
+            :file="lastExportedFile"
+            @send-to-tool="(tId) => emit('send-to-tool', tId)"
+            @close="showNextActions = false"
+          />
 
-        <!-- Bottom Execution & Output Settings Bar (Identical to MergeTool) -->
-        <div class="pt-3 sm:pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <!-- Output Filename & Vault Auto-Save Setting -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center space-x-1.5">
-              <label class="text-xs text-slate-500 font-semibold shrink-0">
-                {{ t('vault_field_name') }}:
+          <!-- Bottom Execution & Output Settings Bar (Identical to MergeTool) -->
+          <div class="pt-3 sm:pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <!-- Output Filename & Vault Auto-Save Setting -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <label class="text-xs text-slate-500 font-semibold shrink-0">
+                  {{ t('vault_field_name') }}:
+                </label>
+                <input 
+                  v-model="customOutputBaseName"
+                  type="text" 
+                  :placeholder="defaultFileNamePlaceholder"
+                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
+                >
+              </div>
+
+              <!-- Auto-save to Vault Checkbox -->
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  v-model="autoSaveToVault"
+                  class="w-3.5 h-3.5 rounded-sm border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                >
+                <FolderLock class="w-3.5 h-3.5 text-amber-600" />
+                <span>{{ t('vault_autosave_checkbox') }}</span>
               </label>
-              <input 
-                v-model="customOutputBaseName"
-                type="text" 
-                :placeholder="defaultFileNamePlaceholder"
-                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
-              >
             </div>
 
-            <!-- Auto-save to Vault Checkbox -->
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                v-model="autoSaveToVault"
-                class="w-3.5 h-3.5 rounded-sm border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
-              >
-              <FolderLock class="w-3.5 h-3.5 text-amber-600" />
-              <span>{{ t('vault_autosave_checkbox') }}</span>
-            </label>
+            <!-- Main Compress Action Button -->
+            <button 
+              @click="executeCompress" 
+              :disabled="isProcessing"
+              class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 cursor-pointer"
+            >
+              <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+              <Minimize2 v-else class="w-4 h-4" />
+              <span>{{ t('compress_btn_action') }}</span>
+            </button>
           </div>
-
-          <!-- Main Compress Action Button -->
-          <button 
-            @click="executeCompress" 
-            :disabled="isProcessing"
-            class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 cursor-pointer"
-          >
-            <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
-            <Minimize2 v-else class="w-4 h-4" />
-            <span>{{ t('compress_btn_action') }}</span>
-          </button>
         </div>
       </div>
     </div>
