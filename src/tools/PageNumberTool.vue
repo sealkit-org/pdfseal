@@ -470,53 +470,55 @@
           </div>
         </div>
 
-        <!-- Next Action Relay Banner -->
-        <NextActionBanner 
-          v-if="showNextActions && lastExportedFile"
-          :current-tool="'page_number'"
-          :file="lastExportedFile"
-          @send-to-tool="(tId) => emit('send-to-tool', tId)"
-          @close="showNextActions = false"
-          class="mb-3"
-        />
+        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Next Action Relay Banner -->
+          <NextActionBanner 
+            v-if="showNextActions && lastExportedFile"
+            :current-tool="'page_number'"
+            :file="lastExportedFile"
+            @send-to-tool="(tId) => emit('send-to-tool', tId)"
+            @close="showNextActions = false"
+          />
 
-        <!-- Assembly Bottom Action & Export Configuration Bar -->
-        <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
-          <!-- Left: Output Filename & Auto-save Checkbox -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center space-x-1.5">
-              <label class="text-xs text-slate-500 font-semibold shrink-0">
-                {{ t('vault_field_name') }}:
+          <!-- Assembly Bottom Action & Export Configuration Bar -->
+          <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5">
+            <!-- Left: Output Filename & Auto-save Checkbox -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <label class="text-xs text-slate-500 font-semibold shrink-0">
+                  {{ t('vault_field_name') }}:
+                </label>
+                <input 
+                  v-model="customOutputBaseName"
+                  type="text" 
+                  :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
+                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 focus:bg-white focus:ring-2 focus:ring-violet-500 outline-hidden font-medium text-slate-700 w-44 sm:w-60"
+                >
+              </div>
+
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  v-model="autoSaveToVault" 
+                  class="w-3.5 h-3.5 text-violet-600 rounded-md border-slate-300 focus:ring-violet-500 cursor-pointer"
+                >
+                <span>{{ t('vault_autosave_checkbox') }}</span>
               </label>
-              <input 
-                v-model="customOutputBaseName"
-                type="text" 
-                :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
-                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 focus:bg-white focus:ring-2 focus:ring-violet-500 outline-hidden font-medium text-slate-700 w-44 sm:w-60"
-              >
             </div>
 
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                v-model="autoSaveToVault" 
-                class="w-3.5 h-3.5 text-violet-600 rounded-md border-slate-300 focus:ring-violet-500 cursor-pointer"
-              >
-              <span>{{ t('vault_autosave_checkbox') }}</span>
-            </label>
+            <!-- Right: Execution Button -->
+            <button 
+              :disabled="isProcessing || isLoading"
+              @click="executePageNumber" 
+              class="bg-violet-600 hover:bg-violet-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-5 py-2 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-violet-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+            >
+              <span v-if="!isProcessing">{{ t('pn_download_btn') }}</span>
+              <span v-else>{{ t('loading') || 'Processing...' }}</span>
+              <Download v-if="!isProcessing" class="w-4 h-4" />
+              <Loader2 v-else class="w-4 h-4 animate-spin" />
+            </button>
           </div>
-
-          <!-- Right: Execution Button -->
-          <button 
-            :disabled="isProcessing || isLoading"
-            @click="executePageNumber" 
-            class="bg-violet-600 hover:bg-violet-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-5 py-2 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-violet-600/25 disabled:opacity-50 cursor-pointer ml-auto"
-          >
-            <span v-if="!isProcessing">{{ t('pn_download_btn') }}</span>
-            <span v-else>{{ t('loading') || 'Processing...' }}</span>
-            <Download v-if="!isProcessing" class="w-4 h-4" />
-            <Loader2 v-else class="w-4 h-4 animate-spin" />
-          </button>
         </div>
       </div>
     </div>

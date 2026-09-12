@@ -325,53 +325,55 @@
           </div>
         </div>
 
-        <!-- Next Action Relay Banner -->
-        <NextActionBanner 
-          v-if="showNextActions && lastExportedFile"
-          :current-tool="'organize'"
-          :file="lastExportedFile"
-          @send-to-tool="(tId) => emit('send-to-tool', tId)"
-          @close="showNextActions = false"
-          class="mb-3"
-        />
+        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Next Action Relay Banner -->
+          <NextActionBanner 
+            v-if="showNextActions && lastExportedFile"
+            :current-tool="'organize'"
+            :file="lastExportedFile"
+            @send-to-tool="(tId) => emit('send-to-tool', tId)"
+            @close="showNextActions = false"
+          />
 
-        <!-- Assembly Bottom Action & Export Configuration Bar -->
-        <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <!-- Left: Output Filename & Auto-save Checkbox -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center space-x-1.5">
-              <label class="text-xs text-slate-500 font-semibold shrink-0">
-                {{ t('vault_field_name') }}:
+          <!-- Assembly Bottom Action & Export Configuration Bar -->
+          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <!-- Left: Output Filename & Auto-save Checkbox -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <label class="text-xs text-slate-500 font-semibold shrink-0">
+                  {{ t('vault_field_name') }}:
+                </label>
+                <input 
+                  v-model="customOutputBaseName"
+                  type="text" 
+                  :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
+                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
+                >
+              </div>
+              
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                <input 
+                  v-model="autoSaveToVault" 
+                  type="checkbox" 
+                  class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                >
+                <span>{{ t('vault_autosave_checkbox') }}</span>
               </label>
-              <input 
-                v-model="customOutputBaseName"
-                type="text" 
-                :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
-                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
-              >
             </div>
-            
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
-              <input 
-                v-model="autoSaveToVault" 
-                type="checkbox" 
-                class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-              >
-              <span>{{ t('vault_autosave_checkbox') }}</span>
-            </label>
-          </div>
 
-          <!-- Right: Big Primary Export Button (All Pages) -->
-          <button 
-            :disabled="isProcessing || isLoading || pages.length === 0"
-            @click="executeExport" 
-            class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-indigo-600/25 disabled:opacity-50 cursor-pointer ml-auto"
-          >
-            <span v-if="!isProcessing">{{ t('org_btn_export_all', { count: pages.length }) }}</span>
-            <span v-else>{{ t('sealing_state') || 'Sealing...' }}</span>
-            <Download v-if="!isProcessing" class="w-4 h-4" />
-            <Loader2 v-else class="w-4 h-4 animate-spin" />
-          </button>
+            <!-- Right: Big Primary Export Button (All Pages) -->
+            <button 
+              :disabled="isProcessing || isLoading || pages.length === 0"
+              @click="executeExport" 
+              class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-indigo-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+            >
+              <span v-if="!isProcessing">{{ t('org_btn_export_all', { count: pages.length }) }}</span>
+              <span v-else>{{ t('sealing_state') || 'Sealing...' }}</span>
+              <Download v-if="!isProcessing" class="w-4 h-4" />
+              <Loader2 v-else class="w-4 h-4 animate-spin" />
+            </button>
+          </div>
         </div>
       </div>
     </div>

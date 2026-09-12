@@ -528,54 +528,56 @@
           </div>
         </div>
 
-        <!-- Next Action Relay Banner -->
-        <NextActionBanner 
-          v-if="showNextActions && lastExportedFile"
-          :current-tool="'sign'"
-          :file="lastExportedFile"
-          @send-to-tool="(tId) => emit('send-to-tool', tId)"
-          @close="showNextActions = false"
-          class="mb-3"
-        />
+        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Next Action Relay Banner -->
+          <NextActionBanner 
+            v-if="showNextActions && lastExportedFile"
+            :current-tool="'sign'"
+            :file="lastExportedFile"
+            @send-to-tool="(tId) => emit('send-to-tool', tId)"
+            @close="showNextActions = false"
+          />
 
-        <!-- Bottom Execution & Output Settings Bar (Matching PDFSeal Standard) -->
-        <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <!-- Left: Output Filename & Vault Auto-Save Setting -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center space-x-1.5">
-              <label class="text-xs text-slate-500 font-semibold shrink-0">
-                {{ t('vault_field_name') }}:
+          <!-- Bottom Execution & Output Settings Bar (Matching PDFSeal Standard) -->
+          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <!-- Left: Output Filename & Vault Auto-Save Setting -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <label class="text-xs text-slate-500 font-semibold shrink-0">
+                  {{ t('vault_field_name') }}:
+                </label>
+                <input 
+                  v-model="customOutputBaseName"
+                  type="text" 
+                  :placeholder="defaultFileNamePlaceholder"
+                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
+                >
+              </div>
+
+              <!-- Auto-save to Vault Checkbox -->
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  v-model="autoSaveToVault"
+                  class="w-3.5 h-3.5 rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                >
+                <FolderLock class="w-3.5 h-3.5 text-indigo-600" />
+                <span>{{ t('vault_autosave_checkbox') }}</span>
               </label>
-              <input 
-                v-model="customOutputBaseName"
-                type="text" 
-                :placeholder="defaultFileNamePlaceholder"
-                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
-              >
             </div>
 
-            <!-- Auto-save to Vault Checkbox -->
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                v-model="autoSaveToVault"
-                class="w-3.5 h-3.5 rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-              >
-              <FolderLock class="w-3.5 h-3.5 text-indigo-600" />
-              <span>{{ t('vault_autosave_checkbox') }}</span>
-            </label>
+            <!-- Main Sign & Export Action Button -->
+            <button 
+              @click="executeSign" 
+              :disabled="isProcessing || placedSignatures.length === 0"
+              class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-indigo-600/25 cursor-pointer"
+            >
+              <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+              <PenTool v-else class="w-4 h-4" />
+              <span>{{ t('sign_btn_action') }} ({{ placedSignatures.length }})</span>
+            </button>
           </div>
-
-          <!-- Main Sign & Export Action Button -->
-          <button 
-            @click="executeSign" 
-            :disabled="isProcessing || placedSignatures.length === 0"
-            class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-indigo-600/25 cursor-pointer"
-          >
-            <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
-            <PenTool v-else class="w-4 h-4" />
-            <span>{{ t('sign_btn_action') }} ({{ placedSignatures.length }})</span>
-          </button>
         </div>
       </div>
     </div>

@@ -275,55 +275,57 @@
           </div>
         </div>
 
-        <!-- Next Action Relay Banner -->
-        <NextActionBanner 
-          v-if="showNextActions && lastExportedFile"
-          :current-tool="'watermark'"
-          :file="lastExportedFile"
-          @send-to-tool="(tId) => emit('send-to-tool', tId)"
-          @close="showNextActions = false"
-          class="mb-3"
-        />
+        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Next Action Relay Banner -->
+          <NextActionBanner 
+            v-if="showNextActions && lastExportedFile"
+            :current-tool="'watermark'"
+            :file="lastExportedFile"
+            @send-to-tool="(tId) => emit('send-to-tool', tId)"
+            @close="showNextActions = false"
+          />
 
-        <!-- Assembly Bottom Action & Export Configuration Bar -->
-        <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <!-- Left: Output Filename & Auto-save Checkbox -->
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center space-x-1.5">
-              <label class="text-xs text-slate-500 font-semibold shrink-0">
-                {{ t('vault_field_name') }}:
+          <!-- Assembly Bottom Action & Export Configuration Bar -->
+          <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <!-- Left: Output Filename & Auto-save Checkbox -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <label class="text-xs text-slate-500 font-semibold shrink-0">
+                  {{ t('vault_field_name') }}:
+                </label>
+                <input 
+                  v-model="customOutputBaseName"
+                  type="text" 
+                  data-testid="wm-filename-input"
+                  :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
+                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
+                >
+              </div>
+
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  v-model="autoSaveToVault" 
+                  class="w-4 h-4 text-amber-600 rounded-md border-slate-300 focus:ring-amber-500 cursor-pointer"
+                >
+                <span>{{ t('vault_autosave_checkbox') }}</span>
               </label>
-              <input 
-                v-model="customOutputBaseName"
-                type="text" 
-                data-testid="wm-filename-input"
-                :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
-                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
-              >
             </div>
 
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                v-model="autoSaveToVault" 
-                class="w-4 h-4 text-amber-600 rounded-md border-slate-300 focus:ring-amber-500 cursor-pointer"
-              >
-              <span>{{ t('vault_autosave_checkbox') }}</span>
-            </label>
+            <!-- Right: Execution Button -->
+            <button 
+              :disabled="isProcessing || isLoading"
+              @click="executeWatermark" 
+              data-testid="wm-download-btn"
+              class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+            >
+              <span v-if="!isProcessing">{{ t('stamp_and_download') || '🦭 Stamp & Download PDF' }}</span>
+              <span v-else>{{ t('loading') || 'Processing...' }}</span>
+              <Download v-if="!isProcessing" class="w-4 h-4" />
+              <Loader2 v-else class="w-4 h-4 animate-spin" />
+            </button>
           </div>
-
-          <!-- Right: Execution Button -->
-          <button 
-            :disabled="isProcessing || isLoading"
-            @click="executeWatermark" 
-            data-testid="wm-download-btn"
-            class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 cursor-pointer ml-auto"
-          >
-            <span v-if="!isProcessing">{{ t('stamp_and_download') || '🦭 Stamp & Download PDF' }}</span>
-            <span v-else>{{ t('loading') || 'Processing...' }}</span>
-            <Download v-if="!isProcessing" class="w-4 h-4" />
-            <Loader2 v-else class="w-4 h-4 animate-spin" />
-          </button>
         </div>
       </div>
     </div>

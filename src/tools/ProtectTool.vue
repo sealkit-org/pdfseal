@@ -556,53 +556,55 @@
           </div>
         </div>
 
-        <!-- Next Action Relay Banner -->
-        <NextActionBanner 
-          v-if="showNextActions && lastExportedFile"
-          :current-tool="'protect'"
-          :file="lastExportedFile"
-          @send-to-tool="(tId) => emit('send-to-tool', tId)"
-          @close="showNextActions = false"
-          class="mb-3"
-        />
+        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Next Action Relay Banner -->
+          <NextActionBanner 
+            v-if="showNextActions && lastExportedFile"
+            :current-tool="'protect'"
+            :file="lastExportedFile"
+            @send-to-tool="(tId) => emit('send-to-tool', tId)"
+            @close="showNextActions = false"
+          />
 
-        <!-- Bottom Execution & Output Settings Bar -->
-        <div class="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="flex items-center space-x-1.5">
-              <label class="text-xs text-slate-500 font-semibold shrink-0">
-                {{ t('vault_field_name') }}:
+          <!-- Bottom Execution & Output Settings Bar -->
+          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center space-x-1.5">
+                <label class="text-xs text-slate-500 font-semibold shrink-0">
+                  {{ t('vault_field_name') }}:
+                </label>
+                <input 
+                  v-model="customOutputBaseName"
+                  type="text" 
+                  :placeholder="defaultFileNamePlaceholder"
+                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
+                >
+              </div>
+
+              <!-- Auto-save to Vault Checkbox -->
+              <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  v-model="autoSaveToVault"
+                  class="w-3.5 h-3.5 rounded text-rose-600 border-slate-300 focus:ring-rose-500 cursor-pointer"
+                >
+                <FolderLock class="w-3.5 h-3.5 text-rose-600" />
+                <span>{{ t('vault_autosave_checkbox') }}</span>
               </label>
-              <input 
-                v-model="customOutputBaseName"
-                type="text" 
-                :placeholder="defaultFileNamePlaceholder"
-                class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-rose-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
-              >
             </div>
 
-            <!-- Auto-save to Vault Checkbox -->
-            <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
-              <input 
-                type="checkbox" 
-                v-model="autoSaveToVault"
-                class="w-3.5 h-3.5 rounded text-rose-600 border-slate-300 focus:ring-rose-500 cursor-pointer"
-              >
-              <FolderLock class="w-3.5 h-3.5 text-rose-600" />
-              <span>{{ t('vault_autosave_checkbox') }}</span>
-            </label>
+            <!-- Execution Action Button -->
+            <button 
+              :disabled="isProcessing"
+              @click="executeProtect"
+              class="bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-rose-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+            >
+              <Lock v-if="!isProcessing" class="w-4 h-4" />
+              <Loader2 v-else class="w-4 h-4 animate-spin" />
+              <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('protect_btn_action') }}</span>
+            </button>
           </div>
-
-          <!-- Execution Action Button -->
-          <button 
-            :disabled="isProcessing"
-            @click="executeProtect"
-            class="bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-rose-600/25 disabled:opacity-50 cursor-pointer ml-auto"
-          >
-            <Lock v-if="!isProcessing" class="w-4 h-4" />
-            <Loader2 v-else class="w-4 h-4 animate-spin" />
-            <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('protect_btn_action') }}</span>
-          </button>
         </div>
       </div>
     </div>
