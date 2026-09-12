@@ -142,6 +142,7 @@ export async function compressPdfLossless(arrayBuffer, password = '') {
  * @param {string} [options.password='']
  * @param {Function} [onProgress] - Callback (current, total)
  * @returns {Promise<Uint8Array>}
+ */
 export async function compressPdfRaster(arrayBuffer, options = {}, onProgress = null) {
   const { scale = 1.25, quality = 0.7, password = '' } = options;
   logger.info('COMPRESS', `[Raster Mode] Executing image downsampling (scale=${scale}, quality=${quality})`);
