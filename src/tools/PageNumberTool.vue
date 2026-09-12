@@ -362,7 +362,7 @@
             <div class="flex items-center justify-between gap-2 mb-2 shrink-0">
               <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-700">
                 <span class="w-2 h-2 rounded-full bg-violet-600"></span>
-                <span>{{ t('live_preview') }}</span>
+                <span>{{ t('pn_live_preview') }} · P.{{ previewPageIndex + 1 }}</span>
               </div>
 
               <!-- Page Navigation Controls -->
@@ -517,7 +517,7 @@ import {
   Pipette
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
-import { t } from '../i18n';
+import { t, onLanguageChange } from '../i18n';
 import { triggerDownload } from '../utils/download';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { consumePendingFile } from '../utils/toolBridge';
@@ -560,7 +560,7 @@ const lastExportedFile = ref(null);
 const showNextActions = ref(false);
 
 // Configuration options
-const pnFormat = ref('Page {n} of {total}');
+const pnFormat = ref(t('pn_preset_page_n_of_total') || 'Page {n} of {total}');
 const pnStartNumber = ref(1);
 const pnSkipCover = ref(false);
 const pnPosition = ref('bottom_center');
@@ -570,13 +570,25 @@ const pnFontSize = ref(10);
 const pnTextColor = ref('#334155');
 const pnMargin = ref(24);
 
-// Format Presets
-const formatPresets = [
+// Format Presets localized to current language
+const formatPresets = computed(() => [
   { val: '{n}', label: '{n}' },
   { val: '{n} / {total}', label: '{n} / {total}' },
-  { val: 'Page {n} of {total}', label: 'Page {n} of {total}' },
-  { val: '第 {n} 页，共 {total} 页', label: '第 {n} 页，共 {total} 页' }
-];
+  { val: t('pn_preset_page_n'), label: t('pn_preset_page_n') },
+  { val: t('pn_preset_page_n_of_total'), label: t('pn_preset_page_n_of_total') }
+]);
+
+// Automatically adapt default format when switching UI languages
+onLanguageChange(() => {
+  const standardPresetsAcrossLangs = [
+    'Page {n} of {total}', '第 {n} 页，共 {total} 页', 'Seite {n} von {total}', 'Página {n} de {total}', 'Page {n} sur {total}',
+    'Page {n}', '第 {n} 页', 'Seite {n}', 'Página {n}'
+  ];
+  if (standardPresetsAcrossLangs.includes(pnFormat.value)) {
+    pnFormat.value = t('pn_preset_page_n_of_total');
+  }
+  renderPreview();
+});
 
 // Position Options (2x3 grid)
 const positionOptions = [
