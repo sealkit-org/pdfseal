@@ -137,12 +137,12 @@
               ]"
             >
               <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                  <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
+                    <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1"></span>
                     <span>{{ t('compress_level_balanced') }}</span>
-                  </span>
-                  <span class="text-[10px] font-mono font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60">
+                  </div>
+                  <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60">
                     -50% ~ -75%
                   </span>
                 </div>
@@ -163,12 +163,12 @@
               ]"
             >
               <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-rose-500"></span>
+                <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                  <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1"></span>
                     <span>{{ t('compress_level_extreme') }}</span>
-                  </span>
-                  <span class="text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-200/60">
+                  </div>
+                  <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-200/60">
                     -75% ~ -90%
                   </span>
                 </div>
@@ -189,12 +189,12 @@
               ]"
             >
               <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+                <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                  <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0 mt-1"></span>
                     <span>{{ t('compress_level_target') }}</span>
-                  </span>
-                  <span class="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md border border-indigo-200/60">
+                  </div>
+                  <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-1.5 py-0.5 rounded-md border border-indigo-200/60">
                     ≤ {{ targetSizeMb }} MB
                   </span>
                 </div>
@@ -215,12 +215,12 @@
               ]"
             >
               <div>
-                <div class="flex items-center justify-between mb-1.5">
-                  <span class="text-xs font-bold text-slate-800 flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                <div class="flex items-start justify-between gap-1.5 mb-1.5">
+                  <div class="text-xs font-bold text-slate-800 flex items-start space-x-1.5 min-w-0 flex-1 leading-snug">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1"></span>
                     <span>{{ t('compress_level_lossless') }}</span>
-                  </span>
-                  <span class="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200/60">
+                  </div>
+                  <span class="shrink-0 whitespace-nowrap text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200/60">
                     -15% ~ -35%
                   </span>
                 </div>
