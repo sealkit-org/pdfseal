@@ -710,7 +710,7 @@
   "sign_upload_hint": "Klicken, um PNG-Signatur oder Stempel hochzuladen",
   "sign_add_upload": "Hinzufügen",
   "sign_add_date": "Datum hinzufügen",
-  "sign_drag_hint": "Signaturen können verschoben und in der Größe geändert werden.",
+  "sign_drag_hint": "Signaturen können verschoben und skaliert werden. Klicken Sie bei mehrseitigen PDFs auf 'Mehrfach anwenden', um sie auf Seiten zu duplizieren.",
   "sign_action_delete": "Löschen",
   "sign_action_resize": "Größe ändern",
   "sign_color_black": "Schwarz",

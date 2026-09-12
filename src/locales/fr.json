@@ -710,7 +710,7 @@
   "sign_upload_hint": "Cliquez pour télécharger une signature PNG",
   "sign_add_upload": "Ajouter à la page",
   "sign_add_date": "Ajouter la date",
-  "sign_drag_hint": "Les signatures peuvent être déplacées et redimensionnées.",
+  "sign_drag_hint": "Les signatures peuvent être déplacées et redimensionnées. Pour les PDF multipages, cliquez sur 'Appliquer en lot' pour dupliquer sur toutes les pages.",
   "sign_action_delete": "Supprimer",
   "sign_action_resize": "Redimensionner",
   "sign_color_black": "Noir",

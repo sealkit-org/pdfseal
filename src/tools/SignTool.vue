@@ -501,16 +501,17 @@
                 <button 
                   v-if="totalPages > 1"
                   @click.stop="openBatchModal(sig)"
-                  class="absolute -top-2.5 -left-2.5 w-5 h-5 rounded-full bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center shadow-md transition cursor-pointer z-10"
-                  :title="t('sign_batch_action')"
+                  class="absolute -top-3.5 -left-1 px-1.5 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white flex items-center space-x-1 shadow-md hover:shadow-indigo-600/30 transition-all cursor-pointer z-10 text-[10px] font-bold select-none leading-none"
+                  :title="t('sign_batch_modal_title')"
                 >
-                  <Layers class="w-3 h-3" />
+                  <Layers class="w-3 h-3 shrink-0" />
+                  <span class="whitespace-nowrap">{{ t('sign_batch_action') }}</span>
                 </button>
 
                 <!-- Delete Badge -->
                 <button 
                   @click.stop="removeSignature(sig.id)"
-                  class="absolute -top-2.5 -right-2.5 w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 transition cursor-pointer z-10"
+                  class="absolute -top-3.5 -right-2 w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 transition cursor-pointer z-10"
                   :title="t('sign_action_delete', 'Delete')"
                 >
                   <X class="w-3 h-3" />
@@ -901,8 +902,8 @@ const computedBatchTargetPages = computed(() => {
   return calculateBatchTargetPages(
     selectedBatchPreset.value,
     totalPages.value,
-    currentPage.value,
-    customBatchRange.value
+    customBatchRange.value,
+    currentPage.value
   );
 });
 
