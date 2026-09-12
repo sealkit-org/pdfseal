@@ -749,34 +749,34 @@
                 </button>
               </div>
 
-              <!-- Mask Color Picker & Pipette matching PageNumberTool -->
+              <!-- Mask Color Controls in Pipeline -->
               <div v-if="editingStepDraft.maskMode !== 'none'" class="mt-2 space-y-1.5">
                 <span class="block text-[11px] text-slate-600 font-semibold">{{ t('pn_mask_color_label') || 'Mask Color' }}:</span>
                 
                 <div class="flex flex-wrap items-center gap-1.5">
-                  <!-- Smart Auto button -->
+                  <!-- 1. Smart Auto-Detect: Samples document dynamically at runtime -->
                   <button 
                     type="button" 
                     @click="editingStepDraft.maskColor = 'auto'"
                     class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1 font-semibold cursor-pointer"
                     :class="[
                       editingStepDraft.maskColor === 'auto' || !editingStepDraft.maskColor
-                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs' 
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs ring-1 ring-indigo-500/20' 
                         : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                     ]"
                   >
                     <Sparkles class="w-3 h-3 text-indigo-600" />
-                    <span>{{ t('pn_mask_color_auto') || 'Smart Auto' }}</span>
+                    <span>{{ t('pn_mask_color_auto') || 'Smart Auto-Detect' }}</span>
                   </button>
 
-                  <!-- White swatch -->
+                  <!-- 2. White swatch -->
                   <button 
                     type="button" 
                     @click="editingStepDraft.maskColor = '#ffffff'" 
                     class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1.5 font-semibold cursor-pointer"
                     :class="[
                       editingStepDraft.maskColor === '#ffffff'
-                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs' 
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs ring-1 ring-indigo-500/20' 
                         : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                     ]"
                   >
@@ -784,14 +784,14 @@
                     <span>{{ t('pn_mask_color_white') || 'White' }}</span>
                   </button>
 
-                  <!-- Cream / Parchment swatch -->
+                  <!-- 3. Cream / Parchment swatch -->
                   <button 
                     type="button" 
                     @click="editingStepDraft.maskColor = '#fbf9f4'" 
                     class="text-[10px] px-2.5 py-1 rounded-xl border transition flex items-center space-x-1.5 font-semibold cursor-pointer"
                     :class="[
                       editingStepDraft.maskColor === '#fbf9f4'
-                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs' 
+                        ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs ring-1 ring-indigo-500/20' 
                         : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                     ]"
                   >
@@ -799,37 +799,28 @@
                     <span>{{ t('pn_mask_color_cream') || 'Parchment / Cream' }}</span>
                   </button>
 
-                  <!-- Custom Color Picker Box -->
-                  <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center">
-                    <input 
-                      ref="pipelineMaskColorInputRef"
-                      type="color" 
-                      :value="editingStepDraft.maskColor !== 'auto' ? (editingStepDraft.maskColor || '#ffffff') : '#ffffff'" 
-                      @input="e => editingStepDraft.maskColor = e.target.value"
-                      class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" 
-                    />
-                    <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.maskColor !== 'auto' ? (editingStepDraft.maskColor || '#ffffff') : '#ffffff' }"></div>
+                  <!-- 4. Custom Fixed Color Picker Box -->
+                  <div class="flex items-center space-x-1.5 pl-1 border-l border-slate-200">
+                    <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer flex items-center justify-center" :title="t('wm_color_picker', 'Custom Color')">
+                      <input 
+                        type="color" 
+                        :value="editingStepDraft.maskColor !== 'auto' ? (editingStepDraft.maskColor || '#ffffff') : '#ffffff'" 
+                        @input="e => editingStepDraft.maskColor = e.target.value"
+                        class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" 
+                      />
+                      <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.maskColor !== 'auto' ? (editingStepDraft.maskColor || '#ffffff') : '#ffffff' }"></div>
+                    </div>
                   </div>
-
-                  <!-- Auto-sample Pipette Button -->
-                  <button 
-                    type="button" 
-                    @click="samplePipelineMaskColor"
-                    class="text-[10px] bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-700 px-2 py-1 rounded-lg border border-slate-200 transition flex items-center space-x-1 font-semibold cursor-pointer"
-                    :title="t('pn_mask_color_sample') || 'Sample Background'"
-                  >
-                    <Pipette class="w-3 h-3 text-indigo-600" />
-                    <span>{{ t('pn_mask_color_sample') || 'Sample Background' }}</span>
-                  </button>
                 </div>
 
-                <!-- Auto mode hint -->
+                <!-- Auto mode vs Fixed mode hint -->
                 <div v-if="editingStepDraft.maskColor === 'auto' || !editingStepDraft.maskColor" class="text-[10.5px] text-indigo-600 flex items-center space-x-1 font-medium pt-0.5">
                   <Sparkles class="w-3 h-3 shrink-0" />
-                  <span>{{ t('pn_mask_color_auto_hint') || 'Adapts to each document background at runtime' }}</span>
+                  <span>{{ t('pn_mask_color_auto_hint') || 'Dynamically samples each document background at runtime' }}</span>
                 </div>
-                <div v-else class="text-[10.5px] text-slate-500 font-mono font-bold pt-0.5">
-                  {{ editingStepDraft.maskColor }}
+                <div v-else class="text-[10.5px] text-slate-500 flex items-center space-x-1.5 pt-0.5">
+                  <span class="font-mono font-bold">{{ editingStepDraft.maskColor }}</span>
+                  <span class="text-slate-400">({{ t('pn_mask_color_fixed') || 'Fixed Color' }})</span>
                 </div>
               </div>
             </div>
@@ -2532,22 +2523,6 @@ function resetStepToDefault() {
         protectConfigError.value = '';
       }
     }
-  }
-}
-
-async function samplePipelineMaskColor() {
-  if (window.EyeDropper) {
-    try {
-      const eyeDropper = new window.EyeDropper();
-      const result = await eyeDropper.open();
-      if (result && result.sRGBHex && editingStepDraft.value) {
-        editingStepDraft.value.maskColor = result.sRGBHex;
-      }
-    } catch (e) {
-      // User cancelled or dismissed picker
-    }
-  } else if (pipelineMaskColorInputRef.value) {
-    pipelineMaskColorInputRef.value.click();
   }
 }
 

@@ -20,7 +20,7 @@ export async function executePageNumberNode(items, params = {}, onProgress = () 
     fontSize: params.fontSize !== undefined ? Number(params.fontSize) : 10,
     textColor: params.textColor || '#334155',
     maskMode: params.maskMode || 'full_ribbon',
-    maskColor: params.maskColor || '#ffffff',
+    maskColor: params.maskColor || 'auto',
     margin: params.margin !== undefined ? Number(params.margin) : 24
   };
 
