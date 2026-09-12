@@ -890,25 +890,6 @@
             <div class="flex flex-col space-y-2.5">
               <button 
                 type="button"
-                @click="editingStepDraft.level = 'extreme'"
-                :class="[
-                  'p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col relative overflow-hidden',
-                  editingStepDraft.level === 'extreme' 
-                    ? 'border-rose-500 bg-rose-50/70 text-rose-800 shadow-xs' 
-                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100'
-                ]"
-              >
-                <div class="flex items-center justify-between w-full">
-                  <div class="text-sm font-bold flex items-center space-x-1.5">
-                    <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
-                    <span>{{ t('compress_level_extreme') }}</span>
-                  </div>
-                </div>
-                <div class="text-[11px] mt-1 opacity-80 leading-relaxed">{{ t('compress_level_extreme_desc') }}</div>
-              </button>
-
-              <button 
-                type="button"
                 @click="editingStepDraft.level = 'balanced'"
                 :class="[
                   'p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col relative overflow-hidden',
@@ -922,9 +903,91 @@
                     <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0"></span>
                     <span>{{ t('compress_level_balanced') }}</span>
                   </div>
+                  <span class="text-[10px] font-mono font-bold text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded-md border border-amber-200/60">
+                    -50% ~ -75%
+                  </span>
                 </div>
                 <div class="text-[11px] mt-1 opacity-80 leading-relaxed">{{ t('compress_level_balanced_desc') }}</div>
               </button>
+
+              <button 
+                type="button"
+                @click="editingStepDraft.level = 'extreme'"
+                :class="[
+                  'p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col relative overflow-hidden',
+                  editingStepDraft.level === 'extreme' 
+                    ? 'border-rose-500 bg-rose-50/70 text-rose-800 shadow-xs' 
+                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100'
+                ]"
+              >
+                <div class="flex items-center justify-between w-full">
+                  <div class="text-sm font-bold flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>
+                    <span>{{ t('compress_level_extreme') }}</span>
+                  </div>
+                  <span class="text-[10px] font-mono font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded-md border border-rose-200/60">
+                    -75% ~ -90%
+                  </span>
+                </div>
+                <div class="text-[11px] mt-1 opacity-80 leading-relaxed">{{ t('compress_level_extreme_desc') }}</div>
+              </button>
+
+              <!-- Target File Size Mode -->
+              <button 
+                type="button"
+                @click="editingStepDraft.level = 'target'"
+                :class="[
+                  'p-3.5 rounded-xl border text-left transition cursor-pointer flex flex-col relative overflow-hidden',
+                  editingStepDraft.level === 'target' 
+                    ? 'border-indigo-500 bg-indigo-50/70 text-indigo-800 shadow-xs ring-1 ring-indigo-500/20' 
+                    : 'border-slate-200 bg-slate-50/50 text-slate-600 hover:bg-slate-100'
+                ]"
+              >
+                <div class="flex items-center justify-between w-full">
+                  <div class="text-sm font-bold flex items-center space-x-1.5">
+                    <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0"></span>
+                    <span>{{ t('compress_level_target') }}</span>
+                  </div>
+                  <span class="text-[10px] font-mono font-bold text-indigo-600 bg-white/80 px-1.5 py-0.5 rounded-md border border-indigo-200/60">
+                    ≤ {{ editingStepDraft.targetSizeMb || 2 }} MB
+                  </span>
+                </div>
+                <div class="text-[11px] mt-1 opacity-80 leading-relaxed">{{ t('compress_level_target_desc') }}</div>
+              </button>
+
+              <!-- Target Size Settings inside Drawer -->
+              <div v-if="editingStepDraft.level === 'target'" class="p-3 bg-indigo-50/50 rounded-xl border border-indigo-200/80 space-y-2 mt-1">
+                <div class="flex items-center justify-between">
+                  <span class="font-bold text-slate-700 text-[11px]">{{ t('compress_target_size_label') || 'Target Size Limit' }}:</span>
+                  <div class="flex items-center space-x-1">
+                    <input 
+                      type="number" 
+                      min="0.1" 
+                      max="100" 
+                      step="0.5" 
+                      v-model.number="editingStepDraft.targetSizeMb" 
+                      class="w-20 px-2 py-1 bg-white border border-indigo-200 rounded-lg text-xs font-mono font-bold text-indigo-700 focus:ring-1 focus:ring-indigo-500 outline-none text-right"
+                    />
+                    <span class="font-bold text-slate-500 text-xs">MB</span>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-1">
+                  <button 
+                    type="button" 
+                    v-for="preset in [1, 2, 5, 10]" 
+                    :key="preset"
+                    @click="editingStepDraft.targetSizeMb = preset"
+                    :class="[
+                      'px-2 py-0.5 rounded-md text-[10.5px] font-mono font-bold transition cursor-pointer border',
+                      editingStepDraft.targetSizeMb === preset 
+                        ? 'bg-indigo-600 text-white border-indigo-600' 
+                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                    ]"
+                  >
+                    {{ preset }} MB
+                  </button>
+                </div>
+              </div>
 
               <button 
                 type="button"
@@ -941,6 +1004,9 @@
                     <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
                     <span>{{ t('compress_level_lossless') }}</span>
                   </div>
+                  <span class="text-[10px] font-mono font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md border border-emerald-200/60">
+                    -15% ~ -35%
+                  </span>
                 </div>
                 <div class="text-[11px] mt-1 opacity-80 leading-relaxed">{{ t('compress_level_lossless_desc') }}</div>
               </button>
@@ -2561,6 +2627,9 @@ function getStepSummary(step) {
       return parts.length > 0 ? parts.join(' · ') : t('param_org_sz_none');
     }
     case 'node_compress': {
+      if (step.params.level === 'target') {
+        return `🎯 ≤ ${step.params.targetSizeMb || 2} MB`;
+      }
       const map = {
         balanced: t('compress_level_balanced', 'Balanced'),
         extreme: t('compress_level_extreme', 'Extreme'),

@@ -102,13 +102,14 @@ export const AVAILABLE_NODES = {
     nameKey: 'tab_compress',
     defaultName: 'PDF 压缩',
     descKey: 'node_compress_desc',
-    defaultDesc: '体积减小最高 90%，支持均衡、极致与无损压缩',
+    defaultDesc: '体积减小最高 90%，支持均衡、极致、目标大小与无损压缩',
     category: 'transform',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
     topology: TOPOLOGY_MODES.MAP,
     defaultParams: {
-      level: 'balanced', // 'balanced' | 'extreme' | 'lossless'
+      level: 'balanced', // 'balanced' | 'extreme' | 'target' | 'lossless'
+      targetSizeMb: 2,
       universalSizeGuard: true
     }
   },
