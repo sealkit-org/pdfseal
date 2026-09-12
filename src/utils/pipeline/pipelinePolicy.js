@@ -44,7 +44,7 @@ export const PIPELINE_POLICY = {
         allowedPlacements: ['last_page_bottom_right', 'first_page', 'all_pages', 'except_last', 'custom']
       },
       node_compress: {
-        allowedLevels: ['balanced', 'extreme', 'lossless']
+        allowedLevels: ['balanced', 'extreme', 'target', 'lossless']
       },
       node_split: {
         maxPagesPerFile: Infinity
@@ -65,7 +65,7 @@ export const PIPELINE_POLICY = {
     allowWorkflowExportImport: true, // Export/import JSON configs for team sharing
     nodeLimits: {
       node_sign: { maxFiles: Infinity, allowedPlacements: ['last_page_bottom_right', 'first_page', 'all_pages', 'except_last', 'custom'] },
-      node_compress: { allowedLevels: ['balanced', 'extreme', 'lossless'] },
+      node_compress: { allowedLevels: ['balanced', 'extreme', 'target', 'lossless'] },
       node_split: { maxPagesPerFile: Infinity },
       node_watermark: { allowOwnerPasswordLock: true }
     }
@@ -125,7 +125,7 @@ export function validatePipelinePreflight(pipelineDef, inputFiles, userTier = 'f
             pass: false,
             code: 'ERR_NODE_COMPRESS_LEVEL',
             triggerPro: true,
-            reason: `流水线中的压缩节点选择了高级档位（${step.params.level}），免费版仅开放均衡档。升级 Pro 即可使用极致压缩与无损压缩！`
+            reason: `流水线中的压缩节点选择了高级档位（${step.params.level}），免费版仅开放均衡档。升级 Pro 即可使用极致压缩、目标大小逼近与无损压缩！`
           };
         }
       }

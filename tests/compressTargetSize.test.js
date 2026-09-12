@@ -123,5 +123,25 @@ describe('Target Size Compression & Bisection Engine (Sprint 3.2)', () => {
       const hasTargetLog = progressLogs.some(l => l.msg.includes('≤ 2 MB'));
       expect(hasTargetLog).toBe(true);
     });
+
+    it('should validate level="target" policy permissions correctly across tiers', async () => {
+      const { validatePipelinePreflight } = await import('../src/utils/pipeline/pipelinePolicy');
+      const pipelineDef = {
+        name: 'Target Size Flow',
+        steps: [
+          { id: 's1', nodeId: 'node_compress', params: { level: 'target', targetSizeMb: 2 } }
+        ]
+      };
+      const dummyFiles = [{ name: 'doc.pdf', data: new Uint8Array([1, 2, 3]) }];
+
+      // Free tier requires Pro for target size
+      const freeCheck = validatePipelinePreflight(pipelineDef, dummyFiles, 'free');
+      expect(freeCheck.pass).toBe(false);
+      expect(freeCheck.code).toBe('ERR_NODE_COMPRESS_LEVEL');
+
+      // Pro tier allows target size
+      const proCheck = validatePipelinePreflight(pipelineDef, dummyFiles, 'pro');
+      expect(proCheck.pass).toBe(true);
+    });
   });
 });
