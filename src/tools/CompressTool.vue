@@ -337,102 +337,54 @@
           </div>
         </div>
 
-        <!-- Visual Clarity Diff Preview (Before / After Comparison Slider) -->
+        <!-- Compact Success Result Banner (Clean & Lightweight, Zero Layout Shift) -->
         <div 
-          v-if="lastExportedFile && originalThumbnailUrl && compressedThumbnailUrl" 
-          class="my-3 p-4 sm:p-5 rounded-3xl bg-slate-50/90 border border-slate-200/90 space-y-3 animate-in fade-in duration-300"
+          v-if="lastExportedFile" 
+          class="my-3 p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-indigo-50/60 border border-emerald-200/90 flex flex-wrap items-center justify-between gap-3 shadow-2xs animate-in fade-in duration-300"
         >
-          <!-- Diff Header -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-2.5">
-              <div class="w-7 h-7 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold shrink-0">
-                <Eye class="w-4 h-4" />
-              </div>
-              <div>
-                <h4 class="text-xs sm:text-sm font-extrabold text-slate-900">
-                  {{ t('compress_diff_title') }}
-                </h4>
-                <p class="text-[11px] text-slate-400 mt-0.5">
-                  {{ t('compress_diff_hint') }}
-                </p>
-              </div>
+          <!-- Left: Success Message & Size Info -->
+          <div class="flex items-center space-x-3 min-w-0">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+              <CheckCircle2 class="w-5 h-5" />
             </div>
+            <div class="min-w-0">
+              <div class="flex items-center space-x-2 flex-wrap">
+                <span class="font-extrabold text-slate-800 text-xs sm:text-sm">
+                  {{ t('compress_result_success') }}!
+                </span>
+                <span class="text-xs font-mono font-bold text-emerald-700 bg-white/90 px-2 py-0.5 rounded-lg border border-emerald-200/80 shadow-2xs">
+                  {{ originalSizeMb }} MB ➔ {{ compressedSizeMb }} MB (-{{ savedPercent }}%)
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-1">
+                <span>{{ t('compress_auto_downloaded') }}</span>
+              </p>
+            </div>
+          </div>
 
+          <!-- Right: Action Buttons -->
+          <div class="flex items-center space-x-2 shrink-0">
+            <!-- Diff Preview Trigger Button -->
+            <button 
+              v-if="originalThumbnailUrl && compressedThumbnailUrl"
+              type="button" 
+              @click="isDiffModalOpen = true"
+              class="text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-50/90 px-3.5 py-2 rounded-xl border border-indigo-200/90 shadow-2xs hover:shadow-xs transition cursor-pointer flex items-center space-x-1.5 active:scale-98"
+            >
+              <Eye class="w-4 h-4 text-indigo-600" />
+              <span>{{ t('compress_btn_view_diff') }}</span>
+            </button>
+
+            <!-- Re-download Button -->
             <button 
               type="button" 
-              @click="diffPosition = 50"
-              class="text-[11px] text-slate-500 hover:text-indigo-600 font-semibold px-2.5 py-1 rounded-xl hover:bg-white border border-transparent hover:border-slate-200 transition cursor-pointer flex items-center space-x-1.5"
-              :title="t('compress_diff_reset')"
+              @click="handleReDownload"
+              class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 px-3 py-2 rounded-xl border border-slate-200 transition cursor-pointer flex items-center space-x-1.5 active:scale-98 shadow-2xs"
+              :title="t('compress_btn_redownload')"
             >
-              <RotateCcw class="w-3.5 h-3.5" />
-              <span>{{ t('compress_diff_reset') }}</span>
+              <Download class="w-3.5 h-3.5 text-slate-600" />
+              <span class="hidden sm:inline">{{ t('compress_btn_redownload') }}</span>
             </button>
-          </div>
-
-          <!-- Side-by-Side Interactive Split Image Container -->
-          <div 
-            ref="diffContainerRef"
-            @mousedown="startDiffDrag"
-            @touchstart="startDiffDrag"
-            class="relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-900/5 flex items-center justify-center select-none cursor-ew-resize min-h-[260px] max-h-[440px]"
-          >
-            <!-- Layer 1: Compressed Image (Bottom Full) -->
-            <img 
-              :src="compressedThumbnailUrl" 
-              class="max-h-[440px] w-auto object-contain mx-auto pointer-events-none select-none" 
-              alt="Compressed"
-            />
-            <div class="absolute bottom-3 right-3 pointer-events-none z-10">
-              <span class="text-[10.5px] font-mono font-bold text-emerald-800 bg-white/95 px-2.5 py-1 rounded-lg border border-emerald-200 shadow-xs flex items-center space-x-1">
-                <CheckCircle2 class="w-3.5 h-3.5 text-emerald-600" />
-                <span>{{ t('compress_diff_comp') }}: {{ compressedSizeMb }} MB (-{{ savedPercent }}%)</span>
-              </span>
-            </div>
-
-            <!-- Layer 2: Original Image (Top Clipped) -->
-            <div 
-              class="absolute inset-0 overflow-hidden flex items-center justify-center pointer-events-none"
-              :style="{ clipPath: `inset(0 ${100 - diffPosition}% 0 0)` }"
-            >
-              <img 
-                :src="originalThumbnailUrl" 
-                class="max-h-[440px] w-auto object-contain mx-auto pointer-events-none select-none" 
-                alt="Original"
-              />
-            </div>
-            <div class="absolute bottom-3 left-3 pointer-events-none z-10">
-              <span class="text-[10.5px] font-mono font-bold text-slate-700 bg-white/95 px-2.5 py-1 rounded-lg border border-slate-200 shadow-xs">
-                {{ t('compress_diff_orig') }}: {{ originalSizeMb }} MB
-              </span>
-            </div>
-
-            <!-- Draggable Center Divider Line & Handle -->
-            <div 
-              class="absolute top-0 bottom-0 pointer-events-none z-20 flex items-center justify-center"
-              :style="{ left: `${diffPosition}%` }"
-            >
-              <div class="w-0.5 h-full bg-white shadow-[0_0_10px_rgba(0,0,0,0.6)]"></div>
-              <div class="absolute w-8 h-8 rounded-full bg-white text-slate-700 shadow-xl border border-slate-200 flex items-center justify-center cursor-ew-resize">
-                <ChevronsLeftRight class="w-4 h-4 text-indigo-600" />
-              </div>
-            </div>
-          </div>
-
-          <!-- Interactive Diff Range Slider -->
-          <div class="flex items-center space-x-3 pt-1">
-            <span class="text-[11px] font-bold text-slate-500 font-mono shrink-0">
-              {{ t('compress_diff_orig') }} ({{ 100 - diffPosition }}%)
-            </span>
-            <input 
-              type="range" 
-              min="0" 
-              max="100" 
-              v-model.number="diffPosition" 
-              class="flex-1 accent-indigo-600 cursor-pointer h-1.5"
-            />
-            <span class="text-[11px] font-bold text-slate-500 font-mono shrink-0">
-              {{ t('compress_diff_comp') }} ({{ diffPosition }}%)
-            </span>
           </div>
         </div>
 
@@ -489,6 +441,16 @@
     </div>
 
     <!-- Modals -->
+    <DiffPreviewModal 
+      :is-open="isDiffModalOpen"
+      :original-thumbnail-url="originalThumbnailUrl"
+      :compressed-thumbnail-url="compressedThumbnailUrl"
+      :original-size-mb="originalSizeMb"
+      :compressed-size-mb="compressedSizeMb"
+      :saved-percent="savedPercent"
+      @close="isDiffModalOpen = false"
+    />
+
     <PasswordModal 
       :is-open="isPasswordOpen"
       :filename="pendingFileName"
@@ -516,10 +478,9 @@ import {
   FolderLock, 
   Sparkles, 
   Loader2,
-  ChevronsLeftRight,
   Eye,
-  RotateCcw,
-  CheckCircle2
+  CheckCircle2,
+  Download
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { t } from '../i18n';
@@ -534,6 +495,7 @@ import { generateExportFileName } from '../utils/filenameUtils';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import NextActionBanner from '../components/NextActionBanner.vue';
+import DiffPreviewModal from '../components/DiffPreviewModal.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
@@ -552,12 +514,10 @@ const detectedType = ref(null); // 'vector' | 'scanned'
 const selectedLevel = ref('balanced'); // 'extreme' | 'balanced' | 'target' | 'lossless'
 const targetSizeMb = ref(2.0);
 
-// Diff Preview Comparison Slider State
+// Diff Preview Modal & Thumbnails State
+const isDiffModalOpen = ref(false);
 const originalThumbnailUrl = ref('');
 const compressedThumbnailUrl = ref('');
-const diffPosition = ref(50);
-const diffContainerRef = ref(null);
-const isDraggingDiff = ref(false);
 
 // Progress
 const progressPercent = ref(0);
@@ -668,7 +628,6 @@ async function loadFile(file, password = '') {
   // Render high-res thumbnail of Page 1 for Before/After Diff comparison
   originalThumbnailUrl.value = '';
   compressedThumbnailUrl.value = '';
-  diffPosition.value = 50;
   try {
     originalThumbnailUrl.value = await renderPdfPagePreview(rawBuffer, 1, 1.5, password);
   } catch (e) {
@@ -706,39 +665,15 @@ function reset() {
   lastExportedFile.value = null;
   originalThumbnailUrl.value = '';
   compressedThumbnailUrl.value = '';
-  diffPosition.value = 50;
+  isDiffModalOpen.value = false;
 }
 
-// Diff Slider Mouse & Touch Drag Handlers
-function startDiffDrag(e) {
-  isDraggingDiff.value = true;
-  updateDiffPosition(e);
-  window.addEventListener('mousemove', onDiffDrag);
-  window.addEventListener('mouseup', stopDiffDrag);
-  window.addEventListener('touchmove', onDiffDrag);
-  window.addEventListener('touchend', stopDiffDrag);
-}
-
-function onDiffDrag(e) {
-  if (!isDraggingDiff.value) return;
-  updateDiffPosition(e);
-}
-
-function stopDiffDrag() {
-  isDraggingDiff.value = false;
-  window.removeEventListener('mousemove', onDiffDrag);
-  window.removeEventListener('mouseup', stopDiffDrag);
-  window.removeEventListener('touchmove', onDiffDrag);
-  window.removeEventListener('touchend', stopDiffDrag);
-}
-
-function updateDiffPosition(e) {
-  if (!diffContainerRef.value) return;
-  const rect = diffContainerRef.value.getBoundingClientRect();
-  const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-  const offsetX = clientX - rect.left;
-  const pct = Math.max(0, Math.min(100, Math.round((offsetX / rect.width) * 100)));
-  diffPosition.value = pct;
+function handleReDownload() {
+  if (!lastExportedFile.value) return;
+  triggerDownload(
+    new Blob([lastExportedFile.value.arrayBuffer], { type: 'application/pdf' }),
+    lastExportedFile.value.name
+  );
 }
 
 async function executeCompress() {

@@ -318,11 +318,23 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   const pdf = await loadingTask.promise;
   const numPages = pdf.numPages;
 
-  // Phase 1: Heuristic Sample Probing
-  // Choose representative sample pages to keep search fast and responsive
-  const sampleIndices = numPages <= 3 
-    ? Array.from({ length: numPages }, (_, i) => i + 1)
-    : [1, Math.ceil(numPages / 2), numPages];
+  // Phase 1: Representative Sample Probing
+  // Select well-distributed sample pages to avoid cover/end blank page skew
+  let sampleIndices;
+  if (numPages <= 3) {
+    sampleIndices = Array.from({ length: numPages }, (_, i) => i + 1);
+  } else if (numPages <= 6) {
+    sampleIndices = [1, Math.ceil(numPages / 2), numPages];
+  } else {
+    // 5-point well-spaced sample for multi-page documents (e.g. 16-page contracts)
+    sampleIndices = Array.from(new Set([
+      1,
+      Math.max(2, Math.round(numPages * 0.25)),
+      Math.round(numPages * 0.5),
+      Math.min(numPages - 1, Math.round(numPages * 0.75)),
+      numPages
+    ])).sort((a, b) => a - b);
+  }
 
   const loadedSamplePages = [];
   for (const pIndex of sampleIndices) {
@@ -356,33 +368,49 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
     return estimatedTotal;
   };
 
-  // Run 4 bisection iterations on sample pages
+  // Run 6 bisection iterations on sample pages for 4x higher precision
   let tLow = 0.0;
   let tHigh = 1.0;
-  const maxIterations = 4;
+  let estBytesLow = await probeSampleBytes(0.0);
+  let estBytesHigh = await probeSampleBytes(1.0);
+  const maxIterations = 6;
 
-  for (let iter = 0; iter < maxIterations; iter++) {
-    const pct = Math.round(10 + (iter / maxIterations) * 20);
-    if (onProgress) onProgress(pct, `智能二分算法探测中 [第 ${iter + 1}/${maxIterations} 轮]...`);
+  // If even t=1.0 (max quality) is within target, take t=1.0 directly
+  if (estBytesHigh <= effectiveTargetBytes) {
+    tLow = 1.0;
+    estBytesLow = estBytesHigh;
+  } else {
+    for (let iter = 0; iter < maxIterations; iter++) {
+      const pct = Math.round(10 + (iter / maxIterations) * 20);
+      if (onProgress) onProgress(pct, `智能二分算法探测中 [第 ${iter + 1}/${maxIterations} 轮]...`);
 
-    const tMid = (tLow + tHigh) / 2;
-    const estBytes = await probeSampleBytes(tMid);
-    logger.info('COMPRESS_TARGET', `Bisection iter ${iter + 1}: t=${tMid.toFixed(3)}, estBytes=${(estBytes / 1048576).toFixed(2)} MB vs effectiveTarget=${(effectiveTargetBytes / 1048576).toFixed(2)} MB`);
+      const tMid = (tLow + tHigh) / 2;
+      const estBytes = await probeSampleBytes(tMid);
+      logger.info('COMPRESS_TARGET', `Bisection iter ${iter + 1}: t=${tMid.toFixed(3)}, estBytes=${(estBytes / 1048576).toFixed(2)} MB vs effectiveTarget=${(effectiveTargetBytes / 1048576).toFixed(2)} MB`);
 
-    if (estBytes > effectiveTargetBytes) {
-      tHigh = tMid;
-    } else {
-      tLow = tMid;
+      if (estBytes > effectiveTargetBytes) {
+        tHigh = tMid;
+        estBytesHigh = estBytes;
+      } else {
+        tLow = tMid;
+        estBytesLow = estBytes;
+      }
     }
   }
 
-  // Selected optimal parameter candidate
+  // Target-Weighted Secant Interpolation (弦截插值) inside [tLow, tHigh]
+  // Instead of blindly defaulting to tLow, interpolate towards effectiveTargetBytes (98% threshold)
   let optimalT = tLow;
+  if (tHigh > tLow && estBytesHigh > estBytesLow) {
+    const fraction = (effectiveTargetBytes - estBytesLow) / Math.max(1, (estBytesHigh - estBytesLow));
+    const clampedFraction = Math.max(0, Math.min(0.95, fraction)); // 95% safety ceiling inside interval
+    optimalT = Math.max(0, Math.min(1, tLow + (tHigh - tLow) * clampedFraction));
+  }
   let currentParams = paramFromQualityIndex(optimalT);
-  logger.info('COMPRESS_TARGET', `Bisection completed candidate t=${optimalT.toFixed(3)} (scale=${currentParams.scale}, quality=${currentParams.quality})`);
+  logger.info('COMPRESS_TARGET', `Bisection optimal candidate t=${optimalT.toFixed(3)} (scale=${currentParams.scale}, quality=${currentParams.quality})`);
 
   // Phase 2: Full Document Rendering with Selected Optimal Parameters
-  const renderFullDoc = async (scale, quality, progressOffset = 30, progressSpan = 60) => {
+  const renderFullDoc = async (scale, quality, progressOffset = 30, progressSpan = 55) => {
     const newPdf = await PDFDocument.create();
 
     for (let i = 1; i <= numPages; i++) {
@@ -423,20 +451,38 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
     return await newPdf.save({ useObjectStreams: true });
   };
 
-  let outBytes = await renderFullDoc(currentParams.scale, currentParams.quality, 30, 60);
+  let outBytes = await renderFullDoc(currentParams.scale, currentParams.quality, 30, 55);
 
-  // Phase 3: Fine-Tuning Verification
-  // If actual full document unexpectedly exceeded targetBytes due to complex non-sample pages:
+  // Phase 3: Fine-Tuning Verification & Clarity Booster
+  // Case A: Actual full document exceeded targetBytes due to complex non-sample pages -> Downward tuning
   if (outBytes.byteLength > targetBytes) {
-    logger.info('COMPRESS_TARGET', `Actual output (${(outBytes.byteLength / 1048576).toFixed(2)} MB) exceeded target (${targetSizeMb} MB). Executing 1-step quadratic fine-tuning.`);
-    if (onProgress) onProgress(90, '微调缩放参数确保严格小于目标上限...');
+    logger.info('COMPRESS_TARGET', `Actual output (${(outBytes.byteLength / 1048576).toFixed(2)} MB) exceeded target (${targetSizeMb} MB). Executing downward fine-tuning.`);
+    if (onProgress) onProgress(88, '微调缩放参数确保严格小于目标上限...');
 
-    const shrinkRatio = Math.min(0.92, Math.sqrt((effectiveTargetBytes * 0.95) / outBytes.byteLength));
+    const shrinkRatio = Math.min(0.94, Math.sqrt((effectiveTargetBytes * 0.96) / outBytes.byteLength));
     const tunedScale = Math.max(0.60, Number((currentParams.scale * shrinkRatio).toFixed(2)));
-    const tunedQuality = Math.max(0.30, Number((currentParams.quality * 0.92).toFixed(2)));
+    const tunedQuality = Math.max(0.30, Number((currentParams.quality * 0.94).toFixed(2)));
 
-    outBytes = await renderFullDoc(tunedScale, tunedQuality, 90, 8);
-    logger.info('COMPRESS_TARGET', `Fine-tuned output size: ${(outBytes.byteLength / 1048576).toFixed(2)} MB`);
+    outBytes = await renderFullDoc(tunedScale, tunedQuality, 88, 10);
+    logger.info('COMPRESS_TARGET', `Downward fine-tuned output size: ${(outBytes.byteLength / 1048576).toFixed(2)} MB`);
+  }
+  // Case B: Space is under-utilized by > 15% (e.g. < 1.70 MB for 2.0 MB target) -> Upward Clarity Booster
+  else if (outBytes.byteLength < targetBytes * 0.85 && currentParams.scale < 2.50) {
+    logger.info('COMPRESS_TARGET', `Actual output (${(outBytes.byteLength / 1048576).toFixed(2)} MB) is below 85% of target (${targetSizeMb} MB). Boosting clarity to maximize sharpness.`);
+    if (onProgress) onProgress(88, '提升清晰度参数以最大化还原画质...');
+
+    const boostRatio = Math.min(1.25, Math.sqrt((effectiveTargetBytes * 0.97) / outBytes.byteLength));
+    const boostedScale = Math.min(2.50, Number((currentParams.scale * boostRatio).toFixed(2)));
+    const boostedQuality = Math.min(0.85, Number((currentParams.quality * Math.min(1.15, boostRatio)).toFixed(2)));
+
+    const boostedBytes = await renderFullDoc(boostedScale, boostedQuality, 88, 10);
+    // Only accept boosted bytes if it strictly stays under target limit!
+    if (boostedBytes.byteLength <= targetBytes) {
+      outBytes = boostedBytes;
+      logger.info('COMPRESS_TARGET', `Clarity boost succeeded: ${(outBytes.byteLength / 1048576).toFixed(2)} MB`);
+    } else {
+      logger.info('COMPRESS_TARGET', `Boosted file (${(boostedBytes.byteLength / 1048576).toFixed(2)} MB) exceeded target. Retaining previous output.`);
+    }
   }
 
   // Universal Size Guard: Never allow output to be larger than original!
