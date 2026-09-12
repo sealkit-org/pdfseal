@@ -960,5 +960,8 @@
   "org_insert_blank_here": "Hier leere Seite einfügen",
   "org_source_external_badge": "Extern",
   "org_confirm_delete_pages": "{count} ausgewählte Seiten löschen?",
-  "org_hint_multi_select": "Umschalttaste für Bereichsauswahl oder Kontrollkästchen zur Mehrfachauswahl verwenden"
+  "org_hint_multi_select": "Umschalttaste für Bereichsauswahl oder Kontrollkästchen zur Mehrfachauswahl verwenden",
+  "org_btn_export_all": "🦭 Versiegeln & Herunterladen (Alle {count} Seiten)",
+  "org_btn_export_selected": "Ausgewählte exportieren ({count})",
+  "org_btn_export_selected_tip": "Nur die {count} ausgewählten Seiten als neue PDF exportieren"
 }

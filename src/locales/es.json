@@ -960,5 +960,8 @@
   "org_insert_blank_here": "Insertar página en blanco aquí",
   "org_source_external_badge": "Externo",
   "org_confirm_delete_pages": "¿Eliminar {count} páginas seleccionadas?",
-  "org_hint_multi_select": "Mantén presionada Mayús para selección múltiple o usa las casillas"
+  "org_hint_multi_select": "Mantén presionada Mayús para selección múltiple o usa las casillas",
+  "org_btn_export_all": "🦭 Sellar y Descargar (Todas {count} págs.)",
+  "org_btn_export_selected": "Exportar selección ({count})",
+  "org_btn_export_selected_tip": "Exportar solo las {count} páginas seleccionadas como un nuevo PDF"
 }
