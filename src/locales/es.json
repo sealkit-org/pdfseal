@@ -895,6 +895,8 @@
   "protect_err_owner_pwd_mismatch": "Las contraseñas de gestión no coinciden",
   "protect_pwd_matched": "Las contraseñas coinciden",
   "protect_pwd_mismatched": "Las contraseñas no coinciden",
+  "next_action_done": "¡Todo listo!",
+  "next_action_prompt": "Siguiente paso (traspaso directo en memoria)",
   "next_action_title": "¡Completado! Su siguiente paso:",
   "next_action_desc": "Reenviar directamente en memoria sin volver a subir",
   "next_action_sign": "Firmar",

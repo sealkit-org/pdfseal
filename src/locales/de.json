@@ -895,6 +895,8 @@
   "protect_err_owner_pwd_mismatch": "Verwaltungspasswörter stimmen nicht überein",
   "protect_pwd_matched": "Passwörter stimmen überein",
   "protect_pwd_mismatched": "Passwörter stimmen nicht überein",
+  "next_action_done": "Alles erledigt!",
+  "next_action_prompt": "Nächster Schritt (Direktübertragung im Speicher)",
   "next_action_title": "Fertig! Ihr nächster Schritt:",
   "next_action_desc": "Direkt im Speicher weiterleiten ohne erneuten Upload",
   "next_action_sign": "Signieren",

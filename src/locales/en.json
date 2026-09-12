@@ -895,6 +895,8 @@
   "protect_err_owner_pwd_mismatch": "Management passwords do not match",
   "protect_pwd_matched": "Passwords match",
   "protect_pwd_mismatched": "Passwords do not match",
+  "next_action_done": "All done!",
+  "next_action_prompt": "Next step (in-memory relay without re-uploading)",
   "next_action_title": "Done! What's your next step:",
   "next_action_desc": "In-memory relay directly to next tool without re-uploading",
   "next_action_sign": "Sign",
