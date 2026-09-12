@@ -796,6 +796,7 @@
   "sign_scale_medium": "标准",
   "sign_scale_large": "大章",
   "pipeline_sign_pick_stamp": "从常用印章库快捷选择：",
+  "pipeline_warn_missing_stamp": "流水线中包含尚未配置印章图片的盖章步骤，执行时将跳过加盖。是否继续执行？",
   "param_sign_scale": "印章缩放比例",
   "param_sign_add_date": "附加日期印迹",
   "param_sign_add_date_desc": "自动在签名下方添加当前日期 (如 2026-09-05)",

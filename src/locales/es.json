@@ -797,6 +797,7 @@
   "sign_scale_medium": "Estándar",
   "sign_scale_large": "Grande",
   "pipeline_sign_pick_stamp": "Elegir de sellos guardados:",
+  "pipeline_warn_missing_stamp": "Uno o más pasos de firma no tienen imagen de sello configurada y se omitirán. ¿Continuar de todos modos?",
   "param_sign_scale": "Stamp Scale",
   "param_sign_add_date": "Append Date Stamp",
   "param_sign_add_date_desc": "Automatically add today's date below the signature.",
