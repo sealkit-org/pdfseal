@@ -125,6 +125,57 @@
             </button>
           </div>
 
+          <!-- Compact Success Result Banner (Placed right below Loaded File Bar for instant feedback) -->
+          <div 
+            v-if="lastExportedFile" 
+            class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-indigo-50/60 border border-emerald-200/90 flex flex-wrap items-center justify-between gap-2.5 shadow-2xs animate-in fade-in duration-300"
+          >
+            <!-- Left: Success Message & Size Info -->
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                <CheckCircle2 class="w-4.5 h-4.5" />
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center space-x-2 flex-wrap">
+                  <span class="font-extrabold text-slate-800 text-xs sm:text-sm">
+                    {{ t('compress_result_success') }}!
+                  </span>
+                  <span class="text-xs font-mono font-bold text-emerald-700 bg-white/90 px-2 py-0.5 rounded-lg border border-emerald-200/80 shadow-2xs">
+                    {{ originalSizeMb }} MB ➔ {{ compressedSizeMb }} MB (-{{ savedPercent }}%)
+                  </span>
+                </div>
+                <p class="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-1">
+                  <span>{{ t('compress_auto_downloaded') }}</span>
+                </p>
+              </div>
+            </div>
+
+            <!-- Right: Action Buttons -->
+            <div class="flex items-center space-x-2 shrink-0">
+              <!-- Diff Preview Trigger Button -->
+              <button 
+                v-if="originalThumbnailUrl && compressedThumbnailUrl"
+                type="button" 
+                @click="isDiffModalOpen = true"
+                class="text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-50/90 px-3 py-1.5 rounded-xl border border-indigo-200/90 shadow-2xs hover:shadow-xs transition cursor-pointer flex items-center space-x-1.5 active:scale-98"
+              >
+                <Eye class="w-4 h-4 text-indigo-600" />
+                <span>{{ t('compress_btn_view_diff') }}</span>
+              </button>
+
+              <!-- Re-download Button -->
+              <button 
+                type="button" 
+                @click="handleReDownload"
+                class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer flex items-center space-x-1.5 active:scale-98 shadow-2xs"
+                :title="t('compress_btn_redownload')"
+              >
+                <Download class="w-3.5 h-3.5 text-slate-600" />
+                <span class="hidden sm:inline">{{ t('compress_btn_redownload') }}</span>
+              </button>
+            </div>
+          </div>
+
           <!-- Compression Preset Selector Cards (4 Options) -->
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
               <!-- 1. Balanced Compression (Recommended) -->
@@ -335,57 +386,6 @@
                 :style="{ width: `${progressPercent}%` }"
               ></div>
             </div>
-          </div>
-        </div>
-
-        <!-- Compact Success Result Banner (Clean & Lightweight, Zero Layout Shift) -->
-        <div 
-          v-if="lastExportedFile" 
-          class="my-2.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-indigo-50/60 border border-emerald-200/90 flex flex-wrap items-center justify-between gap-2.5 shadow-2xs animate-in fade-in duration-300"
-        >
-          <!-- Left: Success Message & Size Info -->
-          <div class="flex items-center space-x-2.5 min-w-0">
-            <div class="w-8 h-8 rounded-lg bg-emerald-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
-              <CheckCircle2 class="w-4.5 h-4.5" />
-            </div>
-            <div class="min-w-0">
-              <div class="flex items-center space-x-2 flex-wrap">
-                <span class="font-extrabold text-slate-800 text-xs sm:text-sm">
-                  {{ t('compress_result_success') }}!
-                </span>
-                <span class="text-xs font-mono font-bold text-emerald-700 bg-white/90 px-2 py-0.5 rounded-lg border border-emerald-200/80 shadow-2xs">
-                  {{ originalSizeMb }} MB ➔ {{ compressedSizeMb }} MB (-{{ savedPercent }}%)
-                </span>
-              </div>
-              <p class="text-[11px] text-slate-500 mt-0.5 flex items-center space-x-1">
-                <span>{{ t('compress_auto_downloaded') }}</span>
-              </p>
-            </div>
-          </div>
-
-          <!-- Right: Action Buttons -->
-          <div class="flex items-center space-x-2 shrink-0">
-            <!-- Diff Preview Trigger Button -->
-            <button 
-              v-if="originalThumbnailUrl && compressedThumbnailUrl"
-              type="button" 
-              @click="isDiffModalOpen = true"
-              class="text-xs font-bold text-indigo-700 bg-white hover:bg-indigo-50/90 px-3 py-1.5 rounded-xl border border-indigo-200/90 shadow-2xs hover:shadow-xs transition cursor-pointer flex items-center space-x-1.5 active:scale-98"
-            >
-              <Eye class="w-4 h-4 text-indigo-600" />
-              <span>{{ t('compress_btn_view_diff') }}</span>
-            </button>
-
-            <!-- Re-download Button -->
-            <button 
-              type="button" 
-              @click="handleReDownload"
-              class="text-xs font-bold text-slate-700 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer flex items-center space-x-1.5 active:scale-98 shadow-2xs"
-              :title="t('compress_btn_redownload')"
-            >
-              <Download class="w-3.5 h-3.5 text-slate-600" />
-              <span class="hidden sm:inline">{{ t('compress_btn_redownload') }}</span>
-            </button>
           </div>
         </div>
 
