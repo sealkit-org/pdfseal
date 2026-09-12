@@ -940,5 +940,20 @@
   "sign_batch_badge_applied": "已批量加盖至 {count} 个页面",
   "sign_batch_target_info": "第 {page} 页签名 / 简签",
   "sign_batch_badge_initials": "骑缝简签",
-  "sign_batch_no_pages": "未选择任何页面"
+  "sign_batch_no_pages": "未选择任何页面",
+  "org_batch_selected": "已选 {count} 页",
+  "org_btn_batch_rotate": "批量旋转 90°",
+  "org_btn_batch_delete": "批量删除",
+  "org_btn_select_all": "全选",
+  "org_btn_invert_select": "反选",
+  "org_btn_deselect": "取消选择",
+  "org_btn_insert_blank": "插入空白页",
+  "org_btn_append_file": "追加外部文件",
+  "org_btn_undo": "撤销",
+  "org_btn_redo": "重做",
+  "org_blank_page_title": "空白页",
+  "org_insert_blank_here": "在此处插入空白页",
+  "org_source_external_badge": "外部文档",
+  "org_confirm_delete_pages": "确定删除选中的 {count} 个页面？",
+  "org_hint_multi_select": "按住 Shift 连续多选，或点击复选框批量操作"
 }

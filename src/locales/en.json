@@ -940,5 +940,20 @@
   "sign_batch_badge_applied": "Applied to {count} pages",
   "sign_batch_target_info": "Page {page} Signature / Initial",
   "sign_batch_badge_initials": "Initials",
-  "sign_batch_no_pages": "No pages selected"
+  "sign_batch_no_pages": "No pages selected",
+  "org_batch_selected": "Selected {count} pages",
+  "org_btn_batch_rotate": "Rotate 90°",
+  "org_btn_batch_delete": "Delete",
+  "org_btn_select_all": "Select All",
+  "org_btn_invert_select": "Invert",
+  "org_btn_deselect": "Deselect",
+  "org_btn_insert_blank": "Insert Blank Page",
+  "org_btn_append_file": "Append External File",
+  "org_btn_undo": "Undo",
+  "org_btn_redo": "Redo",
+  "org_blank_page_title": "Blank Page",
+  "org_insert_blank_here": "Insert blank page here",
+  "org_source_external_badge": "External",
+  "org_confirm_delete_pages": "Delete {count} selected pages?",
+  "org_hint_multi_select": "Hold Shift to range-select, or click checkboxes to multi-select"
 }

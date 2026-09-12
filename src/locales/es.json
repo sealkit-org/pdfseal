@@ -940,5 +940,20 @@
   "sign_batch_badge_applied": "Aplicada a {count} páginas",
   "sign_batch_target_info": "Página {page} Firma / Rúbrica",
   "sign_batch_badge_initials": "Rúbrica",
-  "sign_batch_no_pages": "Ninguna página seleccionada"
+  "sign_batch_no_pages": "No hay páginas seleccionadas",
+  "org_batch_selected": "{count} páginas seleccionadas",
+  "org_btn_batch_rotate": "Girar 90°",
+  "org_btn_batch_delete": "Eliminar",
+  "org_btn_select_all": "Seleccionar todo",
+  "org_btn_invert_select": "Invertir selección",
+  "org_btn_deselect": "Deseleccionar",
+  "org_btn_insert_blank": "Insertar página en blanco",
+  "org_btn_append_file": "Adjuntar archivo externo",
+  "org_btn_undo": "Deshacer",
+  "org_btn_redo": "Rehacer",
+  "org_blank_page_title": "Página en blanco",
+  "org_insert_blank_here": "Insertar página en blanco aquí",
+  "org_source_external_badge": "Externo",
+  "org_confirm_delete_pages": "¿Eliminar {count} páginas seleccionadas?",
+  "org_hint_multi_select": "Mantén presionada Mayús para selección múltiple o usa las casillas"
 }

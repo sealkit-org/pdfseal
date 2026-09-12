@@ -940,5 +940,20 @@
   "sign_batch_badge_applied": "Auf {count} Seiten angewendet",
   "sign_batch_target_info": "Seite {page} Signatur / Paraphe",
   "sign_batch_badge_initials": "Paraphe",
-  "sign_batch_no_pages": "Keine Seiten ausgewählt"
+  "sign_batch_no_pages": "Keine Seiten ausgewählt",
+  "org_batch_selected": "{count} Seiten ausgewählt",
+  "org_btn_batch_rotate": "90° drehen",
+  "org_btn_batch_delete": "Löschen",
+  "org_btn_select_all": "Alle auswählen",
+  "org_btn_invert_select": "Auswahl umkehren",
+  "org_btn_deselect": "Auswahl aufheben",
+  "org_btn_insert_blank": "Leere Seite einfügen",
+  "org_btn_append_file": "Externe Datei anhängen",
+  "org_btn_undo": "Rückgängig",
+  "org_btn_redo": "Wiederholen",
+  "org_blank_page_title": "Leere Seite",
+  "org_insert_blank_here": "Hier leere Seite einfügen",
+  "org_source_external_badge": "Extern",
+  "org_confirm_delete_pages": "{count} ausgewählte Seiten löschen?",
+  "org_hint_multi_select": "Umschalttaste für Bereichsauswahl oder Kontrollkästchen zur Mehrfachauswahl verwenden"
 }
