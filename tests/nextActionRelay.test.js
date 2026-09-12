@@ -86,6 +86,8 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
 
   it('should contain all required i18n keys for NextAction across all 5 languages', () => {
     const requiredKeys = [
+      'next_action_done',
+      'next_action_prompt',
       'next_action_title',
       'next_action_desc',
       'next_action_sign',

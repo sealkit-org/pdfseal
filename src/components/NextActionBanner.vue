@@ -9,9 +9,10 @@
         <Sparkles class="w-4 h-4 text-emerald-600 animate-pulse" />
       </div>
       <div class="min-w-0">
+        <!-- Line 1: Current Result Status & Vault Persistence -->
         <div class="flex items-center space-x-2 flex-wrap">
-          <p class="text-xs font-extrabold text-slate-800 truncate">
-            {{ t('next_action_title') || 'Done! What\'s next:' }}
+          <p class="text-xs font-extrabold text-slate-800">
+            {{ t('next_action_done') || 'All done!' }}
           </p>
 
           <!-- Vault Archiving Status / Action Badge -->
@@ -44,8 +45,9 @@
           </button>
         </div>
 
-        <p class="text-[11px] text-slate-500 font-medium truncate hidden sm:block">
-          {{ t('next_action_desc') || 'Relay directly in memory without re-uploading' }}
+        <!-- Line 2: Next Action Prompt (Leading to the tool buttons on the right) -->
+        <p class="text-[11px] text-slate-500 font-medium truncate hidden sm:block mt-0.5">
+          {{ t('next_action_prompt') || 'Next step (in-memory relay without re-uploading):' }}
         </p>
       </div>
     </div>

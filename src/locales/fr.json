@@ -895,6 +895,8 @@
   "protect_err_owner_pwd_mismatch": "Les mots de passe de gestion ne correspondent pas",
   "protect_pwd_matched": "Les mots de passe correspondent",
   "protect_pwd_mismatched": "Les mots de passe ne correspondent pas",
+  "next_action_done": "Terminé !",
+  "next_action_prompt": "Étape suivante (relais direct en mémoire)",
   "next_action_title": "Terminé ! Quelle est la prochaine étape :",
   "next_action_desc": "Relayer directement en mémoire sans re-téléverser",
   "next_action_sign": "Signer",
