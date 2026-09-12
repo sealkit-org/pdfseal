@@ -361,13 +361,13 @@
             </label>
           </div>
 
-          <!-- Right: Big Primary Export Button -->
+          <!-- Right: Big Primary Export Button (All Pages) -->
           <button 
             :disabled="isProcessing || isLoading || pages.length === 0"
             @click="executeExport" 
             class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-indigo-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
-            <span v-if="!isProcessing">{{ t('seal_and_download') || '🦭 Seal & Download' }}</span>
+            <span v-if="!isProcessing">{{ t('org_btn_export_all', { count: pages.length }) }}</span>
             <span v-else>{{ t('sealing_state') || 'Sealing...' }}</span>
             <Download v-if="!isProcessing" class="w-4 h-4" />
             <Loader2 v-else class="w-4 h-4 animate-spin" />
@@ -426,10 +426,21 @@
           <span>{{ t('org_btn_invert_select') }}</span>
         </button>
 
+        <!-- Export Selected Pages (Direct Extraction) -->
+        <button 
+          @click="executeExportSelected"
+          :disabled="isProcessing"
+          class="text-xs bg-indigo-600 hover:bg-indigo-500 active:scale-98 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center space-x-1.5 cursor-pointer shadow-sm ml-1"
+          :title="t('org_btn_export_selected_tip', { count: selectedPageIds.size })"
+        >
+          <Download class="w-3.5 h-3.5" />
+          <span>{{ t('org_btn_export_selected', { count: selectedPageIds.size }) }}</span>
+        </button>
+
         <!-- Deselect / Clear (X) -->
         <button 
           @click="deselectAll"
-          class="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition cursor-pointer ml-1"
+          class="p-1 hover:bg-slate-800 text-slate-400 hover:text-white rounded-lg transition cursor-pointer ml-0.5"
           :title="t('org_btn_deselect')"
         >
           <X class="w-4 h-4" />
@@ -1191,6 +1202,48 @@ async function executeExport() {
   } catch (err) {
     logger.error('ORGANIZE', `Failed to export organized PDF: ${err.message}`);
     alert('Failed to export organized PDF: ' + err.message);
+  } finally {
+    isProcessing.value = false;
+  }
+}
+
+async function executeExportSelected() {
+  if (selectedPageIds.value.size === 0) return;
+  const targetPages = pages.value.filter(p => selectedPageIds.value.has(p.id));
+  if (targetPages.length === 0) return;
+
+  isProcessing.value = true;
+  try {
+    const outBytes = await assembleOrganizedPdf(targetPages, {
+      sourceBytes: docBytes.value,
+      password: unlockedPassword
+    });
+
+    const cleanBase = (customOutputBaseName.value?.trim() || filename.value || 'PDFSeal').replace(/\.pdf$/i, '');
+    const outName = `${cleanBase}_selected_${targetPages.length}pages.pdf`;
+
+    triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
+    logger.info('ORGANIZE', `Exported ${targetPages.length} selected pages: ${outName} (${(outBytes.byteLength / 1024).toFixed(1)} KB)`);
+
+    lastExportedFile.value = {
+      name: outName,
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+    };
+    showNextActions.value = true;
+
+    if (autoSaveToVault.value) {
+      await saveFile({
+        name: outName,
+        arrayBuffer: outBytes,
+        folderId: 'default',
+        category: 'export',
+        pageCount: targetPages.length
+      });
+      logger.info('VAULT', `Selected pages auto-saved to Vault: ${outName}`);
+    }
+  } catch (err) {
+    logger.error('ORGANIZE', `Failed to export selected pages: ${err.message}`);
+    alert('Failed to export selected pages: ' + err.message);
   } finally {
     isProcessing.value = false;
   }

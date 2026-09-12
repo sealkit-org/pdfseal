@@ -960,5 +960,8 @@
   "org_insert_blank_here": "在此处插入空白页",
   "org_source_external_badge": "外部文档",
   "org_confirm_delete_pages": "确定删除选中的 {count} 个页面？",
-  "org_hint_multi_select": "按住 Shift 连续多选，或点击复选框批量操作"
+  "org_hint_multi_select": "按住 Shift 连续多选，或点击复选框批量操作",
+  "org_btn_export_all": "🦭 封印并下载全部 (共 {count} 页)",
+  "org_btn_export_selected": "导出所选 ({count} 页)",
+  "org_btn_export_selected_tip": "仅将选中的 {count} 个页面导出为一个新 PDF 文件"
 }

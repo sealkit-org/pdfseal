@@ -960,5 +960,8 @@
   "org_insert_blank_here": "Insert blank page here",
   "org_source_external_badge": "External",
   "org_confirm_delete_pages": "Delete {count} selected pages?",
-  "org_hint_multi_select": "Hold Shift to range-select, or click checkboxes to multi-select"
+  "org_hint_multi_select": "Hold Shift to range-select, or click checkboxes to multi-select",
+  "org_btn_export_all": "🦭 Seal & Download (All {count} Pages)",
+  "org_btn_export_selected": "Export Selected ({count})",
+  "org_btn_export_selected_tip": "Export only the {count} selected pages as a new PDF"
 }
