@@ -649,6 +649,145 @@
             </div>
           </div>
 
+          <!-- Page Number Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_page_number'" class="space-y-4">
+            <!-- Format Macro Input & Presets -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('pn_format_label') || 'Page Number Format' }}</label>
+              <input 
+                type="text" 
+                v-model="editingStepDraft.format" 
+                :placeholder="'Page {n} of {total}'"
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+              />
+              <div class="flex flex-wrap gap-1.5 mt-2">
+                <button 
+                  type="button" 
+                  v-for="macro in ['{n}', '{n} / {total}', 'Page {n} of {total}', '第 {n} 页，共 {total} 页']"
+                  :key="macro"
+                  @click="editingStepDraft.format = macro"
+                  class="text-[11px] px-2 py-0.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-600 font-mono transition cursor-pointer"
+                >
+                  {{ macro }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Position Selector (6-Anchor Grid) -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('pn_position_label') || 'Position' }}</label>
+              <div class="grid grid-cols-3 gap-1.5">
+                <button 
+                  type="button" 
+                  v-for="pos in [
+                    { id: 'top_left', label: t('pn_pos_top_left') || 'Top Left' },
+                    { id: 'top_center', label: t('pn_pos_top_center') || 'Top Center' },
+                    { id: 'top_right', label: t('pn_pos_top_right') || 'Top Right' },
+                    { id: 'bottom_left', label: t('pn_pos_bottom_left') || 'Bottom Left' },
+                    { id: 'bottom_center', label: t('pn_pos_bottom_center') || 'Bottom Center' },
+                    { id: 'bottom_right', label: t('pn_pos_bottom_right') || 'Bottom Right' }
+                  ]" 
+                  :key="pos.id"
+                  @click="editingStepDraft.position = pos.id"
+                  :class="[
+                    'text-[11px] py-1.5 px-2 rounded-xl border text-center transition font-semibold cursor-pointer',
+                    editingStepDraft.position === pos.id 
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs' 
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ]"
+                >
+                  {{ pos.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Start Number & Skip Cover -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label class="block text-slate-700 font-bold mb-1.5">{{ t('pn_start_number') || 'Start Number' }}</label>
+                <input 
+                  type="number" 
+                  min="1" 
+                  v-model.number="editingStepDraft.startNumber"
+                  class="w-full px-3.5 py-1.5 rounded-xl border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
+                />
+              </div>
+
+              <div class="flex flex-col justify-end">
+                <label class="flex items-center space-x-2 text-xs font-semibold text-slate-700 cursor-pointer select-none py-2">
+                  <input 
+                    type="checkbox" 
+                    v-model="editingStepDraft.skipCover" 
+                    class="w-4 h-4 text-indigo-600 rounded-md border-slate-300 focus:ring-indigo-500 cursor-pointer"
+                  />
+                  <span>{{ t('pn_skip_cover') || 'Skip Cover Page' }}</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Masking Mode & Mask Color -->
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('pn_mask_label') || 'Background Whiteout Mask' }}</label>
+              <div class="grid grid-cols-3 gap-1.5 mb-2.5">
+                <button 
+                  type="button" 
+                  v-for="mask in [
+                    { id: 'full_ribbon', label: t('pn_mask_ribbon') || 'Full Ribbon' },
+                    { id: 'local_box', label: t('pn_mask_box') || 'Local Box' },
+                    { id: 'none', label: t('pn_mask_none') || 'None (Transparent)' }
+                  ]"
+                  :key="mask.id"
+                  @click="editingStepDraft.maskMode = mask.id"
+                  :class="[
+                    'text-[11px] py-1.5 px-2 rounded-xl border text-center transition font-semibold cursor-pointer',
+                    editingStepDraft.maskMode === mask.id 
+                      ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold shadow-2xs' 
+                      : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                  ]"
+                >
+                  {{ mask.label }}
+                </button>
+              </div>
+
+              <div v-if="editingStepDraft.maskMode !== 'none'" class="flex items-center space-x-2 pt-1">
+                <span class="text-[11px] text-slate-600 font-semibold">{{ t('pn_mask_color_label') || 'Mask Color' }}:</span>
+                <div class="relative w-6 h-6 rounded-md border border-slate-300 overflow-hidden cursor-pointer shadow-2xs">
+                  <input type="color" v-model="editingStepDraft.maskColor" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                  <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.maskColor || '#ffffff' }"></div>
+                </div>
+                <span class="font-mono text-[11px] text-slate-600 uppercase font-bold">{{ editingStepDraft.maskColor || '#ffffff' }}</span>
+              </div>
+            </div>
+
+            <!-- Typography & Color -->
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                  <span>{{ t('wm_size_label') || 'Font Size' }}</span>
+                  <span class="text-indigo-600 font-mono">{{ editingStepDraft.fontSize || 10 }}pt</span>
+                </div>
+                <input 
+                  type="range" 
+                  min="8" 
+                  max="24" 
+                  v-model.number="editingStepDraft.fontSize" 
+                  class="w-full accent-indigo-600 cursor-pointer"
+                />
+              </div>
+
+              <div>
+                <label class="block text-slate-700 font-bold mb-1.5">{{ t('pn_text_color') || 'Text Color' }}</label>
+                <div class="flex items-center space-x-2">
+                  <div class="relative w-7 h-7 rounded-lg border border-slate-300 overflow-hidden cursor-pointer shadow-2xs">
+                    <input type="color" v-model="editingStepDraft.textColor" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                    <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.textColor || '#334155' }"></div>
+                  </div>
+                  <span class="font-mono text-[11px] text-slate-700 font-bold uppercase">{{ editingStepDraft.textColor || '#334155' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- 2. Compress Parameters -->
           <div v-else-if="currentEditingStepNodeId === 'node_compress'" class="space-y-2.5">
             <label class="block text-slate-700 font-bold mb-1">{{ t('param_compress_level') }}</label>
@@ -2298,6 +2437,20 @@ function getStepSummary(step) {
       const color = step.params.color || '#dc2626';
       return `"${txt}" · ${size}px · ${color.toUpperCase()}`;
     }
+    case 'node_page_number': {
+      const fmt = step.params.format || 'Page {n} of {total}';
+      const posMap = {
+        bottom_center: t('pn_pos_bottom_center') || 'Bottom Center',
+        bottom_right: t('pn_pos_bottom_right') || 'Bottom Right',
+        bottom_left: t('pn_pos_bottom_left') || 'Bottom Left',
+        top_center: t('pn_pos_top_center') || 'Top Center',
+        top_right: t('pn_pos_top_right') || 'Top Right',
+        top_left: t('pn_pos_top_left') || 'Top Left'
+      };
+      const pos = posMap[step.params.position] || step.params.position || 'Bottom Center';
+      const cover = step.params.skipCover ? ` · ${t('pn_skip_cover_badge') || 'Skip Cover'}` : '';
+      return `${fmt} · ${pos}${cover}`;
+    }
     case 'node_organize': {
       const parts = [];
       if (step.params.standardizeSize === 'a4') parts.push('A4');
@@ -2383,6 +2536,8 @@ function getStepTagClass(nodeId, step) {
         : 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
     case 'node_watermark':
       return 'bg-amber-50 text-amber-700 border-amber-200/80';
+    case 'node_page_number':
+      return 'bg-violet-50 text-violet-700 border-violet-200/80';
     case 'node_compress':
       return 'bg-blue-50 text-blue-700 border-blue-200/80';
     case 'node_sanitize':

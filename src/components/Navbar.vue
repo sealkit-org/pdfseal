@@ -241,7 +241,8 @@ import {
   ImageDown,
   DownloadCloud,
   Building2,
-  Crown
+  Crown,
+  ListOrdered
 } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { currentLang, setLanguage, t } from '../i18n';
@@ -274,6 +275,7 @@ const moreTools = [
   { id: 'image_to_pdf', labelKey: 'tab_image_to_pdf', icon: Images, color: 'text-violet-600' },
   { id: 'pdf_to_image', labelKey: 'tab_pdf_to_image', icon: ImageDown, color: 'text-cyan-600' },
   { id: 'watermark', labelKey: 'tab_watermark', icon: Stamp, color: 'text-amber-600' },
+  { id: 'page_number', labelKey: 'tab_page_number', icon: ListOrdered, color: 'text-violet-600' },
   { id: 'sanitize', labelKey: 'tab_sanitize', icon: ShieldCheck, color: 'text-blue-600' }
 ];
 

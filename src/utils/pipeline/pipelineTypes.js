@@ -132,6 +132,29 @@ export const AVAILABLE_NODES = {
     }
   },
 
+  node_page_number: {
+    id: 'node_page_number',
+    nameKey: 'tab_page_number',
+    defaultName: '添加页码',
+    descKey: 'node_page_number_desc',
+    defaultDesc: '批量添加规范页码，支持灵活宏格式、白底遮罩覆盖旧页码及跳过封面',
+    category: 'structure',
+    inputs: [DATA_TYPES.PDF_DOCS],
+    outputs: [DATA_TYPES.PDF_DOCS],
+    topology: TOPOLOGY_MODES.MAP,
+    defaultParams: {
+      format: 'Page {n} of {total}',
+      position: 'bottom_center',
+      startNumber: 1,
+      skipCover: false,
+      fontSize: 10,
+      textColor: '#334155',
+      maskMode: 'full_ribbon',
+      maskColor: '#ffffff',
+      margin: 24
+    }
+  },
+
   node_sign: {
     id: 'node_sign',
     nameKey: 'tab_sign',
