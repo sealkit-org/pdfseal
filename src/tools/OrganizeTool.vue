@@ -72,10 +72,34 @@
         </div>
       </div>
 
-      <!-- 2. ACTIVE ASSEMBLY WORKSPACE -->
+      <!-- 2. ACTIVE ASSEMBLY WORKSPACE OR UNIFIED RESULT DELIVERY -->
       <div v-else class="flex-1 flex flex-col justify-between pt-4">
-        <!-- Assembly Control Bar (Single-Row Streamlined Layout) -->
-        <div class="flex items-center justify-between gap-2.5 pb-3 border-b border-slate-100 shrink-0">
+        <!-- 2A. Unified Processing & Result Delivery View -->
+        <ResultDeliveryView 
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
+          :file="lastExportedFile"
+          source-tool="organize"
+          :page-count="lastExportedPageCount"
+          @redownload="handleReDownload"
+          @new-task="reset"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+        >
+          <template #metrics>
+            <span class="inline-flex items-center space-x-1 text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200/60 shadow-2xs">
+              <LayoutGrid class="w-3.5 h-3.5 text-indigo-600" />
+              <span>{{ t('result_metric_organized', { count: lastExportedPageCount }) || `共重排整理 ${lastExportedPageCount} 个页面` }}</span>
+            </span>
+          </template>
+        </ResultDeliveryView>
+
+        <!-- 2B. Staging Workspace & Bottom Execution Bar -->
+        <div v-else class="flex-1 flex flex-col justify-between min-h-0">
+          <!-- Assembly Control Bar (Single-Row Streamlined Layout) -->
+          <div class="flex items-center justify-between gap-2.5 pb-3 border-b border-slate-100 shrink-0">
           <!-- Left Info Badges & Document Operations -->
           <div class="flex items-center space-x-2 min-w-0">
             <span class="text-xs bg-indigo-50 text-indigo-700 font-extrabold px-2.5 py-1 rounded-xl border border-indigo-200/80 shrink-0">
@@ -375,6 +399,7 @@
             </button>
           </div>
         </div>
+        </div>
       </div>
     </div>
 
@@ -388,7 +413,7 @@
       leave-to-class="opacity-0 translate-y-4 scale-95"
     >
       <div 
-        v-if="selectedPageIds.size > 0"
+        v-if="selectedPageIds.size > 0 && !isProcessing && !lastExportedFile"
         class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/90 hover:bg-slate-900 backdrop-blur-md text-white px-4 sm:px-5 py-2.5 rounded-2xl shadow-2xl border border-slate-700/70 flex items-center space-x-2.5 sm:space-x-3 select-none"
       >
         <!-- Selection count pill -->
@@ -515,11 +540,24 @@ import { assembleOrganizedPdf, generateBlankPageThumbnail } from '../utils/organ
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import NextActionBanner from '../components/NextActionBanner.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
 const lastExportedFile = ref(null);
+const lastExportedPageCount = ref(0);
 const showNextActions = ref(false);
+const progressPercent = ref(0);
+const progressMessage = ref('');
+
+function handleReDownload() {
+  if (!lastExportedFile.value?.arrayBuffer) return;
+  triggerDownload(new Blob([lastExportedFile.value.arrayBuffer], { type: 'application/pdf' }), lastExportedFile.value.name);
+}
+
+function handleBackToEdit() {
+  lastExportedFile.value = null;
+}
 
 const fileInputRef = ref(null);
 const appendFileInputRef = ref(null);
@@ -1009,20 +1047,28 @@ function handlePasswordCancel() {
 
 function reset() {
   docBytes.value = null;
+  filename.value = '';
   pages.value = [];
   selectedPageIds.value = new Set();
   undoStack.value = [];
   redoStack.value = [];
   lastClickedIdx = null;
   unlockedPassword = '';
+  pendingFileObj = null;
   customOutputBaseName.value = '';
   showNextActions.value = false;
   lastExportedFile.value = null;
+  lastExportedPageCount.value = 0;
+  progressPercent.value = 0;
+  progressMessage.value = '';
   downloadingPageIdx.value = null;
   destroyPdfDoc();
   if (sortableInstance) {
     sortableInstance.destroy();
     sortableInstance = null;
+  }
+  if (fileInputRef.value) {
+    fileInputRef.value.value = '';
   }
 }
 
@@ -1160,12 +1206,12 @@ async function magicForcePortrait() {
   }
 }
 
-async function generateOrganizedBytes() {
+async function generateOrganizedBytes(onProgress = null) {
   if (!docBytes.value || pages.value.length === 0) return null;
   const outBytes = await assembleOrganizedPdf(pages.value, {
     sourceBytes: docBytes.value,
     password: unlockedPassword
-  });
+  }, onProgress);
 
   const cleanBase = (customOutputBaseName.value?.trim() || `PDFSeal_Organized_${Date.now()}`).replace(/\.pdf$/i, '');
   const outName = `${cleanBase}.pdf`;
@@ -1176,17 +1222,25 @@ async function generateOrganizedBytes() {
 async function executeExport() {
   if (!docBytes.value || pages.value.length === 0) return;
   isProcessing.value = true;
+  progressPercent.value = 5;
+  progressMessage.value = t('org_progress_preparing') || '准备开始重排整理...';
   try {
-    const result = await generateOrganizedBytes();
+    const onProgress = (pct, msg) => {
+      progressPercent.value = pct;
+      if (msg) progressMessage.value = msg;
+    };
+    const result = await generateOrganizedBytes(onProgress);
     if (!result) return;
     const { outBytes, outName, pageCount } = result;
 
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
     logger.info('ORGANIZE', `Exported organized PDF: ${outName} (${(outBytes.byteLength / 1024).toFixed(1)} KB, ${pageCount} pages)`);
 
+    lastExportedPageCount.value = pageCount;
     lastExportedFile.value = {
       name: outName,
-      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes,
+      size: outBytes.byteLength
     };
     showNextActions.value = true;
 
@@ -1215,11 +1269,17 @@ async function executeExportSelected() {
   if (targetPages.length === 0) return;
 
   isProcessing.value = true;
+  progressPercent.value = 5;
+  progressMessage.value = t('org_progress_extracting') || '正在提取选中页面...';
   try {
+    const onProgress = (pct, msg) => {
+      progressPercent.value = pct;
+      if (msg) progressMessage.value = msg;
+    };
     const outBytes = await assembleOrganizedPdf(targetPages, {
       sourceBytes: docBytes.value,
       password: unlockedPassword
-    });
+    }, onProgress);
 
     const cleanBase = (customOutputBaseName.value?.trim() || filename.value || 'PDFSeal').replace(/\.pdf$/i, '');
     const outName = `${cleanBase}_selected_${targetPages.length}pages.pdf`;
@@ -1227,9 +1287,11 @@ async function executeExportSelected() {
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
     logger.info('ORGANIZE', `Exported ${targetPages.length} selected pages: ${outName} (${(outBytes.byteLength / 1024).toFixed(1)} KB)`);
 
+    lastExportedPageCount.value = targetPages.length;
     lastExportedFile.value = {
       name: outName,
-      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes,
+      size: outBytes.byteLength
     };
     showNextActions.value = true;
 
