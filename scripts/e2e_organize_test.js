@@ -401,38 +401,84 @@ async function runOrganizeBusinessTest() {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_05b_back_to_edit.png') });
     console.log('  📷 Screenshot saved: organize_05b_back_to_edit.png');
 
-    // 11. Re-export and Test "整理其他文件" (New Task / Reset)
-    console.log('📍 [Step 11] Re-exporting and Testing "整理其他文件" (New Task / Reset)...');
-    const reExportBtn = await page.evaluateHandle(() => {
+    // 10b. Test Single/Selected Page Export (Verification of {count} interpolation)
+    console.log('📍 [Step 10b] Testing Selected Page Export (Verifying {count} variable fix)...');
+    // Select Card 0
+    await page.evaluate(() => {
+      const cards = document.querySelectorAll('.grid > div');
+      if (cards.length > 0) {
+        const checkboxBtn = cards[0].querySelector('button');
+        if (checkboxBtn) checkboxBtn.click();
+      }
+    });
+    await new Promise(r => setTimeout(r, 400));
+
+    // Floating bar should now be visible with export selected button
+    const exportSelectedBtn = await page.evaluateHandle(() => {
       const btns = Array.from(document.querySelectorAll('button'));
       return btns.find(b => {
         const text = b.textContent || '';
-        return text.includes('导出') || text.includes('Export') || text.includes('封印');
+        return text.includes('导出所选') || text.includes('Export Selected');
       }) || null;
     });
-    const reExportEl = reExportBtn.asElement();
-    if (reExportEl) {
-      await reExportEl.click();
-      await new Promise(r => setTimeout(r, 1000));
 
-      const newTaskBtn = await page.evaluateHandle(() => {
-        const btns = Array.from(document.querySelectorAll('button'));
-        return btns.find(b => b.textContent && (b.textContent.includes('整理其他文件') || b.textContent.includes('Organize Another') || b.textContent.includes('开始新任务'))) || null;
-      });
-      const newTaskEl = newTaskBtn.asElement();
-      if (!newTaskEl) throw new Error('Could not find "整理其他文件" button on ResultDeliveryView');
-      await newTaskEl.click();
-      await new Promise(r => setTimeout(r, 400));
+    const exportSelEl = exportSelectedBtn.asElement();
+    if (!exportSelEl) throw new Error('Could not find "导出所选" button on floating bar');
+    await exportSelEl.click();
+    console.log('  ✓ Clicked "Export Selected" button. Checking processing state message...');
+    await new Promise(r => setTimeout(r, 40));
 
-      const isReset = await page.evaluate(() => {
-        return document.body.innerText.includes('选择要整理的 PDF') || 
-               document.body.innerText.includes('Select a PDF to Organize') ||
-               document.querySelectorAll('.grid > div').length === 0;
-      });
-      console.log(`  ✓ Workspace reset to initial dropzone via "整理其他文件": ${isReset}`);
-      await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_06_reset_empty.png') });
-      console.log('  📷 Screenshot saved: organize_06_reset_empty.png');
+    const processingPillText = await page.evaluate(() => {
+      const pill = document.querySelector('.bg-blue-50\\/90');
+      return pill ? pill.textContent.trim() : '';
+    });
+    console.log(`  ✓ Live activity pill message: "${processingPillText}"`);
+
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_05c_selected_processing.png') });
+    console.log('  📷 Screenshot saved: organize_05c_selected_processing.png');
+
+    if (processingPillText.includes('{count}')) {
+      throw new Error(`CRITICAL BUG: Raw placeholder {count} detected in processing message: "${processingPillText}"`);
+    } else {
+      console.log('  🎉 [VALIDATION SUCCESS] Variable {count} correctly interpolated with actual number!');
     }
+
+    // Wait for delivery view to show
+    await page.waitForFunction(() => {
+      return document.querySelector('.bg-emerald-500') !== null;
+    }, { timeout: 10000 });
+
+    const deliveryMetricText = await page.evaluate(() => {
+      const metric = document.querySelector('span.bg-indigo-50');
+      return metric ? metric.textContent.trim() : '';
+    });
+    console.log(`  ✓ Result delivery metric badge: "${deliveryMetricText}"`);
+    if (deliveryMetricText.includes('{count}')) {
+      throw new Error(`CRITICAL BUG: Raw placeholder {count} detected in delivery metric: "${deliveryMetricText}"`);
+    }
+
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_05d_selected_delivery.png') });
+    console.log('  📷 Screenshot saved: organize_05d_selected_delivery.png');
+
+    // 11. Test "整理其他文件" (New Task / Reset)
+    console.log('📍 [Step 11] Testing "整理其他文件" (New Task / Reset)...');
+    const newTaskBtn = await page.evaluateHandle(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      return btns.find(b => b.textContent && (b.textContent.includes('整理其他文件') || b.textContent.includes('Organize Another') || b.textContent.includes('开始新任务'))) || null;
+    });
+    const newTaskEl = newTaskBtn.asElement();
+    if (!newTaskEl) throw new Error('Could not find "整理其他文件" button on ResultDeliveryView');
+    await newTaskEl.click();
+    await new Promise(r => setTimeout(r, 400));
+
+    const isReset = await page.evaluate(() => {
+      return document.body.innerText.includes('选择要整理的 PDF') || 
+             document.body.innerText.includes('Select a PDF to Organize') ||
+             document.querySelectorAll('.grid > div').length === 0;
+    });
+    console.log(`  ✓ Workspace reset to initial dropzone via "整理其他文件": ${isReset}`);
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_06_reset_empty.png') });
+    console.log('  📷 Screenshot saved: organize_06_reset_empty.png');
 
     console.log('\n==========================================================');
     console.log('🎉 [SUCCESS] PDF Organize Business Workflow Test 100% Passed!');

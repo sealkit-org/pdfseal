@@ -84,8 +84,15 @@
         <div class="w-full bg-slate-50/80 hover:bg-slate-50 rounded-2xl border border-slate-200/80 p-4 sm:p-4.5 mb-5 text-center transition shadow-2xs">
           <!-- File Identity (Centered) -->
           <div class="flex items-center justify-center space-x-2.5 max-w-full min-w-0">
-            <div class="w-7 h-7 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-black text-[10px] shrink-0 border border-red-200/60 shadow-2xs">
-              PDF
+            <div 
+              :class="[
+                'w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] shrink-0 shadow-2xs border',
+                fileExtBadge === 'ZIP' 
+                  ? 'bg-emerald-100 text-emerald-700 border-emerald-200/60' 
+                  : 'bg-red-100 text-red-600 border-red-200/60'
+              ]"
+            >
+              {{ fileExtBadge }}
             </div>
             <p class="text-xs sm:text-sm font-extrabold text-slate-800 truncate max-w-[280px] sm:max-w-md" :title="file.name">
               {{ file.name }}

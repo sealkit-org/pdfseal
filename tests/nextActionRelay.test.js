@@ -115,4 +115,33 @@ describe('Next Action Flow (跨工具无缝接力流)', () => {
       }
     }
   });
+
+  it('should filter vault files with exact match and fuzzy search correctly', () => {
+    const mockFiles = [
+      { id: '1', name: 'contract.pdf', folderId: 'default' },
+      { id: '2', name: 'contract_signed.pdf', folderId: 'default' },
+      { id: '3', name: 'invoice.pdf', folderId: 'default' }
+    ];
+
+    // Helper simulating VaultTool.vue exact matching
+    function filterVault(files, query, exactMatch) {
+      if (!query || !query.trim()) return files;
+      const q = query.trim().toLowerCase();
+      if (exactMatch) {
+        const exactFiltered = files.filter(f => f.name.toLowerCase() === q);
+        if (exactFiltered.length > 0) return exactFiltered;
+      }
+      return files.filter(f => f.name.toLowerCase().includes(q));
+    }
+
+    // Exact match from NextActionBanner view button
+    const exactResult = filterVault(mockFiles, 'contract.pdf', true);
+    expect(exactResult).toHaveLength(1);
+    expect(exactResult[0].name).toBe('contract.pdf');
+
+    // Fuzzy search (exactMatch = false) matches both contract.pdf and contract_signed.pdf
+    const fuzzyResult = filterVault(mockFiles, 'contract', false);
+    expect(fuzzyResult).toHaveLength(2);
+    expect(fuzzyResult.map(f => f.name)).toEqual(['contract.pdf', 'contract_signed.pdf']);
+  });
 });

@@ -111,9 +111,13 @@ const activeShareKey = computed(() => {
 });
 
 function switchTool(tabId) {
-  const targetPath = TOOL_ROUTES[tabId] || '/merge-pdf';
-  if (router && route?.path !== targetPath) {
-    router.push(targetPath);
+  const tool = typeof tabId === 'object' && tabId !== null ? tabId.tool : tabId;
+  const query = typeof tabId === 'object' && tabId !== null ? tabId.query : undefined;
+  const targetPath = TOOL_ROUTES[tool] || '/merge-pdf';
+  if (router) {
+    if (route?.path !== targetPath || query) {
+      router.push(query ? { path: targetPath, query } : targetPath);
+    }
   }
 }
 

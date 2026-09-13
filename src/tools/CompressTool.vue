@@ -288,63 +288,79 @@
                 </div>
             </div>
 
-            <!-- Target Size Configuration Drawer (When 'target' mode is active) -->
+            <!-- Target Size Configuration Panel (Active when selectedLevel === 'target') -->
             <div 
-              v-if="selectedLevel === 'target'"
-              class="p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-indigo-50/70 via-blue-50/50 to-indigo-50/70 border border-indigo-200/80 animate-in fade-in slide-in-from-top-2 duration-200"
+              v-if="selectedLevel === 'target'" 
+              class="p-3.5 sm:p-4 rounded-2xl bg-indigo-50/60 border-2 border-indigo-200 text-xs text-slate-800 space-y-2.5 animate-in fade-in duration-200"
             >
               <div class="flex flex-wrap items-center justify-between gap-2.5">
-                <!-- Left: Target Size Input & Explanation -->
-                <div class="flex items-center space-x-2.5 flex-wrap gap-y-1.5">
-                  <div class="flex items-center space-x-1.5">
-                    <Target class="w-4 h-4 text-indigo-600 shrink-0" />
-                    <label class="text-xs font-bold text-indigo-950 shrink-0">
-                      {{ t('compress_target_label') }}:
-                    </label>
+                <div class="flex items-center space-x-2.5">
+                  <div class="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-xs shrink-0">
+                    🎯
                   </div>
-
-                  <!-- Number Stepper Input -->
-                  <div class="flex items-center shadow-2xs">
-                    <input 
-                      type="number" 
-                      v-model.number="targetSizeMb" 
-                      min="0.1" 
-                      max="100" 
-                      step="0.1"
-                      class="w-20 sm:w-24 text-xs font-mono font-bold px-2.5 py-1.5 bg-white border border-indigo-200 rounded-l-xl focus:ring-2 focus:ring-indigo-500 outline-hidden text-slate-800"
-                    />
-                    <span class="text-xs font-bold bg-indigo-100/80 text-indigo-800 border border-indigo-200 border-l-0 px-2.5 py-1.5 rounded-r-xl select-none">
-                      MB
-                    </span>
-                  </div>
-
-                  <!-- Quick Preset Chips -->
-                  <div class="flex items-center space-x-1 sm:space-x-1.5">
-                    <button 
-                      v-for="preset in [1, 2, 5, 10]" 
-                      :key="preset"
-                      type="button"
-                      @click="targetSizeMb = preset"
-                      :class="[
-                        'text-[11px] font-bold px-2 py-1 rounded-lg border transition cursor-pointer',
-                        targetSizeMb === preset 
-                          ? 'bg-indigo-600 text-white border-indigo-600 shadow-2xs' 
-                          : 'bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50'
-                      ]"
-                    >
-                      {{ preset }} MB
-                    </button>
+                  <div>
+                    <div class="font-extrabold text-slate-900 text-xs sm:text-sm flex items-center space-x-2">
+                      <span>{{ t('compress_target_size_label') }}</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 mt-0.5">
+                      {{ t('compress_target_size_subtitle') }}
+                    </p>
                   </div>
                 </div>
 
-                <!-- Right: Calculation & Guidance Hint -->
-                <div class="text-[11px] text-indigo-700/90 font-medium">
-                  <span v-if="parseFloat(originalSizeMb) <= targetSizeMb" class="text-emerald-700 font-semibold">
-                    ✓ {{ t('compress_target_smaller_hint', 'Original is already smaller than target; will optimize structure losslessly!') }}
-                  </span>
-                  <span v-else>
-                    {{ t('compress_target_shrink_hint', 'Will dynamically search best quality setting to satisfy ≤ target MB.') }}
-                  </span>
+                <!-- Decimal Numeric Input Box -->
+                <div class="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-xl border border-indigo-200 shadow-2xs">
+                  <span class="text-xs text-slate-500 font-semibold">{{ t('compress_target_limit_symbol', '≤') }}</span>
+                  <input 
+                    type="number" 
+                    v-model.number="targetSizeMb" 
+                    min="0.1" 
+                    max="100" 
+                    step="0.1"
+                    class="w-16 text-right font-mono font-bold text-indigo-700 text-sm focus:outline-none"
+                  />
+                  <span class="font-bold text-slate-600 text-xs">MB</span>
+                </div>
+              </div>
+
+              <!-- Quick Preset Pills -->
+              <div class="flex flex-wrap items-center gap-1.5 pt-1.5 border-t border-indigo-100/80">
+                <span class="text-[11px] font-bold text-slate-500 mr-1">{{ t('compress_quick_presets') }}:</span>
+                <button 
+                  type="button" 
+                  v-for="preset in [
+                    { mb: 1, label: '1 MB', tip: t('compress_preset_1mb') },
+                    { mb: 2, label: '2 MB', tip: t('compress_preset_2mb') },
+                    { mb: 5, label: '5 MB', tip: t('compress_preset_5mb') },
+                    { mb: 10, label: '10 MB', tip: t('compress_preset_10mb') }
+                  ]" 
+                  :key="preset.mb"
+                  @click="targetSizeMb = preset.mb"
+                  :class="[
+                    'px-2.5 py-1 rounded-lg text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 border',
+                    targetSizeMb === preset.mb 
+                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' 
+                      : 'bg-white hover:bg-indigo-50/80 text-slate-700 border-indigo-200/80'
+                  ]"
+                >
+                  <span class="font-mono font-bold">{{ preset.label }}</span>
+                  <span :class="targetSizeMb === preset.mb ? 'text-indigo-200 text-[10px]' : 'text-slate-400 text-[10px]'">{{ preset.tip }}</span>
+                </button>
+              </div>
+
+              <!-- Dynamic Comparison & Calculation Hint -->
+              <div class="flex flex-wrap items-center justify-between gap-2 text-[11px] pt-0.5 text-slate-600">
+                <div class="flex items-center space-x-1.5">
+                  <span>{{ t('compress_target_current_size') }}: <strong class="font-mono text-slate-800">{{ originalSizeMb }} MB</strong></span>
+                  <span>➔</span>
+                  <span>{{ t('compress_target_goal') }}: <strong class="font-mono text-indigo-700">≤ {{ Number(targetSizeMb).toFixed(2) }} MB</strong></span>
+                </div>
+                <div v-if="Number(originalSizeMb) <= Number(targetSizeMb)" class="text-emerald-700 font-bold flex items-center space-x-1 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <Sparkles class="w-3 h-3 text-emerald-600 shrink-0" />
+                  <span>{{ t('compress_target_already_smaller') }}</span>
+                </div>
+                <div v-else class="text-indigo-600 font-mono font-semibold">
+                  {{ t('compress_target_expected_reduction') }}: ~{{ Math.round((1 - targetSizeMb / Number(originalSizeMb)) * 100) }}%
                 </div>
               </div>
             </div>
@@ -651,7 +667,9 @@ async function executeCompress() {
   if (!docBytes.value) return;
   isProcessing.value = true;
   progressPercent.value = 10;
-  progressMessage.value = t('compress_status_processing');
+  progressMessage.value = selectedLevel.value === 'lossless' 
+    ? (t('compress_progress_scan') || '正在解析文档结构与对象树...') 
+    : t('compress_status_processing');
 
   try {
     const onProgress = (current, total) => {
@@ -678,6 +696,8 @@ async function executeCompress() {
     );
 
     progressPercent.value = 100;
+    progressMessage.value = t('compress_progress_done') || '压缩完成！';
+    await new Promise(r => setTimeout(r, 180));
 
     let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, 'Compressed'));
     if (!outName.toLowerCase().endsWith('.pdf')) {

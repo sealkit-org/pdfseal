@@ -82,6 +82,7 @@
 
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useRouter } from 'vue-router';
 import { 
   Sparkles, 
   PenTool, 
@@ -161,8 +162,19 @@ async function handleSaveToVault() {
   }
 }
 
+const router = useRouter();
+
 function handleOpenVault() {
-  emit('send-to-tool', 'vault');
+  if (router && props.file?.name) {
+    router.push({
+      path: '/vault',
+      query: { q: props.file.name, exact: '1' }
+    });
+  } else if (props.file?.name) {
+    emit('send-to-tool', { tool: 'vault', query: { q: props.file.name, exact: '1' } });
+  } else {
+    emit('send-to-tool', 'vault');
+  }
 }
 
 // --- Pure Processing Tool Catalog & Prioritization ---

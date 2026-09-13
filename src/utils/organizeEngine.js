@@ -72,8 +72,8 @@ export async function assembleOrganizedPdf(pages = [], options = {}, onProgress 
     const item = pages[idx];
     if (onProgress) {
       const pct = Math.min(88, Math.round(((idx + 1) / total) * 80) + 10);
-      onProgress(pct, t('org_progress_page', { current: idx + 1, total }) || `正在重排第 ${idx + 1}/${total} 页...`);
-      await new Promise(r => setTimeout(r, 90));
+      onProgress(pct, t('org_progress_page', { current: idx + 1, total }) || `正在处理第 ${idx + 1}/${total} 页...`);
+      await new Promise(r => setTimeout(r, 120));
     }
 
     const rot = item.rotation || 0;

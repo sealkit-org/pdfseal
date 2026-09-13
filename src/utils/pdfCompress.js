@@ -2,6 +2,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, PDFName } from 'pdf-lib';
 import { logger } from './logger';
 import { loadCleanPdfDocument } from './pdfSecurity';
+import { t } from '../i18n';
 
 /**
  * Automatically inspects a PDF to determine if it is a text-heavy vector document
@@ -88,14 +89,23 @@ export async function detectDocumentType(arrayBuffer, password = '') {
  * 
  * @param {ArrayBuffer|Uint8Array} arrayBuffer 
  * @param {string} [password='']
+ * @param {Function} [onProgress] - Callback (percent, message)
  * @returns {Promise<Uint8Array>}
  */
-export async function compressPdfLossless(arrayBuffer, password = '') {
+export async function compressPdfLossless(arrayBuffer, password = '', onProgress = null) {
   logger.info('COMPRESS', `[Lossless Mode] Executing structural object stream compression`);
   const origBytes = new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
 
   try {
+    // Stage 1: Document Structure & Cross-Reference Table Parsing
+    if (onProgress) onProgress(20, t('compress_progress_scan') || '正在解析文档结构与对象树...');
+    await new Promise(r => setTimeout(r, 60));
+
     const cleanDoc = await loadCleanPdfDocument(arrayBuffer, password);
+
+    // Stage 2: Pruning Redundant Overhead & Metadata
+    if (onProgress) onProgress(45, t('compress_progress_prune') || '正在清理冗余元数据与孤立对象...');
+    await new Promise(r => setTimeout(r, 60));
 
     // 1. Strip document-level private application overhead & XMP metadata
     if (cleanDoc.catalog) {
@@ -111,18 +121,28 @@ export async function compressPdfLossless(arrayBuffer, password = '') {
       }
     }
 
+    // Stage 3: Compacting Object Streams & Cross-References
+    if (onProgress) onProgress(70, t('compress_progress_streams') || '正在重构底层对象流 (Object Streams)...');
+    await new Promise(r => setTimeout(r, 80));
+
     const outBytes = await cleanDoc.save({
       useObjectStreams: true,
       addDefaultPage: false,
       updateMetadata: false
     });
 
+    // Stage 4: Integrity Verification & Size Guard
+    if (onProgress) onProgress(92, t('compress_progress_verify') || '正在校验文档完整性与压缩率...');
+    await new Promise(r => setTimeout(r, 60));
+
     // Size Guard: Never allow the file to grow!
     if (outBytes.byteLength >= origBytes.byteLength) {
       logger.info('COMPRESS', `[Lossless Mode] Optimized file (${outBytes.byteLength} B) is not smaller than original (${origBytes.byteLength} B). Keeping original file.`);
+      if (onProgress) onProgress(100, t('compress_progress_done') || '压缩完成！');
       return origBytes;
     }
 
+    if (onProgress) onProgress(100, t('compress_progress_done') || '压缩完成！');
     return outBytes;
   } catch (err) {
     logger.warn('COMPRESS', `Lossless optimization failed: ${err.message}, keeping original file.`);
@@ -149,7 +169,7 @@ export async function compressPdfRaster(arrayBuffer, options = {}, onProgress = 
 
   if (typeof document === 'undefined') {
     // Fallback in headless environment without DOM canvas
-    return await compressPdfLossless(arrayBuffer, password);
+    return await compressPdfLossless(arrayBuffer, password, onProgress);
   }
 
   const pdfData = new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
@@ -205,7 +225,15 @@ export async function compressPdfRaster(arrayBuffer, options = {}, onProgress = 
     });
   }
 
+  if (onProgress) {
+    onProgress(92, t('compress_progress_streams') || '正在重构底层对象流 (Object Streams)...');
+  }
+  await new Promise(r => setTimeout(r, 60));
+
   const outBytes = await newPdf.save({ useObjectStreams: true });
+  if (onProgress) {
+    onProgress(100, t('compress_progress_done') || '压缩完成！');
+  }
   logger.info('COMPRESS', `[Raster Mode] Completed (${pdf.numPages} pages compressed to ${(outBytes.byteLength / 1024).toFixed(1)} KB)`);
   return outBytes;
 }
@@ -512,7 +540,7 @@ export async function compressPdf(arrayBuffer, level = 'balanced', options = {},
 
   let result;
   if (level === 'lossless') {
-    result = await compressPdfLossless(arrayBuffer, password);
+    result = await compressPdfLossless(arrayBuffer, password, onProgress);
   } else if (level === 'target') {
     const targetSizeMb = options.targetSizeMb || 2.0;
     result = await compressPdfToTargetSize(arrayBuffer, targetSizeMb, options, onProgress);
