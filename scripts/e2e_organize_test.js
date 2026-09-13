@@ -173,7 +173,9 @@ async function runOrganizeBusinessTest() {
     const rotateClicked = await page.evaluate(() => {
       const cards = document.querySelectorAll('.grid > div');
       if (cards.length === 0) return false;
-      const rotateBtn = cards[0].querySelector('button[title*="Rotate"]');
+      const buttons = Array.from(cards[0].querySelectorAll('button'));
+      // buttons: 0 = checkbox, 1 = rotate, 2 = insert blank, 3 = download img, 4 = delete
+      const rotateBtn = buttons[1];
       if (rotateBtn) {
         rotateBtn.click();
         return true;
@@ -202,7 +204,8 @@ async function runOrganizeBusinessTest() {
     const deleteClicked = await page.evaluate(() => {
       const cards = document.querySelectorAll('.grid > div');
       if (cards.length < 3) return false;
-      const deleteBtn = cards[2].querySelector('button[title*="Delete"]');
+      const buttons = Array.from(cards[2].querySelectorAll('button'));
+      const deleteBtn = buttons[4] || buttons[buttons.length - 1];
       if (deleteBtn) {
         deleteBtn.click();
         return true;
@@ -304,6 +307,11 @@ async function runOrganizeBusinessTest() {
     if (!exportEl) throw new Error('Primary Export button not found');
     await exportEl.click();
     console.log('  ✓ Clicked Export button. Compiling pages in browser memory...');
+    await new Promise(r => setTimeout(r, 60));
+    try {
+      await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_04b_processing_state.png') });
+      console.log('  📷 Screenshot saved: organize_04b_processing_state.png');
+    } catch (e) {}
 
     // Await download completion
     console.log('  ⏳ Awaiting exported organized PDF file...');
@@ -338,6 +346,7 @@ async function runOrganizeBusinessTest() {
       throw new Error('Timeout: Organized PDF was not downloaded within 15 seconds.');
     }
 
+    await new Promise(r => setTimeout(r, 300));
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_05_completed.png') });
     console.log('  📷 Screenshot saved: organize_05_completed.png');
 
@@ -370,21 +379,57 @@ async function runOrganizeBusinessTest() {
       throw new Error(`Expected at least one page with 90° rotation, got ${JSON.stringify(rotations)}`);
     }
 
-    // 10. Test Quick Action Reset
-    console.log('📍 [Step 10] Testing Clear All (Reset to empty dropzone)...');
-    const clearBtn = await page.evaluateHandle(() => {
+    // 10. Test ResultDeliveryView Buttons: Back to Edit ("返回调整")
+    console.log('📍 [Step 10] Testing "返回调整" (Back to Edit)...');
+    const backBtn = await page.evaluateHandle(() => {
       const btns = Array.from(document.querySelectorAll('button'));
-      return btns.find(b => b.textContent && (b.textContent.includes('清空') || b.textContent.includes('Clear'))) || null;
+      return btns.find(b => b.textContent && (b.textContent.includes('返回调整') || b.textContent.includes('返回微调') || b.textContent.includes('Back'))) || null;
     });
 
-    const clearEl = clearBtn.asElement();
-    if (clearEl) {
-      await clearEl.click();
-      await new Promise(r => setTimeout(r, 400));
-      const isReset = await page.evaluate(() => {
-        return document.querySelectorAll('.grid > div').length === 0;
+    const backEl = backBtn.asElement();
+    if (!backEl) throw new Error('Could not find "返回调整" button in ResultDeliveryView');
+    await backEl.click();
+    await new Promise(r => setTimeout(r, 400));
+
+    const restoredCardsCount = await page.evaluate(() => {
+      return document.querySelectorAll('.grid > div').length;
+    });
+    console.log(`  ✓ Returned to staging workspace with ${restoredCardsCount} pages`);
+    if (restoredCardsCount !== 3) {
+      throw new Error(`Expected 3 pages back on staging grid, found ${restoredCardsCount}`);
+    }
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_05b_back_to_edit.png') });
+    console.log('  📷 Screenshot saved: organize_05b_back_to_edit.png');
+
+    // 11. Re-export and Test "整理其他文件" (New Task / Reset)
+    console.log('📍 [Step 11] Re-exporting and Testing "整理其他文件" (New Task / Reset)...');
+    const reExportBtn = await page.evaluateHandle(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      return btns.find(b => {
+        const text = b.textContent || '';
+        return text.includes('导出') || text.includes('Export') || text.includes('封印');
+      }) || null;
+    });
+    const reExportEl = reExportBtn.asElement();
+    if (reExportEl) {
+      await reExportEl.click();
+      await new Promise(r => setTimeout(r, 1000));
+
+      const newTaskBtn = await page.evaluateHandle(() => {
+        const btns = Array.from(document.querySelectorAll('button'));
+        return btns.find(b => b.textContent && (b.textContent.includes('整理其他文件') || b.textContent.includes('Organize Another') || b.textContent.includes('开始新任务'))) || null;
       });
-      console.log(`  ✓ Workspace cleared back to empty dropzone: ${isReset}`);
+      const newTaskEl = newTaskBtn.asElement();
+      if (!newTaskEl) throw new Error('Could not find "整理其他文件" button on ResultDeliveryView');
+      await newTaskEl.click();
+      await new Promise(r => setTimeout(r, 400));
+
+      const isReset = await page.evaluate(() => {
+        return document.body.innerText.includes('选择要整理的 PDF') || 
+               document.body.innerText.includes('Select a PDF to Organize') ||
+               document.querySelectorAll('.grid > div').length === 0;
+      });
+      console.log(`  ✓ Workspace reset to initial dropzone via "整理其他文件": ${isReset}`);
       await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'organize_06_reset_empty.png') });
       console.log('  📷 Screenshot saved: organize_06_reset_empty.png');
     }

@@ -1,6 +1,7 @@
 import { PDFDocument, PageSizes, degrees } from 'pdf-lib';
 import { loadCleanPdfDocument } from './pdfSecurity';
 import { logger } from './logger';
+import { t } from '../i18n';
 
 /**
  * Generates a clean A4 blank canvas thumbnail dataURL.
@@ -49,7 +50,7 @@ export function generateBlankPageThumbnail(text = 'BLANK') {
  * @param {string} [options.password] - Password for primary document if needed
  * @returns {Promise<Uint8Array>} Assembled PDF bytes
  */
-export async function assembleOrganizedPdf(pages = [], options = {}) {
+export async function assembleOrganizedPdf(pages = [], options = {}, onProgress = null) {
   if (!pages || pages.length === 0) {
     throw new Error('No pages to organize.');
   }
@@ -66,7 +67,15 @@ export async function assembleOrganizedPdf(pages = [], options = {}) {
     docCache.set('primary', primaryDoc);
   }
 
-  for (const item of pages) {
+  const total = pages.length;
+  for (let idx = 0; idx < total; idx++) {
+    const item = pages[idx];
+    if (onProgress) {
+      const pct = Math.min(88, Math.round(((idx + 1) / total) * 80) + 10);
+      onProgress(pct, t('org_progress_page', { current: idx + 1, total }) || `正在重排第 ${idx + 1}/${total} 页...`);
+      await new Promise(r => setTimeout(r, 90));
+    }
+
     const rot = item.rotation || 0;
 
     if (item.type === 'blank') {
@@ -101,6 +110,9 @@ export async function assembleOrganizedPdf(pages = [], options = {}) {
     }
   }
 
+  if (onProgress) onProgress(92, t('processing_state_finalizing') || '正在保存并序列化 PDF...');
+  const outBytes = await newPdf.save();
+  if (onProgress) onProgress(100, t('result_success_organize') || '整理完成！');
   logger.info('ORGANIZE_ENGINE', `Assembled ${newPdf.getPageCount()} pages successfully`);
-  return await newPdf.save();
+  return outBytes;
 }
