@@ -24,13 +24,14 @@
           <Search class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           <input 
             v-model="searchQuery" 
+            @input="exactMatch = false"
             type="text" 
             :placeholder="t('vault_search_placeholder')"
             class="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-8 py-2 focus:ring-2 focus:ring-blue-500 focus:bg-white outline-hidden font-medium transition placeholder:text-slate-400"
           >
           <button 
             v-if="searchQuery" 
-            @click="searchQuery = ''" 
+            @click="clearSearch" 
             class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full cursor-pointer"
           >
             <X class="w-3.5 h-3.5" />
@@ -731,6 +732,7 @@
 
 <script setup>
 import { ref, computed, watch, onMounted, onActivated, onUnmounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { 
   FolderLock, Search, Plus, Folder, FolderOpen, Inbox, FileCheck, 
   ChevronDown, ArrowDownNarrowWide, ArrowUpNarrowWide, Eye, Download, 
@@ -756,11 +758,15 @@ import { userSettings } from '../utils/userSettings';
 
 const emit = defineEmits(['send-to-tool']);
 
+const route = useRoute();
+const router = useRouter();
+
 // State
 const files = ref([]);
 const folders = ref([]);
 const activeFolderId = ref('all');
 const searchQuery = ref('');
+const exactMatch = ref(false);
 const sortBy = ref('createdAt');
 const sortOrder = ref('desc');
 const storageStats = ref({ totalMb: '0.00', fileCount: 0 });
@@ -826,9 +832,29 @@ function closeToolMenuOnClickOutside(e) {
   }
 }
 
+function applyQueryFilter() {
+  if (!route) return;
+  const q = route.query?.q || route.query?.search;
+  if (typeof q === 'string' && q.trim()) {
+    searchQuery.value = q.trim();
+    exactMatch.value = route.query?.exact === '1' || route.query?.exact === 'true';
+    activeFolderId.value = 'all';
+    currentPage.value = 1;
+  }
+}
+
+function clearSearch() {
+  searchQuery.value = '';
+  exactMatch.value = false;
+  if (router && (route?.query?.q || route?.query?.search || route?.query?.exact)) {
+    router.replace({ path: route.path, query: {} });
+  }
+}
+
 onMounted(async () => {
   window.addEventListener('click', closeToolMenuOnClickOutside);
   await refreshVault();
+  applyQueryFilter();
 });
 
 onUnmounted(() => {
@@ -837,7 +863,26 @@ onUnmounted(() => {
 
 onActivated(async () => {
   await refreshVault();
+  const q = route?.query?.q || route?.query?.search;
+  if (typeof q === 'string' && q.trim()) {
+    applyQueryFilter();
+  } else if (!q && exactMatch.value) {
+    searchQuery.value = '';
+    exactMatch.value = false;
+  }
 });
+
+watch(
+  () => route?.query?.q,
+  (newQ) => {
+    if (typeof newQ === 'string' && newQ.trim()) {
+      applyQueryFilter();
+    } else if (!newQ && exactMatch.value) {
+      searchQuery.value = '';
+      exactMatch.value = false;
+    }
+  }
+);
 
 async function refreshVault() {
   const loadedFiles = await getFiles({ folderId: 'all' });
@@ -885,7 +930,16 @@ const filteredFiles = computed(() => {
   // Filter search query
   if (searchQuery.value.trim()) {
     const q = searchQuery.value.trim().toLowerCase();
-    list = list.filter(f => f.name.toLowerCase().includes(q));
+    if (exactMatch.value) {
+      const exactFiltered = list.filter(f => f.name.toLowerCase() === q);
+      if (exactFiltered.length > 0) {
+        list = exactFiltered;
+      } else {
+        list = list.filter(f => f.name.toLowerCase().includes(q));
+      }
+    } else {
+      list = list.filter(f => f.name.toLowerCase().includes(q));
+    }
   }
 
   // Sorting

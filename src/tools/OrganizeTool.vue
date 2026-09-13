@@ -405,6 +405,7 @@
 
     <!-- 3. FLOATING BATCH ACTION BAR (Shown when 1 or more pages selected) -->
     <transition
+      :duration="isProcessing ? 0 : 150"
       enter-active-class="transition duration-200 ease-out"
       enter-from-class="opacity-0 translate-y-4 scale-95"
       enter-to-class="opacity-100 translate-y-0 scale-100"
@@ -1268,9 +1269,10 @@ async function executeExportSelected() {
   const targetPages = pages.value.filter(p => selectedPageIds.value.has(p.id));
   if (targetPages.length === 0) return;
 
+  selectedPageIds.value.clear();
   isProcessing.value = true;
   progressPercent.value = 5;
-  progressMessage.value = t('org_progress_extracting') || '正在提取选中页面...';
+  progressMessage.value = t('org_progress_extracting', { count: targetPages.length }) || `正在提取所选 ${targetPages.length} 个页面...`;
   try {
     const onProgress = (pct, msg) => {
       progressPercent.value = pct;
@@ -1294,6 +1296,7 @@ async function executeExportSelected() {
       size: outBytes.byteLength
     };
     showNextActions.value = true;
+    selectedPageIds.value.clear();
 
     if (autoSaveToVault.value) {
       await saveFile({
