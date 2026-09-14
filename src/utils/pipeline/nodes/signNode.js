@@ -17,7 +17,7 @@ export async function executeSignNode(items, params = {}, onProgress = () => {})
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    onProgress(Math.round((i / items.length) * 100), `正在批量盖章 [${i + 1}/${items.length}]: ${item.name}`);
+    onProgress(Math.round((i / items.length) * 100), `Applying stamp / signature [${i + 1}/${items.length}]: ${item.name}`);
 
     try {
       const doc = await loadCleanPdfDocument(item.data, { preserveWatermarks: true });
@@ -125,6 +125,6 @@ export async function executeSignNode(items, params = {}, onProgress = () => {})
     }
   }
 
-  onProgress(100, '批量签名盖章完成');
+  onProgress(100, 'Batch signing complete');
   return result;
 }

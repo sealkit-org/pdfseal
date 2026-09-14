@@ -91,7 +91,7 @@
           <template #metrics>
             <span class="inline-flex items-center space-x-1 text-xs font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200/60 shadow-2xs">
               <LayoutGrid class="w-3.5 h-3.5 text-indigo-600" />
-              <span>{{ t('result_metric_organized', { count: lastExportedPageCount }) || `共重排整理 ${lastExportedPageCount} 个页面` }}</span>
+              <span>{{ t('result_metric_organized', { count: lastExportedPageCount }, `Organized ${lastExportedPageCount} page(s)`) }}</span>
             </span>
           </template>
         </ResultDeliveryView>
@@ -1234,7 +1234,7 @@ async function executeExport() {
   if (!docBytes.value || pages.value.length === 0) return;
   isProcessing.value = true;
   progressPercent.value = 5;
-  progressMessage.value = t('org_progress_preparing') || '准备开始重排整理...';
+  progressMessage.value = t('org_progress_preparing', 'Preparing page organization...');
   try {
     const onProgress = (pct, msg) => {
       progressPercent.value = pct;
@@ -1282,7 +1282,7 @@ async function executeExportSelected() {
   selectedPageIds.value.clear();
   isProcessing.value = true;
   progressPercent.value = 5;
-  progressMessage.value = t('org_progress_extracting', { count: targetPages.length }) || `正在提取所选 ${targetPages.length} 个页面...`;
+  progressMessage.value = t('org_progress_extracting', { count: targetPages.length }, `Extracting ${targetPages.length} selected page(s)...`);
   try {
     const onProgress = (pct, msg) => {
       progressPercent.value = pct;

@@ -1,12 +1,15 @@
 import { describe, it, expect } from 'vitest';
 import { PDFDocument } from 'pdf-lib';
-import { validatePipelinePreflight, canSaveNewPipeline } from '../src/utils/pipeline/pipelinePolicy';
+import { validatePipelinePreflight, canSaveNewPipeline, PIPELINE_POLICY } from '../src/utils/pipeline/pipelinePolicy';
 import { checkNodeCompatibility, AVAILABLE_NODES } from '../src/utils/pipeline/pipelineTypes';
 import { executeMergeNode } from '../src/utils/pipeline/nodes/mergeNode';
 import { executeSanitizeNode } from '../src/utils/pipeline/nodes/sanitizeNode';
 import { parseRangeExpression } from '../src/utils/pipeline/nodes/splitNode';
 import { runPipeline } from '../src/utils/pipeline/pipelineRunner';
 import { saveUserPipeline, loadUserPipelines, deleteUserPipeline } from '../src/utils/pipeline/userPipelines';
+import { PRESET_PIPELINES } from '../src/utils/pipeline/presetPipelines';
+import enLocale from '../src/locales/en.json';
+import zhLocale from '../src/locales/zh.json';
 
 describe('Pipeline Automation & Policy Engine', () => {
   // Helper to create a minimal 1-page PDF
@@ -41,22 +44,22 @@ describe('Pipeline Automation & Policy Engine', () => {
       expect(checkPro.pass).toBe(true);
     });
 
-    it('should reject pipelines exceeding free step limit (3 steps max)', () => {
+    it('should allow unlimited pipeline steps for all users without step count restrictions', () => {
       const pipelineDef = {
         name: 'Long Flow',
         steps: [
           { id: '1', nodeId: 'node_unlock', params: {} },
           { id: '2', nodeId: 'node_sanitize', params: {} },
-          { id: '3', nodeId: 'node_watermark', params: {} },
-          { id: '4', nodeId: 'node_compress', params: {} }
+          { id: '3', nodeId: 'node_page_number', params: {} },
+          { id: '4', nodeId: 'node_watermark', params: {} },
+          { id: '5', nodeId: 'node_compress', params: {} }
         ]
       };
       const files = [{ name: '1.pdf', data: new Uint8Array([1]) }];
 
       const check = validatePipelinePreflight(pipelineDef, files, 'free');
-      expect(check.pass).toBe(false);
-      expect(check.code).toBe('ERR_MAX_STEPS');
-      expect(check.triggerPro).toBe(true);
+      expect(check.pass).toBe(true);
+      expect(PIPELINE_POLICY.free.maxStepsPerPipeline).toBe(Infinity);
     });
 
     it('should gate node_sign batch stamping for more than 1 file in free tier', () => {
@@ -101,7 +104,7 @@ describe('Pipeline Automation & Policy Engine', () => {
       // e.g. Split (PDF out) -> Image to PDF (expects images in) is incompatible
       const check = checkNodeCompatibility('node_split', 'node_img2pdf');
       expect(check.compatible).toBe(false);
-      expect(check.suggestion).toContain('PDF 转图片');
+      expect(check.suggestion).toContain('PDF to Images');
     });
 
     it('should accurately parse range expression in split node', () => {
@@ -281,6 +284,218 @@ describe('Pipeline Automation & Policy Engine', () => {
         steps: [{ nodeId: 'node_compress' }]
       });
       expect(loadUserPipelines()).toHaveLength(3);
+    });
+  });
+
+  describe('Official Preset Pipelines (Sprint 3.3)', () => {
+    // Standard 1x1 transparent PNG for image-based tests
+    const samplePngBytes = Uint8Array.from(
+      atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='),
+      c => c.charCodeAt(0)
+    );
+
+    it('should have 3 battle-tested official preset pipelines', () => {
+      expect(PRESET_PIPELINES).toHaveLength(3);
+      expect(PRESET_PIPELINES.map(p => p.id)).toEqual([
+        'preset_tender_sanitize',
+        'preset_receipt_packer',
+        'preset_contract_stamp'
+      ]);
+    });
+
+    it('should verify all adjacent node pairs in presets are type-compatible', () => {
+      for (const preset of PRESET_PIPELINES) {
+        for (let i = 0; i < preset.steps.length - 1; i++) {
+          const currentStep = preset.steps[i];
+          const nextStep = preset.steps[i + 1];
+          const check = checkNodeCompatibility(currentStep.nodeId, nextStep.nodeId);
+          expect(check.compatible, `${preset.id}: ${currentStep.nodeId} -> ${nextStep.nodeId} should be compatible`).toBe(true);
+        }
+      }
+    });
+
+    it('should verify all presets have i18n nameKey and descKey mapped in en and zh locale dictionaries', () => {
+      for (const preset of PRESET_PIPELINES) {
+        expect(preset.nameKey).toBeDefined();
+        expect(enLocale[preset.nameKey]).toBeDefined();
+        expect(zhLocale[preset.nameKey]).toBeDefined();
+        expect(preset.descKey).toBeDefined();
+        expect(enLocale[preset.descKey]).toBeDefined();
+        expect(zhLocale[preset.descKey]).toBeDefined();
+      }
+      const contractPreset = PRESET_PIPELINES.find(p => p.id === 'preset_contract_stamp');
+      expect(enLocale[contractPreset.nameKey]).toBe('Contract & NDA Execution Flow');
+      expect(zhLocale[contractPreset.nameKey]).toBe('商务合同签署与防伪归档流');
+    });
+
+    it('should support resolveNodeName in runPipeline options to localize progress step titles', async () => {
+      const preset = PRESET_PIPELINES.find(p => p.id === 'preset_tender_sanitize');
+      const pdf = await createTestPdf('Test Localization');
+      const files = [{ name: 'test.pdf', data: pdf, mimeType: 'application/pdf' }];
+      const stepNamesReported = [];
+      await runPipeline(preset, files, {
+        userTier: 'free',
+        resolveNodeName: (nodeId) => `CUSTOM_${nodeId}`,
+        onProgress: (p) => {
+          if (p.stepName && !stepNamesReported.includes(p.stepName)) {
+            stepNamesReported.push(p.stepName);
+          }
+        }
+      });
+      expect(stepNamesReported.some(name => name.startsWith('CUSTOM_'))).toBe(true);
+    });
+
+    it('should verify all official presets pass free tier preflight successfully with unlimited steps', () => {
+      for (const preset of PRESET_PIPELINES) {
+        const fakeFiles = [{ name: 'test.pdf', data: new Uint8Array([1]) }];
+        const check = validatePipelinePreflight(preset, fakeFiles, 'free');
+        expect(check.pass, `${preset.id} should pass preflight in free tier`).toBe(true);
+      }
+    });
+
+    it('should execute preset_tender_sanitize end-to-end with metadata wipe, page numbers, compression and watermark', async () => {
+      const preset = PRESET_PIPELINES.find(p => p.id === 'preset_tender_sanitize');
+      expect(preset).toBeDefined();
+      expect(preset.steps.length).toBeGreaterThanOrEqual(3);
+
+      const pdf = await createTestPdf('Confidential Tender Document');
+      const files = [{ name: 'Bid_Proposal_v1.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const result = await runPipeline(preset, files, { userTier: 'free' });
+      expect(result.success).toBe(true);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].name).toContain('Bid_Proposal_v1_SubmissionReady_');
+
+      const reloaded = await PDFDocument.load(result.items[0].data, { updateMetadata: false });
+      expect(reloaded.getTitle()).toBeFalsy();
+      expect(reloaded.getAuthor()).toBeFalsy();
+      expect(reloaded.getPageCount()).toBe(1);
+    });
+
+    it('should execute preset_receipt_packer end-to-end from multiple images into A4 paginated compressed PDF', async () => {
+      const preset = PRESET_PIPELINES.find(p => p.id === 'preset_receipt_packer');
+      expect(preset).toBeDefined();
+
+      const imageFiles = [
+        { name: 'hotel_bill.png', data: samplePngBytes, mimeType: 'image/png' },
+        { name: 'taxi_receipt.png', data: samplePngBytes, mimeType: 'image/png' }
+      ];
+
+      const result = await runPipeline(preset, imageFiles, { userTier: 'free' });
+      expect(result.success).toBe(true);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].name).toContain('Expense_Report_');
+
+      const reloaded = await PDFDocument.load(result.items[0].data);
+      expect(reloaded.getPageCount()).toBe(2);
+      const firstPageSize = reloaded.getPage(0).getSize();
+      expect(Math.round(firstPageSize.width)).toBe(595); // A4 width
+    });
+
+    it('should execute preset_contract_stamp end-to-end with sanitization, numbering, signature and executed watermark', async () => {
+      const preset = PRESET_PIPELINES.find(p => p.id === 'preset_contract_stamp');
+      expect(preset).toBeDefined();
+      expect(preset.steps).toHaveLength(5);
+
+      // Create a 2-page contract
+      const doc = await PDFDocument.create();
+      doc.addPage([595, 842]);
+      doc.addPage([595, 842]);
+      doc.setTitle('Draft NDA Agreement');
+      doc.setAuthor('Internal Counsel');
+      const contractPdf = await doc.save();
+
+      const files = [{ name: 'Mutual_NDA_Final.pdf', data: contractPdf, mimeType: 'application/pdf' }];
+
+      // Clone preset and configure sample signature stamp
+      const testPreset = JSON.parse(JSON.stringify(preset));
+      testPreset.steps.find(s => s.nodeId === 'node_sign').params.stampDataUrl = 
+        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+
+      const result = await runPipeline(testPreset, files, { userTier: 'free' });
+      expect(result.success).toBe(true);
+      expect(result.items).toHaveLength(1);
+      expect(result.items[0].name).toContain('Mutual_NDA_Final_Executed_');
+
+      const reloaded = await PDFDocument.load(result.items[0].data, { updateMetadata: false });
+      expect(reloaded.getTitle()).toBeFalsy();
+      expect(reloaded.getAuthor()).toBeFalsy();
+      expect(reloaded.getPageCount()).toBe(2);
+    });
+  });
+
+  describe('Runtime Step Parameter Validation Engine', () => {
+    it('should strictly block runPipeline execution if node_sign is missing signature/stamp', async () => {
+      const preset = PRESET_PIPELINES.find(p => p.id === 'preset_contract_stamp');
+      const pdf = await createTestPdf('Contract requiring signature');
+      const files = [{ name: 'contract.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      // Raw preset has stampDataUrl: ''
+      const result = await runPipeline(preset, files, { userTier: 'free' });
+      expect(result.success).toBe(false);
+      expect(result.code).toBe('ERR_MISSING_STAMP');
+      expect(result.nodeId).toBe('node_sign');
+      expect(result.reason).toContain('Missing stamp');
+    });
+
+    it('should strictly block runPipeline execution if node_protect is missing open password', async () => {
+      const flow = {
+        name: 'Protect Without Password',
+        steps: [
+          { nodeId: 'node_protect', params: { preset: 'confidential', userPassword: '' } }
+        ]
+      };
+      const pdf = await createTestPdf('Confidential PDF');
+      const files = [{ name: 'doc.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const result = await runPipeline(flow, files, { userTier: 'free' });
+      expect(result.success).toBe(false);
+      expect(result.code).toBe('ERR_MISSING_PASSWORD');
+      expect(result.reason).toContain('Missing open password');
+    });
+
+    it('should strictly block runPipeline execution if node_watermark has empty text', async () => {
+      const flow = {
+        name: 'Empty Watermark Flow',
+        steps: [
+          { nodeId: 'node_watermark', params: { text: '   ' } }
+        ]
+      };
+      const pdf = await createTestPdf('Watermark PDF');
+      const files = [{ name: 'doc.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const result = await runPipeline(flow, files, { userTier: 'free' });
+      expect(result.success).toBe(false);
+      expect(result.code).toBe('ERR_MISSING_WATERMARK_TEXT');
+      expect(result.reason).toContain('Watermark text cannot be empty');
+    });
+  });
+
+  describe('Pipeline Deliverables ZIP Bundle Packaging', () => {
+    it('should package multiple deliverables into a valid ZIP archive without data loss', async () => {
+      const { createZipBlob } = await import('../src/utils/zipUtils');
+      const JSZip = (await import('jszip')).default;
+
+      const pdf1 = await createTestPdf('Invoice 001');
+      const pdf2 = await createTestPdf('Invoice 002');
+      const deliverables = [
+        { name: 'Invoice_001_processed.pdf', data: pdf1 },
+        { name: 'Invoice_002_processed.pdf', data: pdf2 }
+      ];
+
+      const zipBlob = await createZipBlob(deliverables);
+      expect(zipBlob).toBeDefined();
+      expect(zipBlob.size).toBeGreaterThan(0);
+
+      const zip = await JSZip.loadAsync(zipBlob);
+      const fileNames = Object.keys(zip.files);
+      expect(fileNames).toContain('Invoice_001_processed.pdf');
+      expect(fileNames).toContain('Invoice_002_processed.pdf');
+
+      // Verify uncorrupted contents
+      const extractedBytes1 = await zip.file('Invoice_001_processed.pdf').async('uint8array');
+      const reloadedDoc1 = await PDFDocument.load(extractedBytes1);
+      expect(reloadedDoc1.getPageCount()).toBe(1);
     });
   });
 });

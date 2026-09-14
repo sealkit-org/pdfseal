@@ -17,7 +17,7 @@ export async function executeUnlockNode(items, params = {}, onProgress = () => {
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    onProgress(Math.round(((i) / items.length) * 100), `正在解密: ${item.name}`);
+    onProgress(Math.round(((i) / items.length) * 100), `Removing password: ${item.name}`);
 
     try {
       const security = await verifyPdfSecurity(item.data, password);
@@ -40,11 +40,11 @@ export async function executeUnlockNode(items, params = {}, onProgress = () => {
       if (params.skipIfUnencrypted) {
         result.push(item);
       } else {
-        throw new Error(`解密失败 (${item.name}): ${err.message}`);
+        throw new Error(`Failed to decrypt (${item.name}): ${err.message}`);
       }
     }
   }
 
-  onProgress(100, '解密处理完成');
+  onProgress(100, 'Password removal complete');
   return result;
 }

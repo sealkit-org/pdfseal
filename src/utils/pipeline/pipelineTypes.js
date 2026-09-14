@@ -18,9 +18,9 @@ export const AVAILABLE_NODES = {
   node_img2pdf: {
     id: 'node_img2pdf',
     nameKey: 'tab_image_to_pdf',
-    defaultName: '图片转PDF',
+    defaultName: 'Images to PDF',
     descKey: 'node_img2pdf_desc',
-    defaultDesc: '将导入的图片批量转换为 PDF，或合并为单一文档',
+    defaultDesc: 'Convert imported images into PDF or combine into a single document',
     category: 'input_convert',
     inputs: [DATA_TYPES.IMAGE_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -35,9 +35,9 @@ export const AVAILABLE_NODES = {
   node_pdf2img: {
     id: 'node_pdf2img',
     nameKey: 'tab_pdf_to_image',
-    defaultName: 'PDF 转图片',
+    defaultName: 'PDF to Images',
     descKey: 'node_pdf2img_desc',
-    defaultDesc: '将 PDF 每页渲染导出为 PNG / JPG 图片，支持 150 / 300 DPI',
+    defaultDesc: 'Render each PDF page as PNG / JPG images at 150 / 300 DPI',
     category: 'output_convert',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.IMAGE_DOCS],
@@ -51,9 +51,9 @@ export const AVAILABLE_NODES = {
   node_unlock: {
     id: 'node_unlock',
     nameKey: 'tab_unlock',
-    defaultName: '去除密码',
+    defaultName: 'Remove Password',
     descKey: 'node_unlock_desc',
-    defaultDesc: '批量解除密码保护或清除所有者权限限制',
+    defaultDesc: 'Batch remove password protection or strip owner restrictions',
     category: 'preprocess',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -67,9 +67,9 @@ export const AVAILABLE_NODES = {
   node_merge: {
     id: 'node_merge',
     nameKey: 'tab_merge',
-    defaultName: 'PDF 合并',
+    defaultName: 'Merge PDFs',
     descKey: 'node_merge_desc',
-    defaultDesc: '将多个 PDF 按照顺序合并为一个总文档',
+    defaultDesc: 'Merge multiple PDFs sequentially into a single document',
     category: 'structure',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -83,9 +83,9 @@ export const AVAILABLE_NODES = {
   node_split: {
     id: 'node_split',
     nameKey: 'tab_split',
-    defaultName: '页面拆分',
+    defaultName: 'Split Pages',
     descKey: 'node_split_desc',
-    defaultDesc: '提取指定页面区间或将每页拆分为独立文件',
+    defaultDesc: 'Extract page ranges or burst each page into standalone files',
     category: 'structure',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -100,9 +100,9 @@ export const AVAILABLE_NODES = {
   node_compress: {
     id: 'node_compress',
     nameKey: 'tab_compress',
-    defaultName: 'PDF 压缩',
+    defaultName: 'Compress PDF',
     descKey: 'node_compress_desc',
-    defaultDesc: '体积减小最高 90%，支持均衡、极致、目标大小与无损压缩',
+    defaultDesc: 'Reduce file size up to 90% with balanced, extreme, and lossless modes',
     category: 'transform',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -117,9 +117,9 @@ export const AVAILABLE_NODES = {
   node_watermark: {
     id: 'node_watermark',
     nameKey: 'tab_watermark',
-    defaultName: '添加水印',
+    defaultName: 'Add Watermark',
     descKey: 'node_watermark_desc',
-    defaultDesc: '批量添加防盗斜向平铺水印，支持自定义文本、字号、颜色与旋转',
+    defaultDesc: 'Batch apply diagonal tiled watermarks with customizable text, size, color and angle',
     category: 'security',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -136,9 +136,9 @@ export const AVAILABLE_NODES = {
   node_page_number: {
     id: 'node_page_number',
     nameKey: 'tab_page_number',
-    defaultName: '添加页码',
+    defaultName: 'Page Numbers',
     descKey: 'node_page_number_desc',
-    defaultDesc: '批量添加规范页码，支持灵活宏格式、白底遮罩覆盖旧页码及跳过封面',
+    defaultDesc: 'Batch add formal page numbers with flexible formatting, masking ribbons, and cover skipping',
     category: 'structure',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -159,9 +159,9 @@ export const AVAILABLE_NODES = {
   node_sign: {
     id: 'node_sign',
     nameKey: 'tab_sign',
-    defaultName: '电子签名',
+    defaultName: 'Stamp / Sign',
     descKey: 'node_sign_desc',
-    defaultDesc: '批量在文档指定位置（如最后一页右下角）盖章或签名',
+    defaultDesc: 'Batch stamp seals or signatures at target placement such as last page bottom right',
     category: 'transform',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -178,9 +178,9 @@ export const AVAILABLE_NODES = {
   node_sanitize: {
     id: 'node_sanitize',
     nameKey: 'tab_sanitize',
-    defaultName: '隐私清理',
+    defaultName: 'Sanitize Metadata',
     descKey: 'node_sanitize_desc',
-    defaultDesc: '物理抹除作者、修改历史、创建软件、GPS 经纬度等追踪信息',
+    defaultDesc: 'Physically erase author, editing history, creation software, GPS and metadata',
     category: 'security',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -196,9 +196,9 @@ export const AVAILABLE_NODES = {
   node_organize: {
     id: 'node_organize',
     nameKey: 'tab_organize',
-    defaultName: '页面整理',
+    defaultName: 'Organize Pages',
     descKey: 'node_organize_desc',
-    defaultDesc: '文档智能规范化：将所有页面统一缩放至 A4 尺寸，并智能纠正横纵方向。',
+    defaultDesc: 'Normalize document pages: resize to A4 and correct orientation',
     category: 'structure',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -213,9 +213,9 @@ export const AVAILABLE_NODES = {
   node_protect: {
     id: 'node_protect',
     nameKey: 'tab_protect',
-    defaultName: '加密保护',
+    defaultName: 'Protect PDF',
     descKey: 'node_protect_desc',
-    defaultDesc: '批量设置打开密码，或全局限制复制、修改、打印防篡改',
+    defaultDesc: 'Batch set open password or restrict copying, editing, and printing',
     category: 'security',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -243,7 +243,7 @@ export const AVAILABLE_NODES = {
 export function checkNodeCompatibility(upstreamNodeId, downstreamNodeId) {
   const up = AVAILABLE_NODES[upstreamNodeId];
   const down = AVAILABLE_NODES[downstreamNodeId];
-  if (!up || !down) return { compatible: false, reason: '未知的节点类型' };
+  if (!up || !down) return { compatible: false, code: 'ERR_UNKNOWN_NODE', reasonKey: 'pipeline_compat_err_unknown', reason: 'Unknown node type' };
 
   // Check if any output of upstream matches any input of downstream
   const hasCommonType = up.outputs.some(outType => down.inputs.includes(outType));
@@ -251,20 +251,28 @@ export function checkNodeCompatibility(upstreamNodeId, downstreamNodeId) {
     if (up.outputs.includes(DATA_TYPES.IMAGE_DOCS) && down.inputs.includes(DATA_TYPES.PDF_DOCS)) {
       return {
         compatible: false,
-        reason: `上游节点【${up.defaultName}】产出的是图片，而下游节点【${down.defaultName}】需要 PDF 文档作为输入。`,
-        suggestion: '请在中间插入【图片转 PDF】节点'
+        code: 'ERR_INCOMPATIBLE_IMAGE_TO_PDF',
+        reasonKey: 'pipeline_compat_err_image_to_pdf',
+        reason: `Upstream node [${up.defaultName}] outputs images, but downstream node [${down.defaultName}] requires PDF documents.`,
+        suggestionKey: 'pipeline_compat_suggest_img2pdf',
+        suggestion: 'Please insert an [Images to PDF] node in between'
       };
     }
     if (up.outputs.includes(DATA_TYPES.PDF_DOCS) && down.inputs.includes(DATA_TYPES.IMAGE_DOCS)) {
       return {
         compatible: false,
-        reason: `上游节点【${up.defaultName}】产出的是 PDF 文档，而下游节点【${down.defaultName}】需要图片作为输入。`,
-        suggestion: '请在中间插入【PDF 转图片】节点'
+        code: 'ERR_INCOMPATIBLE_PDF_TO_IMAGE',
+        reasonKey: 'pipeline_compat_err_pdf_to_image',
+        reason: `Upstream node [${up.defaultName}] outputs PDF documents, but downstream node [${down.defaultName}] requires images.`,
+        suggestionKey: 'pipeline_compat_suggest_pdf2img',
+        suggestion: 'Please insert a [PDF to Images] node in between'
       };
     }
     return {
       compatible: false,
-      reason: `节点【${up.defaultName}】与【${down.defaultName}】类型不兼容。`
+      code: 'ERR_INCOMPATIBLE_NODES',
+      reasonKey: 'pipeline_compat_err_general',
+      reason: `Node [${up.defaultName}] is incompatible with [${down.defaultName}].`
     };
   }
 

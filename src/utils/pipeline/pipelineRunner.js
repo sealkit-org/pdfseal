@@ -1,4 +1,4 @@
-import { validatePipelinePreflight } from './pipelinePolicy';
+import { validatePipelinePreflight, validateStepParameters } from './pipelinePolicy';
 import { checkNodeCompatibility, AVAILABLE_NODES } from './pipelineTypes';
 import { executePipelineNode } from './nodes';
 import { logger } from '../logger';
@@ -15,6 +15,10 @@ export async function runPipeline(pipelineDef, inputFiles, options = {}, maybeOn
   let userTier = 'free';
   let onProgress = () => {};
   let signal = undefined;
+  let resolveNodeName = (nodeId) => {
+    const nodeMeta = AVAILABLE_NODES[nodeId];
+    return nodeMeta ? nodeMeta.defaultName : nodeId;
+  };
 
   if (typeof options === 'string') {
     userTier = options;
@@ -24,6 +28,9 @@ export async function runPipeline(pipelineDef, inputFiles, options = {}, maybeOn
     userTier = options.userTier || 'free';
     onProgress = options.onProgress || (() => {});
     signal = options.abortSignal;
+    if (typeof options.resolveNodeName === 'function') {
+      resolveNodeName = options.resolveNodeName;
+    }
   }
 
   const pipeName = pipelineDef.name || pipelineDef.defaultName || pipelineDef.id || 'Pipeline';
@@ -36,12 +43,27 @@ export async function runPipeline(pipelineDef, inputFiles, options = {}, maybeOn
     return {
       success: false,
       code: preflight.code,
+      reasonKey: preflight.reasonKey,
+      params: preflight.params,
       reason: preflight.reason,
       triggerPro: preflight.triggerPro
     };
   }
 
-  // 2. Preflight Type Compatibility Validation
+  // 2. Step Parameter Completeness Validation
+  const paramValidation = validateStepParameters(pipelineDef.steps);
+  if (!paramValidation.valid) {
+    logger.warn('PIPELINE_RUNNER', `Parameter validation blocked: ${paramValidation.reason}`);
+    return {
+      success: false,
+      code: paramValidation.code || 'ERR_MISSING_PARAM',
+      reason: paramValidation.reason,
+      stepIndex: paramValidation.stepIndex,
+      nodeId: paramValidation.nodeId
+    };
+  }
+
+  // 3. Preflight Type Compatibility Validation
   for (let i = 0; i < pipelineDef.steps.length - 1; i++) {
     const currentStep = pipelineDef.steps[i];
     const nextStep = pipelineDef.steps[i + 1];
@@ -67,7 +89,7 @@ export async function runPipeline(pipelineDef, inputFiles, options = {}, maybeOn
     } else if (f.data) {
       data = f.data instanceof Uint8Array ? f.data : new Uint8Array(f.data);
     } else {
-      throw new Error(`无法读取输入文件数据: ${f.name}`);
+      throw new Error(`Unable to read input file data: ${f.name}`);
     }
 
     const mime = f.type || f.mimeType || (/\.pdf$/i.test(f.name) ? 'application/pdf' : 'image/png');
@@ -88,13 +110,13 @@ export async function runPipeline(pipelineDef, inputFiles, options = {}, maybeOn
       return {
         success: false,
         code: 'ABORTED',
-        reason: '用户手动中止了流水线操作。'
+        reasonKey: 'pipeline_aborted_by_user',
+        reason: 'Operation aborted by user'
       };
     }
 
     const step = pipelineDef.steps[stepIdx];
-    const nodeMeta = AVAILABLE_NODES[step.nodeId];
-    const nodeTitle = nodeMeta ? nodeMeta.defaultName : step.nodeId;
+    const nodeTitle = resolveNodeName(step.nodeId);
 
     logger.info('PIPELINE_RUNNER', `Step ${stepIdx + 1}/${totalSteps}: Executing [${nodeTitle}] with ${currentItems.length} items`);
 
@@ -151,12 +173,17 @@ export async function runPipeline(pipelineDef, inputFiles, options = {}, maybeOn
     });
   }
 
+  const completedStepTitle = (typeof options === 'object' && options?.completedStepName) || 'Completed';
+  const completedStepMsg = (typeof options === 'object' && typeof options?.formatCompletedMessage === 'function')
+    ? options.formatCompletedMessage(currentItems.length)
+    : `Pipeline execution completed, produced ${currentItems.length} deliverable file(s).`;
+
   onProgress({
     overallPercent: 100,
     currentStepIndex: totalSteps - 1,
     totalSteps,
-    stepName: '完成',
-    stepMessage: `自动化流水线执行完毕，共输出 ${currentItems.length} 个结果文档。`
+    stepName: completedStepTitle,
+    stepMessage: completedStepMsg
   });
 
   logger.info('PIPELINE_RUNNER', `Pipeline completed successfully. Produced ${currentItems.length} items.`);

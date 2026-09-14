@@ -93,7 +93,7 @@ describe('PDF to Image Engine & Pipeline Node', () => {
     // PDF node directly to IMG2PDF should fail with suggestion to insert pdf2img
     const step3 = checkNodeCompatibility('node_merge', 'node_img2pdf');
     expect(step3.compatible).toBe(false);
-    expect(step3.suggestion).toContain('PDF 转图片');
+    expect(step3.suggestion).toContain('PDF to Images');
   });
 
   it('should define correct semantic route and SEO titles in multiple languages', () => {

@@ -71,7 +71,7 @@ describe('Target Size Compression & Bisection Engine (Sprint 3.2)', () => {
       expect(result.byteLength).toBeGreaterThan(0);
       expect(result.byteLength).toBeLessThanOrEqual(targetSizeMb * 1024 * 1024);
       // Confirmed lossless path executed
-      expect(messages.some(m => m.includes('无损'))).toBe(true);
+      expect(messages.some(m => m.toLowerCase().includes('lossless'))).toBe(true);
     });
 
     it('should dispatch level === "target" via universal compressPdf', async () => {

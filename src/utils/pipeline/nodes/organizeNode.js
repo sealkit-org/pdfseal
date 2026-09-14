@@ -10,7 +10,7 @@ export async function executeOrganizeNode(items, params = {}, onProgress = () =>
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    onProgress(Math.round((i / items.length) * 100), `正在规范化文档 [${i + 1}/${items.length}]: ${item.name}`);
+    onProgress(Math.round((i / items.length) * 100), `Normalizing document [${i + 1}/${items.length}]: ${item.name}`);
 
     try {
       const doc = await loadCleanPdfDocument(item.data, { preserveWatermarks: true });
@@ -71,10 +71,10 @@ export async function executeOrganizeNode(items, params = {}, onProgress = () =>
 
     } catch (err) {
       logger.error('ORGANIZE_FAIL', `Failed to normalize ${item.name}: ${err.message}`);
-      throw new Error(`处理 ${item.name} 时出错: ${err.message}`);
+      throw new Error(`Error processing ${item.name}: ${err.message}`);
     }
   }
 
-  onProgress(100, '页面规范化完成');
+  onProgress(100, 'Page normalization complete');
   return result;
 }

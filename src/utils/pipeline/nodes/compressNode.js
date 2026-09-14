@@ -21,12 +21,12 @@ export async function executeCompressNode(items, params = {}, onProgress = () =>
     const nextPct = Math.round(((i + 1) / items.length) * 100);
 
     const levelDisplay = level === 'target' ? `≤ ${targetSizeMb} MB` : level;
-    onProgress(basePct, `正在压缩 [${i + 1}/${items.length}]: ${item.name} (${levelDisplay})`);
+    onProgress(basePct, `Compressing [${i + 1}/${items.length}]: ${item.name} (${levelDisplay})`);
 
     try {
       const compressedBytes = await compressPdf(item.data, level, { targetSizeMb }, (cur, tot) => {
         const subPct = basePct + Math.round((cur / tot) * (nextPct - basePct));
-        onProgress(subPct, `正在压缩 [${i + 1}/${items.length}] 第 ${cur}/${tot} 页...`);
+        onProgress(subPct, `Compressing [${i + 1}/${items.length}] page ${cur}/${tot}...`);
       });
 
       result.push({
@@ -41,6 +41,6 @@ export async function executeCompressNode(items, params = {}, onProgress = () =>
     }
   }
 
-  onProgress(100, '批量压缩处理完成');
+  onProgress(100, 'Batch compression complete');
   return result;
 }

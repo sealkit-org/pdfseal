@@ -72,7 +72,7 @@ describe('LemonSqueezy License Gateway & Device Seat Management', () => {
 
     const res = await activateLemonLicense('over-limit-key');
     expect(res.success).toBe(false);
-    expect(res.error).toContain('最大设备数上限');
+    expect(res.error).toContain('limit');
   });
 
   it('should correctly handle invalid or not found license keys', async () => {
@@ -88,7 +88,7 @@ describe('LemonSqueezy License Gateway & Device Seat Management', () => {
 
     const res = await activateLemonLicense('nonexistent-key');
     expect(res.success).toBe(false);
-    expect(res.error).toContain('无效的激活码');
+    expect(res.error).toContain('Invalid');
   });
 
   it('should successfully deactivate and release a device seat', async () => {

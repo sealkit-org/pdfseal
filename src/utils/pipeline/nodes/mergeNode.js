@@ -20,14 +20,14 @@ export async function executeMergeNode(items, params = {}, onProgress = () => {}
     sorted.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
   }
 
-  onProgress(10, '正在初始化合并引擎...');
+  onProgress(10, 'Initializing merge engine...');
   const mergedPdf = await PDFDocument.create();
   let totalCopiedPages = 0;
 
   for (let i = 0; i < sorted.length; i++) {
     const item = sorted[i];
     const pct = 10 + Math.round(((i) / sorted.length) * 80);
-    onProgress(pct, `正在合并 [${i + 1}/${sorted.length}]: ${item.name}`);
+    onProgress(pct, `Merging [${i + 1}/${sorted.length}]: ${item.name}`);
 
     try {
       const srcDoc = await loadCleanPdfDocument(item.data, { preserveWatermarks: true });
@@ -47,13 +47,13 @@ export async function executeMergeNode(items, params = {}, onProgress = () => {}
       }
     } catch (err) {
       logger.error('PIPELINE_MERGE', `Error copying pages from ${item.name}: ${err.message}`);
-      throw new Error(`合并失败 (${item.name}): ${err.message}`);
+      throw new Error(`Merge failed (${item.name}): ${err.message}`);
     }
   }
 
-  onProgress(95, '正在生成最终合并文档...');
+  onProgress(95, 'Generating merged document...');
   const mergedBytes = await mergedPdf.save({ useObjectStreams: true });
-  onProgress(100, '合并完成');
+  onProgress(100, 'Merge complete');
 
   return [{
     id: 'merged_' + Date.now(),

@@ -82,7 +82,7 @@
           <template #metrics>
             <span class="inline-flex items-center space-x-1 text-xs font-semibold text-violet-700 bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200/60 shadow-2xs">
               <Images class="w-3.5 h-3.5 text-violet-600" />
-              <span>{{ t('img2pdf_metric_count', { count: lastExportedCount || imageList.length }) || `由 ${lastExportedCount || imageList.length} 张图片合成` }}</span>
+              <span>{{ t('img2pdf_metric_count', { count: lastExportedCount || imageList.length }, `Compiled from ${lastExportedCount || imageList.length} images`) }}</span>
             </span>
           </template>
         </ResultDeliveryView>
@@ -596,7 +596,7 @@ async function executeExport() {
       });
     }
 
-    progressMessage.value = t('img2pdf_progress_saving') || '正在生成与优化 PDF 文档...';
+    progressMessage.value = t('img2pdf_progress_saving', 'Generating & optimizing PDF document...');
     progressPercent.value = 90;
     await new Promise(resolve => setTimeout(resolve, 0));
 

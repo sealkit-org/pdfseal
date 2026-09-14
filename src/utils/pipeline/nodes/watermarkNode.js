@@ -19,7 +19,7 @@ export async function executeWatermarkNode(items, params = {}, onProgress = () =
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    onProgress(Math.round((i / items.length) * 100), `正在加水印 [${i + 1}/${items.length}]: ${item.name}`);
+    onProgress(Math.round((i / items.length) * 100), `Applying watermark [${i + 1}/${items.length}]: ${item.name}`);
 
     try {
       const doc = await loadCleanPdfDocument(item.data, { preserveWatermarks: true });
@@ -92,6 +92,6 @@ export async function executeWatermarkNode(items, params = {}, onProgress = () =
     }
   }
 
-  onProgress(100, '批量水印添加完成');
+  onProgress(100, 'Batch watermark complete');
   return result;
 }

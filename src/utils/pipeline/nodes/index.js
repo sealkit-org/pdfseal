@@ -29,7 +29,7 @@ export const NODE_EXECUTORS = {
 export async function executePipelineNode(nodeId, items, params = {}, onProgress = () => {}) {
   const executor = NODE_EXECUTORS[nodeId];
   if (!executor) {
-    throw new Error(`未知的节点执行器: ${nodeId}`);
+    throw new Error(`Unknown pipeline node executor: ${nodeId}`);
   }
   return await executor(items, params, onProgress);
 }

@@ -678,7 +678,7 @@ async function executeCompress() {
   isProcessing.value = true;
   progressPercent.value = 10;
   progressMessage.value = selectedLevel.value === 'lossless' 
-    ? (t('compress_progress_scan') || '正在解析文档结构与对象树...') 
+    ? t('compress_progress_scan', 'Analyzing document structure and object tree...') 
     : t('compress_status_processing');
 
   try {
@@ -706,7 +706,7 @@ async function executeCompress() {
     );
 
     progressPercent.value = 100;
-    progressMessage.value = t('compress_progress_done') || '压缩完成！';
+    progressMessage.value = t('compress_progress_done', 'Compression complete!');
     await new Promise(r => setTimeout(r, 180));
 
     let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, 'Compressed'));

@@ -26,7 +26,7 @@ export async function executePageNumberNode(items, params = {}, onProgress = () 
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    onProgress(Math.round((i / items.length) * 100), `正在编排页码 [${i + 1}/${items.length}]: ${item.name}`);
+    onProgress(Math.round((i / items.length) * 100), `Applying page numbers [${i + 1}/${items.length}]: ${item.name}`);
 
     try {
       const { outBytes } = await applyPageNumbers(item.data, options);
@@ -42,6 +42,6 @@ export async function executePageNumberNode(items, params = {}, onProgress = () 
     }
   }
 
-  onProgress(100, '批量页码编排完成');
+  onProgress(100, 'Batch page numbering complete');
   return result;
 }

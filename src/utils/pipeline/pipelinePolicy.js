@@ -1,13 +1,10 @@
-/**
- * Pipeline Automation Policy & Quota Engine (Config-Driven)
- * Governs Free vs Pro limits for the pipeline automation feature.
- */
+import { AVAILABLE_NODES } from './pipelineTypes';
 
 export const PIPELINE_POLICY = {
   free: {
     name: 'Community Free',
     maxSavedPipelines: 3,           // Maximum custom pipelines saved in local IndexedDB/localStorage (3 slots for Free)
-    maxStepsPerPipeline: 3,         // Maximum steps allowed in a single pipeline definition
+    maxStepsPerPipeline: Infinity,  // Unlimited steps allowed in a single pipeline definition (zero restrictions on chain length)
     maxBatchFiles: 3,               // Maximum files allowed in a single batch execution
     allowedExportDestinations: ['download_files'], // Sequential download only (ZIP is Pro)
     allowCustomNamingTemplates: false, // Pro only: dynamic tokens like {date}_{index}
@@ -85,17 +82,23 @@ export function validatePipelinePreflight(pipelineDef, inputFiles, userTier = 'f
       pass: false,
       code: 'ERR_MAX_BATCH_FILES',
       triggerPro: true,
-      reason: `免费版单次最多支持 ${policy.maxBatchFiles} 个文件批量处理，当前导入了 ${inputFiles.length} 个文件。升级 Pro 解锁 100+ 文件批量批处理！`
+      reasonKey: 'pipeline_preflight_err_max_files',
+      params: { max: policy.maxBatchFiles, count: inputFiles.length },
+      reason: `Free tier supports up to ${policy.maxBatchFiles} batch files per run (currently imported ${inputFiles.length}). Upgrade to Pro to process 100+ files simultaneously!`
     };
   }
 
-  // 2. Validate Step Count
-  if (pipelineDef.steps && pipelineDef.steps.length > policy.maxStepsPerPipeline) {
+  const isPreset = Boolean(pipelineDef.id?.startsWith('preset_') || pipelineDef.isPreset);
+
+  // 2. Validate Step Count (Zero artificial restrictions on step count)
+  if (pipelineDef.steps && Number.isFinite(policy.maxStepsPerPipeline) && pipelineDef.steps.length > policy.maxStepsPerPipeline) {
     return {
       pass: false,
       code: 'ERR_MAX_STEPS',
       triggerPro: true,
-      reason: `免费版单条流水线最多支持 ${policy.maxStepsPerPipeline} 个处理步骤，当前流水线包含 ${pipelineDef.steps.length} 个步骤。升级 Pro 解锁无限自由编排！`
+      reasonKey: 'pipeline_preflight_err_max_steps',
+      params: { max: policy.maxStepsPerPipeline, count: pipelineDef.steps.length },
+      reason: `Single pipeline supports up to ${policy.maxStepsPerPipeline} processing steps (current pipeline has ${pipelineDef.steps.length} steps).`
     };
   }
 
@@ -108,12 +111,14 @@ export function validatePipelinePreflight(pipelineDef, inputFiles, userTier = 'f
 
       // Check node_sign
       if (step.nodeId === 'node_sign') {
-        if (inputFiles.length > limit.maxFiles) {
+        if (!isPreset && inputFiles.length > limit.maxFiles) {
           return {
             pass: false,
             code: 'ERR_NODE_SIGN_LIMIT',
             triggerPro: true,
-            reason: `批量盖章/签名节点在免费版中单次限处理 ${limit.maxFiles} 份文件体验。升级 Pro 解锁多份文件批量同位置自动盖章！`
+            reasonKey: 'pipeline_preflight_err_sign_limit',
+            params: { max: limit.maxFiles },
+            reason: `Batch signature/stamp node in Free tier is limited to ${limit.maxFiles} files per batch. Upgrade to Pro to process unlimited files!`
           };
         }
       }
@@ -125,7 +130,9 @@ export function validatePipelinePreflight(pipelineDef, inputFiles, userTier = 'f
             pass: false,
             code: 'ERR_NODE_COMPRESS_LEVEL',
             triggerPro: true,
-            reason: `流水线中的压缩节点选择了高级档位（${step.params.level}），免费版仅开放均衡档。升级 Pro 即可使用极致压缩、目标大小逼近与无损压缩！`
+            reasonKey: 'pipeline_preflight_err_compress_level',
+            params: { level: step.params.level },
+            reason: `The compression node selected an advanced mode (${step.params.level}). Free tier supports Balanced mode. Upgrade to Pro for Extreme, Target Size, and Lossless compression!`
           };
         }
       }
@@ -137,7 +144,8 @@ export function validatePipelinePreflight(pipelineDef, inputFiles, userTier = 'f
             pass: false,
             code: 'ERR_NODE_WATERMARK_OWNER_LOCK',
             triggerPro: true,
-            reason: `水印防篡改（所有者只读权限锁）为 Pro 专业版专属特性。`
+            reasonKey: 'pipeline_preflight_err_watermark_lock',
+            reason: `Tamper-proof watermark (read-only owner password lock) is a Pro exclusive feature.`
           };
         }
       }
@@ -152,17 +160,18 @@ export function validatePipelinePreflight(pipelineDef, inputFiles, userTier = 'f
         pass: false,
         code: 'ERR_EXPORT_DESTINATION',
         triggerPro: true,
-        reason: `一键打包 ZIP 导出与收纳箱自动归档属于 Pro 专业版专属交付能力。`
+        reasonKey: 'pipeline_preflight_err_export_dest',
+        reason: `One-click ZIP bundle packaging and vault auto-archiving are Pro exclusive features.`
       };
     }
     if (pipelineDef.exportConfig.namingTemplate && !policy.allowCustomNamingTemplates) {
-      const isPreset = Boolean(pipelineDef.id?.startsWith('preset_'));
       if (!isPreset && /\{date\}|\{index\}|\{time\}/.test(pipelineDef.exportConfig.namingTemplate)) {
         return {
           pass: false,
           code: 'ERR_CUSTOM_NAMING',
           triggerPro: true,
-          reason: `自定义动态命名模板（支持 {date}、{index} 等变量）属于 Pro 专业版特权。`
+          reasonKey: 'pipeline_preflight_err_custom_naming',
+          reason: `Custom dynamic naming templates (with {date}, {index}, etc.) are a Pro exclusive feature.`
         };
       }
     }
@@ -179,8 +188,103 @@ export function canSaveNewPipeline(currentSavedCount, userTier = 'free') {
   if (currentSavedCount >= policy.maxSavedPipelines) {
     return {
       allowed: false,
-      reason: `免费版最多保存 ${policy.maxSavedPipelines} 条常用自定义工作流。升级 Pro 即可无限制保存并管理您的工作流库！`
+      reasonKey: 'pipeline_preflight_err_max_saved',
+      params: { max: policy.maxSavedPipelines },
+      reason: `Free tier allows saving up to ${policy.maxSavedPipelines} custom workflows. Upgrade to Pro to save unlimited workflows!`
     };
   }
   return { allowed: true };
 }
+
+/**
+ * Validates that all steps in a pipeline have required parameters properly filled.
+ * Returns { valid: boolean, stepIndex?: number, stepId?: string, nodeId?: string, reason?: string, reasonKey?: string }
+ */
+export function validateStepParameters(steps) {
+  const stepList = Array.isArray(steps) ? steps : (steps?.steps || []);
+  if (!stepList || !Array.isArray(stepList)) {
+    return { valid: true };
+  }
+
+  for (let i = 0; i < stepList.length; i++) {
+    const step = stepList[i];
+    const nodeDef = AVAILABLE_NODES[step.nodeId];
+    const nodeName = nodeDef?.defaultName || step.nodeId;
+
+    if (step.nodeId === 'node_sign') {
+      if (!step.params?.stampDataUrl) {
+        return {
+          valid: false,
+          stepIndex: i,
+          stepId: step.id,
+          nodeId: step.nodeId,
+          code: 'ERR_MISSING_STAMP',
+          reasonKey: 'pipeline_param_err_sign',
+          reason: `Step ${i + 1} [${nodeName}]: Missing stamp or signature image. Please upload or select a signature first.`
+        };
+      }
+    }
+
+    if (step.nodeId === 'node_protect') {
+      const preset = step.params?.preset || 'confidential';
+      if (preset === 'confidential') {
+        if (!step.params?.userPassword || !step.params.userPassword.trim()) {
+          return {
+            valid: false,
+            stepIndex: i,
+            stepId: step.id,
+            nodeId: step.nodeId,
+            code: 'ERR_MISSING_PASSWORD',
+            reasonKey: 'pipeline_param_err_protect_open',
+            reason: `Step ${i + 1} [${nodeName}]: Missing open password. Please enter a password first.`
+          };
+        }
+      } else {
+        if (!step.params?.ownerPassword || !step.params.ownerPassword.trim()) {
+          return {
+            valid: false,
+            stepIndex: i,
+            stepId: step.id,
+            nodeId: step.nodeId,
+            code: 'ERR_MISSING_PASSWORD',
+            reasonKey: 'pipeline_param_err_protect_owner',
+            reason: `Step ${i + 1} [${nodeName}]: Missing owner password. Please enter a management password first.`
+          };
+        }
+      }
+    }
+
+    if (step.nodeId === 'node_watermark') {
+      if (!step.params?.text || !step.params.text.trim()) {
+        return {
+          valid: false,
+          stepIndex: i,
+          stepId: step.id,
+          nodeId: step.nodeId,
+          code: 'ERR_MISSING_WATERMARK_TEXT',
+          reasonKey: 'pipeline_param_err_watermark',
+          reason: `Step ${i + 1} [${nodeName}]: Watermark text cannot be empty. Please enter watermark text first.`
+        };
+      }
+    }
+
+    if (step.nodeId === 'node_split') {
+      if (step.params?.mode === 'extract_range' && step.params?.rangeType === 'custom') {
+        if (!step.params?.rangeExpr || !step.params.rangeExpr.trim()) {
+          return {
+            valid: false,
+            stepIndex: i,
+            stepId: step.id,
+            nodeId: step.nodeId,
+            code: 'ERR_MISSING_SPLIT_RANGE',
+            reasonKey: 'pipeline_param_err_split',
+            reason: `Step ${i + 1} [${nodeName}]: Custom page range cannot be empty. Please enter a page range first.`
+          };
+        }
+      }
+    }
+  }
+
+  return { valid: true };
+}
+

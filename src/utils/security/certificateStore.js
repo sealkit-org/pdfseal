@@ -74,7 +74,7 @@ export async function initCertificateStore() {
 export async function activateCertificate(rawString) {
   const trimmed = (rawString || '').trim();
   if (!trimmed) {
-    return { success: false, error: '请输入授权码或证书代码' };
+    return { success: false, error: 'Please enter a license key or certificate code' };
   }
 
   isVerifying.value = true;

@@ -280,13 +280,16 @@
             @change="handleFileInput" 
           />
 
-          <!-- 1. Top Box: File Batch Area (flex-1: Fills upper half with only 8px gap to run button) -->
+          <!-- 1. Top Box: File Batch Area (Adaptive height with strict min/max constraints) -->
           <div 
             @dragover.prevent="isDragging = true"
             @dragleave.prevent="isDragging = false"
             @drop.prevent="handleFileDrop"
             :class="[
-              'relative border-2 border-dashed rounded-2xl transition flex flex-col flex-1 min-h-[160px] overflow-hidden',
+              'relative border-2 border-dashed rounded-2xl transition-all duration-300 flex flex-col overflow-hidden shrink-0',
+              inputFiles.length === 0 
+                ? 'min-h-[150px] max-h-[190px]' 
+                : 'min-h-[110px] max-h-[220px]',
               isDragging 
                 ? 'border-indigo-500 bg-indigo-50/60 scale-[0.995]' 
                 : 'border-slate-300 hover:border-indigo-300 bg-slate-50/40'
@@ -331,7 +334,7 @@
             </div>
 
             <!-- STATE B: When Files Exist (Mini Toolbar + Compact Scrollable List Inside the Dashed Box) -->
-            <div v-else class="flex-1 flex flex-col overflow-hidden">
+            <div v-else class="flex flex-col overflow-hidden">
               <!-- Pinned Top Mini-Bar Inside the Box -->
               <div class="flex items-center justify-between px-3 py-1.5 bg-white/90 border-b border-slate-200/80 shrink-0 text-xs">
                 <span class="text-slate-600 font-semibold flex items-center space-x-1.5">
@@ -368,8 +371,8 @@
                 </div>
               </div>
 
-              <!-- Compact Scrollable File List -->
-              <div class="flex-1 overflow-y-auto p-2 space-y-1.5 custom-scrollbar">
+              <!-- Compact Scrollable File List (Adaptive height with internal scroll) -->
+              <div class="overflow-y-auto p-2 space-y-1.5 custom-scrollbar max-h-[135px]">
                 <div 
                   v-for="(file, fIdx) in inputFiles" 
                   :key="fIdx"
@@ -381,11 +384,20 @@
                     </span>
                     <Images v-if="isImageFile(file)" class="w-3.5 h-3.5 text-blue-600 shrink-0" />
                     <FileText v-else class="w-3.5 h-3.5 text-red-600 shrink-0" />
-                    <span class="font-bold text-slate-800 text-xs truncate max-w-[260px]" :title="file.name">
+                    <span class="font-bold text-slate-800 text-xs truncate max-w-[240px]" :title="file.name">
                       {{ file.name }}
                     </span>
                     <span class="text-[10px] text-slate-400 font-mono shrink-0">
                       {{ formatSize(file.size) }}
+                    </span>
+
+                    <!-- Completed Badge when output exists -->
+                    <span 
+                      v-if="!isRunning && outputResults.length > 0" 
+                      class="text-[10px] text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-1.5 py-0.2 rounded font-medium shrink-0 flex items-center space-x-0.5"
+                    >
+                      <CheckCircle2 class="w-2.5 h-2.5 text-emerald-600" />
+                      <span>{{ t('pipeline_tag_processed') }}</span>
                     </span>
                   </div>
 
@@ -415,62 +427,160 @@
             </div>
           </div>
 
-          <!-- 2. Middle Bar: Compact Execution Launch Control (Tight 8px gap above and below!) -->
-          <div class="bg-gradient-to-r from-slate-50 to-indigo-50/40 rounded-2xl border border-indigo-100 p-2.5 space-y-1.5 shrink-0 shadow-2xs">
-            <div class="flex items-center justify-between text-xs px-0.5">
-              <div class="flex items-center space-x-2">
-                <span class="font-bold text-slate-700">{{ t('pipeline_ready_to_run') }}:</span>
-                <span class="font-black text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-100 shadow-2xs">
-                  {{ currentPipeline.name || currentPipeline.defaultName }}
-                </span>
-              </div>
-              <div class="text-slate-500 text-[11px]">
-                {{ activeWorkflowSteps.length }} {{ t('pipeline_steps_count_unit') }} · {{ inputFiles.length }} {{ t('pipeline_files_unit') }}
-              </div>
-            </div>
-
-            <!-- Primary Run Button (Sleek, Compact Height) -->
-            <button 
-              type="button"
-              data-testid="pipeline-run-btn"
-              @click="startExecution" 
-              :disabled="isRunning || inputFiles.length === 0 || activeWorkflowSteps.length === 0"
-              :class="[
-                'w-full py-2 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center space-x-2 shadow-md transition cursor-pointer',
-                (isRunning || inputFiles.length === 0 || activeWorkflowSteps.length === 0) 
-                  ? 'bg-slate-300 cursor-not-allowed text-slate-500 shadow-none' 
-                  : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-indigo-500/20 active:scale-[0.99]'
-              ]"
-            >
-              <Loader2 v-if="isRunning" class="w-4 h-4 animate-spin text-white" />
-              <Play v-else class="w-4 h-4 text-white fill-white" />
-              <span>{{ isRunning ? t('pipeline_btn_running') : t('pipeline_btn_run_main') }}</span>
-            </button>
-
-            <!-- Live Progress Bar when Running -->
-            <div v-if="isRunning" class="space-y-1 pt-0.5">
-              <div class="flex items-center justify-between text-xs">
-                <div class="font-bold text-indigo-700 flex items-center space-x-2 truncate">
-                  <span>{{ progressState.stepName }}:</span>
-                  <span class="text-slate-600 font-normal truncate">{{ progressState.stepMessage }}</span>
+          <!-- 2. Middle Bar: Compact Execution Launch Control / Completed Harvest Bar -->
+          <div 
+            :class="[
+              'rounded-2xl border p-2.5 space-y-1.5 shrink-0 shadow-2xs transition-all duration-300',
+              (!isRunning && outputResults.length > 0)
+                ? 'bg-gradient-to-r from-emerald-50/90 to-teal-50/70 border-emerald-200'
+                : 'bg-gradient-to-r from-slate-50 to-indigo-50/40 border-indigo-100'
+            ]"
+          >
+            <!-- Sub-state 1: Completed Harvest Bar -->
+            <template v-if="!isRunning && outputResults.length > 0">
+              <div class="flex items-center justify-between text-xs px-0.5">
+                <div class="flex items-center space-x-1.5 min-w-0">
+                  <CheckCircle2 class="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span class="font-bold text-slate-800 truncate">
+                    {{ t('pipeline_completed_status_title') }}
+                  </span>
+                  <span class="font-extrabold text-emerald-700 bg-emerald-100/80 px-2 py-0.2 rounded-full text-[11px] shrink-0 border border-emerald-200/80">
+                    {{ outputResults.length }} {{ t('pipeline_files_unit') }}
+                  </span>
                 </div>
-                <div class="flex items-center space-x-2 shrink-0">
-                  <span class="font-extrabold text-indigo-600">{{ progressState.overallPercent }}%</span>
-                  <button 
-                    @click="cancelExecution"
-                    class="text-[10px] text-red-500 hover:text-red-700 font-semibold px-1.5 py-0.5 rounded border border-red-200 bg-red-50 transition cursor-pointer"
-                  >
-                    {{ t('btn_cancel') || 'Cancel' }}
-                  </button>
+                <div v-if="compressionSavings" class="text-[11px] text-emerald-700 font-bold bg-white/90 px-2 py-0.5 rounded-md border border-emerald-200 shadow-2xs shrink-0">
+                  {{ t('pipeline_stat_saved') }} -{{ compressionSavings }}%
                 </div>
               </div>
-              <div class="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden">
-                <div 
-                  class="h-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-300 rounded-full"
-                  :style="{ width: progressState.overallPercent + '%' }"
-                ></div>
+
+              <!-- Main Harvest Button (Large vibrant emerald button) -->
+              <!-- Case A: Single File Output -->
+              <button 
+                v-if="outputResults.length === 1"
+                type="button"
+                data-testid="pipeline-harvest-download-single-btn"
+                @click="downloadSingle(outputResults[0])" 
+                class="w-full py-2.5 rounded-xl font-extrabold text-xs sm:text-sm text-white flex items-center justify-center space-x-2 shadow-md bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20 active:scale-[0.99] transition cursor-pointer"
+              >
+                <Download class="w-4 h-4 text-white" />
+                <span>{{ t('pipeline_btn_download_single_harvest') }} ({{ formatSize(totalOutputSize) }})</span>
+              </button>
+
+              <!-- Case B: Multi-File Output (ZIP Archive) -->
+              <button 
+                v-else
+                type="button"
+                data-testid="pipeline-harvest-download-all-btn"
+                :disabled="isZipping"
+                @click="downloadAllZip" 
+                class="w-full py-2.5 rounded-xl font-extrabold text-xs sm:text-sm text-white flex items-center justify-center space-x-2 shadow-md bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 shadow-emerald-500/20 active:scale-[0.99] transition cursor-pointer disabled:opacity-75 disabled:cursor-not-allowed"
+              >
+                <Loader2 v-if="isZipping" class="w-4 h-4 animate-spin text-white" />
+                <Archive v-else class="w-4 h-4 text-white" />
+                <span>{{ isZipping ? zipProgressText : `${t('pipeline_btn_download_zip_harvest', { count: outputResults.length })} (${formatSize(totalOutputSize)})` }}</span>
+              </button>
+
+              <!-- Secondary Action Controls (Rerun, Download Separately, Save to Vault, Start New) -->
+              <div class="flex items-center justify-between pt-0.5 px-0.5 text-xs">
+                <button 
+                  type="button" 
+                  @click="startExecution"
+                  class="flex items-center space-x-1 text-[11px] text-slate-600 hover:text-indigo-600 font-semibold py-1 px-2 rounded-lg hover:bg-white/80 transition cursor-pointer"
+                  :title="t('pipeline_btn_rerun_tooltip')"
+                >
+                  <RotateCcw class="w-3 h-3" />
+                  <span>{{ t('pipeline_btn_rerun') }}</span>
+                </button>
+
+                <!-- When multi-file, offer Download Separately option -->
+                <button 
+                  v-if="outputResults.length > 1"
+                  type="button" 
+                  @click="downloadAllSequential"
+                  class="flex items-center space-x-1 text-[11px] text-slate-600 hover:text-emerald-700 font-semibold py-1 px-2 rounded-lg hover:bg-white/80 transition cursor-pointer"
+                  :title="t('pipeline_btn_download_separate')"
+                >
+                  <Files class="w-3.5 h-3.5 text-slate-500" />
+                  <span>{{ t('pipeline_btn_download_separate') }}</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  @click="saveAllToVault"
+                  class="flex items-center space-x-1 text-[11px] text-blue-700 hover:text-blue-800 font-semibold py-1 px-2 rounded-lg hover:bg-white/80 transition cursor-pointer"
+                >
+                  <FolderLock class="w-3.5 h-3.5 text-blue-600" />
+                  <span>{{ t('pipeline_btn_save_vault') }}</span>
+                </button>
+
+                <button 
+                  type="button" 
+                  @click="resetBatchAndResults"
+                  class="flex items-center space-x-1 text-[11px] text-slate-400 hover:text-red-600 font-medium py-1 px-2 rounded-lg hover:bg-white/80 transition cursor-pointer"
+                >
+                  <X class="w-3 h-3" />
+                  <span>{{ t('pipeline_btn_new_batch') }}</span>
+                </button>
               </div>
-            </div>
+            </template>
+
+            <!-- Sub-state 2: Normal Ready / Running Control Bar -->
+            <template v-else>
+              <div class="flex items-center justify-between text-xs px-0.5">
+                <div class="flex items-center space-x-2">
+                  <span class="font-bold text-slate-700">{{ t('pipeline_ready_to_run') }}</span>
+                  <span class="font-black text-indigo-700 bg-white px-2 py-0.5 rounded border border-indigo-100 shadow-2xs">
+                    {{ currentPipeline.name || (currentPipeline.nameKey ? t(currentPipeline.nameKey, currentPipeline.defaultName) : currentPipeline.defaultName) }}
+                  </span>
+                </div>
+                <div class="text-slate-500 text-[11px]">
+                  {{ activeWorkflowSteps.length }} {{ t('pipeline_steps_count_unit') }} · {{ inputFiles.length }} {{ t('pipeline_files_unit') }}
+                </div>
+              </div>
+
+              <!-- Primary Run Button (Sleek, Compact Height) -->
+              <button 
+                type="button"
+                data-testid="pipeline-run-btn"
+                @click="startExecution" 
+                :disabled="isRunning || inputFiles.length === 0 || activeWorkflowSteps.length === 0"
+                :class="[
+                  'w-full py-2 rounded-xl font-bold text-xs sm:text-sm text-white flex items-center justify-center space-x-2 shadow-md transition cursor-pointer',
+                  (isRunning || inputFiles.length === 0 || activeWorkflowSteps.length === 0) 
+                    ? 'bg-slate-300 cursor-not-allowed text-slate-500 shadow-none' 
+                    : 'bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 shadow-indigo-500/20 active:scale-[0.99]'
+                ]"
+              >
+                <Loader2 v-if="isRunning" class="w-4 h-4 animate-spin text-white" />
+                <Play v-else class="w-4 h-4 text-white fill-white" />
+                <span>{{ isRunning ? t('pipeline_btn_running') : t('pipeline_btn_run_main') }}</span>
+              </button>
+
+              <!-- Live Progress Bar when Running -->
+              <div v-if="isRunning" class="space-y-1 pt-0.5">
+                <div class="flex items-center justify-between text-xs">
+                  <div class="font-bold text-indigo-700 flex items-center space-x-2 truncate">
+                    <span>{{ progressState.stepName }}:</span>
+                    <span class="text-slate-600 font-normal truncate">{{ progressState.stepMessage }}</span>
+                  </div>
+                  <div class="flex items-center space-x-2 shrink-0">
+                    <span class="font-extrabold text-indigo-600">{{ progressState.overallPercent }}%</span>
+                    <button 
+                      @click="cancelExecution"
+                      class="text-[10px] text-red-500 hover:text-red-700 font-semibold px-1.5 py-0.5 rounded border border-red-200 bg-red-50 transition cursor-pointer"
+                    >
+                      {{ t('btn_cancel') || 'Cancel' }}
+                    </button>
+                  </div>
+                </div>
+                <div class="w-full h-1.5 bg-slate-200/80 rounded-full overflow-hidden">
+                  <div 
+                    class="h-full bg-gradient-to-r from-indigo-500 to-blue-500 transition-all duration-300 rounded-full"
+                    :style="{ width: progressState.overallPercent + '%' }"
+                  ></div>
+                </div>
+              </div>
+            </template>
           </div>
 
           <!-- 3. Bottom Box: Deliverables & Output Area (flex-1: Fills lower half with only 8px gap to run button) -->
@@ -485,8 +595,34 @@
               </div>
 
               <div class="flex items-center space-x-1.5">
+                <!-- If multi-file: primary ZIP download button -->
                 <button 
+                  v-if="outputResults.length > 1"
+                  @click="downloadAllZip"
+                  :disabled="isZipping"
+                  data-testid="pipeline-download-zip-btn"
+                  class="flex items-center space-x-1 px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg transition cursor-pointer shadow-xs disabled:opacity-75"
+                >
+                  <Loader2 v-if="isZipping" class="w-3 h-3 animate-spin" />
+                  <Archive v-else class="w-3 h-3" />
+                  <span>{{ t('pipeline_btn_download_zip') }}</span>
+                </button>
+
+                <!-- If multi-file: separate sequential download button -->
+                <button 
+                  v-if="outputResults.length > 1"
                   @click="downloadAllSequential"
+                  data-testid="pipeline-download-separate-btn"
+                  class="flex items-center space-x-1 px-2 py-0.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold rounded-lg transition cursor-pointer"
+                >
+                  <Files class="w-3 h-3 text-slate-500" />
+                  <span>{{ t('pipeline_btn_download_separate') }}</span>
+                </button>
+
+                <!-- If single file: standard download button -->
+                <button 
+                  v-if="outputResults.length === 1"
+                  @click="downloadSingle(outputResults[0])"
                   data-testid="pipeline-download-all-btn"
                   class="flex items-center space-x-1 px-2.5 py-0.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-lg transition cursor-pointer shadow-xs"
                 >
@@ -504,8 +640,19 @@
               </div>
             </div>
 
+            <!-- Value Recap Strip (ROI / Savings Banner) -->
+            <div v-if="compressionSavings" class="mt-1 px-2.5 py-1 bg-emerald-50/70 border border-emerald-100 rounded-lg text-emerald-800 text-[11px] flex items-center justify-between shrink-0">
+              <div class="flex items-center space-x-1.5 min-w-0">
+                <Sparkles class="w-3 h-3 text-emerald-600 shrink-0" />
+                <span class="truncate">{{ t('pipeline_summary_savings_recap') }}: <b>{{ formatSize(totalInputSize) }}</b> ➔ <b>{{ formatSize(totalOutputSize) }}</b></span>
+              </div>
+              <span class="text-[10px] font-extrabold text-emerald-700 bg-white px-1.5 py-0.2 rounded border border-emerald-200 shrink-0">
+                -{{ compressionSavings }}%
+              </span>
+            </div>
+
             <!-- Processed Files List -->
-            <div class="flex-1 overflow-y-auto space-y-1 mt-1 pr-1 custom-scrollbar">
+            <div class="flex-1 overflow-y-auto space-y-1 mt-1.5 pr-1 custom-scrollbar">
               <div 
                 v-for="(item, oIdx) in outputResults" 
                 :key="oIdx"
@@ -515,23 +662,54 @@
                   <div class="w-5 h-5 rounded bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                     <FileCheck class="w-3 h-3" />
                   </div>
-                  <span class="font-bold text-slate-800 text-xs truncate max-w-[220px]">{{ item.name }}</span>
+                  <span class="font-bold text-slate-800 text-xs truncate max-w-[200px]" :title="item.name">{{ item.name }}</span>
                   <span class="text-[10px] text-slate-400 font-mono">{{ formatSize(item.data.byteLength) }}</span>
                 </div>
 
-                <button 
-                  @click="downloadSingle(item)"
-                  class="flex items-center space-x-1 text-[11px] text-emerald-700 hover:text-emerald-900 font-semibold px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 rounded-md transition cursor-pointer shrink-0"
-                >
-                  <Download class="w-3 h-3" />
-                  <span>{{ t('pipeline_btn_download_single') }}</span>
-                </button>
+                <div class="flex items-center space-x-1 shrink-0">
+                  <button 
+                    type="button"
+                    @click="previewSingle(item)"
+                    class="flex items-center space-x-1 text-[11px] text-slate-600 hover:text-indigo-600 font-semibold px-2 py-0.5 bg-white hover:bg-indigo-50 border border-slate-200/80 rounded-md transition cursor-pointer shrink-0"
+                    :title="t('btn_preview')"
+                  >
+                    <Eye class="w-3 h-3 text-slate-500 group-hover:text-indigo-600" />
+                    <span>{{ t('btn_preview') }}</span>
+                  </button>
+
+                  <button 
+                    @click="downloadSingle(item)"
+                    class="flex items-center space-x-1 text-[11px] text-emerald-700 hover:text-emerald-900 font-semibold px-2 py-0.5 bg-emerald-50 hover:bg-emerald-100 rounded-md transition cursor-pointer shrink-0"
+                  >
+                    <Download class="w-3 h-3" />
+                    <span>{{ t('pipeline_btn_download_single') }}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
-          <!-- State B: Empty Deliverables State -->
-          <div v-else-if="!isRunning" class="flex-1 min-h-[160px] bg-slate-50/40 rounded-2xl border border-dashed border-slate-200/80 p-3 text-center flex flex-col items-center justify-center space-y-1">
+          <!-- State B: Executing in Progress -->
+          <div v-else-if="isRunning" class="flex-1 min-h-[160px] bg-indigo-50/20 rounded-2xl border border-dashed border-indigo-200/90 p-4 text-center flex flex-col items-center justify-center space-y-2 animate-in fade-in duration-300">
+            <div class="w-9 h-9 rounded-2xl bg-indigo-100/80 text-indigo-600 flex items-center justify-center shadow-2xs">
+              <Loader2 class="w-5 h-5 animate-spin" />
+            </div>
+            <div>
+              <div class="text-xs font-bold text-slate-800 flex items-center justify-center space-x-1.5">
+                <span>{{ progressState.stepName || t('pipeline_deliverables_running_title') }}</span>
+                <span class="text-indigo-600 font-black">({{ progressState.overallPercent }}%)</span>
+              </div>
+              <p class="text-[11px] text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed truncate">
+                {{ progressState.stepMessage || t('pipeline_deliverables_running_desc') }}
+              </p>
+            </div>
+            <div class="text-[10px] text-slate-400 bg-white/70 px-2.5 py-1 rounded-full border border-indigo-100/70">
+              {{ t('pipeline_deliverables_running_hint') }}
+            </div>
+          </div>
+
+          <!-- State C: Empty Deliverables State -->
+          <div v-else class="flex-1 min-h-[160px] bg-slate-50/40 rounded-2xl border border-dashed border-slate-200/80 p-3 text-center flex flex-col items-center justify-center space-y-1">
             <div class="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-500 mx-auto flex items-center justify-center mb-0.5">
               <Sparkles class="w-3.5 h-3.5" />
             </div>
@@ -590,60 +768,69 @@
                 class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs text-slate-800 font-medium focus:ring-2 focus:ring-indigo-500 outline-none shadow-sm"
               />
             </div>
-            
-            <div class="grid grid-cols-2 gap-5">
-              <div>
-                <div class="flex justify-between text-slate-700 font-bold mb-1.5">
-                  <span>{{ t('wm_size_label') || 'Font Size' }}</span>
-                  <span class="text-indigo-600 font-mono">{{ editingStepDraft.size || 48 }}px</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="16" 
-                  max="96" 
-                  v-model.number="editingStepDraft.size" 
-                  class="w-full accent-indigo-600 cursor-pointer"
-                />
-              </div>
 
-              <div>
-                <div class="flex justify-between text-slate-700 font-bold mb-1.5">
-                  <span>{{ t('param_watermark_opacity') }}</span>
-                  <span class="text-indigo-600 font-mono">{{ Math.round((editingStepDraft.opacity || 0.3) * 100) }}%</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="0.05" 
-                  max="0.9" 
-                  step="0.05" 
-                  v-model.number="editingStepDraft.opacity" 
-                  class="w-full accent-indigo-600 cursor-pointer"
-                />
+            <div>
+              <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                <span>{{ t('wm_size_label') || 'Font Size' }}</span>
+                <span class="text-indigo-600 font-mono font-bold">{{ editingStepDraft.size || 48 }}px</span>
               </div>
+              <input 
+                type="range" 
+                min="16" 
+                max="96" 
+                v-model.number="editingStepDraft.size" 
+                class="w-full accent-indigo-600 cursor-pointer"
+              />
+            </div>
 
-              <div>
-                <div class="flex justify-between text-slate-700 font-bold mb-1.5">
-                  <span>{{ t('param_watermark_rotation') || 'Rotation' }}</span>
-                  <span class="text-indigo-600 font-mono">{{ editingStepDraft.rotation || -45 }}°</span>
-                </div>
-                <input 
-                  type="range" 
-                  min="-90" 
-                  max="90" 
-                  step="22.5" 
-                  v-model.number="editingStepDraft.rotation" 
-                  class="w-full accent-indigo-600 cursor-pointer"
-                />
+            <div>
+              <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                <span>{{ t('param_watermark_opacity') }}</span>
+                <span class="text-indigo-600 font-mono font-bold">{{ Math.round((editingStepDraft.opacity || 0.18) * 100) }}%</span>
               </div>
+              <input 
+                type="range" 
+                min="0.05" 
+                max="0.9" 
+                step="0.01" 
+                v-model.number="editingStepDraft.opacity" 
+                class="w-full accent-indigo-600 cursor-pointer"
+              />
+            </div>
 
-              <div>
-                <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_watermark_color') }}</label>
-                <div class="flex items-center space-x-2">
-                  <div class="relative w-8 h-8 rounded-lg border border-slate-200 overflow-hidden cursor-pointer shrink-0 shadow-sm">
-                    <input type="color" v-model="editingStepDraft.color" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
-                    <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.color || '#dc2626' }"></div>
-                  </div>
-                  <span class="font-mono text-[11px] text-slate-700 font-bold uppercase">{{ editingStepDraft.color || '#dc2626' }}</span>
+            <div>
+              <div class="flex justify-between text-slate-700 font-bold mb-1.5">
+                <span>{{ t('param_watermark_rotation') || 'Rotation' }}</span>
+                <span class="text-indigo-600 font-mono font-bold">{{ editingStepDraft.rotation || 45 }}°</span>
+              </div>
+              <input 
+                type="range" 
+                min="-90" 
+                max="90" 
+                step="5" 
+                v-model.number="editingStepDraft.rotation" 
+                class="w-full accent-indigo-600 cursor-pointer"
+              />
+            </div>
+
+            <div>
+              <label class="block text-slate-700 font-bold mb-1.5">{{ t('param_watermark_color') }}</label>
+              <div class="flex items-center space-x-2.5">
+                <div class="relative w-8 h-8 rounded-lg border border-slate-200 overflow-hidden cursor-pointer shrink-0 shadow-sm">
+                  <input type="color" v-model="editingStepDraft.color" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer" />
+                  <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.color || '#ef4444' }"></div>
+                </div>
+                <span class="font-mono text-xs text-slate-700 font-bold uppercase mr-2">{{ editingStepDraft.color || '#ef4444' }}</span>
+                <div class="flex items-center space-x-1.5">
+                  <button 
+                    type="button"
+                    v-for="c in ['#ef4444', '#2563eb', '#475569', '#10b981', '#000000']"
+                    :key="c"
+                    @click="editingStepDraft.color = c"
+                    class="w-6 h-6 rounded-md border border-slate-200/80 cursor-pointer transition hover:scale-110 shadow-2xs"
+                    :style="{ backgroundColor: c }"
+                    :title="c"
+                  />
                 </div>
               </div>
             </div>
@@ -2197,6 +2384,14 @@
       @close="isVaultPickerOpen = false" 
       @select-files="handleVaultFilesSelected" 
     />
+
+    <!-- PDF Quick Preview Modal -->
+    <VaultPreviewModal 
+      :is-open="isPreviewOpen" 
+      :file="previewTargetFile" 
+      @close="isPreviewOpen = false" 
+      @download="downloadSingle" 
+    />
   </section>
 </template>
 
@@ -2251,24 +2446,33 @@ import {
   PenLine,
   Star,
   Calendar,
-  Pipette
+  Pipette,
+  Archive,
+  Files
 } from 'lucide-vue-next';
 import { PRESET_PIPELINES } from '../utils/pipeline/presetPipelines';
 import { AVAILABLE_NODES } from '../utils/pipeline/pipelineTypes';
 import { runPipeline } from '../utils/pipeline/pipelineRunner';
+import { validateStepParameters } from '../utils/pipeline/pipelinePolicy';
 import { loadUserPipelines, saveUserPipeline, deleteUserPipeline } from '../utils/pipeline/userPipelines';
 import { loadSavedStamps } from '../utils/imageProcess';
 import confetti from 'canvas-confetti';
 import { saveFile } from '../utils/vaultDb';
+import { createAndDownloadZip } from '../utils/zipUtils';
 import { siteConfig } from '../config/siteConfig';
 import { isProSupporter } from '../utils/security/certificateStore';
 import { t } from '../i18n';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import VaultPreviewModal from '../components/VaultPreviewModal.vue';
 
 const emit = defineEmits(['open-enterprise', 'send-to-tool']);
 
 const fileInput = ref(null);
 const isVaultPickerOpen = ref(false);
+const isPreviewOpen = ref(false);
+const previewTargetFile = ref(null);
+const isZipping = ref(false);
+const zipProgress = ref(0);
 const addStepModal = ref(false);
 const isSaveFlowModalOpen = ref(false);
 const saveFlowMode = ref('new'); // 'new' | 'update'
@@ -2393,6 +2597,7 @@ const currentPipeline = computed(() => {
   if (currentPresetRecord.value) {
     return {
       ...currentPresetRecord.value,
+      name: t(currentPresetRecord.value.nameKey, currentPresetRecord.value.defaultName),
       steps: activeWorkflowSteps.value
     };
   }
@@ -2434,7 +2639,7 @@ function calcPasswordStrength(pwd) {
     return {
       level: 1,
       score: 1,
-      label: t('protect_pwd_strength_weak') || '弱',
+      label: t('protect_pwd_strength_weak') || 'Weak',
       color: 'text-rose-600',
       widthClass: 'w-1/3 bg-rose-500'
     };
@@ -2442,7 +2647,7 @@ function calcPasswordStrength(pwd) {
     return {
       level: 2,
       score: 2,
-      label: t('protect_pwd_strength_medium') || '中',
+      label: t('protect_pwd_strength_medium') || 'Medium',
       color: 'text-amber-600',
       widthClass: 'w-2/3 bg-amber-500'
     };
@@ -2450,7 +2655,7 @@ function calcPasswordStrength(pwd) {
     return {
       level: 3,
       score: 3,
-      label: t('protect_pwd_strength_strong') || '极佳',
+      label: t('protect_pwd_strength_strong') || 'Strong',
       color: 'text-emerald-600',
       widthClass: 'w-full bg-emerald-500'
     };
@@ -2653,7 +2858,7 @@ function getStepSummary(step) {
       }
       const parts = [];
       if (step.params.stripDocInfo) parts.push(t('pipe_san_info', 'Clear doc info'));
-      if (step.params.stripAnnots) parts.push('Remove annots');
+      if (step.params.stripAnnots) parts.push(t('pipe_san_annots', 'Remove annots'));
       return parts.length > 0 ? parts.join(' + ') : t('pipe_san_basic', 'Sanitize');
     }
     case 'node_img2pdf': {
@@ -2667,21 +2872,21 @@ function getStepSummary(step) {
       return `${fmt} · ${dpi} DPI`;
     }
     case 'node_sign': {
-      let txt = step.params.stampDataUrl ? t('pipe_pwd_set', 'Set') : '⚠️ ' + t('pipe_pwd_unset', 'Not Set');
-      if (step.params.placement === 'last_page_bottom_right') txt += ' · ' + (t('param_sign_place_last') || 'Last Page');
-      else if (step.params.placement === 'except_last') txt += ' · ' + (t('param_sign_place_except_last') || 'Initials');
-      else if (step.params.placement === 'first_page') txt += ' · ' + (t('param_sign_place_first') || 'First Page');
-      else if (step.params.placement === 'all_pages') txt += ' · ' + (t('param_sign_place_all') || 'All Pages');
+      let txt = step.params?.stampDataUrl ? t('pipe_sign_set', 'Signature Configured') : '⚠️ ' + t('pipe_sign_unset', 'Signature Required');
+      if (step.params?.placement === 'last_page_bottom_right') txt += ' · ' + (t('param_sign_place_last') || 'Last Page');
+      else if (step.params?.placement === 'except_last') txt += ' · ' + (t('param_sign_place_except_last') || 'Initials');
+      else if (step.params?.placement === 'first_page') txt += ' · ' + (t('param_sign_place_first') || 'First Page');
+      else if (step.params?.placement === 'all_pages') txt += ' · ' + (t('param_sign_place_all') || 'All Pages');
       return txt;
     }
     case 'node_unlock': {
-      return step.params.password ? t('pipe_pwd_set', 'Password Set') : t('pipe_pwd_unset', 'No Password');
+      return step.params?.password ? t('pipe_pwd_set', 'Password Set') : t('pipe_pwd_unset', 'No Password');
     }
     case 'node_split': {
-      if (step.params.mode === 'burst') return t('param_split_burst').split('(')[0].trim();
-      if (step.params.rangeType === 'first') return t('param_split_range_first');
-      if (step.params.rangeType === 'last') return t('param_split_range_last');
-      return step.params.rangeExpr || '1-3';
+      if (step.params?.mode === 'burst') return t('param_split_burst').split('(')[0].trim();
+      if (step.params?.rangeType === 'first') return t('param_split_range_first');
+      if (step.params?.rangeType === 'last') return t('param_split_range_last');
+      return step.params?.rangeExpr || '1-3';
     }
     case 'node_merge': {
       const sortMap = {
@@ -2689,19 +2894,19 @@ function getStepSummary(step) {
         name_asc: t('pipe_merge_sort_name'),
         date: t('pipe_merge_sort_date')
       };
-      const sortBy = sortMap[step.params.sortBy] || t('pipe_merge_sort_order');
-      const pad = step.params.padBlankPageIfOdd ? t('pipe_merge_pad_odd') : '';
+      const sortBy = sortMap[step.params?.sortBy] || t('pipe_merge_sort_order');
+      const pad = step.params?.padBlankPageIfOdd ? t('pipe_merge_pad_odd') : '';
       return `${sortBy}${pad}`;
     }
     case 'node_protect': {
-      if (step.params.userPassword) {
+      if (step.params?.userPassword) {
         return `🛡️ ${t('protect_preset_confidential')} (${step.params.algorithm || 'AES-256'})`;
-      } else if (step.params.allowAnnotating) {
+      } else if (step.params?.allowAnnotating) {
         return `✍️ ${t('protect_preset_forms')} (${t('protect_badge_sign_only')})`;
-      } else if (step.params.ownerPassword) {
+      } else if (step.params?.ownerPassword) {
         return `📄 ${t('protect_preset_readonly')} (${t('protect_badge_readonly')})`;
       }
-      return `🔒 ${t('tab_protect')}`;
+      return `⚠️ ${t('pipe_pwd_unset', 'No Password')}`;
     }
     default:
       return formatStepParams(step);
@@ -2712,10 +2917,16 @@ function getStepTagClass(nodeId, step) {
   switch (nodeId) {
     case 'node_sign':
       return !step?.params?.stampDataUrl 
-        ? 'bg-amber-50 text-amber-700 border-amber-300' 
+        ? 'bg-amber-50 text-amber-700 border-amber-300 font-semibold' 
         : 'bg-indigo-50 text-indigo-700 border-indigo-200/80';
+    case 'node_protect':
+      return (!step?.params?.userPassword && !step?.params?.ownerPassword)
+        ? 'bg-amber-50 text-amber-700 border-amber-300 font-semibold'
+        : 'bg-rose-50 text-rose-700 border-rose-200/80';
     case 'node_watermark':
-      return 'bg-amber-50 text-amber-700 border-amber-200/80';
+      return !step?.params?.text?.trim()
+        ? 'bg-amber-50 text-amber-700 border-amber-300 font-semibold'
+        : 'bg-amber-50 text-amber-700 border-amber-200/80';
     case 'node_page_number':
       return 'bg-violet-50 text-violet-700 border-violet-200/80';
     case 'node_compress':
@@ -2972,6 +3183,18 @@ const totalInputSize = computed(() => {
   return inputFiles.value.reduce((acc, f) => acc + (f.size || 0), 0);
 });
 
+const totalOutputSize = computed(() => {
+  return outputResults.value.reduce((acc, item) => acc + (item.data?.byteLength || 0), 0);
+});
+
+const compressionSavings = computed(() => {
+  if (totalInputSize.value <= 0 || totalOutputSize.value <= 0) return null;
+  const diff = totalInputSize.value - totalOutputSize.value;
+  if (diff <= 0) return null;
+  const pct = Math.round((diff / totalInputSize.value) * 100);
+  return pct > 0 ? pct : null;
+});
+
 function isImageFile(file) {
   return Boolean(file.type?.startsWith('image/') || /\.(png|jpe?g|webp)$/i.test(file.name));
 }
@@ -3007,11 +3230,17 @@ function formatSize(bytes) {
 async function startExecution() {
   if (inputFiles.value.length === 0 || activeWorkflowSteps.value.length === 0) return;
 
-  // Check if any node_sign step is missing a stamp image
-  const missingStampStep = activeWorkflowSteps.value.find(s => s.nodeId === 'node_sign' && !s.params?.stampDataUrl);
-  if (missingStampStep) {
-    const proceed = confirm(t('pipeline_warn_missing_stamp'));
-    if (!proceed) return;
+  // Validate step required parameters before running (e.g. node_sign needs signature, node_protect needs password, etc.)
+  const stepValidation = validateStepParameters(activeWorkflowSteps.value);
+  if (!stepValidation.valid) {
+    const errorMsg = stepValidation.reasonKey 
+      ? t(stepValidation.reasonKey, stepValidation.reason, { step: (stepValidation.stepIndex || 0) + 1 })
+      : stepValidation.reason;
+    alert(errorMsg);
+    if (typeof stepValidation.stepIndex === 'number' && stepValidation.stepIndex >= 0) {
+      openStepConfigModal(stepValidation.stepIndex);
+    }
+    return;
   }
 
   outputResults.value = [];
@@ -3028,11 +3257,16 @@ async function startExecution() {
     const result = await runPipeline(
       currentPipeline.value,
       inputFiles.value,
-      isProSupporter.value ? 'pro' : 'free',
-      (p) => {
-        progressState.value = p;
-      },
-      abortController.signal
+      {
+        userTier: isProSupporter.value ? 'pro' : 'free',
+        onProgress: (p) => {
+          progressState.value = p;
+        },
+        abortSignal: abortController.signal,
+        resolveNodeName: (id) => getNodeName(id),
+        completedStepName: t('pipeline_completed_step', 'Completed'),
+        formatCompletedMessage: (count) => t('pipeline_completed_msg', { count }, `Pipeline execution completed, produced ${count} deliverable file(s).`)
+      }
     );
 
     if (result.success) {
@@ -3048,7 +3282,10 @@ async function startExecution() {
       } else if (result.code === 'BATCH_LIMIT_EXCEEDED') {
         emit('open-enterprise');
       } else {
-        alert(result.reason || t('pipe_err', 'Pipeline execution failed.'));
+        const errorMsg = result.reasonKey
+          ? t(result.reasonKey, result.reason, result.params || {})
+          : result.reason;
+        alert(errorMsg || t('pipe_err', 'Pipeline execution failed.'));
       }
     }
   } catch (err) {
@@ -3066,13 +3303,99 @@ function cancelExecution() {
 }
 
 function downloadSingle(item) {
-  const blob = new Blob([item.data], { type: item.mimeType });
+  if (!item) return;
+  let blob = item.blob;
+  if (!blob && item.data) {
+    const mime = item.mimeType || (/\.pdf$/i.test(item.name) ? 'application/pdf' : 'application/octet-stream');
+    blob = new Blob([item.data], { type: mime });
+  }
+  if (!blob) return;
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = item.name;
   a.click();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 10000);
+}
+
+function previewSingle(item) {
+  if (!item) return;
+  const mime = item.mimeType || (/\.pdf$/i.test(item.name) ? 'application/pdf' : 'application/octet-stream');
+  let blob = item.blob;
+  if (!blob && item.data) {
+    blob = new Blob([item.data], { type: mime });
+  }
+  if (!blob) return;
+  previewTargetFile.value = {
+    name: item.name,
+    size: item.data?.byteLength || blob.size,
+    blob,
+    data: item.data,
+    mimeType: mime,
+    isEncrypted: false
+  };
+  isPreviewOpen.value = true;
+}
+
+function resetBatchAndResults() {
+  inputFiles.value = [];
+  outputResults.value = [];
+}
+
+const zipProgressText = computed(() => {
+  return t('pipeline_status_zipping', { percent: zipProgress.value });
+});
+
+async function downloadAllZip() {
+  if (outputResults.value.length === 0 || isZipping.value) return;
+  if (outputResults.value.length === 1) {
+    downloadSingle(outputResults.value[0]);
+    return;
+  }
+
+  isZipping.value = true;
+  zipProgress.value = 0;
+
+  try {
+    const rawFlowName = (currentPipeline.value?.name || currentPipeline.value?.defaultName || 'Pipeline').trim();
+    const cleanFlowName = rawFlowName.replace(/[\\/:*?"<>|]/g, '_') || 'Pipeline';
+    const now = new Date();
+    const pad = (n) => String(n).padStart(2, '0');
+    const dateStamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}`;
+    const zipName = `${cleanFlowName}_Batch_${dateStamp}.zip`;
+
+    const nameCountMap = new Map();
+    const zipFiles = outputResults.value.map((item, idx) => {
+      let baseName = item.name || `file_${idx + 1}.pdf`;
+      if (nameCountMap.has(baseName)) {
+        const count = nameCountMap.get(baseName) + 1;
+        nameCountMap.set(baseName, count);
+        const dotIdx = baseName.lastIndexOf('.');
+        if (dotIdx > 0) {
+          baseName = `${baseName.slice(0, dotIdx)}_${count}${baseName.slice(dotIdx)}`;
+        } else {
+          baseName = `${baseName}_${count}`;
+        }
+      } else {
+        nameCountMap.set(baseName, 1);
+      }
+      return {
+        name: baseName,
+        data: item.data || item.blob
+      };
+    });
+
+    await createAndDownloadZip(zipFiles, zipName, (pct) => {
+      zipProgress.value = pct;
+    });
+  } catch (err) {
+    console.error('ZIP packaging failed:', err);
+    alert(t('pipeline_zip_fallback_err', 'ZIP packaging failed, falling back to individual downloads: ') + err.message);
+    downloadAllSequential();
+  } finally {
+    isZipping.value = false;
+    zipProgress.value = 0;
+  }
 }
 
 function downloadAllSequential() {

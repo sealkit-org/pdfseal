@@ -87,7 +87,7 @@
           <template #metrics>
             <span class="inline-flex items-center space-x-1 text-xs font-semibold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-lg border border-cyan-200/60 shadow-2xs">
               <ShieldCheck class="w-3.5 h-3.5 text-cyan-600" />
-              <span>{{ t('san_metric_badge') || '已彻底擦除元数据/脚本/批注 · 隐私 100% 净化' }}</span>
+              <span>{{ t('san_metric_badge', 'Metadata, scripts, and privacy annotations removed') }}</span>
             </span>
           </template>
         </ResultDeliveryView>
@@ -591,7 +591,7 @@ async function generateSanitizedBytes() {
   if (!docBytes.value) return null;
 
   progressPercent.value = 15;
-  progressMessage.value = t('san_progress_metadata') || '正在擦除文档元数据与 XMP 资产...';
+  progressMessage.value = t('san_progress_metadata', 'Purging sensitive document metadata...');
   await new Promise(resolve => setTimeout(resolve, 0));
 
   const pdfDoc = await PDFDocument.load(docBytes.value, {
@@ -632,7 +632,7 @@ async function generateSanitizedBytes() {
   }
 
   progressPercent.value = 45;
-  progressMessage.value = t('san_progress_scripts') || '正在安全剥离嵌入脚本与危险动作...';
+  progressMessage.value = t('san_progress_scripts', 'Removing embedded scripts and interactive actions...');
   await new Promise(resolve => setTimeout(resolve, 0));
 
   // Clear Javascript / Actions / OpenAction
@@ -657,7 +657,7 @@ async function generateSanitizedBytes() {
   }
 
   progressPercent.value = 70;
-  progressMessage.value = t('san_progress_annots') || '正在平整化表单并清除残留批注...';
+  progressMessage.value = t('san_progress_annots', 'Flattening forms and cleaning annotations...');
   await new Promise(resolve => setTimeout(resolve, 0));
 
   // Clear Annots & Flatten Forms
@@ -681,7 +681,7 @@ async function generateSanitizedBytes() {
   }
 
   progressPercent.value = 88;
-  progressMessage.value = t('san_progress_saving') || '正在深度优化并封装纯净文档...';
+  progressMessage.value = t('san_progress_saving', 'Rebuilding safe, sanitized PDF document...');
   await new Promise(resolve => setTimeout(resolve, 0));
 
   const outBytes = await pdfDoc.save();
@@ -698,7 +698,7 @@ async function executeSanitize() {
   if (!docBytes.value) return;
   isProcessing.value = true;
   progressPercent.value = 10;
-  progressMessage.value = t('san_progress_metadata') || '正在深度清洗敏感数据...';
+  progressMessage.value = t('san_progress_metadata', 'Purging sensitive document metadata...');
 
   try {
     const result = await generateSanitizedBytes();

@@ -478,7 +478,7 @@
 
                 <!-- Delivery Format Selector (Visible for multi-file operations) -->
                 <div v-if="isDeliveryToggleVisible" class="flex items-center space-x-1.5 pl-1 sm:border-l sm:border-slate-200">
-                  <span class="text-xs text-slate-500 font-semibold shrink-0">{{ t('split_delivery_format_label') || '交付形式：' }}</span>
+                  <span class="text-xs text-slate-500 font-semibold shrink-0">{{ t('split_delivery_format_label', 'Format:') }}</span>
                   <div class="flex items-center space-x-1 bg-slate-100/90 p-0.5 rounded-xl border border-slate-200/70 text-xs">
                     <button 
                       type="button" 
@@ -491,7 +491,7 @@
                       ]"
                     >
                       <Package class="w-3.5 h-3.5 text-emerald-600" />
-                      <span>{{ t('split_delivery_zip_pill') || '📦 ZIP 打包' }}</span>
+                      <span>{{ t('split_delivery_zip_pill', '📦 ZIP Archive') }}</span>
                     </button>
                     <button 
                       type="button" 
@@ -504,7 +504,7 @@
                       ]"
                     >
                       <Files class="w-3.5 h-3.5 text-slate-600" />
-                      <span>{{ t('split_delivery_separate_pill') || '📄 独立 PDF' }}</span>
+                      <span>{{ t('split_delivery_separate_pill', '📄 Separate PDFs') }}</span>
                     </button>
                   </div>
                 </div>
@@ -688,17 +688,17 @@ const computedIntervalPlan = computed(() => {
 const primaryButtonText = computed(() => {
   if (activeMode.value === 'extract') {
     if (extractFormat.value === 'merge') {
-      return `${t('extract_selected') || '🦭 Extract Selected'} (${selectedIndices.value.size})`;
+      return `${t('extract_selected', '🦭 Extract Selected')} (${selectedIndices.value.size})`;
     }
     const prefix = deliveryFormat.value === 'zip' 
-      ? (t('split_btn_execute_zip') || '🦭 打包下载 ZIP') 
-      : (t('split_btn_execute_separate') || '🦭 逐个下载 PDF');
-    return `${prefix} (${selectedIndices.value.size} ${t('pages_label') || 'pages'})`;
+      ? t('split_btn_execute_zip', '🦭 Download ZIP') 
+      : t('split_btn_execute_separate', '🦭 Download Separate PDFs');
+    return `${prefix} (${selectedIndices.value.size} ${t('pages_label', 'pages')})`;
   }
 
   const prefix = deliveryFormat.value === 'zip' 
-    ? (t('split_btn_execute_zip') || '🦭 打包下载 ZIP') 
-    : (t('split_btn_execute_separate') || '🦭 逐个下载 PDF');
+    ? t('split_btn_execute_zip', '🦭 Download ZIP') 
+    : t('split_btn_execute_separate', '🦭 Download Separate PDFs');
 
   if (activeMode.value === 'burst') {
     return `${prefix} (${totalPages.value} ${t('pages_label') || 'pages'})`;
@@ -1017,7 +1017,7 @@ async function buildSplitOutputFiles(onProgress = () => {}) {
   if (!docBytes.value) return [];
   const preserveWatermarks = userSettings.preserveWatermarks !== false;
 
-  onProgress(5, 100, t('split_progress_preparing') || '正在准备文档资源...');
+  onProgress(5, 100, t('split_progress_preparing', 'Analyzing document structure & split plan...'));
   await new Promise(r => setTimeout(r, 40));
 
   const cleanDoc = await loadCleanPdfDocument(docBytes.value, {
@@ -1034,7 +1034,7 @@ async function buildSplitOutputFiles(onProgress = () => {}) {
 
     if (extractFormat.value === 'merge') {
       // Single combined document
-      onProgress(35, 100, t('split_progress_slicing', { current: 1, total: 1 }) || '正在切分文档...');
+      onProgress(35, 100, t('split_progress_slicing', { current: 1, total: 1 }, 'Generating slice 1/1...'));
       await new Promise(r => setTimeout(r, 30));
 
       const newPdf = await PDFDocument.create();
@@ -1046,7 +1046,7 @@ async function buildSplitOutputFiles(onProgress = () => {}) {
         data: bytes,
         pageCount: sortedIndices.length
       });
-      onProgress(85, 100, t('split_progress_slicing', { current: 1, total: 1 }) || '文档切分完成');
+      onProgress(85, 100, t('split_progress_done', 'Split Complete!'));
       await new Promise(r => setTimeout(r, 30));
     } else {
       // Separate files per selected page
@@ -1054,7 +1054,7 @@ async function buildSplitOutputFiles(onProgress = () => {}) {
       for (let i = 0; i < total; i++) {
         const pIdx = sortedIndices[i];
         const pct = Math.round(15 + ((i + 1) / total) * 65);
-        onProgress(pct, 100, t('split_progress_slicing', { current: i + 1, total }) || `正在切分第 ${i + 1}/${total} 个文件...`);
+        onProgress(pct, 100, t('split_progress_slicing', { current: i + 1, total }, `Generating slice ${i + 1}/${total}...`));
         await new Promise(r => setTimeout(r, 40));
 
         const singleDoc = await PDFDocument.create();
@@ -1073,7 +1073,7 @@ async function buildSplitOutputFiles(onProgress = () => {}) {
     const total = totalPages.value;
     for (let p = 0; p < total; p++) {
       const pct = Math.round(15 + ((p + 1) / total) * 65);
-      onProgress(pct, 100, t('split_progress_slicing', { current: p + 1, total }) || `正在切分第 ${p + 1}/${total} 个文件...`);
+      onProgress(pct, 100, t('split_progress_slicing', { current: p + 1, total }, `Generating slice ${p + 1}/${total}...`));
       await new Promise(r => setTimeout(r, 40));
 
       const singleDoc = await PDFDocument.create();
@@ -1094,7 +1094,7 @@ async function buildSplitOutputFiles(onProgress = () => {}) {
     for (let idx = 0; idx < total; idx++) {
       const item = plan[idx];
       const pct = Math.round(15 + ((idx + 1) / total) * 65);
-      onProgress(pct, 100, t('split_progress_slicing', { current: idx + 1, total }) || `正在切分第 ${idx + 1}/${total} 个分卷...`);
+      onProgress(pct, 100, t('split_progress_slicing', { current: idx + 1, total }, `Generating slice ${idx + 1}/${total}...`));
       await new Promise(r => setTimeout(r, 40));
 
       const chunk = [];
@@ -1125,7 +1125,7 @@ async function buildSplitOutputFiles(onProgress = () => {}) {
       if (indices.length === 0) continue;
 
       const pct = Math.round(15 + ((r + 1) / total) * 65);
-      onProgress(pct, 100, t('split_progress_slicing', { current: r + 1, total }) || `正在切分第 ${r + 1}/${total} 个指定范围...`);
+      onProgress(pct, 100, t('split_progress_slicing', { current: r + 1, total }, `Generating slice ${r + 1}/${total}...`));
       await new Promise(r => setTimeout(r, 40));
 
       const rangeDoc = await PDFDocument.create();
@@ -1152,7 +1152,7 @@ async function handlePrimarySplitClick() {
   if (!docBytes.value || isExecutionDisabled.value) return;
   isProcessing.value = true;
   progressPercent.value = 5;
-  progressMessage.value = t('split_progress_preparing') || '正在准备文档资源...';
+  progressMessage.value = t('split_progress_preparing', 'Analyzing document structure & split plan...');
 
   try {
     const files = await buildSplitOutputFiles((pct, total, msg) => {
@@ -1172,7 +1172,7 @@ async function handlePrimarySplitClick() {
       // Direct single-file download
       const singleFile = files[0];
       progressPercent.value = 90;
-      progressMessage.value = t('split_progress_done') || '拆分完成，正在准备下载...';
+      progressMessage.value = t('split_progress_done', 'Split Complete!');
       await new Promise(r => setTimeout(r, 50));
 
       triggerDownload(new Blob([singleFile.data], { type: 'application/pdf' }), singleFile.name);
@@ -1199,7 +1199,7 @@ async function handlePrimarySplitClick() {
       }
 
       progressPercent.value = 100;
-      progressMessage.value = t('split_progress_done') || '拆分完成！';
+      progressMessage.value = t('split_progress_done', 'Split Complete!');
       await new Promise(r => setTimeout(r, 150));
       return;
     }
@@ -1226,7 +1226,7 @@ async function executeDelivery(type) {
 
   try {
     if (type === 'zip') {
-      progressMessage.value = t('split_progress_packaging_zip') || '正在打包为 ZIP 压缩包...';
+      progressMessage.value = t('split_progress_packaging_zip', 'Packaging into ZIP archive...');
       const zipName = `${baseCleanName}_Split_Bundle.zip`;
       
       const { zipBlob, zipFileName } = await createAndDownloadZip(
@@ -1234,7 +1234,7 @@ async function executeDelivery(type) {
         zipName, 
         (pct) => {
           progressPercent.value = Math.min(98, Math.round(85 + (pct * 0.13)));
-          progressMessage.value = `${t('split_progress_packaging_zip') || '正在打包为 ZIP 压缩包...'} (${pct}%)`;
+          progressMessage.value = `${t('split_progress_packaging_zip', 'Packaging into ZIP archive...')} (${pct}%)`;
         }
       );
 
@@ -1259,7 +1259,7 @@ async function executeDelivery(type) {
         const f = pendingSplitPlan.value[i];
         const pct = Math.round(85 + ((i + 1) / total) * 12);
         progressPercent.value = pct;
-        progressMessage.value = t('split_delivery_downloading_files', { current: i + 1, total }) || `正在下载 (${i + 1}/${total})...`;
+        progressMessage.value = t('split_delivery_downloading_files', { current: i + 1, total }, `Downloading files (${i + 1}/${total})...`);
         triggerDownload(new Blob([f.data], { type: 'application/pdf' }), f.name);
         if (i < total - 1) {
           await new Promise(r => setTimeout(r, 200));
@@ -1293,7 +1293,7 @@ async function executeDelivery(type) {
     }
 
     progressPercent.value = 100;
-    progressMessage.value = t('split_progress_done') || '拆分完成！';
+    progressMessage.value = t('split_progress_done', 'Split Complete!');
     await new Promise(r => setTimeout(r, 150));
   } catch (err) {
     logger.error('SPLIT_DELIVERY', `Delivery failed: ${err.message}`);

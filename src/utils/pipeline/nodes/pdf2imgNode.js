@@ -68,7 +68,7 @@ export async function executePdf2ImgNode(items, params = {}, onProgress = () => 
 
         onProgress(
           Math.min(99, Math.round(((docIdx + i / pdf.numPages) / totalDocs) * 100)),
-          `正在渲染页面 [${origBase} · ${i}/${pdf.numPages}] (${dpi} DPI ${format.toUpperCase()})`
+          `Rendering page [${origBase} · ${i}/${pdf.numPages}] (${dpi} DPI ${format.toUpperCase()})`
         );
       }
     } catch (err) {
@@ -82,7 +82,7 @@ export async function executePdf2ImgNode(items, params = {}, onProgress = () => 
     }
   }
 
-  onProgress(100, '全部页面转换完成');
+  onProgress(100, 'All pages converted');
   logger.info('PIPELINE_PDF2IMG', `Converted ${result.length} pages to ${format.toUpperCase()} at ${dpi} DPI`);
   return result;
 }

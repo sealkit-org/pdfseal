@@ -102,18 +102,18 @@ export async function signSupporterCertificate(payload, privateKeyJwk) {
 export async function verifySupporterCertificate(certificateString, customPublicKeyJwk = null) {
   try {
     if (!certificateString || typeof certificateString !== 'string') {
-      return { valid: false, error: '证书代码不能为空' };
+      return { valid: false, error: 'Certificate code cannot be empty' };
     }
 
     const trimmed = certificateString.trim();
     if (!trimmed.startsWith(CERT_PREFIX)) {
-      return { valid: false, error: '无效的证书格式 (缺少 SEAL- 前缀)' };
+      return { valid: false, error: 'Invalid certificate format (missing SEAL- prefix)' };
     }
 
     const content = trimmed.substring(CERT_PREFIX.length);
     const parts = content.split('.');
     if (parts.length !== 2) {
-      return { valid: false, error: '证书结构损坏 (缺少数字签名段)' };
+      return { valid: false, error: 'Corrupted certificate structure (missing signature)' };
     }
 
     const [payloadB64, signatureB64] = parts;
@@ -140,7 +140,7 @@ export async function verifySupporterCertificate(certificateString, customPublic
     );
 
     if (!isSignatureValid) {
-      return { valid: false, error: '数字签名验证失败：此证书未经官方私钥签发或已被篡改' };
+      return { valid: false, error: 'Digital signature verification failed: certificate was not signed by official key or was tampered with' };
     }
 
     // 2. Parse and validate JSON payload content
@@ -148,7 +148,7 @@ export async function verifySupporterCertificate(certificateString, customPublic
     const cert = JSON.parse(payloadJson);
 
     if (!cert.tier || !['pro_annual', 'pro_lifetime', 'enterprise'].includes(cert.tier)) {
-      return { valid: false, error: '未知的授权等级: ' + cert.tier };
+      return { valid: false, error: 'Unknown license tier: ' + cert.tier };
     }
 
     // 3. Check expiration (if annual pass)
@@ -157,7 +157,7 @@ export async function verifySupporterCertificate(certificateString, customPublic
         const expiredDateStr = new Date(cert.expiresAt).toLocaleDateString();
         return { 
           valid: false, 
-          error: `此证书已于 ${expiredDateStr} 到期，请续订或升级终身版`,
+          error: `This certificate expired on ${expiredDateStr}. Please renew or upgrade to lifetime edition.`,
           expired: true,
           cert 
         };
@@ -177,6 +177,6 @@ export async function verifySupporterCertificate(certificateString, customPublic
       }
     };
   } catch (err) {
-    return { valid: false, error: '证书解析异常: ' + (err.message || '格式错误') };
+    return { valid: false, error: 'Certificate parsing error: ' + (err.message || 'invalid format') };
   }
 }

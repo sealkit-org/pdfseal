@@ -92,7 +92,7 @@
           <template #metrics>
             <span class="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60 shadow-2xs">
               <Unlock class="w-3.5 h-3.5 text-emerald-600" />
-              <span>{{ t('unlock_metric_badge') || '已彻底解除密码与权限限制' }}</span>
+              <span>{{ t('unlock_metric_badge', 'All passwords and restrictions permanently removed') }}</span>
             </span>
           </template>
         </ResultDeliveryView>
@@ -417,7 +417,7 @@ async function executeUnlock() {
   isProcessing.value = true;
   unlockError.value = '';
   progressPercent.value = 15;
-  progressMessage.value = t('unlock_progress_verifying') || '正在验证文档密码与安全结构...';
+  progressMessage.value = t('unlock_progress_verifying', 'Verifying document password and security structure...');
   // Yield to event loop for smooth UI animation
   await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -431,14 +431,14 @@ async function executeUnlock() {
     }
 
     progressPercent.value = 50;
-    progressMessage.value = t('unlock_progress_stripping') || '正在彻底清除密码保护与权限限制...';
+    progressMessage.value = t('unlock_progress_stripping', 'Permanently removing encryption and permission restrictions...');
     // Yield to event loop
     await new Promise(resolve => setTimeout(resolve, 0));
 
     const cleanDoc = await loadCleanPdfDocument(docBytes.value, pwd);
 
     progressPercent.value = 80;
-    progressMessage.value = t('unlock_progress_saving') || '正在生成无限制的纯净 PDF 文档...';
+    progressMessage.value = t('unlock_progress_saving', 'Generating unrestricted clean PDF document...');
     // Yield to event loop
     await new Promise(resolve => setTimeout(resolve, 0));
 

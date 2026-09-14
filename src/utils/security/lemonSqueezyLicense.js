@@ -39,7 +39,7 @@ export async function activateLemonLicense(licenseKey, customInstanceName = null
   try {
     const trimmedKey = (licenseKey || '').trim();
     if (!trimmedKey) {
-      return { success: false, error: '激活码不能为空' };
+      return { success: false, error: 'License key cannot be empty' };
     }
 
     const instanceName = customInstanceName || getOrCreateInstanceId();
@@ -83,27 +83,27 @@ export async function activateLemonLicense(licenseKey, customInstanceName = null
       if (errorMsg.includes('activation_limit_reached') || errorMsg.includes('limit')) {
         return { 
           success: false, 
-          error: '已达到此激活码的最大设备数上限 (通常为 3 台设备)。请先在旧电脑上解除绑定。' 
+          error: 'Maximum device activation limit reached (typically 3 devices). Please deactivate from your previous device first.' 
         };
       }
       if (errorMsg.includes('not_found') || errorMsg.includes('invalid')) {
         return { 
           success: false, 
-          error: '无效的激活码。请检查您的授权邮件凭证中的 License Key。' 
+          error: 'Invalid license key. Please check the License Key in your confirmation email.' 
         };
       }
       if (errorMsg.includes('expired')) {
         return { 
           success: false, 
-          error: '此年度订阅授权已到期，请前往 LemonSqueezy 续订。' 
+          error: 'This annual subscription license has expired. Please renew on LemonSqueezy.' 
         };
       }
-      return { success: false, error: errorMsg || 'LemonSqueezy 激活验证失败' };
+      return { success: false, error: errorMsg || 'LemonSqueezy activation failed' };
     }
   } catch (err) {
     return { 
       success: false, 
-      error: '网络通信异常或离线，首次激活需要联网与 LemonSqueezy 核销设备数：' + (err.message || '网络超时') 
+      error: 'Network error or offline. Initial activation requires an internet connection: ' + (err.message || 'Request timed out') 
     };
   }
 }

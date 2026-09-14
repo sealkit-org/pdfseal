@@ -21,7 +21,7 @@
         </h2>
         
         <p class="text-xs text-slate-500 font-medium mb-4">
-          {{ t('result_auto_downloaded_hint_wait') || '运算完全在您的浏览器内存中执行 · 请稍候' }}
+          {{ t('result_auto_downloaded_hint_wait', 'Processing entirely in browser memory · Please wait') }}
         </p>
 
         <!-- Progress Bar & Percentage Track -->
@@ -56,7 +56,7 @@
         <!-- Privacy & Local Safety Guarantee -->
         <div class="flex items-center justify-center space-x-1.5 text-[11px] text-slate-400 font-medium mt-6 pt-3 border-t border-slate-100 w-full max-w-xs">
           <Lock class="w-3.5 h-3.5 text-slate-400 shrink-0" />
-          <span>{{ t('processing_privacy_guarantee') || '纯前端内存运算 · 零文件上传 · 绝对隐私' }}</span>
+          <span>{{ t('processing_privacy_guarantee', '100% Client-Side · Zero Cloud Uploads · Absolute Privacy') }}</span>
         </div>
       </div>
 
@@ -77,7 +77,7 @@
           {{ resolvedTitle }}
         </h2>
         <p class="text-xs text-slate-500 font-medium mb-5">
-          {{ t('result_auto_downloaded_hint') || '文件已自动下载至您的设备 · 100% 浏览器本地运算零上传' }}
+          {{ t('result_auto_downloaded_hint', 'File automatically downloaded to your device · 100% private in-browser') }}
         </p>
 
         <!-- Artifact Information Card (Refined & Centered) -->
@@ -105,7 +105,7 @@
           <div class="flex items-center justify-center space-x-2 text-[11px] text-slate-500 font-medium mt-1">
             <span class="font-mono font-semibold text-slate-600">{{ formattedSize }}</span>
             <span v-if="pageCount" class="text-slate-300">·</span>
-            <span v-if="pageCount">{{ pageCount }} {{ t('page_unit', '页') }}</span>
+            <span v-if="pageCount">{{ pageCount }} {{ t('page_unit', 'pages') }}</span>
           </div>
 
           <!-- Dynamic Feature Metric Slot & Extra Actions (Centered) -->
@@ -128,7 +128,7 @@
             class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-blue-600/25 transition flex items-center justify-center space-x-2 cursor-pointer"
           >
             <Download class="w-4 h-4" />
-            <span>{{ t('result_btn_redownload') || '再次下载' }}</span>
+            <span>{{ t('result_btn_redownload', 'Download Again') }}</span>
           </button>
 
           <!-- Secondary: Start New Task (Reset) -->
@@ -150,7 +150,7 @@
             class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 active:scale-98 text-slate-600 hover:text-slate-800 font-bold text-xs sm:text-sm border border-slate-200/80 transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-2xs"
           >
             <Pencil class="w-3.5 h-3.5 text-slate-500" />
-            <span>{{ t('result_btn_back_to_edit') || '返回调整' }}</span>
+            <span>{{ t('result_btn_back_to_edit', 'Back to Edit') }}</span>
           </button>
         </div>
       </div>
@@ -234,23 +234,23 @@ const clampedPercent = computed(() => {
 const resolvedProcessingTitle = computed(() => {
   if (props.processingTitle) return props.processingTitle;
   const toolKey = `processing_title_${props.sourceTool}`;
-  return t(toolKey) || t('processing_title_default') || '正在本地极速处理中...';
+  return t(toolKey, t('processing_title_default', 'Processing in browser memory...'));
 });
 
 const resolvedProgressMessage = computed(() => {
   if (props.progressMessage) return props.progressMessage;
-  return t('processing_status_default') || '正在准备中...';
+  return t('processing_status_default', 'Preparing...');
 });
 
 const resolvedTitle = computed(() => {
   if (props.title) return props.title;
   const toolKey = `result_success_${props.sourceTool}`;
-  return t(toolKey) || t('result_success_default') || '处理完成！';
+  return t(toolKey, t('result_success_default', 'Processing Complete!'));
 });
 
 const resolvedNewTaskText = computed(() => {
   const toolKey = `result_btn_new_task_${props.sourceTool}`;
-  return t(toolKey) || t('result_btn_new_task_default') || '开始新任务';
+  return t(toolKey, t('result_btn_new_task_default', 'Start New Task'));
 });
 
 const formattedSize = computed(() => {
