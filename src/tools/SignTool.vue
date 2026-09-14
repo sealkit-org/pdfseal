@@ -1509,7 +1509,7 @@ async function executeSign() {
   if (!docBytes.value || placedSignatures.value.length === 0) return;
   isProcessing.value = true;
   progressPercent.value = 5;
-  progressMessage.value = t('sign_progress_preparing') || '准备图章与文档资源...';
+  progressMessage.value = t('sign_progress_preparing', 'Preparing document and signature layers...');
   await new Promise(r => setTimeout(r, 40));
 
   try {
@@ -1565,7 +1565,7 @@ async function executeSign() {
     }
 
     progressPercent.value = 90;
-    progressMessage.value = t('sign_progress_saving') || '正在封装生成已签署的 PDF...';
+    progressMessage.value = t('sign_progress_saving', 'Finalizing document encapsulation...');
     await new Promise(r => setTimeout(r, 40));
 
     const outBytes = await cleanDoc.save({ useObjectStreams: true });
@@ -1587,7 +1587,7 @@ async function executeSign() {
     };
     showNextActions.value = true;
     progressPercent.value = 100;
-    progressMessage.value = t('sign_progress_done') || '文档签署完成！';
+    progressMessage.value = t('sign_progress_done', 'Signing complete!');
 
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {

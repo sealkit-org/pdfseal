@@ -87,7 +87,7 @@
           <template #metrics>
             <span class="inline-flex items-center space-x-1 text-xs font-semibold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-lg border border-amber-200/60 shadow-2xs">
               <Stamp class="w-3.5 h-3.5 text-amber-600" />
-              <span>{{ t('wm_metric_badge', { text: wmText || 'CONFIDENTIAL' }) || `已成功压印水印「${wmText || 'CONFIDENTIAL'}」` }}</span>
+              <span>{{ t('wm_metric_badge', { text: wmText || 'CONFIDENTIAL' }, `Watermark "${wmText || 'CONFIDENTIAL'}" applied successfully`) }}</span>
             </span>
           </template>
         </ResultDeliveryView>
@@ -745,7 +745,7 @@ async function generateWatermarkedBytes() {
   }
 
   progressPercent.value = 85;
-  progressMessage.value = t('wm_progress_saving') || '正在封装并持久化水印文档...';
+  progressMessage.value = t('wm_progress_saving', 'Packaging and finalizing watermarked PDF...');
   await new Promise(resolve => setTimeout(resolve, 0));
 
   let outBytes = await pdfDoc.save();

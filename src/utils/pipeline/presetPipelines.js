@@ -1,6 +1,6 @@
 /**
  * Standard Official Preset Pipelines
- * Battle-tested automated workflows for common business and administrative tasks.
+ * Battle-tested automated workflows for common business and administrative tasks in global and Western markets.
  */
 
 export const PRESET_PIPELINES = [
@@ -9,9 +9,9 @@ export const PRESET_PIPELINES = [
     icon: 'ShieldCheck',
     color: 'emerald',
     nameKey: 'preset_tender_name',
-    defaultName: '招投标与涉密公文预处理流',
+    defaultName: 'Tender, Court & GDPR Sanitization Flow',
     descKey: 'preset_tender_desc',
-    defaultDesc: '自动清除作者与版本修改痕迹 -> 智能压缩体积 -> 加印防泄露水印',
+    defaultDesc: 'Scrub tracking metadata -> Add formal page numbers -> Smart compression -> Stamp CONFIDENTIAL watermark',
     steps: [
       {
         id: 'step_sanitize',
@@ -19,7 +19,23 @@ export const PRESET_PIPELINES = [
         params: {
           stripDocInfo: true,
           stripGpsAndThumb: true,
-          stripPieceInfo: true
+          stripPieceInfo: true,
+          stripAnnots: true
+        }
+      },
+      {
+        id: 'step_page_number',
+        nodeId: 'node_page_number',
+        params: {
+          format: 'Page {n} of {total}',
+          position: 'bottom_center',
+          startNumber: 1,
+          skipCover: false,
+          fontSize: 10,
+          textColor: '#334155',
+          maskMode: 'full_ribbon',
+          maskColor: 'auto',
+          margin: 24
         }
       },
       {
@@ -34,7 +50,8 @@ export const PRESET_PIPELINES = [
         id: 'step_watermark',
         nodeId: 'node_watermark',
         params: {
-          text: '投标专用 严禁外传',
+          text: 'CONFIDENTIAL',
+          size: 48,
           opacity: 0.18,
           rotation: 45,
           color: '#ef4444'
@@ -43,7 +60,7 @@ export const PRESET_PIPELINES = [
     ],
     exportConfig: {
       destination: 'download_files',
-      namingTemplate: '{original}_TenderReady_{date}.pdf'
+      namingTemplate: '{original}_SubmissionReady_{date}.pdf'
     }
   },
 
@@ -52,16 +69,32 @@ export const PRESET_PIPELINES = [
     icon: 'Images',
     color: 'blue',
     nameKey: 'preset_receipt_name',
-    defaultName: '发票报销多图规整流',
+    defaultName: 'Tax & Expense Receipts Auto-Packer',
     descKey: 'preset_receipt_desc',
-    defaultDesc: '将多张发票照片批量转为标准 A4 PDF -> 压缩适配报销系统大小限制',
+    defaultDesc: 'Compile receipt photos to A4 PDF -> Add audit page numbers -> Smart compression -> Stamp EXPENSE REPORT watermark',
     steps: [
       {
         id: 'step_img2pdf',
         nodeId: 'node_img2pdf',
         params: {
           mergeIntoOne: true,
-          pageSize: 'a4'
+          pageSize: 'a4',
+          quality: 0.85
+        }
+      },
+      {
+        id: 'step_page_number',
+        nodeId: 'node_page_number',
+        params: {
+          format: 'Page {n} of {total}',
+          position: 'bottom_center',
+          startNumber: 1,
+          skipCover: false,
+          fontSize: 10,
+          textColor: '#334155',
+          maskMode: 'full_ribbon',
+          maskColor: 'auto',
+          margin: 24
         }
       },
       {
@@ -71,11 +104,22 @@ export const PRESET_PIPELINES = [
           level: 'balanced',
           universalSizeGuard: true
         }
+      },
+      {
+        id: 'step_watermark',
+        nodeId: 'node_watermark',
+        params: {
+          text: 'EXPENSE REPORT',
+          size: 42,
+          opacity: 0.12,
+          rotation: 45,
+          color: '#475569'
+        }
       }
     ],
     exportConfig: {
       destination: 'download_files',
-      namingTemplate: 'Reimbursement_Pack_{date}.pdf'
+      namingTemplate: 'Expense_Report_{date}.pdf'
     }
   },
 
@@ -84,34 +128,63 @@ export const PRESET_PIPELINES = [
     icon: 'Stamp',
     color: 'amber',
     nameKey: 'preset_contract_name',
-    defaultName: '合同批量盖章与防伪流',
+    defaultName: 'Contract & NDA Execution Flow',
     descKey: 'preset_contract_desc',
-    defaultDesc: '自动解除权限保护 -> 尾页批量盖章/签名 -> 平铺版权防伪水印',
+    defaultDesc: 'Scrub draft revisions -> Add contract page numbers -> Stamp final page -> Tile EXECUTED COPY watermark -> Optimize compression',
     steps: [
       {
-        id: 'step_unlock',
-        nodeId: 'node_unlock',
+        id: 'step_sanitize',
+        nodeId: 'node_sanitize',
         params: {
-          skipIfUnencrypted: true
+          stripDocInfo: true,
+          stripGpsAndThumb: true,
+          stripPieceInfo: true,
+          stripAnnots: true
+        }
+      },
+      {
+        id: 'step_page_number',
+        nodeId: 'node_page_number',
+        params: {
+          format: 'Page {n} of {total}',
+          position: 'bottom_center',
+          startNumber: 1,
+          skipCover: false,
+          fontSize: 10,
+          textColor: '#334155',
+          maskMode: 'full_ribbon',
+          maskColor: 'auto',
+          margin: 24
         }
       },
       {
         id: 'step_sign',
         nodeId: 'node_sign',
         params: {
+          stampDataUrl: '',
           placement: 'last_page_bottom_right',
           position: 'bottom_right',
-          scale: 0.5
+          scale: 0.5,
+          addDateStamp: true
         }
       },
       {
         id: 'step_watermark',
         nodeId: 'node_watermark',
         params: {
-          text: 'OFFICIAL CONTRACT',
+          text: 'EXECUTED COPY',
+          size: 48,
           opacity: 0.15,
           rotation: 45,
           color: '#2563eb'
+        }
+      },
+      {
+        id: 'step_compress',
+        nodeId: 'node_compress',
+        params: {
+          level: 'balanced',
+          universalSizeGuard: true
         }
       }
     ],

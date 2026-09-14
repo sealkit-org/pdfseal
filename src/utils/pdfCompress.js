@@ -98,13 +98,13 @@ export async function compressPdfLossless(arrayBuffer, password = '', onProgress
 
   try {
     // Stage 1: Document Structure & Cross-Reference Table Parsing
-    if (onProgress) onProgress(20, t('compress_progress_scan') || '正在解析文档结构与对象树...');
+    if (onProgress) onProgress(20, t('compress_progress_scan', 'Analyzing document structure and object tree...'));
     await new Promise(r => setTimeout(r, 60));
 
     const cleanDoc = await loadCleanPdfDocument(arrayBuffer, password);
 
     // Stage 2: Pruning Redundant Overhead & Metadata
-    if (onProgress) onProgress(45, t('compress_progress_prune') || '正在清理冗余元数据与孤立对象...');
+    if (onProgress) onProgress(45, t('compress_progress_prune', 'Pruning redundant metadata and orphan objects...'));
     await new Promise(r => setTimeout(r, 60));
 
     // 1. Strip document-level private application overhead & XMP metadata
@@ -122,7 +122,7 @@ export async function compressPdfLossless(arrayBuffer, password = '', onProgress
     }
 
     // Stage 3: Compacting Object Streams & Cross-References
-    if (onProgress) onProgress(70, t('compress_progress_streams') || '正在重构底层对象流 (Object Streams)...');
+    if (onProgress) onProgress(70, t('compress_progress_streams', 'Compacting underlying object streams...'));
     await new Promise(r => setTimeout(r, 80));
 
     const outBytes = await cleanDoc.save({
@@ -132,17 +132,17 @@ export async function compressPdfLossless(arrayBuffer, password = '', onProgress
     });
 
     // Stage 4: Integrity Verification & Size Guard
-    if (onProgress) onProgress(92, t('compress_progress_verify') || '正在校验文档完整性与压缩率...');
+    if (onProgress) onProgress(92, t('compress_progress_verify', 'Verifying document integrity and size reduction...'));
     await new Promise(r => setTimeout(r, 60));
 
     // Size Guard: Never allow the file to grow!
     if (outBytes.byteLength >= origBytes.byteLength) {
       logger.info('COMPRESS', `[Lossless Mode] Optimized file (${outBytes.byteLength} B) is not smaller than original (${origBytes.byteLength} B). Keeping original file.`);
-      if (onProgress) onProgress(100, t('compress_progress_done') || '压缩完成！');
+      if (onProgress) onProgress(100, t('compress_progress_done', 'Compression complete!'));
       return origBytes;
     }
 
-    if (onProgress) onProgress(100, t('compress_progress_done') || '压缩完成！');
+    if (onProgress) onProgress(100, t('compress_progress_done', 'Compression complete!'));
     return outBytes;
   } catch (err) {
     logger.warn('COMPRESS', `Lossless optimization failed: ${err.message}, keeping original file.`);
@@ -226,13 +226,13 @@ export async function compressPdfRaster(arrayBuffer, options = {}, onProgress = 
   }
 
   if (onProgress) {
-    onProgress(92, t('compress_progress_streams') || '正在重构底层对象流 (Object Streams)...');
+    onProgress(92, t('compress_progress_streams', 'Compacting underlying object streams...'));
   }
   await new Promise(r => setTimeout(r, 60));
 
   const outBytes = await newPdf.save({ useObjectStreams: true });
   if (onProgress) {
-    onProgress(100, t('compress_progress_done') || '压缩完成！');
+    onProgress(100, t('compress_progress_done', 'Compression complete!'));
   }
   logger.info('COMPRESS', `[Raster Mode] Completed (${pdf.numPages} pages compressed to ${(outBytes.byteLength / 1024).toFixed(1)} KB)`);
   return outBytes;
@@ -323,9 +323,9 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   // we do NOT downsample raster images! We perform lossless optimization to preserve 100% vector fidelity.
   if (origBytes.byteLength <= targetBytes) {
     logger.info('COMPRESS_TARGET', `Original size (${origBytes.byteLength} B) <= target (${targetBytes} B). Applying lossless optimization without lossy downsampling.`);
-    if (onProgress) onProgress(50, '原文件已符合体积上限，正在执行无损保真优化...');
+    if (onProgress) onProgress(50, 'Original size already meets target limit. Running lossless optimization...');
     const losslessBytes = await compressPdfLossless(arrayBuffer, password);
-    if (onProgress) onProgress(100, '完成优化');
+    if (onProgress) onProgress(100, 'Optimization complete');
     return losslessBytes;
   }
 
@@ -411,7 +411,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   } else {
     for (let iter = 0; iter < maxIterations; iter++) {
       const pct = Math.round(10 + (iter / maxIterations) * 20);
-      if (onProgress) onProgress(pct, `智能二分算法探测中 [第 ${iter + 1}/${maxIterations} 轮]...`);
+      if (onProgress) onProgress(pct, `Bisection search in progress [iteration ${iter + 1}/${maxIterations}]...`);
 
       const tMid = (tLow + tHigh) / 2;
       const estBytes = await probeSampleBytes(tMid);
@@ -445,7 +445,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
     for (let i = 1; i <= numPages; i++) {
       if (onProgress) {
         const stepPct = Math.round(progressOffset + ((i - 1) / numPages) * progressSpan);
-        onProgress(stepPct, `正在以最佳清晰度重采样生成文档 (${i}/${numPages})...`);
+        onProgress(stepPct, `Resampling pages at optimal resolution (${i}/${numPages})...`);
       }
 
       const page = await pdf.getPage(i);
@@ -486,7 +486,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   // Case A: Actual full document exceeded targetBytes due to complex non-sample pages -> Downward tuning
   if (outBytes.byteLength > targetBytes) {
     logger.info('COMPRESS_TARGET', `Actual output (${(outBytes.byteLength / 1048576).toFixed(2)} MB) exceeded target (${targetSizeMb} MB). Executing downward fine-tuning.`);
-    if (onProgress) onProgress(88, '微调缩放参数确保严格小于目标上限...');
+    if (onProgress) onProgress(88, 'Fine-tuning scale parameters to strictly meet target limit...');
 
     const shrinkRatio = Math.min(0.94, Math.sqrt((effectiveTargetBytes * 0.96) / outBytes.byteLength));
     const tunedScale = Math.max(0.60, Number((currentParams.scale * shrinkRatio).toFixed(2)));
@@ -498,7 +498,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   // Case B: Space is under-utilized by > 15% (e.g. < 1.70 MB for 2.0 MB target) -> Upward Clarity Booster
   else if (outBytes.byteLength < targetBytes * 0.85 && currentParams.scale < 2.50) {
     logger.info('COMPRESS_TARGET', `Actual output (${(outBytes.byteLength / 1048576).toFixed(2)} MB) is below 85% of target (${targetSizeMb} MB). Boosting clarity to maximize sharpness.`);
-    if (onProgress) onProgress(88, '提升清晰度参数以最大化还原画质...');
+    if (onProgress) onProgress(88, 'Boosting clarity parameters to maximize visual sharpness...');
 
     const boostRatio = Math.min(1.25, Math.sqrt((effectiveTargetBytes * 0.97) / outBytes.byteLength));
     const boostedScale = Math.min(2.50, Number((currentParams.scale * boostRatio).toFixed(2)));
@@ -520,7 +520,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
     return origBytes;
   }
 
-  if (onProgress) onProgress(100, '目标逼近压缩完成');
+  if (onProgress) onProgress(100, 'Target size compression complete');
   return outBytes;
 }
 

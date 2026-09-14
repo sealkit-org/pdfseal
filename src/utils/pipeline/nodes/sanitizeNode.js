@@ -16,7 +16,7 @@ export async function executeSanitizeNode(items, params = {}, onProgress = () =>
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    onProgress(Math.round((i / items.length) * 100), `正在脱敏 [${i + 1}/${items.length}]: ${item.name}`);
+    onProgress(Math.round((i / items.length) * 100), `Sanitizing [${i + 1}/${items.length}]: ${item.name}`);
 
     try {
       const doc = await loadCleanPdfDocument(item.data, { preserveWatermarks: true });
@@ -112,6 +112,6 @@ export async function executeSanitizeNode(items, params = {}, onProgress = () =>
     }
   }
 
-  onProgress(100, '元数据脱敏完成');
+  onProgress(100, 'Metadata sanitization complete');
   return result;
 }

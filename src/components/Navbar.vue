@@ -162,10 +162,10 @@
             @click.stop="toggleAbout" 
             class="flex items-center space-x-1 sm:space-x-1.5 py-1.5 px-2.5 rounded-xl transition cursor-pointer shrink-0 border border-slate-200/80 shadow-2xs select-none"
             :class="isAboutOpen ? 'bg-blue-50 text-blue-700 border-blue-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'"
-            :title="t('navbar_about_title') || '关于与法律条款'"
+            :title="t('navbar_about_title', 'About & Legal Terms')"
           >
             <Info class="w-3.5 h-3.5 shrink-0" :class="isAboutOpen ? 'text-blue-600' : 'text-slate-600'" />
-            <span class="hidden sm:inline text-xs font-semibold">{{ t('navbar_about') || '关于' }}</span>
+            <span class="hidden sm:inline text-xs font-semibold">{{ t('navbar_about', 'About') }}</span>
             <ChevronDown class="w-3 h-3 text-slate-400 transition-transform duration-150" :class="{ 'rotate-180': isAboutOpen }" />
           </button>
 
@@ -185,7 +185,7 @@
                   </div>
                   <p class="text-[11px] text-emerald-700 font-medium mt-0.5 flex items-center">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 shrink-0"></span>
-                    {{ t('brand_footer_claim') || '100% 浏览器本地离线 · 零数据上传' }}
+                    {{ t('brand_footer_claim', '100% Client-Side Local · Zero Data Upload') }}
                   </p>
                 </div>
               </div>
@@ -199,7 +199,7 @@
             >
               <div class="flex items-center space-x-2.5 min-w-0">
                 <ShieldCheck class="w-4 h-4 text-emerald-600 shrink-0" />
-                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('footer_privacy') || '隐私承诺与白皮书' }}</span>
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('footer_privacy', 'Privacy Commitment') }}</span>
               </div>
               <span class="text-[10px] text-slate-400 group-hover:text-slate-600">🛡️</span>
             </button>
@@ -215,7 +215,7 @@
               <div class="flex items-center space-x-2.5 min-w-0">
                 <FileText class="w-4 h-4 text-emerald-600 shrink-0" />
                 <div class="truncate">
-                  <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_agpl_title') || 'AGPL-3.0 开源协议' }}</span>
+                  <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_agpl_title', 'AGPL-3.0 Open Source License') }}</span>
                 </div>
               </div>
               <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">AGPLv3 ↗</span>
@@ -230,7 +230,7 @@
             >
               <div class="flex items-center space-x-2.5 min-w-0">
                 <Building2 class="w-4 h-4 text-indigo-600 shrink-0" />
-                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_commercial_title') || '商业与专业许可 (Commercial / Pro)' }}</span>
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_commercial_title', 'Commercial & Pro Licensing') }}</span>
               </div>
               <span class="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">Pro</span>
             </button>
@@ -246,7 +246,7 @@
             >
               <div class="flex items-center space-x-2.5 min-w-0">
                 <Github class="w-4 h-4 text-slate-800 shrink-0" />
-                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_github_title') || 'GitHub 开源仓库' }}</span>
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_github_title', 'Open Source GitHub Repository') }}</span>
               </div>
               <span class="text-[10px] text-slate-400 group-hover:text-slate-600">↗</span>
             </a>
@@ -260,7 +260,7 @@
             >
               <div class="flex items-center space-x-2.5 min-w-0">
                 <MessageSquare class="w-4 h-4 text-blue-600 shrink-0" />
-                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_feedback_title') || '意见与问题反馈' }}</span>
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_feedback_title', 'User Feedback & Support') }}</span>
               </div>
               <span class="text-[10px] text-blue-500 font-semibold">Tally ↗</span>
             </button>
@@ -273,7 +273,7 @@
             >
               <div class="flex items-center space-x-2.5 min-w-0">
                 <Terminal class="w-4 h-4 text-slate-600 shrink-0" />
-                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_logs_title') || '诊断与排错日志' }}</span>
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_logs_title', 'Client-Side Diagnostic Logs') }}</span>
               </div>
               <span class="text-[10px] font-mono text-slate-400">LOGS</span>
             </button>
@@ -289,7 +289,7 @@
             >
               <div class="flex items-center space-x-2.5 min-w-0">
                 <Coffee class="w-4 h-4 text-amber-600 shrink-0" />
-                <span class="font-semibold text-amber-900">{{ t('about_kofi_title') || '请小海豹吃鱼' }}</span>
+                <span class="font-semibold text-amber-900">{{ t('about_kofi_title', 'Feed the Seal') }}</span>
               </div>
               <span class="text-[10px] text-amber-600 font-bold bg-amber-100/70 px-1.5 py-0.5 rounded">☕ ↗</span>
             </a>
@@ -300,7 +300,7 @@
         <button 
           @click="$emit('open-settings')" 
           class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition cursor-pointer shrink-0 border border-slate-200/80 shadow-2xs"
-          :title="t('settings_modal_title') || '全局偏好设置'"
+          :title="t('settings_modal_title', 'Global Preferences')"
         >
           <Settings class="w-4 h-4 text-slate-600 shrink-0" />
         </button>

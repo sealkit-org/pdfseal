@@ -25,7 +25,7 @@ export function saveUserPipeline(pipeline) {
     const id = pipeline.id || ('custom_flow_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6));
     const record = {
       id,
-      name: pipeline.name || '未命名流程',
+      name: pipeline.name || 'Untitled Flow',
       desc: pipeline.desc || '',
       isCustom: true,
       updatedAt: Date.now(),

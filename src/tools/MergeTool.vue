@@ -93,7 +93,7 @@
           <template #metrics>
             <span class="inline-flex items-center space-x-1 text-xs font-semibold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200/60 shadow-2xs">
               <Layers class="w-3.5 h-3.5 text-blue-600" />
-              <span>{{ t('result_metric_merged', { count: files.length }) || `由 ${files.length} 份独立文件合并而成` }}</span>
+              <span>{{ t('result_metric_merged', { count: files.length }, `Combined from ${files.length} individual files`) }}</span>
             </span>
           </template>
         </ResultDeliveryView>
@@ -505,7 +505,7 @@ async function generateMergedBytes(onProgress = null) {
   }
 
   // 1. Phase 1: Security Scan
-  if (onProgress) onProgress(10, t('merge_progress_check') || '正在安全校验输入文档...');
+  if (onProgress) onProgress(10, t('merge_progress_check', 'Verifying input document security...'));
   await new Promise(r => setTimeout(r, 60));
 
   for (const file of files.value) {
@@ -537,14 +537,14 @@ async function generateMergedBytes(onProgress = null) {
     copiedPages.forEach(p => mergedPdf.addPage(p));
   }
 
-  if (onProgress) onProgress(90, t('merge_progress_saving') || '正在完成文档封印与保存...');
+  if (onProgress) onProgress(90, t('merge_progress_saving', 'Finalizing and saving merged PDF...'));
   await new Promise(r => setTimeout(r, 60));
 
   const mergedBytes = await mergedPdf.save();
   const cleanBase = (customOutputBaseName.value?.trim() || `PDFSeal_Merged_${Date.now()}`).replace(/\.pdf$/i, '');
   const finalName = `${cleanBase}.pdf`;
 
-  if (onProgress) onProgress(100, t('merge_progress_done') || '合并完成！');
+  if (onProgress) onProgress(100, t('merge_progress_done', 'Merge complete!'));
   return { mergedBytes, finalName, pageCount: mergedPdf.getPageCount() };
 }
 
@@ -556,7 +556,7 @@ async function executeMerge() {
 
   isProcessing.value = true;
   progressPercent.value = 10;
-  progressMessage.value = t('merge_progress_check') || '正在安全校验输入文档...';
+  progressMessage.value = t('merge_progress_check', 'Verifying input document security...');
 
   logger.info('MERGE_START', `Executing merge for ${files.value.length} files`, {
     fileList: files.value.map(f => f.name)

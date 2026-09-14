@@ -14,10 +14,10 @@
           </div>
           <div>
             <h3 class="font-extrabold text-slate-900 text-base leading-tight">
-              {{ t('settings_modal_title', '全局偏好设置') }}
+              {{ t('settings_modal_title', 'Global Preferences') }}
             </h3>
             <p class="text-xs text-slate-400 font-medium mt-0.5">
-              {{ t('settings_modal_desc', '配置收纳箱归档与默认行为，所有设置保存在本地浏览器') }}
+              {{ t('settings_modal_desc', 'Configure rendering, vault archiving, and defaults.') }}
             </p>
           </div>
         </div>
@@ -44,7 +44,7 @@
             ]"
           >
             <FolderLock class="w-3.5 h-3.5" />
-            <span>{{ t('settings_tab_general', '常用偏好') }}</span>
+            <span>{{ t('settings_tab_general', 'Preferences') }}</span>
           </button>
 
           <button 
@@ -58,16 +58,16 @@
             ]"
           >
             <Sliders class="w-3.5 h-3.5" />
-            <span>{{ t('settings_tab_advanced', '高级与授权') }}</span>
+            <span>{{ t('settings_tab_advanced', 'Advanced & Licensing') }}</span>
           </button>
         </div>
       </div>
 
       <!-- Settings Body -->
       <div class="flex-1 overflow-y-auto py-3.5 pr-1 min-h-0">
-        <!-- TAB 1: 常用偏好 (General) - 简洁直接、一屏搞定 -->
+        <!-- TAB 1: General Preferences -->
         <div v-show="activeTab === 'general'" class="space-y-3.5 animate-in fade-in duration-150">
-          <!-- 1. 收纳箱与归档行为 -->
+          <!-- 1. Vault & Archiving -->
           <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 space-y-3.5">
             <!-- Auto save export switch -->
             <div class="flex items-center justify-between gap-4 pb-3 border-b border-slate-200/60">
@@ -75,11 +75,11 @@
                 <div class="flex items-center space-x-1.5">
                   <FolderLock class="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <p class="text-xs font-bold text-slate-800">
-                    {{ t('settings_autosave_vault_title', '处理后自动保存至收纳箱') }}
+                    {{ t('settings_autosave_vault_title', 'Auto-save output to Vault') }}
                   </p>
                 </div>
                 <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed pl-5">
-                  {{ t('settings_autosave_vault_desc', '合并、拆分或导出的文件自动在本地收纳箱中留存备份副本。') }}
+                  {{ t('settings_autosave_vault_desc', 'Automatically store a backup of merged, split, or exported files in your local Vault.') }}
                 </p>
               </div>
 
@@ -99,11 +99,11 @@
                 <div class="flex items-center space-x-1.5">
                   <LayoutGrid class="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <p class="text-xs font-bold text-slate-800">
-                    {{ t('settings_default_view_title', '收纳箱默认展示视图') }}
+                    {{ t('settings_default_view_title', 'Default Vault View') }}
                   </p>
                 </div>
                 <p class="text-[11px] text-slate-500 mt-0.5 pl-5">
-                  {{ t('settings_default_view_desc', '进入海豹收纳箱时默认采用的展示形式。') }}
+                  {{ t('settings_default_view_desc', 'Choose default display layout when opening Vault.') }}
                 </p>
               </div>
 
@@ -117,7 +117,7 @@
                   ]"
                 >
                   <LayoutGrid class="w-3.5 h-3.5" />
-                  <span class="text-[11px]">{{ t('vault_view_grid', '网格卡片') }}</span>
+                  <span class="text-[11px]">{{ t('vault_view_grid', 'Grid Cards') }}</span>
                 </button>
                 <button 
                   type="button" 
@@ -128,19 +128,19 @@
                   ]"
                 >
                   <List class="w-3.5 h-3.5" />
-                  <span class="text-[11px]">{{ t('vault_view_list', '详细列表') }}</span>
+                  <span class="text-[11px]">{{ t('vault_view_list', 'Detailed List') }}</span>
                 </button>
               </div>
             </div>
           </div>
 
-          <!-- 2. 默认导出命名规则 -->
+          <!-- 2. Export Naming Pattern -->
           <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 space-y-3">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-1.5">
                 <Tag class="w-3.5 h-3.5 text-blue-600 shrink-0" />
                 <p class="text-xs font-bold text-slate-800">
-                  {{ t('settings_naming_pattern_title', '默认导出文件名命名规则') }}
+                  {{ t('settings_naming_pattern_title', 'Default Export Naming Pattern') }}
                 </p>
               </div>
               <button 
@@ -149,7 +149,7 @@
                 @click="userSettings.defaultNamingPattern = ''" 
                 class="text-[11px] text-slate-500 hover:text-blue-600 transition cursor-pointer"
               >
-                {{ t('settings_naming_reset_btn', '清空规则') }}
+                {{ t('settings_naming_reset_btn', 'Reset') }}
               </button>
             </div>
 
@@ -183,20 +183,20 @@
           </div>
         </div>
 
-        <!-- TAB 2: 高级与授权 (Advanced) - 极客项集中管理 -->
+        <!-- TAB 2: Advanced & Licensing -->
         <div v-show="activeTab === 'advanced'" class="space-y-3.5 animate-in fade-in duration-150">
-          <!-- 1. 渲染与图层处理 -->
+          <!-- 1. Rendering and Layers -->
           <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70">
             <div class="flex items-start justify-between gap-4">
               <div class="min-w-0 pr-2">
                 <div class="flex items-center space-x-1.5">
                   <Layers class="w-3.5 h-3.5 text-blue-600 shrink-0" />
                   <p class="text-xs font-bold text-slate-800">
-                    {{ t('settings_preserve_watermarks_title', '保留原始浮动水印与注释图层') }}
+                    {{ t('settings_preserve_watermarks_title', 'Preserve Watermarks and Annotations') }}
                   </p>
                 </div>
                 <p class="text-[11px] text-slate-500 mt-0.5 leading-relaxed pl-5">
-                  {{ t('settings_preserve_watermarks_desc', '开启时 100% 保留原文档中的浮动水印、签章与注释图层；关闭时采用纯净正文模式。') }}
+                  {{ t('settings_preserve_watermarks_desc', 'Retain floating watermarks, stamps, and annotation layers from original document.') }}
                 </p>
               </div>
 
@@ -211,12 +211,12 @@
             </div>
           </div>
 
-          <!-- 2. 赞助者证书与软件授权 -->
+          <!-- 2. Supporter Certificate & License -->
           <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 space-y-3">
             <div class="flex items-center space-x-1.5">
               <Crown class="w-3.5 h-3.5 text-amber-500 shrink-0" />
               <p class="text-xs font-bold text-slate-800">
-                {{ t('settings_group_license', '赞助者证书与软件授权') }}
+                {{ t('settings_group_license', 'Supporter Certificate & License') }}
               </p>
             </div>
 
@@ -231,7 +231,7 @@
                     <span class="text-sm">🦭</span>
                     <span class="font-extrabold text-slate-900 text-xs">{{ activeTierLabel }}</span>
                     <span class="px-2 py-0.5 rounded-full text-[10px] font-black bg-emerald-600 text-white">
-                      {{ t('enterprise_active_title', '已激活') }}
+                      {{ t('enterprise_active_title', 'Activated') }}
                     </span>
                     <span 
                       class="px-2 py-0.5 rounded-full text-[10px] font-bold"
@@ -241,12 +241,12 @@
                     </span>
                   </div>
                   <p class="text-[11px] text-slate-600">
-                    {{ t('settings_license_owner', '授权所有者:') }} <b class="text-slate-800">{{ activeCert?.name }}</b> 
+                    {{ t('settings_license_owner', 'License Owner:') }} <b class="text-slate-800">{{ activeCert?.name }}</b> 
                     <span v-if="activeCert?.email" class="text-slate-500">({{ activeCert.email }})</span>
                   </p>
                   <p class="text-[10px] text-slate-500 flex flex-wrap items-center gap-x-2">
-                    <span>{{ t('settings_license_validity', '有效期:') }} <b>{{ activeCert?.expiresAt ? new Date(activeCert.expiresAt).toLocaleDateString() : t('settings_license_lifetime', '终生永久有效') }}</b></span>
-                    <span v-if="activeCert?.instanceName" class="text-slate-400">· {{ t('settings_license_device', '设备:') }} {{ activeCert.instanceName }}</span>
+                    <span>{{ t('settings_license_validity', 'Validity:') }} <b>{{ activeCert?.expiresAt ? new Date(activeCert.expiresAt).toLocaleDateString() : t('settings_license_lifetime', 'Lifetime Valid') }}</b></span>
+                    <span v-if="activeCert?.instanceName" class="text-slate-400">· {{ t('settings_license_device', 'Device:') }} {{ activeCert.instanceName }}</span>
                   </p>
                 </div>
 
@@ -254,7 +254,7 @@
                   @click="handleRevokeCert"
                   class="px-2.5 py-1 rounded-lg border border-slate-300 hover:bg-white text-slate-600 text-[11px] font-semibold transition cursor-pointer shrink-0 shadow-2xs"
                 >
-                  {{ t('settings_license_revoke_btn', '解绑授权') }}
+                  {{ t('settings_license_revoke_btn', 'Revoke License') }}
                 </button>
               </div>
             </div>
@@ -262,14 +262,14 @@
             <!-- If Not Activated -->
             <div v-else class="space-y-2.5">
               <p class="text-[11px] text-slate-500 leading-relaxed">
-                {{ t('settings_license_code_desc', '输入您的激活码或离线证书代码，激活后解锁全部 Pro 权益。') }}
+                {{ t('settings_license_code_desc', 'Enter your activation code or offline certificate code to unlock Pro features.') }}
               </p>
 
               <div class="flex flex-col sm:flex-row gap-2">
                 <input 
                   type="text" 
                   v-model="inputCertCode" 
-                  :placeholder="t('settings_license_placeholder', '粘贴授权码或离线代码 (SEAL-...)')" 
+                  :placeholder="t('settings_license_placeholder', 'Paste license key or offline code (SEAL-...)')" 
                   class="text-xs bg-white border border-slate-200 rounded-xl px-3 py-1.5 font-mono focus:ring-2 focus:ring-amber-500 outline-hidden flex-1 text-slate-800 placeholder:text-slate-400"
                 >
                 <button 
@@ -277,7 +277,7 @@
                   @click="handleActivateCert" 
                   class="px-4 py-1.5 bg-amber-500 hover:bg-amber-600 active:scale-98 text-white text-xs font-bold rounded-xl transition cursor-pointer shrink-0 shadow-xs"
                 >
-                  {{ t('settings_license_btn_activate', '验证并激活') }}
+                  {{ t('settings_license_btn_activate', 'Verify & Activate') }}
                 </button>
               </div>
 
@@ -290,13 +290,13 @@
             </div>
           </div>
 
-          <!-- 3. 端到端加密中继端点 -->
+          <!-- 3. Encrypted Sharing Relay -->
           <div class="bg-slate-50/80 rounded-2xl p-4 border border-slate-200/70 space-y-2.5">
             <div class="flex items-center justify-between">
               <div class="flex items-center space-x-1.5">
                 <Send class="w-3.5 h-3.5 text-blue-600 shrink-0" />
                 <p class="text-xs font-bold text-slate-800">
-                  {{ t('settings_custom_worker_title', '自定义 Cloudflare Worker URL') }}
+                  {{ t('settings_custom_worker_title', 'Custom Cloudflare Worker URL') }}
                 </p>
               </div>
               <button 
@@ -305,11 +305,11 @@
                 @click="userSettings.customWorkerUrl = ''" 
                 class="text-[11px] text-slate-500 hover:text-blue-600 transition cursor-pointer"
               >
-                {{ t('settings_naming_reset_btn', '恢复默认') }}
+                {{ t('settings_naming_reset_btn', 'Reset') }}
               </button>
             </div>
             <p class="text-[11px] text-slate-500 leading-relaxed">
-              {{ t('settings_custom_worker_desc', '外发加密分享的中转端点，留空则使用官方默认安全中继。') }}
+              {{ t('settings_custom_worker_desc', 'Relay endpoint for encrypted sharing. Leave empty to use official secure relay.') }}
             </p>
             <input 
               type="text" 
@@ -329,7 +329,7 @@
           class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer flex items-center space-x-1"
         >
           <RotateCcw class="w-3.5 h-3.5" />
-          <span>{{ t('settings_btn_reset', '恢复默认设置') }}</span>
+          <span>{{ t('settings_btn_reset', 'Reset to Defaults') }}</span>
         </button>
 
         <button 
@@ -337,7 +337,7 @@
           @click="$emit('close')" 
           class="bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold px-5 py-2 rounded-xl transition shadow-md hover:shadow-blue-600/25 cursor-pointer"
         >
-          {{ t('btn_done', '完成') }}
+          {{ t('btn_done', 'Done') }}
         </button>
       </div>
     </div>
@@ -369,10 +369,10 @@ defineEmits(['close']);
 const activeTab = ref('general');
 
 const namingPresets = computed(() => [
-  { label: t('settings_naming_preset_default', '原名_工具_日期'), val: '{name}_{tool}_{date}' },
-  { label: t('settings_naming_preset_simple', '原名_工具'), val: '{name}_{tool}' },
-  { label: t('settings_naming_preset_date', '原名_日期'), val: '{name}_{date}' },
-  { label: t('settings_naming_preset_clean', '保持原文件名'), val: '{name}' }
+  { label: t('settings_naming_preset_default', 'Name_Tool_Date'), val: '{name}_{tool}_{date}' },
+  { label: t('settings_naming_preset_simple', 'Name_Tool'), val: '{name}_{tool}' },
+  { label: t('settings_naming_preset_date', 'Name_Date'), val: '{name}_{date}' },
+  { label: t('settings_naming_preset_clean', 'Original Name'), val: '{name}' }
 ]);
 
 const inputCertCode = ref('');
@@ -383,12 +383,12 @@ async function handleActivateCert() {
   certError.value = '';
   certSuccess.value = '';
   if (!inputCertCode.value.trim()) {
-    certError.value = t('settings_license_err_empty', '请输入证书代码');
+    certError.value = t('settings_license_err_empty', 'Please enter a license key');
     return;
   }
   const res = await activateCertificate(inputCertCode.value.trim());
   if (res.success) {
-    certSuccess.value = t('settings_license_success', { name: res.cert.name, tier: activeTierLabel.value }) || `激活成功！欢迎，${res.cert.name} (${activeTierLabel.value})`;
+    certSuccess.value = t('settings_license_success', { name: res.cert.name, tier: activeTierLabel.value }, `Activated! Welcome, ${res.cert.name} (${activeTierLabel.value})`);
     inputCertCode.value = '';
   } else {
     certError.value = res.error || 'Invalid license certificate';
@@ -396,7 +396,7 @@ async function handleActivateCert() {
 }
 
 function handleRevokeCert() {
-  if (confirm(t('settings_license_revoke_confirm', '确定要从此设备解绑并清除授权证书吗？'))) {
+  if (confirm(t('settings_license_revoke_confirm', 'Are you sure you want to unbind and remove this license certificate from this device?'))) {
     revokeCertificate();
     certSuccess.value = '';
     certError.value = '';
@@ -404,7 +404,7 @@ function handleRevokeCert() {
 }
 
 function handleReset() {
-  if (confirm(t('settings_confirm_reset', '确定要将所有设置恢复为默认值吗？'))) {
+  if (confirm(t('settings_confirm_reset', 'Are you sure you want to reset all settings to defaults?'))) {
     resetSettings();
   }
 }

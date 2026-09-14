@@ -72,7 +72,7 @@ export async function executeSplitNode(items, params = {}, onProgress = () => {}
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    onProgress(Math.round((i / items.length) * 100), `正在处理页面提取 [${i + 1}/${items.length}]: ${item.name}`);
+    onProgress(Math.round((i / items.length) * 100), `Extracting / splitting pages [${i + 1}/${items.length}]: ${item.name}`);
 
     try {
       const srcDoc = await loadCleanPdfDocument(item.data, { preserveWatermarks: true });
@@ -182,6 +182,6 @@ export async function executeSplitNode(items, params = {}, onProgress = () => {}
     }
   }
 
-  onProgress(100, '页面提取拆分完成');
+  onProgress(100, 'Page extraction complete');
   return result;
 }

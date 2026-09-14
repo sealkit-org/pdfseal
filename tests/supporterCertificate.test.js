@@ -84,7 +84,7 @@ describe('Supporter Certificate & Cryptographic License Engine', () => {
     const res = await verifySupporterCertificate(certString, testPublicKeyJwk);
     expect(res.valid).toBe(false);
     expect(res.expired).toBe(true);
-    expect(res.error).toContain('到期');
+    expect(res.error.toLowerCase()).toContain('expired');
   });
 
   it('should reject a tampered certificate where payload was modified by an attacker', async () => {
@@ -104,7 +104,7 @@ describe('Supporter Certificate & Cryptographic License Engine', () => {
 
     const res = await verifySupporterCertificate(tamperedCert, testPublicKeyJwk);
     expect(res.valid).toBe(false);
-    expect(res.error).toContain('数字签名验证失败');
+    expect(res.error.toLowerCase()).toContain('signature verification failed');
   });
 
   it('should reject malformed or empty certificate strings gracefully', async () => {

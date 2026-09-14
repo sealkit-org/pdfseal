@@ -1044,7 +1044,7 @@ async function executePageNumber() {
   if (!docBytes.value) return;
   isProcessing.value = true;
   progressPercent.value = 10;
-  progressMessage.value = t('pn_progress_rendering', { current: 1, total: totalPages.value }) || '正在编排页码...';
+  progressMessage.value = t('pn_progress_rendering', { current: 1, total: totalPages.value }, `Rendering page numbers for page 1 of ${totalPages.value}...`);
 
   try {
     const { outBytes, pageCount } = await applyPageNumbers(docBytes.value, {
@@ -1062,10 +1062,10 @@ async function executePageNumber() {
         if (phase === 'rendering') {
           const pct = Math.round((current / total) * 80);
           progressPercent.value = Math.min(80, Math.max(10, pct));
-          progressMessage.value = t('pn_progress_rendering', { current, total }) || `正在编排页码 (第 ${current} / ${total} 页)...`;
+          progressMessage.value = t('pn_progress_rendering', { current, total }, `Rendering page numbers for page ${current} of ${total}...`);
         } else if (phase === 'saving') {
           progressPercent.value = 85;
-          progressMessage.value = t('pn_progress_saving') || '正在封装并持久化页码文档...';
+          progressMessage.value = t('pn_progress_saving', 'Generating clean numbered PDF document...');
         } else if (phase === 'done') {
           progressPercent.value = 100;
         }

@@ -15,12 +15,12 @@ export async function executeImg2PdfNode(items, params = {}, onProgress = () => 
   const pageSize = params.pageSize || 'fit_image';
 
   if (mergeIntoOne) {
-    onProgress(10, '正在初始化多图转 PDF...');
+    onProgress(10, 'Initializing images to PDF...');
     const mergedDoc = await PDFDocument.create();
 
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      onProgress(10 + Math.round((i / items.length) * 80), `正在装配图片 [${i + 1}/${items.length}]: ${item.name}`);
+      onProgress(10 + Math.round((i / items.length) * 80), `Assembling image [${i + 1}/${items.length}]: ${item.name}`);
 
       try {
         const isJpg = item.mimeType === 'image/jpeg' || /\.jpe?g$/i.test(item.name);
@@ -49,9 +49,9 @@ export async function executeImg2PdfNode(items, params = {}, onProgress = () => 
       }
     }
 
-    onProgress(95, '正在导出合并 PDF...');
+    onProgress(95, 'Exporting merged PDF...');
     const pdfBytes = await mergedDoc.save({ useObjectStreams: true });
-    onProgress(100, '转换完成');
+    onProgress(100, 'Conversion complete');
 
     return [{
       id: 'img_pdf_' + Date.now(),
@@ -65,7 +65,7 @@ export async function executeImg2PdfNode(items, params = {}, onProgress = () => 
     const result = [];
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
-      onProgress(Math.round((i / items.length) * 100), `正在转换图片 [${i + 1}/${items.length}]: ${item.name}`);
+      onProgress(Math.round((i / items.length) * 100), `Converting image [${i + 1}/${items.length}]: ${item.name}`);
 
       try {
         const doc = await PDFDocument.create();
@@ -87,7 +87,7 @@ export async function executeImg2PdfNode(items, params = {}, onProgress = () => 
         logger.warn('PIPELINE_IMG2PDF', `Failed to convert image ${item.name}: ${err.message}`);
       }
     }
-    onProgress(100, '全部图片转换完成');
+    onProgress(100, 'All images converted');
     return result;
   }
 }

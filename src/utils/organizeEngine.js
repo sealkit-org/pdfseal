@@ -72,7 +72,7 @@ export async function assembleOrganizedPdf(pages = [], options = {}, onProgress 
     const item = pages[idx];
     if (onProgress) {
       const pct = Math.min(88, Math.round(((idx + 1) / total) * 80) + 10);
-      onProgress(pct, t('org_progress_page', { current: idx + 1, total }) || `正在处理第 ${idx + 1}/${total} 页...`);
+      onProgress(pct, t('org_progress_page', { current: idx + 1, total }, `Processing page ${idx + 1}/${total}...`));
       await new Promise(r => setTimeout(r, 120));
     }
 
@@ -110,9 +110,9 @@ export async function assembleOrganizedPdf(pages = [], options = {}, onProgress 
     }
   }
 
-  if (onProgress) onProgress(92, t('processing_state_finalizing') || '正在保存并序列化 PDF...');
+  if (onProgress) onProgress(92, t('processing_state_finalizing', 'Finalizing PDF...'));
   const outBytes = await newPdf.save();
-  if (onProgress) onProgress(100, t('result_success_organize') || '整理完成！');
+  if (onProgress) onProgress(100, t('result_success_organize', 'Pages Organized Successfully!'));
   logger.info('ORGANIZE_ENGINE', `Assembled ${newPdf.getPageCount()} pages successfully`);
   return outBytes;
 }

@@ -60,7 +60,7 @@ export async function fetchServiceStatus() {
  */
 export async function uploadEncryptedPayload({ encryptedBytes, expirationSeconds = 3600, burnAfterRead = true, isPasswordProtected = true }) {
   if (encryptedBytes.byteLength > MAX_FILE_BYTES) {
-    throw new Error(`单个外发文件大小不得超过 10 MB（当前：${(encryptedBytes.byteLength / (1024 * 1024)).toFixed(2)} MB）。`);
+    throw new Error(`Encrypted file size cannot exceed 10 MB (current: ${(encryptedBytes.byteLength / (1024 * 1024)).toFixed(2)} MB).`);
   }
 
   const endpoint = getWorkerEndpoint();
@@ -88,13 +88,13 @@ export async function uploadEncryptedPayload({ encryptedBytes, expirationSeconds
           throw new Error(errorJson.message);
         }
         if (response.status === 413) {
-          throw new Error('文件大小超过 10MB 限制。');
+          throw new Error('File size exceeds 10MB limit.');
         }
         if (response.status === 503) {
-          throw new Error('中转盲盒存储池已达 95% 水位上限，暂时停止接收新文件，请稍后重试。');
+          throw new Error('Relay storage pool reached 95% capacity limit. Temporarily paused receiving new files, please try again later.');
         }
         if (response.status === 400 && errorJson.error === 'WATERMARK_RESTRICTED_10M') {
-          throw new Error('中转池当前水位超 85%，仅支持选择 10 分钟有效时长。');
+          throw new Error('Relay pool currently exceeds 85% capacity; only 10-minute validity is currently supported.');
         }
         throw new Error(errorJson.error || `HTTP_UPLOAD_ERROR_${response.status}`);
       }

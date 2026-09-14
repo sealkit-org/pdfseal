@@ -19,7 +19,7 @@ export async function executeProtectNode(items, params = {}, onProgress = () => 
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    onProgress(Math.round(((i) / items.length) * 100), `正在加密保护: ${item.name}`);
+    onProgress(Math.round(((i) / items.length) * 100), `Encrypting and protecting: ${item.name}`);
 
     try {
       // Ensure the PDF is cleanly loaded (stripping any existing locks if already decrypted)
@@ -49,10 +49,10 @@ export async function executeProtectNode(items, params = {}, onProgress = () => 
       });
     } catch (err) {
       logger.warn('PIPELINE_PROTECT', `Failed to protect ${item.name}: ${err.message}`);
-      throw new Error(`加密保护失败 (${item.name}): ${err.message}`);
+      throw new Error(`Encryption failed (${item.name}): ${err.message}`);
     }
   }
 
-  onProgress(100, '加密保护处理完成');
+  onProgress(100, 'Encryption complete');
   return result;
 }

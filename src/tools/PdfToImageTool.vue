@@ -89,7 +89,7 @@
           <template #metrics>
             <span class="inline-flex items-center space-x-1 text-xs font-semibold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-lg border border-cyan-200/60 shadow-2xs">
               <ImageDown class="w-3.5 h-3.5 text-cyan-600" />
-              <span>{{ t('p2i_metric_bundle', { count: lastExportedCount || pages.length }) || `共导出 ${lastExportedCount || pages.length} 张高清图片` }}</span>
+              <span>{{ t('p2i_metric_bundle', { count: lastExportedCount || pages.length }, `${lastExportedCount || pages.length} high-res images exported`) }}</span>
             </span>
           </template>
         </ResultDeliveryView>

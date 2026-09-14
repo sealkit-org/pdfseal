@@ -89,7 +89,7 @@
           <template #metrics>
             <span class="inline-flex items-center space-x-1 text-xs font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200/60 shadow-2xs">
               <Lock class="w-3.5 h-3.5 text-rose-600" />
-              <span>{{ t('protect_metric_badge', { algo: algorithm || 'AES-256' }) || `已启用 ${algorithm || 'AES-256'} 高强度加密与权限控制` }}</span>
+              <span>{{ t('protect_metric_badge', { algo: algorithm || 'AES-256' }, `Protected with ${algorithm || 'AES-256'} encryption & permission restrictions`) }}</span>
             </span>
           </template>
         </ResultDeliveryView>
@@ -743,7 +743,7 @@ function calcPasswordStrength(pwd) {
     return {
       level: 1,
       score: 1,
-      label: t('protect_pwd_strength_weak') || '弱',
+      label: t('protect_pwd_strength_weak', 'Weak'),
       color: 'text-rose-600',
       widthClass: 'w-1/3 bg-rose-500'
     };
@@ -751,7 +751,7 @@ function calcPasswordStrength(pwd) {
     return {
       level: 2,
       score: 2,
-      label: t('protect_pwd_strength_medium') || '中',
+      label: t('protect_pwd_strength_medium', 'Medium'),
       color: 'text-amber-600',
       widthClass: 'w-2/3 bg-amber-500'
     };
@@ -759,7 +759,7 @@ function calcPasswordStrength(pwd) {
     return {
       level: 3,
       score: 3,
-      label: t('protect_pwd_strength_strong') || '极佳',
+      label: t('protect_pwd_strength_strong', 'Strong'),
       color: 'text-emerald-600',
       widthClass: 'w-full bg-emerald-500'
     };
@@ -962,22 +962,22 @@ function reset() {
 }
 
 function formatErrorMessage(err) {
-  if (!err) return t('protect_err_failed') || '加密保护处理失败，请重试。';
+  if (!err) return t('protect_err_failed', 'Encryption failed. Please check inputs and try again.');
   const msg = err.message || String(err);
 
   if (/invalid pdf structure|failed to parse|no pdf header/i.test(msg)) {
-    return t('protect_err_invalid_pdf') || 'PDF 文件结构异常或已损坏，无法进行加密保护。';
+    return t('protect_err_invalid_pdf', 'The PDF structure is invalid or corrupted. Unable to encrypt.');
   }
   if (/already password-protected|already encrypted/i.test(msg)) {
-    return t('protect_err_already_encrypted') || '该文档已被加密，请先解除现有密码保护后再进行加密。';
+    return t('protect_err_already_encrypted', 'This document is already password-protected. Please unlock it first.');
   }
   if (/password/i.test(msg) && (/incorrect|wrong|invalid/i.test(msg))) {
-    return t('pwd_error_wrong') || '密码不正确，请重新输入。';
+    return t('pwd_error_wrong', 'Incorrect password. Please verify and try again.');
   }
   if (/unsupported password character|prohibited password character/i.test(msg)) {
-    return t('protect_err_unsupported_char') || '密码包含不受支持的特殊字符，请尝试更换密码。';
+    return t('protect_err_unsupported_char', 'Password contains unsupported special characters. Please use standard characters.');
   }
-  return t('protect_err_failed') || `加密保护处理失败: ${msg}`;
+  return t('protect_err_failed', `Encryption failed: ${msg}`);
 }
 
 async function executeProtect() {
@@ -1018,7 +1018,7 @@ async function executeProtect() {
 
   isProcessing.value = true;
   progressPercent.value = 15;
-  progressMessage.value = t('protect_progress_parsing') || '正在分析文档结构与安全层...';
+  progressMessage.value = t('protect_progress_parsing', 'Analyzing document structure and security layer...');
   // Yield to event loop for smooth UI animation
   await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -1036,7 +1036,7 @@ async function executeProtect() {
     }
 
     progressPercent.value = 45;
-    progressMessage.value = t('protect_progress_encrypting') || '正在执行底层安全加密与权限设定...';
+    progressMessage.value = t('protect_progress_encrypting', 'Applying cryptographic encryption and permission controls...');
     // Yield to event loop
     await new Promise(resolve => setTimeout(resolve, 0));
 
@@ -1059,7 +1059,7 @@ async function executeProtect() {
     });
 
     progressPercent.value = 85;
-    progressMessage.value = t('protect_progress_saving') || '正在封装并持久化受保护文档...';
+    progressMessage.value = t('protect_progress_saving', 'Finalizing and packaging protected document...');
     // Yield to event loop
     await new Promise(resolve => setTimeout(resolve, 0));
 
