@@ -257,7 +257,7 @@
         <div 
           v-else 
           ref="gridRef" 
-          class="flex-1 my-3 overflow-y-auto max-h-[460px] pr-1 grid content-start items-start grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 select-none"
+          class="flex-1 my-3 overflow-y-auto min-h-[200px] max-h-[calc(100vh-355px)] pr-1 grid content-start items-start grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-3 select-none"
         >
           <div 
             v-for="(p, idx) in pages" 
@@ -505,7 +505,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onActivated, onDeactivated, onUnmounted } from 'vue';
+import { ref, watch, nextTick, inject, onMounted, onActivated, onDeactivated, onUnmounted } from 'vue';
 import { 
   LayoutGrid, 
   Plus, 
@@ -514,18 +514,18 @@ import {
   Download, 
   Loader2, 
   FolderLock, 
-  Unlock,
-  RefreshCw,
-  ImageDown,
-  Wand2,
-  Undo2,
-  Redo2,
-  CheckSquare,
-  Square,
-  Check,
-  X,
-  FilePlus,
-  FileUp
+  Unlock, 
+  RefreshCw, 
+  ImageDown, 
+  Wand2, 
+  Undo2, 
+  Redo2, 
+  CheckSquare, 
+  Square, 
+  Check, 
+  X, 
+  FilePlus, 
+  FileUp 
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, PageSizes, degrees } from 'pdf-lib';
@@ -544,6 +544,8 @@ import NextActionBanner from '../components/NextActionBanner.vue';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
+
+const workspaceState = inject('workspaceActiveState', null);
 
 const lastExportedFile = ref(null);
 const lastExportedPageCount = ref(0);
@@ -564,6 +566,14 @@ const fileInputRef = ref(null);
 const appendFileInputRef = ref(null);
 const gridRef = ref(null);
 const docBytes = ref(null);
+
+watch(() => Boolean(docBytes.value), (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+});
 const filename = ref('');
 const pages = ref([]);
 const isDragOver = ref(false);

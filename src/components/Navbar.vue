@@ -1,219 +1,311 @@
 <template>
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-xs">
-    <!-- Top Header -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <!-- Brand -->
-      <div class="flex items-center space-x-3 cursor-pointer" @click="$emit('switch-tab', 'merge')">
-        <span class="text-3xl hover:rotate-12 transition-transform duration-300">🦭</span>
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="font-extrabold text-xl text-slate-900 tracking-tight">PDFSeal</span>
-            <!-- Interactive Privacy Guarantee Badge -->
-            <button 
-              @click.stop="$emit('open-privacy')"
-              class="text-[11px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-full font-semibold flex items-center cursor-pointer transition shadow-2xs group"
-              title="Click to view Privacy & Security Guarantee"
-            >
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5 animate-ping"></span>
-              <span>{{ t('local_badge') }}</span>
-              <ShieldCheck class="w-3 h-3 ml-1 text-emerald-700 opacity-70 group-hover:opacity-100" />
-            </button>
-          </div>
-          <p class="text-[11px] text-slate-500 hidden sm:block">{{ t('brand_subtitle') }}</p>
+  <header class="bg-white border-b border-slate-200/90 sticky top-0 z-40 shadow-2xs select-none">
+    <div class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-6 h-14 flex items-center justify-between gap-2 sm:gap-4">
+      
+      <!-- 1. Left: Brand & Local Trust Mini Badge -->
+      <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
+        <div class="flex items-center space-x-2 cursor-pointer group" @click="$emit('switch-tab', 'merge')">
+          <span class="text-2xl group-hover:rotate-12 transition-transform duration-300 select-none">🦭</span>
+          <span class="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">PDFSeal</span>
         </div>
+
+        <!-- Interactive Privacy Guarantee Mini Pill -->
+        <button 
+          @click.stop="$emit('open-privacy')"
+          class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/80 px-2 sm:px-2.5 py-0.5 rounded-full font-bold flex items-center cursor-pointer transition shadow-2xs group shrink-0"
+          :title="t('privacy_modal_title') || '100% Local Processing Guarantee'"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 sm:mr-1.5 animate-pulse"></span>
+          <span class="hidden sm:inline">{{ t('local_badge') }}</span>
+          <ShieldCheck class="w-3 h-3 sm:ml-1 text-emerald-700 opacity-70 group-hover:opacity-100" />
+        </button>
       </div>
 
-      <!-- Actions -->
-      <div class="flex items-center space-x-2 sm:space-x-3">
-        <!-- Language Selector -->
-        <div class="relative">
-          <select 
-            :value="currentLang" 
-            @change="setLanguage($event.target.value)"
-            class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-1.5 px-2.5 rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition cursor-pointer appearance-none pr-7"
+      <!-- 2. Center: Core Tools Navigation Pills & Shortcuts -->
+      <div class="flex items-center space-x-1 sm:space-x-1.5 py-1 min-w-0 flex-1 justify-center overflow-visible">
+        <!-- 5 Core Tools -->
+        <button 
+          v-for="tool in primaryTools" 
+          :key="tool.id"
+          @click="selectPrimaryTool(tool.id)"
+          :class="[
+            'flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer select-none shrink-0',
+            activeTab === tool.id 
+              ? 'bg-blue-50 text-blue-700 font-bold shadow-2xs border border-blue-200/60' 
+              : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
+          ]"
+          :title="t(tool.labelKey)"
+        >
+          <component :is="tool.icon" class="w-3.5 h-3.5 shrink-0" :class="activeTab === tool.id ? 'text-blue-600' : 'text-slate-500'" />
+          <span :class="activeTab === tool.id ? 'inline' : 'hidden xl:inline'">{{ t(tool.labelKey) }}</span>
+        </button>
+
+        <!-- More Tools Dropdown -->
+        <div class="relative shrink-0" ref="moreMenuRef">
+          <button 
+            @click.stop="toggleMore"
+            :class="[
+              'flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer select-none',
+              isMoreActive
+                ? 'bg-blue-50 text-blue-700 font-bold shadow-2xs border border-blue-200/60' 
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
+            ]"
+            :title="t('tab_more')"
           >
-            <option value="en">🇺🇸 English</option>
-            <option value="zh">🇨🇳 简体中文</option>
-            <option value="de">🇩🇪 Deutsch</option>
-            <option value="es">🇪🇸 Español</option>
-            <option value="fr">🇫🇷 Français</option>
-          </select>
-          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-500">
-            <ChevronDown class="w-3.5 h-3.5" />
+            <component :is="activeMoreIcon || Sparkles" class="w-3.5 h-3.5 shrink-0" :class="isMoreActive ? 'text-blue-600' : 'text-slate-500'" />
+            <span>{{ activeMoreToolName || t('tab_more') }}</span>
+            <ChevronDown class="w-3 h-3 transition-transform duration-150" :class="{ 'rotate-180': isMoreOpen }" />
+          </button>
+
+          <!-- Dropdown Popover -->
+          <div 
+            v-if="isMoreOpen"
+            class="absolute left-0 top-full mt-1.5 z-50 w-48 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left space-y-0.5"
+          >
+            <button 
+              v-for="tool in moreTools"
+              :key="tool.id"
+              @click="selectMoreTool(tool.id)"
+              :class="[
+                'w-full text-left px-3 py-2 rounded-xl transition flex items-center space-x-2.5 cursor-pointer',
+                activeTab === tool.id 
+                  ? 'bg-blue-50 text-blue-700 font-bold' 
+                  : 'hover:bg-slate-50 hover:text-slate-900 text-slate-700'
+              ]"
+            >
+              <component :is="tool.icon" class="w-4 h-4 shrink-0" :class="tool.color" />
+              <span class="truncate">{{ t(tool.labelKey) }}</span>
+            </button>
           </div>
         </div>
 
-        <!-- Global Settings Button -->
+        <!-- Divider line -->
+        <div class="h-4 w-px bg-slate-200/80 mx-1 shrink-0 hidden md:block"></div>
+
+        <!-- Pipeline shortcut -->
         <button 
-          @click="$emit('open-settings')" 
-          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 transition font-semibold cursor-pointer whitespace-nowrap shrink-0"
-          :title="t('settings_modal_title') || 'Global Preferences'"
+          @click="$emit('switch-tab', 'pipeline')"
+          :class="[
+            'flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer shrink-0',
+            activeTab === 'pipeline' 
+              ? 'bg-indigo-600 text-white shadow-xs' 
+              : 'text-indigo-700 hover:bg-indigo-50 border border-indigo-200/80 bg-indigo-50/40 shadow-2xs'
+          ]"
+          :title="t('tab_pipeline') || 'Pipeline'"
         >
-          <Settings class="w-4 h-4 text-slate-600 shrink-0" />
-          <span class="hidden lg:inline whitespace-nowrap">{{ t('settings_btn_label') || 'Settings' }}</span>
+          <Zap class="w-3.5 h-3.5 shrink-0" :class="activeTab === 'pipeline' ? 'text-white' : 'text-indigo-600'" />
+          <span class="hidden 2xl:inline">{{ t('tab_pipeline') || 'Pipeline' }}</span>
         </button>
 
-        <!-- Diagnostic Log Button -->
+        <!-- Vault shortcut -->
         <button 
-          @click="$emit('open-logs')" 
-          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200/80 transition font-semibold cursor-pointer whitespace-nowrap shrink-0"
-          :title="t('log_modal_title') || 'Diagnostic Logs Console'"
+          @click="$emit('switch-tab', 'vault')"
+          :class="[
+            'flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer shrink-0',
+            activeTab === 'vault' 
+              ? 'bg-blue-600 text-white shadow-xs' 
+              : 'text-slate-700 hover:text-blue-600 hover:bg-slate-100 border border-slate-200/80 bg-white shadow-2xs'
+          ]"
+          :title="t('tab_vault')"
         >
-          <Terminal class="w-4 h-4 text-slate-600 shrink-0" />
-          <span class="hidden lg:inline whitespace-nowrap">{{ t('log_btn_label') || 'Logs' }}</span>
+          <FolderLock class="w-3.5 h-3.5 shrink-0" :class="activeTab === 'vault' ? 'text-white' : 'text-blue-600'" />
+          <span class="hidden 2xl:inline">{{ t('tab_vault') }}</span>
         </button>
+      </div>
 
-        <!-- PWA Install Button -->
+      <!-- 3. Right: Utility Controls & Settings -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+        <!-- PWA Install Button (When prompt available) -->
         <button 
           v-if="canInstallPwa"
           @click="installPwa"
-          class="flex items-center space-x-1.5 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 sm:px-3 py-1.5 rounded-xl transition font-semibold cursor-pointer shadow-2xs animate-in fade-in whitespace-nowrap shrink-0"
+          class="flex items-center space-x-1 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/90 px-2 sm:px-2.5 py-1.5 rounded-xl transition font-bold cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
           :title="t('install_app_btn') || 'Install App'"
         >
-          <DownloadCloud class="w-4 h-4 text-emerald-600 shrink-0" />
-          <span class="hidden sm:inline whitespace-nowrap">{{ t('install_app_btn') || 'Install App' }}</span>
+          <DownloadCloud class="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <span class="hidden xl:inline">{{ t('install_app_btn') || 'Install' }}</span>
         </button>
 
-        <!-- Enterprise & Pro Commercial Portal Button -->
+        <!-- Pro / Supporter Badge (If active) -->
         <button 
-          v-if="siteConfig.features.enableEnterprisePortal"
-          @click="isProSupporter ? $emit('open-settings') : $emit('open-enterprise')" 
-          :class="[
-            'flex items-center space-x-1.5 text-xs px-2.5 sm:px-3 py-1.5 rounded-xl border transition font-bold cursor-pointer shadow-2xs whitespace-nowrap shrink-0',
-            isProSupporter 
-              ? 'bg-gradient-to-r from-amber-500/10 via-emerald-500/10 to-indigo-500/10 hover:from-amber-500/20 hover:to-emerald-500/20 text-slate-800 border-amber-300/80 shadow-amber-500/10' 
-              : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200/80'
-          ]"
-          :title="isProSupporter ? `${activeTierLabel} (${activeCert?.name || t('enterprise_active_title')}) · ${t('nav_active_tooltip_hint')}` : (t('nav_enterprise_btn') || 'Commercial / Pro')"
+          v-if="isProSupporter"
+          @click="$emit('open-settings')"
+          class="flex items-center space-x-1 text-xs px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-indigo-500/15 text-slate-800 border border-amber-300 font-bold shrink-0 shadow-2xs cursor-pointer"
+          :title="activeTierLabel"
         >
-          <Crown v-if="isProSupporter" class="w-3.5 h-3.5 text-amber-500 shrink-0" />
-          <Building2 v-else class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-          <span class="hidden md:inline whitespace-nowrap">{{ isProSupporter ? activeTierLabel : (t('nav_enterprise_btn') || 'Commercial / Pro') }}</span>
-          <span v-if="isProSupporter" class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+          <Crown class="w-3.5 h-3.5 text-amber-600 shrink-0" />
+          <span class="hidden xl:inline">{{ activeTierLabel }}</span>
         </button>
 
-        <!-- Ko-fi (Controlled via siteConfig) -->
-        <a 
-          v-if="siteConfig.features.enableDonations"
-          :href="siteConfig.kofiUrl" 
-          target="_blank" 
-          class="flex items-center space-x-1.5 text-xs bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 px-2.5 sm:px-3 py-1.5 rounded-xl transition font-semibold shadow-xs whitespace-nowrap shrink-0"
-        >
-          <span class="whitespace-nowrap">{{ t('support_coffee') }}</span>
-          <span class="hidden xl:inline text-amber-700 whitespace-nowrap">{{ t('support_fish') }}</span>
-        </a>
-
-        <!-- Feedback Modal (Controlled via siteConfig) -->
-        <button 
-          v-if="siteConfig.features.enableFeedback"
-          @click="$emit('open-feedback')" 
-          class="flex items-center space-x-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 sm:px-3 py-1.5 rounded-xl transition font-medium whitespace-nowrap shrink-0"
-        >
-          <MessageSquare class="w-4 h-4 text-slate-500 shrink-0" />
-          <span class="hidden sm:inline whitespace-nowrap">{{ t('feedback_btn') }}</span>
-        </button>
-
-        <!-- GitHub -->
-        <a 
-          v-if="siteConfig.githubRepoUrl"
-          :href="siteConfig.githubRepoUrl" 
-          target="_blank" 
-          title="View GitHub Repository" 
-          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition shrink-0"
-        >
-          <Github class="w-5 h-5" />
-        </a>
-      </div>
-    </div>
-
-    <!-- Tool Navigation Tab Bar with Sleek Micro Trust Strip -->
-    <div class="bg-slate-100/90 border-t border-slate-200/80 overflow-x-auto sm:overflow-visible no-scrollbar relative z-30">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between py-2">
-        <div class="flex items-center space-x-1 sm:space-x-2">
-          <!-- Primary Core Tools (Top 5 Ranked) -->
-          <button 
-            v-for="tool in primaryTools" 
-            :key="tool.id"
-            @click="selectPrimaryTool(tool.id)"
-            :class="[
-              'flex items-center space-x-2 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs sm:text-sm transition whitespace-nowrap cursor-pointer',
-              activeTab === tool.id 
-                ? 'bg-white text-blue-600 shadow-xs font-semibold' 
-                : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium'
-            ]"
+        <!-- Language Selector -->
+        <div class="relative shrink-0">
+          <select 
+            :value="currentLang" 
+            @change="setLanguage($event.target.value)"
+            class="text-xs bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold py-1.5 pl-2.5 pr-6 rounded-xl border border-slate-200/80 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition cursor-pointer appearance-none"
+            :title="t('select_language') || 'Language'"
           >
-            <component :is="tool.icon" class="w-4 h-4" />
-            <span>{{ t(tool.labelKey) }}</span>
-          </button>
-
-          <!-- More Tools Dropdown Menu -->
-          <div class="relative" ref="moreMenuRef">
-            <button 
-              @click.stop="isMoreOpen = !isMoreOpen"
-              :class="[
-                'flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm transition whitespace-nowrap cursor-pointer select-none',
-                isMoreActive
-                  ? 'bg-white text-blue-600 shadow-xs font-semibold' 
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-white/60 font-medium'
-              ]"
-            >
-              <component :is="activeMoreIcon || Sparkles" class="w-3.5 h-3.5" :class="isMoreActive ? 'text-blue-600' : 'text-slate-500'" />
-              <span>{{ activeMoreToolName || t('tab_more') }}</span>
-              <ChevronDown class="w-3.5 h-3.5 transition-transform duration-150" :class="{ 'rotate-180': isMoreOpen }" />
-            </button>
-
-            <!-- Dropdown Popover -->
-            <div 
-              v-if="isMoreOpen"
-              class="absolute left-0 top-full mt-1.5 z-50 w-44 bg-white rounded-2xl shadow-xl border border-slate-200/90 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left"
-            >
-              <button 
-                v-for="tool in moreTools"
-                :key="tool.id"
-                @click="selectMoreTool(tool.id)"
-                :class="[
-                  'w-full text-left px-3 py-2 rounded-xl transition flex items-center space-x-2 cursor-pointer',
-                  activeTab === tool.id 
-                    ? 'bg-blue-50 text-blue-700 font-bold' 
-                    : 'hover:bg-slate-50 hover:text-slate-900 text-slate-700'
-                ]"
-              >
-                <component :is="tool.icon" class="w-4 h-4" :class="tool.color" />
-                <span>{{ t(tool.labelKey) }}</span>
-              </button>
-            </div>
+            <option value="en">🇺🇸 EN</option>
+            <option value="de">🇩🇪 DE</option>
+            <option value="es">🇪🇸 ES</option>
+            <option value="fr">🇫🇷 FR</option>
+            <option value="zh">🇨🇳 简中</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
+            <ChevronDown class="w-3 h-3" />
           </div>
         </div>
 
-        <!-- Right Side Dedicated Pipeline & Vault Hub -->
-        <div class="flex items-center space-x-2 pl-2">
+        <!-- About Dropdown Menu -->
+        <div class="relative shrink-0" ref="aboutMenuRef">
           <button 
-            @click="$emit('switch-tab', 'pipeline')"
-            :class="[
-              'flex items-center space-x-1.5 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer',
-              activeTab === 'pipeline' 
-                ? 'bg-indigo-600 text-white shadow-xs font-semibold' 
-                : 'bg-indigo-50/80 hover:bg-indigo-100 text-indigo-700 border border-indigo-200/80 shadow-2xs font-semibold'
-            ]"
+            @click.stop="toggleAbout" 
+            class="flex items-center space-x-1 sm:space-x-1.5 py-1.5 px-2.5 rounded-xl transition cursor-pointer shrink-0 border border-slate-200/80 shadow-2xs select-none"
+            :class="isAboutOpen ? 'bg-blue-50 text-blue-700 border-blue-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'"
+            :title="t('navbar_about_title') || '关于与法律条款'"
           >
-            <Zap class="w-4 h-4" :class="activeTab === 'pipeline' ? 'text-white' : 'text-indigo-600'" />
-            <span>{{ t('tab_pipeline') || 'Pipeline' }}</span>
+            <Info class="w-3.5 h-3.5 shrink-0" :class="isAboutOpen ? 'text-blue-600' : 'text-slate-600'" />
+            <span class="hidden sm:inline text-xs font-semibold">{{ t('navbar_about') || '关于' }}</span>
+            <ChevronDown class="w-3 h-3 text-slate-400 transition-transform duration-150" :class="{ 'rotate-180': isAboutOpen }" />
           </button>
 
-          <button 
-            @click="$emit('switch-tab', 'vault')"
-            :class="[
-              'flex items-center space-x-2 px-3 sm:px-3.5 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer',
-              activeTab === 'vault' 
-                ? 'bg-blue-600 text-white shadow-xs font-semibold' 
-                : 'bg-white/80 hover:bg-white text-slate-700 hover:text-blue-600 border border-slate-200/80 shadow-2xs font-semibold'
-            ]"
+          <!-- Dropdown Popover (Aligned Right) -->
+          <div 
+            v-if="isAboutOpen"
+            class="absolute right-0 top-full mt-1.5 z-50 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 text-xs text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left space-y-1"
           >
-            <FolderLock class="w-4 h-4" :class="activeTab === 'vault' ? 'text-white' : 'text-blue-600'" />
-            <span>{{ t('tab_vault') }}</span>
-          </button>
+            <!-- Popover Header: Brand & Local Offline Badge -->
+            <div class="p-3 bg-gradient-to-r from-blue-50/70 via-slate-50 to-indigo-50/50 rounded-xl border border-blue-100/60 mb-1.5">
+              <div class="flex items-center space-x-2.5">
+                <span class="text-2xl select-none">🦭</span>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center space-x-1.5">
+                    <h4 class="font-extrabold text-slate-900 text-sm">PDFSeal</h4>
+                    <span class="text-[10px] bg-slate-900 text-white px-1.5 py-0.2 rounded-full font-mono font-bold">v{{ siteConfig.version }}</span>
+                  </div>
+                  <p class="text-[11px] text-emerald-700 font-medium mt-0.5 flex items-center">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 shrink-0"></span>
+                    {{ t('brand_footer_claim') || '100% 浏览器本地离线 · 零数据上传' }}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Menu Item 1: Privacy Guarantee Manifesto Modal -->
+            <button
+              type="button"
+              @click="isAboutOpen = false; $emit('open-privacy')"
+              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-slate-50 hover:text-slate-900 cursor-pointer group"
+            >
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <ShieldCheck class="w-4 h-4 text-emerald-600 shrink-0" />
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('footer_privacy') || '隐私承诺与白皮书' }}</span>
+              </div>
+              <span class="text-[10px] text-slate-400 group-hover:text-slate-600">🛡️</span>
+            </button>
+
+            <!-- Menu Item 2: Open Source AGPL-3.0 License -->
+            <a
+              :href="siteConfig.githubRepoUrl ? `${siteConfig.githubRepoUrl}/blob/main/LICENSE` : 'https://www.gnu.org/licenses/agpl-3.0.en.html'"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="isAboutOpen = false"
+              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-slate-50 hover:text-slate-900 cursor-pointer group"
+            >
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <FileText class="w-4 h-4 text-emerald-600 shrink-0" />
+                <div class="truncate">
+                  <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_agpl_title') || 'AGPL-3.0 开源协议' }}</span>
+                </div>
+              </div>
+              <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200 rounded">AGPLv3 ↗</span>
+            </a>
+
+            <!-- Menu Item 3: Commercial License (v-if="siteConfig.features.enableEnterprisePortal") -->
+            <button
+              v-if="siteConfig.features.enableEnterprisePortal"
+              type="button"
+              @click="isAboutOpen = false; $emit('open-enterprise')"
+              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-slate-50 hover:text-slate-900 cursor-pointer group"
+            >
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <Building2 class="w-4 h-4 text-indigo-600 shrink-0" />
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_commercial_title') || '商业与专业许可 (Commercial / Pro)' }}</span>
+              </div>
+              <span class="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">Pro</span>
+            </button>
+
+            <!-- Menu Item 4: GitHub Repo (v-if="siteConfig.githubRepoUrl") -->
+            <a
+              v-if="siteConfig.githubRepoUrl"
+              :href="siteConfig.githubRepoUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="isAboutOpen = false"
+              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-slate-50 hover:text-slate-900 cursor-pointer group"
+            >
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <Github class="w-4 h-4 text-slate-800 shrink-0" />
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_github_title') || 'GitHub 开源仓库' }}</span>
+              </div>
+              <span class="text-[10px] text-slate-400 group-hover:text-slate-600">↗</span>
+            </a>
+
+            <!-- Menu Item 5: Feedback (v-if="siteConfig.features.enableFeedback") -->
+            <button
+              v-if="siteConfig.features.enableFeedback"
+              type="button"
+              @click="isAboutOpen = false; $emit('open-feedback')"
+              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-slate-50 hover:text-slate-900 cursor-pointer group"
+            >
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <MessageSquare class="w-4 h-4 text-blue-600 shrink-0" />
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_feedback_title') || '意见与问题反馈' }}</span>
+              </div>
+              <span class="text-[10px] text-blue-500 font-semibold">Tally ↗</span>
+            </button>
+
+            <!-- Menu Item 6: Diagnostic Logs -->
+            <button
+              type="button"
+              @click="isAboutOpen = false; $emit('open-logs')"
+              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-slate-50 hover:text-slate-900 cursor-pointer group"
+            >
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <Terminal class="w-4 h-4 text-slate-600 shrink-0" />
+                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_logs_title') || '诊断与排错日志' }}</span>
+              </div>
+              <span class="text-[10px] font-mono text-slate-400">LOGS</span>
+            </button>
+
+            <!-- Menu Item 7: Ko-fi / Donate (v-if="siteConfig.features.enableDonations") -->
+            <a
+              v-if="siteConfig.features.enableDonations"
+              :href="siteConfig.kofiUrl"
+              target="_blank"
+              rel="noopener noreferrer"
+              @click="isAboutOpen = false"
+              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-amber-50 hover:text-amber-950 cursor-pointer group border-t border-slate-100 pt-2 mt-1"
+            >
+              <div class="flex items-center space-x-2.5 min-w-0">
+                <Coffee class="w-4 h-4 text-amber-600 shrink-0" />
+                <span class="font-semibold text-amber-900">{{ t('about_kofi_title') || '请小海豹吃鱼' }}</span>
+              </div>
+              <span class="text-[10px] text-amber-600 font-bold bg-amber-100/70 px-1.5 py-0.5 rounded">☕ ↗</span>
+            </a>
+          </div>
         </div>
+
+        <!-- Global Settings Button (Opens Preferences) -->
+        <button 
+          @click="$emit('open-settings')" 
+          class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition cursor-pointer shrink-0 border border-slate-200/80 shadow-2xs"
+          :title="t('settings_modal_title') || '全局偏好设置'"
+        >
+          <Settings class="w-4 h-4 text-slate-600 shrink-0" />
+        </button>
       </div>
+
     </div>
   </header>
 </template>
@@ -221,8 +313,6 @@
 <script setup>
 import { 
   ChevronDown, 
-  MessageSquare, 
-  Github, 
   Layers, 
   Minimize2,
   LayoutGrid, 
@@ -233,22 +323,27 @@ import {
   Zap,
   Lock,
   Settings,
-  Terminal, 
+  Info,
   Sparkles,
   PenTool,
   Unlock,
   Images,
   ImageDown,
   DownloadCloud,
-  Building2,
   Crown,
-  ListOrdered
+  ListOrdered,
+  FileText,
+  Building2,
+  Github,
+  MessageSquare,
+  Terminal,
+  Coffee
 } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { currentLang, setLanguage, t } from '../i18n';
-import { toolUsageCounts, DEFAULT_WEIGHTS, recordToolUsage } from '../utils/usageTracker';
+import { recordToolUsage } from '../utils/usageTracker';
 import { siteConfig } from '../config/siteConfig';
-import { isProSupporter, activeTierLabel, activeCert } from '../utils/security/certificateStore';
+import { isProSupporter, activeTierLabel } from '../utils/security/certificateStore';
 
 const props = defineProps({
   activeTab: {
@@ -257,7 +352,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-logs', 'open-enterprise']);
+const emit = defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-about', 'open-logs', 'open-enterprise']);
 
 // Primary Core Tools (Strictly fixed 5 pillars for predictable muscle memory)
 const primaryTools = [
@@ -282,11 +377,24 @@ const moreTools = [
 const isMoreOpen = ref(false);
 const moreMenuRef = ref(null);
 
+const isAboutOpen = ref(false);
+const aboutMenuRef = ref(null);
+
 const isMoreActive = computed(() => moreTools.some(t => t.id === props.activeTab));
 
 const activeMoreTool = computed(() => moreTools.find(t => t.id === props.activeTab));
 const activeMoreToolName = computed(() => activeMoreTool.value ? t(activeMoreTool.value.labelKey) : null);
 const activeMoreIcon = computed(() => activeMoreTool.value ? activeMoreTool.value.icon : null);
+
+function toggleMore() {
+  isAboutOpen.value = false;
+  isMoreOpen.value = !isMoreOpen.value;
+}
+
+function toggleAbout() {
+  isMoreOpen.value = false;
+  isAboutOpen.value = !isAboutOpen.value;
+}
 
 function selectPrimaryTool(id) {
   recordToolUsage(id);
@@ -302,6 +410,9 @@ function selectMoreTool(id) {
 function handleOutsideClick(e) {
   if (moreMenuRef.value && !moreMenuRef.value.contains(e.target)) {
     isMoreOpen.value = false;
+  }
+  if (aboutMenuRef.value && !aboutMenuRef.value.contains(e.target)) {
+    isAboutOpen.value = false;
   }
 }
 

@@ -36,22 +36,25 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 
 ## ✨ Features & Architecture
 
-### 🛠️ 12 Core Local PDF Utilities (100% Free & Unlimited)
+### 🛠️ 13 Core Local PDF Utilities (100% Free & Unlimited)
 
-*All atomic tools run entirely client-side in browser RAM with no arbitrary limits or watermark penalties:*
+*All atomic utilities execute entirely client-side in browser RAM with zero arbitrary limits, no watermark penalties, and zero data leakage:*
 
-- **Merge PDFs**: Combine multiple documents in custom order with intuitive drag-and-drop.
-- **Smart Compress**: Reduce file size by up to 90% across 3 fine-tuned modes (*Balanced 300 DPI*, *Extreme 150 DPI*, and *Lossless Object Stream Compression*) protected by a Universal Anti-Inflation Size Guard.
-- **Reorder & Rotate**: Visual thumbnail grid to reorder, rotate pages 90°/180°, or delete unneeded pages.
-- **Split & Extract**: Select individual pages or custom page ranges (e.g. `1-3, 5, 8-end`) to export instantly.
-- **Watermark & Protect**: High-DPI transparent canvas watermarks supporting multi-language typography and optional owner-level permissions locking.
-- **Dynamic Page Numbering**: Add customizable page numbers (`{n}`, `{total}`, `Page {n} of {total}`) with full-ribbon or local whiteout masking to cover legacy numbers, parchment/canvas color auto-sampling, and cover page skipping.
-- **Sign & Stamp**: Embed handwritten signatures or official seals with instant placement presets (*Last Page Bottom Right*, *First Page*, etc.).
-- **Image to PDF**: Convert PNG, JPG, and WebP images into standard A4 or auto-fitted multi-page PDF documents.
-- **PDF to Image**: Render each PDF page as a crisp PNG or JPG at *Standard 150 DPI* or *print-grade 300 DPI* — download single pages or the entire batch as a ZIP, right from the page thumbnails.
-- **Unlock & Strip Restrictions**: Decrypt password-protected files and permanently strip printing/copying permission locks.
-- **Deep Metadata Sanitizer**: Permanently purge document author, editing software, creation timestamps, GPS data, and embedded thumbnails.
-- **Local Privacy Vault**: Secure in-browser document archive powered by IndexedDB with Web Crypto SHA-256 duplicate detection.
+- **Merge PDFs**: Combine multiple documents in custom order with intuitive drag-and-drop. Features real-time page count aggregation, pre-merge thumbnail preview, and instant stage-three delivery relays to seamlessly chain into compression or protection.
+- **Organize & Rotate**: Visual thumbnail grid workbench to reorder, multi-select with Shift or drag-box selection, rotate pages 90°/180°, and delete unneeded pages. Insert standard blank A4 pages anywhere (complete with multilingual watermark placeholders) or append external files, backed by a 30-step lossless undo/redo history stack and selective-page export.
+- **Split & Extract**: Precision document slicing across 4 dedicated operational modes: *Extract to Single PDF* (isolate specific pages or ranges like `1-3, 5, 8-end`), *Burst to Single Pages* (split the entire document into N distinct one-page files), *Fixed Step Split* (divide evenly every N pages), and *Custom Range Segmentation*. Export directly as standalone PDFs or bundled into a ZIP archive.
+- **Smart Compress**: Reduce file size by up to 90% across 4 fine-tuned modes: *Balanced (300 DPI)* for crisp readability; *Extreme (150 DPI)* for tight email caps; *Lossless Object Stream Compression* for structural optimization without rasterization; and **Target Size Bisection** (specify exact thresholds like ≤ 2MB, auto-tuning resolution and quality factors in-browser). All modes are guarded by a Universal Anti-Inflation Size Guard.
+- **Watermark & Protect**: High-DPI transparent canvas watermark stamping engine. Supports multilingual typography, custom font sizing, opacity, tilt angles (-90° to 90°), repetitive grid tiling or centered placement, quick color swatches (Official Red, Navy Blue), and custom hex values, with direct chaining into owner-level permission encryption.
+- **Dynamic Page Numbering**: Professional document pagination. Supports customizable format macros (`{n}`, `{total}`, `Page {n} of {total}`, etc.), 6 header/footer alignment anchors, odd/even mirror flipping, and cover page skipping (starting page 1 on sheet 2). Features proprietary **Whiteout Masking** (full-ribbon or local bounding box) with canvas color auto-sampling to cleanly conceal misaligned legacy page numbers.
+- **Sign & Stamp**: Engineered for rigorous contract signing. Supports freehand drawing, typography-generated signatures, and uploaded seal images. Proprietary local background flattening automatically strips camera shadows and paper whiteout, with instant ink recoloring (Original, Ink Black, Deep Blue, Stamp Red). One-click batch initial placement across all, even, odd, or non-terminal pages, backed by a persistent local seal library and positioning presets.
+- **PDF to Image**: High-fidelity rasterization of PDF pages into crisp PNG or JPG images. Choose between *Standard 150 DPI* for web distribution and *Print-Grade 300 DPI* for archival clarity. Download individual pages directly from thumbnail cards or export the complete set as a zipped archive in one click.
+- **Image to PDF**: Convert batches of PNG, JPG, WebP, and BMP images into a unified multi-page PDF. Offers standardized A4 dimensions (with auto-orientation and proportional centered margins) or adaptive native-image sizing, ideal for expense receipt collation and identity document archiving.
+- **Protect & Encrypt**: Modern high-grade AES-256 client-side encryption. Protect documents with an **Open Password (User Password)** to prevent unauthorized reading, and set an **Owner Password** to enforce granular operational restrictions (prohibiting unauthorized printing, text/image extraction, form alterations, and annotating), securing distributed contracts without sending keys to the cloud.
+- **Unlock & Strip Restrictions**: Permanently remove encryption locks and permission restrictions. After validating the document password, the client engine restructures the internal object streams to permanently purge encryption dictionaries, yielding a clean, unrestricted, plaintext PDF.
+- **Deep Metadata Sanitizer**: Essential privacy purification for government, corporate audits, and sensitive disclosures. Deeply audits and permanently purges hidden forensic metadata: document titles, author names, company names, software fingerprints (Word, WPS, InDesign), timestamps, camera GPS coordinates, private application dictionaries (PieceInfo), and embedded thumbnail caches.
+- **Local Privacy Vault**: Secure in-browser document staging and archive powered by IndexedDB with zero network telemetry. Leverages native Web Crypto SHA-256 content hashing for automatic deduplication, toggleable grid/list views, automatic or one-click post-processing storage, and instant reloading into downstream editing tools.
+
+> 💡 **Unified Three-Stage Delivery Architecture**: All 12 core interactive processing tools feature a standardized three-step workflow (« ① Upload File → ② Configure & Process → ③ Delivery & Next Relays »), complete with before/after size & ratio metric badges, seamless full-screen preview, one-click re-download, « Return to Edit » state preservation, and next-action relays (e.g., compress immediately after merging, or add watermarks right after signing).
 
 ---
 
@@ -65,7 +68,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
   - 📑 **Contract Batch Stamping & Archive**: Permission unlock $\rightarrow$ Last page signature stamping $\rightarrow$ Security watermark.
 - **Visual Drag & Drop Pipeline Builder**:
   - Reorder, configure, add, or remove steps with live node compatibility port validation.
-  - Real-time multi-file batch execution with step-by-step progress tracking and cancellation support.
+  - Real-time multi-file batch execution with step-by-step progress tracking, cancellation support, and active event loop yielding.
   - Batch export options: sequential download, automatic local Vault archiving, and dynamic token naming (`{original}_{date}_{index}`).
 
 ---
@@ -100,8 +103,10 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **Styling & UI**: [Tailwind CSS](https://tailwindcss.com/) & [Lucide Icons](https://lucide.dev/)
 - **PDF Engine**: [pdf-lib](https://pdf-lib.js.org/) & [pdfjs-dist](https://mozilla.github.io/pdf.js/)
 - **Security & Cryptography**: Native Web Crypto API (SubtleCrypto AES-GCM-256, SHA-256)
-- **Local Storage**: IndexedDB with structured transactional stores
-- **Testing**: [Vitest](https://vitest.dev/) (26 test suites, 95 unit tests)
+- **Internationalization**: Vue I18n (Full support for 🇺🇸 English, 🇩🇪 German, 🇪🇸 Spanish, 🇫🇷 French, 🇨🇳 Simplified Chinese)
+- **Local Storage**: IndexedDB with structured transactional stores (Privacy Vault)
+- **Performance & Scheduling**: Active Event Loop Yielding to prevent UI freezing during intensive WASM/canvas computations
+- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**28 unit test suites, 137 unit tests 100% passing**, plus headless browser E2E regression suites)
 
 ---
 
@@ -121,7 +126,10 @@ npm run dev
 # 4. Run automated unit test suite
 npm test
 
-# 5. Build for production (generates PWA Service Worker)
+# 5. Run headless browser end-to-end (E2E) regression tests
+npm run test:e2e
+
+# 6. Build for production (generates PWA Service Worker)
 npm run build
 ```
 
@@ -132,25 +140,6 @@ npm run build
 docker compose up -d
 ```
 
-
----
-
-## 🗺️ Roadmap
-
-**Recently shipped**
-
-- ✅ **PDF to Image converter** — PNG/JPG export at 150/300 DPI with single-page and batch ZIP download
-- ✅ **Automated batch pipeline** — drag-and-drop node builder with presets and live compatibility validation
-- ✅ **Signature tool upgrade** — apply initials across all pages in one click, a locally saved signature/seal library, and automatic white-background & shadow removal for photographed signatures
-- ✅ **Organize tool upgrade** — Shift / box multi-select for batch rotate & delete, insert blank pages (multilingual watermark) or append external files anywhere, with 30-step undo/redo stack
-
-**Planned next**
-
-- 🔜 **Page Numbering system** — flexible format macros (`Page {n} of {total}`), cover page exclusion, and 6 header/footer alignment anchors
-- 🔜 **Target file size compression** — specify hard size caps (e.g. ≤ 2MB) with binary search auto-tuning
-- 🔜 More interface languages (community contributions welcome!)
-
-> Have a feature idea? [Open an issue](https://github.com/sealkit-org/pdfseal/issues) — feedback from real privacy-conscious users shapes this roadmap.
 
 ---
 

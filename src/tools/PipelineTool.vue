@@ -2201,7 +2201,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, inject, onMounted, onActivated, onBeforeUnmount } from 'vue';
 
 import { 
   Zap, 
@@ -2333,7 +2333,17 @@ function onDragEnd() {
 }
 
 // File & Execution State
+const workspaceState = inject('workspaceActiveState', null);
 const inputFiles = ref([]);
+
+watch(() => inputFiles.value.length > 0, (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(inputFiles.value.length > 0);
+});
+
 const isDragging = ref(false);
 const isRunning = ref(false);
 const outputResults = ref([]);

@@ -70,8 +70,32 @@
         </div>
       </div>
 
-      <!-- 2. ACTIVE WORKSPACE -->
+      <!-- 2. ACTIVE WORKSPACE OR UNIFIED RESULT DELIVERY -->
       <div v-else class="flex-1 flex flex-col justify-between pt-4">
+        <!-- 2A. Unified Processing & Result Delivery View -->
+        <ResultDeliveryView 
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
+          :file="lastExportedFile"
+          source-tool="protect"
+          :page-count="totalPages"
+          @redownload="handleReDownload"
+          @new-task="handleNewTask"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+        >
+          <template #metrics>
+            <span class="inline-flex items-center space-x-1 text-xs font-semibold text-rose-700 bg-rose-50 px-2.5 py-1 rounded-lg border border-rose-200/60 shadow-2xs">
+              <Lock class="w-3.5 h-3.5 text-rose-600" />
+              <span>{{ t('protect_metric_badge', { algo: algorithm || 'AES-256' }) || `已启用 ${algorithm || 'AES-256'} 高强度加密与权限控制` }}</span>
+            </span>
+          </template>
+        </ResultDeliveryView>
+
+        <!-- 2B. Staging Workspace & Bottom Execution Bar -->
+        <div v-else class="flex-1 flex flex-col justify-between min-h-0">
         <div class="space-y-4">
           <!-- File Summary Card -->
           <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80">
@@ -556,17 +580,8 @@
           </div>
         </div>
 
-        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <!-- Bottom Cluster: Output Settings Bar -->
         <div class="shrink-0 space-y-2.5 pt-2">
-          <!-- Next Action Relay Banner -->
-          <NextActionBanner 
-            v-if="showNextActions && lastExportedFile"
-            :current-tool="'protect'"
-            :file="lastExportedFile"
-            @send-to-tool="(tId) => emit('send-to-tool', tId)"
-            @close="showNextActions = false"
-          />
-
           <!-- Bottom Execution & Output Settings Bar -->
           <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
             <div class="flex flex-wrap items-center gap-3">
@@ -606,6 +621,7 @@
             </button>
           </div>
         </div>
+        </div>
       </div>
     </div>
 
@@ -630,7 +646,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, inject, onMounted, onActivated } from 'vue';
 import { 
   Lock, 
   Plus, 
@@ -662,15 +678,29 @@ import { generateExportFileName } from '../utils/filenameUtils';
 import { consumePendingFile } from '../utils/toolBridge';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import PasswordModal from '../components/PasswordModal.vue';
-import NextActionBanner from '../components/NextActionBanner.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool', 'open-enterprise']);
 
+const workspaceState = inject('workspaceActiveState', null);
+
 const lastExportedFile = ref(null);
 const showNextActions = ref(false);
+const progressPercent = ref(0);
+const progressMessage = ref('');
+let cachedPdfBlob = null;
+let cachedPdfName = '';
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
+
+watch(() => Boolean(docBytes.value), (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+});
 const filename = ref('');
 const totalPages = ref(0);
 const originalSizeFormatted = ref('0 B');
@@ -894,6 +924,20 @@ function handlePasswordCancel() {
   reset();
 }
 
+function handleReDownload() {
+  if (cachedPdfBlob && cachedPdfName) {
+    triggerDownload(cachedPdfBlob, cachedPdfName);
+  }
+}
+
+function handleNewTask() {
+  reset();
+}
+
+function handleBackToEdit() {
+  lastExportedFile.value = null;
+}
+
 function reset() {
   docBytes.value = null;
   filename.value = '';
@@ -911,6 +955,10 @@ function reset() {
   activePreset.value = 'confidential';
   showNextActions.value = false;
   lastExportedFile.value = null;
+  progressPercent.value = 0;
+  progressMessage.value = '';
+  cachedPdfBlob = null;
+  cachedPdfName = '';
 }
 
 function formatErrorMessage(err) {
@@ -969,6 +1017,10 @@ async function executeProtect() {
   }
 
   isProcessing.value = true;
+  progressPercent.value = 15;
+  progressMessage.value = t('protect_progress_parsing') || '正在分析文档结构与安全层...';
+  // Yield to event loop for smooth UI animation
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   try {
     // 1. Ensure clean base document
@@ -982,6 +1034,11 @@ async function executeProtect() {
     } else {
       rawBytes = docBytes.value;
     }
+
+    progressPercent.value = 45;
+    progressMessage.value = t('protect_progress_encrypting') || '正在执行底层安全加密与权限设定...';
+    // Yield to event loop
+    await new Promise(resolve => setTimeout(resolve, 0));
 
     // 2. Determine open password & owner password
     const passToOpen = activePreset.value === 'confidential' ? userPassword.value : '';
@@ -1001,34 +1058,53 @@ async function executeProtect() {
       allowHighQualityPrint: Boolean(allowPrinting.value)
     });
 
+    progressPercent.value = 85;
+    progressMessage.value = t('protect_progress_saving') || '正在封装并持久化受保护文档...';
+    // Yield to event loop
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, 'Protected'));
     if (!outName.toLowerCase().endsWith('.pdf')) {
       outName += '.pdf';
     }
 
+    const pdfBlob = new Blob([encryptedBytes], { type: 'application/pdf' });
+    cachedPdfBlob = pdfBlob;
+    cachedPdfName = outName;
+
     // 4. Download
-    triggerDownload(new Blob([encryptedBytes], { type: 'application/pdf' }), outName);
+    triggerDownload(pdfBlob, outName);
     confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
     logger.info('PROTECT', `PDF encrypted and protected successfully: ${outName}`);
 
+    const ab = encryptedBytes.buffer ? encryptedBytes.buffer.slice(encryptedBytes.byteOffset, encryptedBytes.byteOffset + encryptedBytes.byteLength) : encryptedBytes;
+
     lastExportedFile.value = {
       name: outName,
-      arrayBuffer: encryptedBytes.buffer ? encryptedBytes.buffer.slice(encryptedBytes.byteOffset, encryptedBytes.byteOffset + encryptedBytes.byteLength) : encryptedBytes
+      size: encryptedBytes.byteLength || encryptedBytes.length,
+      arrayBuffer: ab,
+      blob: pdfBlob
     };
     showNextActions.value = true;
 
     // 5. Auto-save to Vault if checked
     if (autoSaveToVault.value) {
-      await saveFile({
-        name: outName,
-        arrayBuffer: encryptedBytes,
-        folderId: 'default',
-        category: 'export',
-        pageCount: totalPages.value,
-        isEncrypted: true
-      });
-      logger.info('VAULT', `Protected PDF auto-saved to Vault: ${outName} (isEncrypted=true)`);
+      try {
+        await saveFile({
+          name: outName,
+          arrayBuffer: ab,
+          folderId: 'default',
+          category: 'export',
+          pageCount: totalPages.value,
+          isEncrypted: true
+        });
+        logger.info('VAULT', `Protected PDF auto-saved to Vault: ${outName} (isEncrypted=true)`);
+      } catch (e) {
+        logger.warn('VAULT', `Failed to auto-save to Vault: ${e.message}`);
+      }
     }
+
+    progressPercent.value = 100;
   } catch (err) {
     logger.error('PROTECT', `Protect failed: ${err.message}`);
     protectError.value = formatErrorMessage(err);

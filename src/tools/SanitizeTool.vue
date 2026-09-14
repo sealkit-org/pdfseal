@@ -3,7 +3,7 @@
     <!-- Main Card Container matching Merge, Organize, Split, and Watermark tools -->
     <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Integrated Header with Badge -->
-      <div class="flex items-center justify-between pb-3 mb-2.5 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-9 h-9 rounded-2xl bg-cyan-50 text-cyan-600 flex items-center justify-center font-bold shadow-2xs">
             <ShieldCheck class="w-4.5 h-4.5" />
@@ -27,7 +27,7 @@
         @dragleave.prevent="isDragOver = false"
         @drop.prevent="onDrop"
         :class="[
-          'border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition flex-1 flex flex-col items-center justify-center relative select-none',
+          'flex-1 border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center transition flex flex-col items-center justify-center my-4 relative select-none',
           isDragOver ? 'border-cyan-500 bg-cyan-50/50' : 'border-slate-200/90 hover:border-cyan-400 bg-slate-50/40 hover:bg-slate-50/80'
         ]"
       >
@@ -68,8 +68,32 @@
         </div>
       </div>
 
-      <!-- State B: Active Document Workspace -->
-      <div v-else class="flex-1 flex flex-col justify-between overflow-hidden">
+      <!-- State B: Active Document Workspace OR UNIFIED RESULT DELIVERY -->
+      <div v-else class="flex-1 flex flex-col justify-between pt-3 sm:pt-3.5 overflow-hidden">
+        <!-- Unified Processing & Result Delivery View -->
+        <ResultDeliveryView 
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
+          :file="lastExportedFile"
+          source-tool="sanitize"
+          :page-count="totalPages"
+          @redownload="handleReDownload"
+          @new-task="handleNewTask"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+        >
+          <template #metrics>
+            <span class="inline-flex items-center space-x-1 text-xs font-semibold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-lg border border-cyan-200/60 shadow-2xs">
+              <ShieldCheck class="w-3.5 h-3.5 text-cyan-600" />
+              <span>{{ t('san_metric_badge') || '已彻底擦除元数据/脚本/批注 · 隐私 100% 净化' }}</span>
+            </span>
+          </template>
+        </ResultDeliveryView>
+
+        <!-- Staging Workspace & Bottom Execution Bar -->
+        <div v-else class="flex-1 flex flex-col justify-between min-h-0">
         <!-- Top Toolbar & Status Bar -->
         <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 border-b border-slate-100 shrink-0">
           <div class="flex items-center space-x-2 min-w-0 flex-1">
@@ -227,17 +251,8 @@
           </div>
         </div>
 
-        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <!-- Bottom Cluster: Output Settings Bar -->
         <div class="shrink-0 space-y-2.5 pt-2">
-          <!-- Next Action Relay Banner -->
-          <NextActionBanner 
-            v-if="showNextActions && lastExportedFile"
-            :current-tool="'sanitize'"
-            :file="lastExportedFile"
-            @send-to-tool="(tId) => emit('send-to-tool', tId)"
-            @close="showNextActions = false"
-          />
-
           <!-- Assembly Bottom Action & Export Configuration Bar -->
           <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
             <!-- Left: Output Filename & Auto-save Checkbox -->
@@ -280,6 +295,7 @@
             </div>
           </div>
         </div>
+        </div>
       </div>
     </div>
 
@@ -304,7 +320,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, inject, onMounted, onActivated } from 'vue';
 import { 
   ShieldCheck, 
   Plus, 
@@ -329,15 +345,43 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
-import NextActionBanner from '../components/NextActionBanner.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
+const workspaceState = inject('workspaceActiveState', null);
+
 const lastExportedFile = ref(null);
 const showNextActions = ref(false);
+const progressPercent = ref(0);
+const progressMessage = ref('');
+let cachedPdfBlob = null;
+let cachedPdfName = '';
+
+function handleReDownload() {
+  if (cachedPdfBlob && cachedPdfName) {
+    triggerDownload(cachedPdfBlob, cachedPdfName);
+  }
+}
+
+function handleNewTask() {
+  reset();
+}
+
+function handleBackToEdit() {
+  lastExportedFile.value = null;
+}
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
+
+watch(() => Boolean(docBytes.value), (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+});
 const filename = ref('');
 const totalPages = ref(0);
 const rawMetadata = ref({});
@@ -529,14 +573,27 @@ function reset() {
   filename.value = '';
   totalPages.value = 0;
   rawMetadata.value = {};
-  unlockedPassword = '';
+  pendingFileName.value = '';
   pendingFileObj = null;
+  unlockedPassword = '';
   showNextActions.value = false;
   lastExportedFile.value = null;
+  cachedPdfBlob = null;
+  cachedPdfName = '';
+  progressPercent.value = 0;
+  progressMessage.value = '';
+  if (fileInputRef.value) {
+    fileInputRef.value.value = '';
+  }
 }
 
 async function generateSanitizedBytes() {
   if (!docBytes.value) return null;
+
+  progressPercent.value = 15;
+  progressMessage.value = t('san_progress_metadata') || '正在擦除文档元数据与 XMP 资产...';
+  await new Promise(resolve => setTimeout(resolve, 0));
+
   const pdfDoc = await PDFDocument.load(docBytes.value, {
     password: unlockedPassword || undefined,
     ignoreEncryption: !unlockedPassword,
@@ -574,6 +631,10 @@ async function generateSanitizedBytes() {
     console.warn('SANITIZE', `Failed to purge XMP Metadata: ${e.message}`);
   }
 
+  progressPercent.value = 45;
+  progressMessage.value = t('san_progress_scripts') || '正在安全剥离嵌入脚本与危险动作...';
+  await new Promise(resolve => setTimeout(resolve, 0));
+
   // Clear Javascript / Actions / OpenAction
   try {
     const catalog = pdfDoc.catalog;
@@ -595,6 +656,10 @@ async function generateSanitizedBytes() {
     console.warn('SANITIZE', `Failed to delete JavaScript/Actions: ${e.message}`);
   }
 
+  progressPercent.value = 70;
+  progressMessage.value = t('san_progress_annots') || '正在平整化表单并清除残留批注...';
+  await new Promise(resolve => setTimeout(resolve, 0));
+
   // Clear Annots & Flatten Forms
   try {
     const form = pdfDoc.getForm();
@@ -615,41 +680,63 @@ async function generateSanitizedBytes() {
     console.warn('SANITIZE', `Failed to delete annotations: ${e.message}`);
   }
 
+  progressPercent.value = 88;
+  progressMessage.value = t('san_progress_saving') || '正在深度优化并封装纯净文档...';
+  await new Promise(resolve => setTimeout(resolve, 0));
+
   const outBytes = await pdfDoc.save();
   let outName = (customOutputBaseName.value.trim() || `PDFSeal_Sanitized_${Date.now()}`);
   if (!outName.toLowerCase().endsWith('.pdf')) {
     outName += '.pdf';
   }
+
+  progressPercent.value = 100;
   return { outBytes, outName, pageCount: totalPages.value };
 }
 
 async function executeSanitize() {
   if (!docBytes.value) return;
   isProcessing.value = true;
+  progressPercent.value = 10;
+  progressMessage.value = t('san_progress_metadata') || '正在深度清洗敏感数据...';
+
   try {
     const result = await generateSanitizedBytes();
     if (!result) return;
     const { outBytes, outName, pageCount } = result;
 
-    triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
+    const pdfBlob = new Blob([outBytes], { type: 'application/pdf' });
+    cachedPdfBlob = pdfBlob;
+    cachedPdfName = outName;
+
+    triggerDownload(pdfBlob, outName);
     logger.info('SANITIZE', `PDF sanitized and downloaded: ${outName}`);
+
+    const ab = outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes;
 
     lastExportedFile.value = {
       name: outName,
-      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+      size: outBytes.byteLength || outBytes.length,
+      arrayBuffer: ab,
+      blob: pdfBlob
     };
     showNextActions.value = true;
 
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {
-      await saveFile({
-        name: outName,
-        arrayBuffer: outBytes,
-        folderId: 'default',
-        category: 'export',
-        pageCount
-      });
-      logger.info('VAULT', `Sanitized result auto-saved to Vault: ${outName}`);
+      try {
+        await saveFile({
+          name: outName,
+          arrayBuffer: ab,
+          folderId: 'default',
+          category: 'export',
+          pageCount,
+          isEncrypted: false
+        });
+        logger.info('VAULT', `Sanitized result auto-saved to Vault: ${outName}`);
+      } catch (e) {
+        logger.warn('VAULT', `Failed to auto-save to Vault: ${e.message}`);
+      }
     }
   } catch (err) {
     logger.error('SANITIZE', `Failed to sanitize PDF: ${err.message}`);

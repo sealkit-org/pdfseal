@@ -63,14 +63,38 @@
         </div>
       </div>
 
-      <!-- 2. ACTIVE ASSEMBLY WORKSPACE -->
+      <!-- 2. ACTIVE ASSEMBLY WORKSPACE OR UNIFIED RESULT DELIVERY -->
       <div v-else class="flex-1 flex flex-col justify-between pt-3">
-        <!-- Top Toolbar -->
-        <div class="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
-          <div class="flex items-center space-x-3">
-            <span class="text-xs font-bold text-slate-800">
-              {{ t('img2pdf_selected', 'Selected') }} <span class="font-mono text-violet-600">{{ imageList.length }}</span> {{ t('img2pdf_images', 'images') }}
+        <!-- 2A. Unified Processing & Result Delivery View -->
+        <ResultDeliveryView 
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
+          :file="lastExportedFile"
+          source-tool="image_to_pdf"
+          :page-count="imageList.length"
+          @redownload="handleReDownload"
+          @new-task="handleNewTask"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+        >
+          <template #metrics>
+            <span class="inline-flex items-center space-x-1 text-xs font-semibold text-violet-700 bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200/60 shadow-2xs">
+              <Images class="w-3.5 h-3.5 text-violet-600" />
+              <span>{{ t('img2pdf_metric_count', { count: lastExportedCount || imageList.length }) || `由 ${lastExportedCount || imageList.length} 张图片合成` }}</span>
             </span>
+          </template>
+        </ResultDeliveryView>
+
+        <!-- 2B. Staging Workspace & Bottom Execution Bar -->
+        <div v-else class="flex-1 flex flex-col justify-between min-h-0">
+          <!-- Top Toolbar -->
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
+            <div class="flex items-center space-x-3">
+              <span class="text-xs font-bold text-slate-800">
+                {{ t('img2pdf_selected', 'Selected') }} <span class="font-mono text-violet-600">{{ imageList.length }}</span> {{ t('img2pdf_images', 'images') }}
+              </span>
             <button 
               @click="fileInputRef.click()"
               class="text-xs text-violet-600 hover:text-violet-700 bg-violet-50 hover:bg-violet-100 font-bold px-3 py-1 rounded-xl transition flex items-center space-x-1 cursor-pointer"
@@ -97,9 +121,9 @@
         </div>
 
         <!-- Main Workspace (Left: Image Card Grid, Right: Layout Settings) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 py-3 flex-1 min-h-[440px]">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 py-3 flex-1 min-h-[220px]">
           <!-- Left: Image Cards (8 cols) -->
-          <div class="lg:col-span-8 bg-slate-50/70 rounded-2xl p-3 sm:p-4 border border-slate-200/80 overflow-y-auto max-h-[500px]">
+          <div class="lg:col-span-8 bg-slate-50/70 rounded-2xl p-3 sm:p-4 border border-slate-200/80 overflow-y-auto min-h-[200px] max-h-[calc(100vh-320px)]">
             <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <div 
                 v-for="(img, idx) in imageList" 
@@ -249,17 +273,8 @@
           </div>
         </div>
 
-        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <!-- Bottom Cluster: Output Settings Bar -->
         <div class="shrink-0 space-y-2.5 pt-2">
-          <!-- Next Action Relay Banner -->
-          <NextActionBanner 
-            v-if="showNextActions && lastExportedFile"
-            :current-tool="'image_to_pdf'"
-            :file="lastExportedFile"
-            @send-to-tool="(tId) => emit('send-to-tool', tId)"
-            @close="showNextActions = false"
-          />
-
           <!-- Bottom Execution & Output Settings Bar -->
           <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
             <!-- Output Filename & Vault Auto-Save Setting -->
@@ -302,11 +317,12 @@
         </div>
       </div>
     </div>
-  </section>
+  </div>
+</section>
 </template>
 
 <script setup>
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, inject, onActivated } from 'vue';
 import { 
   Images, 
   Plus, 
@@ -325,12 +341,18 @@ import { triggerDownload } from '../utils/download';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
-import NextActionBanner from '../components/NextActionBanner.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
+const workspaceState = inject('workspaceActiveState', null);
+
 const lastExportedFile = ref(null);
-const showNextActions = ref(false);
+const lastExportedCount = ref(0);
+const progressPercent = ref(0);
+const progressMessage = ref('');
+let cachedPdfBlob = null;
+let cachedPdfName = '';
 
 const fileInputRef = ref(null);
 const isDragOver = ref(false);
@@ -338,6 +360,14 @@ const isProcessing = ref(false);
 
 // Image item: { id, file, name, previewUrl, width, height, rotation }
 const imageList = ref([]);
+
+watch(() => imageList.value.length > 0, (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(imageList.value.length > 0);
+});
 
 // Layout configurations
 const pageSize = ref('a4'); // 'a4' | 'letter' | 'fit'
@@ -392,7 +422,6 @@ async function onDrop(e) {
 }
 
 async function processAddedFiles(files) {
-  showNextActions.value = false;
   lastExportedFile.value = null;
   for (const f of files) {
     const previewUrl = URL.createObjectURL(f);
@@ -435,8 +464,12 @@ function clearAll() {
   imageList.value.forEach(img => URL.revokeObjectURL(img.previewUrl));
   imageList.value = [];
   customOutputBaseName.value = '';
-  showNextActions.value = false;
   lastExportedFile.value = null;
+  lastExportedCount.value = 0;
+  cachedPdfBlob = null;
+  cachedPdfName = '';
+  progressMessage.value = '';
+  progressPercent.value = 0;
 }
 
 function rotateImage(idx) {
@@ -471,11 +504,20 @@ function onDropReorder(targetIdx) {
 async function executeExport() {
   if (imageList.value.length === 0) return;
   isProcessing.value = true;
+  progressPercent.value = 0;
+  const total = imageList.value.length;
+  progressMessage.value = t('img2pdf_progress_embedding', { current: 1, total });
 
   try {
     const doc = await PDFDocument.create();
 
-    for (const item of imageList.value) {
+    for (let i = 0; i < total; i++) {
+      const item = imageList.value[i];
+      progressMessage.value = t('img2pdf_progress_embedding', { current: i + 1, total });
+      progressPercent.value = Math.round((i / total) * 85);
+      // Yield to event loop for smooth UI reactivity and animation
+      await new Promise(resolve => setTimeout(resolve, 0));
+
       // 1. Render image with rotation to canvas
       const canvas = document.createElement('canvas');
       const img = new Image();
@@ -554,37 +596,66 @@ async function executeExport() {
       });
     }
 
+    progressMessage.value = t('img2pdf_progress_saving') || '正在生成与优化 PDF 文档...';
+    progressPercent.value = 90;
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     const outBytes = await doc.save({ useObjectStreams: true });
     let outName = (customOutputBaseName.value.trim() || `PDFSeal_Images_${Date.now()}`);
     if (!outName.toLowerCase().endsWith('.pdf')) {
       outName += '.pdf';
     }
 
-    triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
-    logger.info('IMG2PDF', `Images successfully converted to PDF: ${outName} (${imageList.value.length} pages)`);
+    const pdfBlob = new Blob([outBytes], { type: 'application/pdf' });
+    cachedPdfBlob = pdfBlob;
+    cachedPdfName = outName;
+    progressPercent.value = 100;
 
-    lastExportedFile.value = {
-      name: outName,
-      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
-    };
-    showNextActions.value = true;
+    triggerDownload(pdfBlob, outName);
+    logger.info('IMG2PDF', `Images successfully converted to PDF: ${outName} (${total} pages)`);
 
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {
-      await saveFile({
-        name: outName,
-        arrayBuffer: outBytes,
-        folderId: 'default',
-        category: 'export',
-        pageCount: imageList.value.length
-      });
-      logger.info('VAULT', `Image PDF auto-saved to Vault: ${outName}`);
+      try {
+        await saveFile({
+          name: outName,
+          arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes,
+          folderId: 'default',
+          category: 'export',
+          pageCount: total
+        });
+        logger.info('VAULT', `Image PDF auto-saved to Vault: ${outName}`);
+      } catch (e) {
+        logger.warn('VAULT', `Failed to auto-save PDF to Vault: ${e.message}`);
+      }
     }
+
+    lastExportedCount.value = total;
+    lastExportedFile.value = {
+      name: outName,
+      size: outBytes.length,
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes,
+      blob: pdfBlob
+    };
   } catch (err) {
     logger.error('IMG2PDF', `Failed to convert images: ${err.message}`);
     alert('Failed to convert images to PDF: ' + err.message);
   } finally {
     isProcessing.value = false;
   }
+}
+
+function handleReDownload() {
+  if (cachedPdfBlob && cachedPdfName) {
+    triggerDownload(cachedPdfBlob, cachedPdfName);
+  }
+}
+
+function handleNewTask() {
+  clearAll();
+}
+
+function handleBackToEdit() {
+  lastExportedFile.value = null;
 }
 </script>

@@ -3,7 +3,7 @@
     <!-- Main Assembly Container -->
     <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-2.5 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
             <PenTool class="w-5 h-5" />
@@ -73,405 +73,418 @@
         </div>
       </div>
 
-      <!-- 2. ACTIVE SIGNING WORKSPACE -->
-      <div v-else class="flex-1 flex flex-col justify-between pt-2">
-        <!-- Top File Summary Bar & Page Switcher -->
-        <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 shrink-0">
-          <div class="flex items-center space-x-3 min-w-0">
-            <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
-              PDF
-            </div>
-            <div class="min-w-0">
-              <p class="text-xs font-bold text-slate-800 truncate max-w-[200px] sm:max-w-xs" :title="filename">
-                {{ filename }}
-              </p>
-              <div class="text-[11px] text-slate-400 font-mono">
-                <span>{{ (docBytes.byteLength / 1024 / 1024).toFixed(2) }} MB</span>
-                <span> • </span>
-                <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
+      <!-- 2. ACTIVE SIGNING WORKSPACE OR UNIFIED RESULT DELIVERY -->
+      <div v-else class="flex-1 flex flex-col justify-between pt-2 overflow-hidden">
+        <!-- 2A. Unified Processing & Result Delivery View upon Completion -->
+        <ResultDeliveryView 
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
+          :file="lastExportedFile"
+          source-tool="sign"
+          :page-count="totalPages"
+          @redownload="handleReDownload"
+          @new-task="reset"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+        >
+          <template #metrics>
+            <span class="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-200/80 shadow-2xs">
+              {{ placedSignatures.length }} {{ t('sign_metric_count') || 'signatures stamped' }}
+            </span>
+          </template>
+        </ResultDeliveryView>
+
+        <!-- 2B. Interactive Signing Studio Workspace & Canvas -->
+        <div v-show="!isProcessing && !lastExportedFile" class="flex-1 flex flex-col justify-between min-h-0">
+          <!-- Top File Summary Bar & Page Switcher -->
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 shrink-0">
+            <div class="flex items-center space-x-3 min-w-0">
+              <div class="w-8 h-8 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs shrink-0">
+                PDF
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-slate-800 truncate max-w-[200px] sm:max-w-xs" :title="filename">
+                  {{ filename }}
+                </p>
+                <div class="text-[11px] text-slate-400 font-mono">
+                  <span>{{ (docBytes.byteLength / 1024 / 1024).toFixed(2) }} MB</span>
+                  <span> • </span>
+                  <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
+                </div>
               </div>
             </div>
+
+            <!-- Page Switcher -->
+            <div class="flex items-center space-x-2">
+              <button 
+                @click="prevPage" 
+                :disabled="currentPage <= 1"
+                class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer"
+              >
+                <ChevronLeft class="w-4 h-4 text-slate-600" />
+              </button>
+              <span class="text-xs font-mono font-bold text-slate-700 px-2.5 py-1 bg-slate-100 rounded-lg">
+                {{ currentPage }} / {{ totalPages }}
+              </span>
+              <button 
+                @click="nextPage" 
+                :disabled="currentPage >= totalPages"
+                class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer"
+              >
+                <ChevronRight class="w-4 h-4 text-slate-600" />
+              </button>
+
+              <button 
+                @click="reset" 
+                class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 rounded-lg hover:bg-slate-100 transition cursor-pointer ml-2"
+              >
+                {{ t('btn_reset_file') || 'Reset / Change File' }}
+              </button>
+            </div>
           </div>
 
-          <!-- Page Switcher -->
-          <div class="flex items-center space-x-2">
-            <button 
-              @click="prevPage" 
-              :disabled="currentPage <= 1"
-              class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer"
-            >
-              <ChevronLeft class="w-4 h-4 text-slate-600" />
-            </button>
-            <span class="text-xs font-mono font-bold text-slate-700 px-2.5 py-1 bg-slate-100 rounded-lg">
-              {{ currentPage }} / {{ totalPages }}
-            </span>
-            <button 
-              @click="nextPage" 
-              :disabled="currentPage >= totalPages"
-              class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer"
-            >
-              <ChevronRight class="w-4 h-4 text-slate-600" />
-            </button>
-
-            <button 
-              @click="reset" 
-              class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 rounded-lg hover:bg-slate-100 transition cursor-pointer ml-2"
-            >
-              {{ t('btn_reset_file') || 'Reset / Change File' }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Signing Workspace Grid (Left: Sign Studio, Right: Document Viewer) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 py-2 flex-1 min-h-[320px]">
-          <!-- Left: Signature Studio Panel (4 cols) -->
-          <div class="lg:col-span-4 bg-slate-50/80 rounded-2xl p-3 border border-slate-200/80 flex flex-col justify-between space-y-2.5">
-            <div>
-              <!-- Quick Shelf: Saved Stamps (Shown if user has saved stamps) -->
-              <div v-if="savedStamps.length > 0" class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-2 mb-2.5">
-                <div class="flex items-center justify-between mb-1.5 px-0.5">
-                  <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-700">
-                    <Star class="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
-                    <span>{{ t('sign_quick_shelf_title') }}</span>
-                    <span class="text-[10px] text-slate-400 font-mono">({{ savedStamps.length }}/6)</span>
-                  </div>
-                  <span class="text-[10px] text-indigo-600 font-medium">{{ t('sign_quick_place_hint') }}</span>
-                </div>
-                <!-- Horizontal scrollable chips -->
-                <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
-                  <div 
-                    v-for="stamp in savedStamps" 
-                    :key="stamp.id"
-                    class="group relative shrink-0 bg-white border border-slate-200 hover:border-indigo-500 hover:shadow-xs rounded-lg p-1 transition cursor-pointer flex items-center space-x-1.5 select-none"
-                    @click="placeSavedStamp(stamp)"
-                    :title="`${stamp.title} - ${t('sign_quick_place_hint')}`"
-                  >
-                    <div 
-                      class="w-10 h-7 rounded border border-slate-100 overflow-hidden flex items-center justify-center bg-slate-50 shrink-0"
-                      :style="{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '6px 6px' }"
-                    >
-                      <img :src="stamp.dataUrl" class="max-w-full max-h-full object-contain pointer-events-none" />
+          <!-- Signing Workspace Grid (Left: Sign Studio, Right: Document Viewer) -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 py-2 flex-1 min-h-[320px]">
+            <!-- Left: Signature Studio Panel (4 cols) -->
+            <div class="lg:col-span-4 bg-slate-50/80 rounded-2xl p-3 border border-slate-200/80 flex flex-col justify-between space-y-2.5">
+              <div>
+                <!-- Quick Shelf: Saved Stamps (Shown if user has saved stamps) -->
+                <div v-if="savedStamps.length > 0" class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-2 mb-2.5">
+                  <div class="flex items-center justify-between mb-1.5 px-0.5">
+                    <div class="flex items-center space-x-1.5 text-xs font-bold text-slate-700">
+                      <Star class="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                      <span>{{ t('sign_quick_shelf_title') }}</span>
+                      <span class="text-[10px] text-slate-400 font-mono">({{ savedStamps.length }}/6)</span>
                     </div>
-                    <span class="text-[11px] font-bold text-slate-700 max-w-[65px] truncate">{{ stamp.title }}</span>
-                    <button 
-                      @click.stop="deleteStamp(stamp.id)" 
-                      class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded p-0.5 transition cursor-pointer"
-                      :title="t('sign_library_delete')"
+                    <span class="text-[10px] text-indigo-600 font-medium">{{ t('sign_quick_place_hint') }}</span>
+                  </div>
+                  <!-- Horizontal scrollable chips -->
+                  <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5">
+                    <div 
+                      v-for="stamp in savedStamps" 
+                      :key="stamp.id"
+                      class="group relative shrink-0 bg-white border border-slate-200 hover:border-indigo-500 hover:shadow-xs rounded-lg p-1 transition cursor-pointer flex items-center space-x-1.5 select-none"
+                      @click="placeSavedStamp(stamp)"
+                      :title="`${stamp.title} - ${t('sign_quick_place_hint')}`"
                     >
-                      <X class="w-3 h-3" />
+                      <div 
+                        class="w-10 h-7 rounded border border-slate-100 overflow-hidden flex items-center justify-center bg-slate-50 shrink-0"
+                        :style="{ backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '6px 6px' }"
+                      >
+                        <img :src="stamp.dataUrl" class="max-w-full max-h-full object-contain pointer-events-none" />
+                      </div>
+                      <span class="text-[11px] font-bold text-slate-700 max-w-[65px] truncate">{{ stamp.title }}</span>
+                      <button 
+                        @click.stop="deleteStamp(stamp.id)" 
+                        class="opacity-0 group-hover:opacity-100 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded p-0.5 transition cursor-pointer"
+                        :title="t('sign_library_delete')"
+                      >
+                        <Trash2 class="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tab Headers (5 Tabs: Draw, Type, Upload, Date, Library) -->
+                <div class="flex p-0.5 bg-slate-200/60 rounded-xl mb-2.5 text-xs font-semibold overflow-x-auto">
+                  <button 
+                    v-for="tab in signTabs" 
+                    :key="tab.id"
+                    @click="activeSignTab = tab.id"
+                    :class="[
+                      'flex-1 py-1.5 px-2 rounded-lg transition flex items-center justify-center space-x-1 whitespace-nowrap cursor-pointer',
+                      activeSignTab === tab.id ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'text-slate-600 hover:text-slate-900'
+                    ]"
+                  >
+                    <component :is="tab.icon" class="w-3.5 h-3.5" />
+                    <span>{{ tab.label }}</span>
+                  </button>
+                </div>
+
+                <!-- Global Color Picker (For Draw, Type, Date) -->
+                <div v-if="activeSignTab !== 'upload' && activeSignTab !== 'library'" class="flex items-center justify-between mb-2.5 px-0.5">
+                  <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_color_label') }}</span>
+                  <div class="flex items-center space-x-1.5">
+                    <button 
+                      v-for="c in colorOptions" 
+                      :key="c.value"
+                      @click="activeColor = c.value"
+                      :class="[
+                        'w-5 h-5 rounded-full border transition cursor-pointer flex items-center justify-center',
+                        activeColor === c.value ? 'ring-2 ring-indigo-500 ring-offset-1 scale-110' : 'border-slate-300 hover:scale-105'
+                      ]"
+                      :style="{ backgroundColor: c.value }"
+                      :title="c.label"
+                    ></button>
+                  </div>
+                </div>
+
+                <!-- Content 1: Draw Pad -->
+                <div v-show="activeSignTab === 'draw'" class="space-y-2">
+                  <div class="relative bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                    <canvas 
+                      ref="drawCanvasRef" 
+                      width="400" 
+                      height="160"
+                      class="w-full h-[120px] sm:h-[135px] cursor-crosshair touch-none bg-transparent"
+                      @pointerdown="startDrawing"
+                      @pointermove="drawStroke"
+                      @pointerup="stopDrawing"
+                      @pointerleave="stopDrawing"
+                    ></canvas>
+                    <div 
+                      v-if="!hasDrawn" 
+                      class="absolute inset-0 flex items-center justify-center pointer-events-none text-slate-300 text-xs italic"
+                    >
+                      {{ t('sign_draw_placeholder', 'Draw your signature here...') }}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button 
+                      @click="clearDrawCanvas" 
+                      :disabled="!hasDrawn"
+                      class="px-2.5 py-2 text-slate-500 hover:text-rose-600 active:scale-98 disabled:opacity-40 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-semibold transition cursor-pointer bg-white"
+                      :title="t('clear_signature')"
+                    >
+                      <Trash2 class="w-3.5 h-3.5" />
+                    </button>
+                    <button 
+                      @click="addDrawnSignature" 
+                      :disabled="!hasDrawn"
+                      class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                    >
+                      <Plus class="w-3.5 h-3.5 shrink-0" />
+                      <span class="whitespace-nowrap">{{ t('sign_add_draw', 'Add to Page') }}</span>
+                    </button>
+                    <button
+                      @click="saveDrawnToLibrary"
+                      :disabled="!hasDrawn"
+                      class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                      :title="t('sign_btn_save_library')"
+                    >
+                      <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                      <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
                     </button>
                   </div>
                 </div>
-              </div>
 
-              <!-- Tab Selector (Clean 4 Creation Modes) -->
-              <div class="grid grid-cols-4 gap-1 p-1 bg-slate-200/60 rounded-xl mb-3 text-[11px] font-semibold text-slate-600">
-                <button 
-                  @click="activeSignTab = 'draw'"
-                  :class="['py-1.5 px-1 rounded-lg transition text-center flex items-center justify-center space-x-1 cursor-pointer min-w-0', activeSignTab === 'draw' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
-                  :title="t('sign_tab_draw')"
-                >
-                  <PenTool class="w-3.5 h-3.5 shrink-0" />
-                  <span class="truncate">{{ t('sign_tab_draw') }}</span>
-                </button>
-                <button 
-                  @click="activeSignTab = 'type'"
-                  :class="['py-1.5 px-1 rounded-lg transition text-center flex items-center justify-center space-x-1 cursor-pointer min-w-0', activeSignTab === 'type' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
-                  :title="t('sign_tab_type')"
-                >
-                  <Type class="w-3.5 h-3.5 shrink-0" />
-                  <span class="truncate">{{ t('sign_tab_type') }}</span>
-                </button>
-                <button 
-                  @click="activeSignTab = 'upload'"
-                  :class="['py-1.5 px-1 rounded-lg transition text-center flex items-center justify-center space-x-1 cursor-pointer min-w-0', activeSignTab === 'upload' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
-                  :title="t('sign_tab_upload')"
-                >
-                  <Upload class="w-3.5 h-3.5 shrink-0" />
-                  <span class="truncate">{{ t('sign_tab_upload') }}</span>
-                </button>
-                <button 
-                  @click="activeSignTab = 'date'"
-                  :class="['py-1.5 px-1 rounded-lg transition text-center flex items-center justify-center space-x-1 cursor-pointer min-w-0', activeSignTab === 'date' ? 'bg-white text-indigo-700 shadow-2xs font-bold' : 'hover:text-slate-900']"
-                  :title="t('sign_tab_date')"
-                >
-                  <Calendar class="w-3.5 h-3.5 shrink-0" />
-                  <span class="truncate">{{ t('sign_tab_date') }}</span>
-                </button>
-              </div>
+                <!-- Content 2: Type Cursive Artistic Font -->
+                <div v-show="activeSignTab === 'type'" class="space-y-2">
+                  <input 
+                    v-model="typedName" 
+                    type="text" 
+                    :placeholder="t('sign_type_placeholder', 'Enter your name...')" 
+                    class="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-2 text-slate-800 outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium"
+                    maxlength="30"
+                  />
 
-              <!-- Color Presets (For Draw & Type) -->
-              <div v-if="activeSignTab === 'draw' || activeSignTab === 'type'" class="flex items-center justify-between mb-2.5">
-                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_ink_color', 'Ink Color:') }}</span>
-                <div class="flex items-center space-x-2">
-                  <button 
-                    v-for="c in colorOptions" 
-                    :key="c.value"
-                    @click="activeColor = c.value"
-                    :style="{ backgroundColor: c.value }"
-                    :class="[
-                      'w-5 h-5 rounded-full border-2 transition cursor-pointer shadow-2xs',
-                      activeColor === c.value ? 'border-indigo-600 scale-110 ring-2 ring-indigo-200' : 'border-white hover:scale-105'
-                    ]"
-                    :title="c.label"
-                  ></button>
-                </div>
-              </div>
-
-              <!-- Content 1: Draw Canvas -->
-              <div v-show="activeSignTab === 'draw'" class="space-y-2">
-                <div class="relative bg-white border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
-                  <canvas 
-                    ref="drawCanvasRef"
-                    width="320" 
-                    height="115"
-                    class="w-full h-[115px] cursor-crosshair touch-none bg-white"
-                    @pointerdown="startDrawing"
-                    @pointermove="drawStroke"
-                    @pointerup="stopDrawing"
-                    @pointerleave="stopDrawing"
-                  ></canvas>
-                  <button 
-                    @click="clearDrawCanvas" 
-                    class="absolute top-2 right-2 text-[10px] text-slate-400 hover:text-rose-600 bg-white/90 hover:bg-rose-50 px-2 py-0.5 rounded-md border border-slate-200 font-semibold transition cursor-pointer"
-                  >
-                    {{ t('sign_btn_clear') }}
-                  </button>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button 
-                    @click="addDrawnSignature"
-                    :disabled="!hasDrawn"
-                    class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
-                  >
-                    <Plus class="w-3.5 h-3.5 shrink-0" />
-                    <span class="whitespace-nowrap">{{ t('sign_add_draw', 'Add to Page') }}</span>
-                  </button>
-                  <button
-                    @click="saveDrawnToLibrary"
-                    :disabled="!hasDrawn"
-                    class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
-                    :title="t('sign_btn_save_library')"
-                  >
-                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
-                    <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Content 2: Type Cursive Signature -->
-              <div v-show="activeSignTab === 'type'" class="space-y-2">
-                <input 
-                  v-model="typedName" 
-                  type="text"
-                  :placeholder="t('sign_type_placeholder')"
-                  class="w-full text-xs bg-white border border-slate-200 rounded-xl px-3 py-1.5 text-slate-700 outline-hidden focus:ring-2 focus:ring-indigo-500 font-medium"
-                >
-
-                <!-- Signature Style Selector Tabs -->
-                <div class="grid grid-cols-4 gap-1 p-1 bg-slate-100 rounded-xl">
-                  <button 
-                    v-for="st in signatureStyles" 
-                    :key="st.id"
-                    type="button"
-                    @click="selectedSignatureStyle = st.id"
-                    :class="[
-                      'py-1 text-[11px] font-bold rounded-lg transition text-center cursor-pointer',
-                      selectedSignatureStyle === st.id 
-                        ? 'bg-white text-indigo-600 shadow-2xs' 
-                        : 'text-slate-500 hover:text-slate-800'
-                    ]"
-                  >
-                    {{ st.label }}
-                  </button>
-                </div>
-
-                <!-- Cursive Font Preview Box -->
-                <div 
-                  class="h-[85px] sm:h-[95px] bg-white border border-slate-200 rounded-xl flex items-center justify-center p-2.5 overflow-hidden shadow-2xs select-none"
-                  :style="{ color: activeColor }"
-                >
-                  <span 
-                    class="text-3xl sm:text-4xl text-center truncate" 
-                    :class="{ 'italic': currentSignatureStyle.slant }"
-                    :style="{ fontFamily: currentSignatureStyle.fontFamily }"
-                  >
-                    {{ typedName || t('sign_typed_preview', 'Your artistic signature') }}
-                  </span>
-                </div>
-                <div class="flex items-center gap-2">
-                  <button 
-                    @click="addTypedSignature"
-                    :disabled="!typedName.trim()"
-                    class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
-                  >
-                    <Plus class="w-3.5 h-3.5 shrink-0" />
-                    <span class="whitespace-nowrap">{{ t('sign_add_type', 'Add to Page') }}</span>
-                  </button>
-                  <button
-                    @click="saveTypedToLibrary"
-                    :disabled="!typedName.trim()"
-                    class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
-                    :title="t('sign_btn_save_library')"
-                  >
-                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
-                    <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
-                  </button>
-                </div>
-              </div>
-
-              <!-- Content 3: Upload Signature Stamp Image -->
-              <div v-show="activeSignTab === 'upload'" class="space-y-2">
-                <input 
-                  ref="stampImageInputRef" 
-                  type="file" 
-                  accept="image/png,image/jpeg,image/webp,image/jpg" 
-                  class="hidden" 
-                  @change="onStampFileSelected"
-                >
-                <div 
-                  @click="stampImageInputRef.click()"
-                  class="h-[90px] relative bg-white border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-xl flex flex-col items-center justify-center p-2 text-center cursor-pointer transition overflow-hidden"
-                  :style="uploadedStampDataUrl ? { backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '8px 8px' } : {}"
-                >
-                  <div v-if="uploadedStampDataUrl" class="h-full w-full flex items-center justify-center overflow-hidden relative">
-                    <img :src="uploadedStampDataUrl" class="max-h-full max-w-full object-contain" />
-                    <div v-if="isProcessingStamp" class="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
-                      <Loader2 class="w-5 h-5 animate-spin text-indigo-600" />
-                    </div>
+                  <!-- 4 Signature Style Pills -->
+                  <div class="grid grid-cols-2 gap-1.5 p-0.5 bg-slate-200/50 rounded-xl text-xs font-semibold">
+                    <button 
+                      type="button" 
+                      v-for="st in signatureStyles" 
+                      :key="st.id"
+                      @click="selectedSignatureStyle = st.id"
+                      :class="[
+                        'py-1 px-2 rounded-lg transition text-center cursor-pointer',
+                        selectedSignatureStyle === st.id 
+                          ? 'bg-white text-indigo-600 shadow-2xs' 
+                          : 'text-slate-500 hover:text-slate-800'
+                      ]"
+                    >
+                      {{ st.label }}
+                    </button>
                   </div>
-                  <div v-else class="text-slate-400 text-xs flex flex-col items-center">
-                    <Upload class="w-5 h-5 mb-1 text-slate-400" />
-                    <span>{{ t('sign_upload_hint', 'Click to upload transparent PNG signature or stamp') }}</span>
+
+                  <!-- Cursive Font Preview Box -->
+                  <div 
+                    class="h-[85px] sm:h-[95px] bg-white border border-slate-200 rounded-xl flex items-center justify-center p-2.5 overflow-hidden shadow-2xs select-none"
+                    :style="{ color: activeColor }"
+                  >
+                    <span 
+                      class="text-3xl sm:text-4xl text-center truncate" 
+                      :class="{ 'italic': currentSignatureStyle.slant }"
+                      :style="{ fontFamily: currentSignatureStyle.fontFamily }"
+                    >
+                      {{ typedName || t('sign_typed_preview', 'Your artistic signature') }}
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button 
+                      @click="addTypedSignature" 
+                      :disabled="!typedName.trim()"
+                      class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                    >
+                      <Plus class="w-3.5 h-3.5 shrink-0" />
+                      <span class="whitespace-nowrap">{{ t('sign_add_type', 'Add to Page') }}</span>
+                    </button>
+                    <button
+                      @click="saveTypedToLibrary"
+                      :disabled="!typedName.trim()"
+                      class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                      :title="t('sign_btn_save_library')"
+                    >
+                      <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                      <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
+                    </button>
                   </div>
                 </div>
 
-                <!-- Anti-shadow & Transparency Controls -->
-                <div v-if="rawStampDataUrl" class="space-y-2 bg-white p-2 rounded-xl border border-slate-200/80">
-                  <!-- Auto Remove Background Toggle -->
-                  <div class="flex items-center justify-between">
-                    <div class="flex items-center space-x-1.5">
-                      <Wand2 class="w-3.5 h-3.5 text-indigo-600" />
-                      <span class="text-[11px] font-bold text-slate-700">{{ t('sign_bg_remove') }}</span>
+                <!-- Content 3: Upload Signature Stamp Image -->
+                <div v-show="activeSignTab === 'upload'" class="space-y-2">
+                  <input 
+                    ref="stampImageInputRef" 
+                    type="file" 
+                    accept="image/png,image/jpeg,image/webp,image/jpg" 
+                    class="hidden" 
+                    @change="onStampFileSelected"
+                  >
+                  <div 
+                    @click="stampImageInputRef.click()"
+                    class="h-[90px] relative bg-white border-2 border-dashed border-slate-200 hover:border-indigo-400 rounded-xl flex flex-col items-center justify-center p-2 text-center cursor-pointer transition overflow-hidden"
+                    :style="uploadedStampDataUrl ? { backgroundImage: 'radial-gradient(#cbd5e1 1px, transparent 1px)', backgroundSize: '8px 8px' } : {}"
+                  >
+                    <div v-if="uploadedStampDataUrl" class="h-full w-full flex items-center justify-center overflow-hidden relative">
+                      <img :src="uploadedStampDataUrl" class="max-h-full max-w-full object-contain" />
+                      <div v-if="isProcessingStamp" class="absolute inset-0 bg-white/70 backdrop-blur-xs flex items-center justify-center">
+                        <Loader2 class="w-5 h-5 animate-spin text-indigo-600" />
+                      </div>
                     </div>
-                    <label class="relative inline-flex items-center cursor-pointer">
-                      <input type="checkbox" v-model="autoRemoveBg" class="sr-only peer" />
-                      <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+                    <div v-else class="flex flex-col items-center">
+                      <Upload class="w-5 h-5 text-indigo-500 mb-1" />
+                      <span class="text-[11px] font-bold text-slate-700">{{ t('sign_upload_prompt') }}</span>
+                      <span class="text-[10px] text-slate-400 mt-0.5">{{ t('sign_upload_hint') }}</span>
+                    </div>
+                  </div>
+
+                  <!-- Image Pre-processing Controls (Threshold & Shadow Removal) -->
+                  <div v-if="rawStampDataUrl" class="space-y-2 bg-white p-2 rounded-xl border border-slate-200/80">
+                    <!-- Auto Remove Background Toggle -->
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center space-x-1.5">
+                        <Wand2 class="w-3.5 h-3.5 text-indigo-600" />
+                        <span class="text-[11px] font-bold text-slate-700">{{ t('sign_bg_remove') }}</span>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" v-model="autoRemoveBg" class="sr-only peer" />
+                        <div class="w-7 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+                      </label>
+                    </div>
+
+                    <div v-if="autoRemoveBg" class="space-y-2 pt-1 border-t border-slate-100">
+                      <!-- Shadow Removal Option Pills -->
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between text-[10.5px]">
+                          <span class="font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_shadow_removal') }}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1 p-0.5 bg-slate-100 rounded-lg text-[10px] font-semibold">
+                          <button 
+                            type="button" 
+                            v-for="opt in shadowOptions" 
+                            :key="opt.id"
+                            @click="uploadShadowRemoval = opt.id"
+                            :class="['py-0.5 rounded-md transition text-center cursor-pointer', uploadShadowRemoval === opt.id ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800']"
+                          >
+                            {{ opt.label }}
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Ink Color Override -->
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between text-[10.5px]">
+                          <span class="font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_ink_override') }}</span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-1 p-0.5 bg-slate-100 rounded-lg text-[10px] font-semibold">
+                          <button 
+                            type="button" 
+                            v-for="ink in inkColorOptions" 
+                            :key="ink.id"
+                            @click="uploadInkColor = ink.id"
+                            :class="['py-0.5 rounded-md transition text-center flex items-center justify-center space-x-1 cursor-pointer', uploadInkColor === ink.id ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800']"
+                          >
+                            <span class="w-2 h-2 rounded-full border border-slate-300 shrink-0" :style="{ backgroundColor: ink.color }"></span>
+                            <span class="truncate">{{ ink.label }}</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Sensitivity Slider -->
+                      <div class="space-y-0.5">
+                        <div class="flex items-center justify-between text-[10.5px] text-slate-500">
+                          <span class="font-bold uppercase tracking-wider">{{ t('sign_threshold_label') }}</span>
+                          <span class="font-mono text-slate-700 font-bold">{{ uploadSensitivity }}%</span>
+                        </div>
+                        <input 
+                          type="range" 
+                          v-model.number="uploadSensitivity" 
+                          min="50" 
+                          max="98" 
+                          step="1"
+                          class="w-full accent-indigo-600 h-1 bg-slate-200 rounded-lg cursor-pointer"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button 
+                      @click="addUploadedSignature" 
+                      :disabled="!uploadedStampDataUrl || isProcessingStamp"
+                      class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                    >
+                      <Plus class="w-3.5 h-3.5 shrink-0" />
+                      <span class="whitespace-nowrap">{{ t('sign_add_upload', 'Add to Page') }}</span>
+                    </button>
+                    <button
+                      @click="saveUploadedToLibrary"
+                      :disabled="!uploadedStampDataUrl || isProcessingStamp"
+                      class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
+                      :title="t('sign_btn_save_library')"
+                    >
+                      <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
+                      <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Content 4: Date Stamp -->
+                <div v-show="activeSignTab === 'date'" class="space-y-2">
+                  <div class="space-y-1.5">
+                    <label 
+                      v-for="df in dateFormats" 
+                      :key="df.id"
+                      @click="selectedDateFormat = df.id"
+                      :class="[
+                        'w-full flex items-center justify-between p-2 rounded-xl border text-xs font-mono transition cursor-pointer',
+                        selectedDateFormat === df.id ? 'bg-indigo-50 border-indigo-400 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
+                      ]"
+                    >
+                      <span>{{ df.sample }}</span>
+                      <span class="text-[10px] text-slate-400 uppercase font-sans">{{ df.label }}</span>
                     </label>
                   </div>
-
-                  <div v-if="autoRemoveBg" class="space-y-2 pt-1 border-t border-slate-100">
-                    <!-- Shadow Removal Option Pills -->
-                    <div class="space-y-1">
-                      <div class="flex items-center justify-between text-[10.5px]">
-                        <span class="font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_shadow_removal') }}</span>
-                      </div>
-                      <div class="grid grid-cols-4 gap-1 p-0.5 bg-slate-100 rounded-lg text-[10px] font-semibold">
-                        <button 
-                          type="button" 
-                          v-for="opt in shadowOptions" 
-                          :key="opt.id"
-                          @click="uploadShadowRemoval = opt.id"
-                          :class="['py-0.5 rounded-md transition text-center cursor-pointer', uploadShadowRemoval === opt.id ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800']"
-                        >
-                          {{ opt.label }}
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Ink Color Override -->
-                    <div class="space-y-1">
-                      <div class="flex items-center justify-between text-[10.5px]">
-                        <span class="font-bold text-slate-500 uppercase tracking-wider">{{ t('sign_ink_override') }}</span>
-                      </div>
-                      <div class="grid grid-cols-4 gap-1 p-0.5 bg-slate-100 rounded-lg text-[10px] font-semibold">
-                        <button 
-                          type="button" 
-                          v-for="ink in inkColorOptions" 
-                          :key="ink.id"
-                          @click="uploadInkColor = ink.id"
-                          :class="['py-0.5 rounded-md transition text-center flex items-center justify-center space-x-1 cursor-pointer', uploadInkColor === ink.id ? 'bg-white text-indigo-600 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800']"
-                        >
-                          <span class="w-2 h-2 rounded-full border border-slate-300 shrink-0" :style="{ backgroundColor: ink.color }"></span>
-                          <span class="truncate">{{ ink.label }}</span>
-                        </button>
-                      </div>
-                    </div>
-
-                    <!-- Sensitivity Slider -->
-                    <div class="space-y-0.5">
-                      <div class="flex items-center justify-between text-[10.5px] text-slate-500">
-                        <span class="font-bold uppercase tracking-wider">{{ t('sign_threshold_label') }}</span>
-                        <span class="font-mono text-slate-700 font-bold">{{ uploadSensitivity }}%</span>
-                      </div>
-                      <input 
-                        type="range" 
-                        v-model.number="uploadSensitivity" 
-                        min="50" 
-                        max="98" 
-                        step="1"
-                        class="w-full accent-indigo-600 h-1 bg-slate-200 rounded-lg cursor-pointer"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-2">
                   <button 
-                    @click="addUploadedSignature"
-                    :disabled="!uploadedStampDataUrl || isProcessingStamp"
-                    class="flex-1 min-w-0 bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-40 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
+                    @click="addDateStamp"
+                    class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
                   >
                     <Plus class="w-3.5 h-3.5 shrink-0" />
-                    <span class="whitespace-nowrap">{{ t('sign_add_upload', 'Add to Page') }}</span>
-                  </button>
-                  <button
-                    @click="saveUploadedToLibrary"
-                    :disabled="!uploadedStampDataUrl || isProcessingStamp"
-                    class="shrink-0 px-2.5 py-2 bg-amber-50 hover:bg-amber-100 active:scale-98 disabled:opacity-40 text-amber-700 border border-amber-200 text-xs font-bold rounded-xl transition flex items-center justify-center space-x-1 shadow-2xs cursor-pointer"
-                    :title="t('sign_btn_save_library')"
-                  >
-                    <Star class="w-3.5 h-3.5 fill-amber-500 text-amber-500 shrink-0" />
-                    <span class="hidden sm:inline whitespace-nowrap">{{ t('sign_btn_save_library') }}</span>
+                    <span class="whitespace-nowrap">{{ t('sign_add_date', 'Add Date') }}</span>
                   </button>
                 </div>
               </div>
 
-              <!-- Content 4: Date Stamp -->
-              <div v-show="activeSignTab === 'date'" class="space-y-2">
-                <div class="space-y-1.5">
-                  <label 
-                    v-for="df in dateFormats" 
-                    :key="df.id"
-                    @click="selectedDateFormat = df.id"
-                    :class="[
-                      'w-full flex items-center justify-between p-2 rounded-xl border text-xs font-mono transition cursor-pointer',
-                      selectedDateFormat === df.id ? 'bg-indigo-50 border-indigo-400 text-indigo-900 font-bold' : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-50'
-                    ]"
-                  >
-                    <span>{{ df.sample }}</span>
-                    <span class="text-[10px] text-slate-400 font-sans">{{ df.label }}</span>
-                  </label>
-                </div>
-                <button 
-                  @click="addDateStamp"
-                  class="w-full bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white text-xs font-bold py-2 px-3 rounded-xl transition flex items-center justify-center space-x-1.5 shadow-2xs cursor-pointer"
-                >
-                  <Plus class="w-3.5 h-3.5 shrink-0" />
-                  <span class="whitespace-nowrap">{{ t('sign_add_date', 'Add Date') }}</span>
-                </button>
+              <!-- Hint: Drag and Resize -->
+              <div class="p-2 rounded-xl bg-indigo-50/60 border border-indigo-100 text-[10.5px] text-indigo-900 flex items-start space-x-1.5">
+                <CheckCircle2 class="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
+                <span>{{ t('sign_drag_hint', 'Signatures can be dragged to move and resized from the bottom-right corner.') }}</span>
               </div>
             </div>
-
-            <!-- Hint: Drag and Resize -->
-            <div class="p-2 rounded-xl bg-indigo-50/60 border border-indigo-100 text-[10.5px] text-indigo-900 flex items-start space-x-1.5">
-              <CheckCircle2 class="w-3.5 h-3.5 text-indigo-600 shrink-0 mt-0.5" />
-              <span>{{ t('sign_drag_hint', 'Signatures can be dragged to move and resized from the bottom-right corner.') }}</span>
-            </div>
-          </div>
 
           <!-- Right: Interactive PDF Page Viewer & Stamping Board (8 cols) -->
-          <div class="lg:col-span-8 bg-slate-100/70 rounded-2xl p-2 sm:p-3 border border-slate-200/80 flex flex-col items-center justify-center overflow-auto relative select-none min-h-[320px] max-h-[460px]">
+          <div class="lg:col-span-8 bg-slate-100/70 rounded-2xl p-2 sm:p-3 border border-slate-200/80 flex flex-col items-center justify-center overflow-auto relative select-none min-h-[380px] max-h-[calc(100vh-220px)]">
             <!-- Interactive Stamping Canvas Board -->
             <div 
               ref="boardContainerRef"
@@ -528,55 +541,47 @@
           </div>
         </div>
 
-        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <!-- Bottom Cluster: Output Settings Bar -->
         <div class="shrink-0 space-y-2.5 pt-2">
-          <!-- Next Action Relay Banner -->
-          <NextActionBanner 
-            v-if="showNextActions && lastExportedFile"
-            :current-tool="'sign'"
-            :file="lastExportedFile"
-            @send-to-tool="(tId) => emit('send-to-tool', tId)"
-            @close="showNextActions = false"
-          />
+            <!-- Bottom Execution & Output Settings Bar (Matching PDFSeal Standard) -->
+            <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+              <!-- Left: Output Filename & Vault Auto-Save Setting -->
+              <div class="flex flex-wrap items-center gap-3">
+                <div class="flex items-center space-x-1.5">
+                  <label class="text-xs text-slate-500 font-semibold shrink-0">
+                    {{ t('vault_field_name') }}:
+                  </label>
+                  <input 
+                    v-model="customOutputBaseName"
+                    type="text" 
+                    :placeholder="defaultFileNamePlaceholder"
+                    class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
+                  >
+                </div>
 
-          <!-- Bottom Execution & Output Settings Bar (Matching PDFSeal Standard) -->
-          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <!-- Left: Output Filename & Vault Auto-Save Setting -->
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex items-center space-x-1.5">
-                <label class="text-xs text-slate-500 font-semibold shrink-0">
-                  {{ t('vault_field_name') }}:
+                <!-- Auto-save to Vault Checkbox -->
+                <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    v-model="autoSaveToVault"
+                    class="w-3.5 h-3.5 rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
+                  >
+                  <FolderLock class="w-3.5 h-3.5 text-indigo-600" />
+                  <span>{{ t('vault_autosave_checkbox') }}</span>
                 </label>
-                <input 
-                  v-model="customOutputBaseName"
-                  type="text" 
-                  :placeholder="defaultFileNamePlaceholder"
-                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
-                >
               </div>
 
-              <!-- Auto-save to Vault Checkbox -->
-              <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
-                <input 
-                  type="checkbox" 
-                  v-model="autoSaveToVault"
-                  class="w-3.5 h-3.5 rounded-sm border-slate-300 text-indigo-600 focus:ring-indigo-500 cursor-pointer"
-                >
-                <FolderLock class="w-3.5 h-3.5 text-indigo-600" />
-                <span>{{ t('vault_autosave_checkbox') }}</span>
-              </label>
+              <!-- Main Sign & Export Action Button -->
+              <button 
+                @click="executeSign" 
+                :disabled="isProcessing || placedSignatures.length === 0"
+                class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-indigo-600/25 cursor-pointer"
+              >
+                <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+                <PenTool v-else class="w-4 h-4" />
+                <span>{{ t('sign_btn_action') }} ({{ placedSignatures.length }})</span>
+              </button>
             </div>
-
-            <!-- Main Sign & Export Action Button -->
-            <button 
-              @click="executeSign" 
-              :disabled="isProcessing || placedSignatures.length === 0"
-              class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-indigo-600/25 cursor-pointer"
-            >
-              <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
-              <PenTool v-else class="w-4 h-4" />
-              <span>{{ t('sign_btn_action') }} ({{ placedSignatures.length }})</span>
-            </button>
           </div>
         </div>
       </div>
@@ -737,7 +742,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onUnmounted, onActivated, nextTick } from 'vue';
+import { ref, computed, watch, inject, onMounted, onUnmounted, onActivated, nextTick } from 'vue';
 import { 
   PenTool, 
   Plus, 
@@ -774,12 +779,18 @@ import {
 } from '../utils/imageProcess';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
-import NextActionBanner from '../components/NextActionBanner.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
+const workspaceState = inject('workspaceActiveState', null);
+
 const lastExportedFile = ref(null);
 const showNextActions = ref(false);
+const progressPercent = ref(0);
+const progressMessage = ref('');
+let cachedSignedBytes = null;
+let cachedSignedName = '';
 
 const fileInputRef = ref(null);
 const stampImageInputRef = ref(null);
@@ -788,6 +799,14 @@ const drawCanvasRef = ref(null);
 const boardContainerRef = ref(null);
 
 const docBytes = ref(null);
+
+watch(() => Boolean(docBytes.value), (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+});
 const filename = ref('');
 const totalPages = ref(0);
 const currentPage = ref(1);
@@ -796,6 +815,12 @@ const isProcessing = ref(false);
 const isVaultPickerOpen = ref(false);
 
 const activeSignTab = ref('draw'); // 'draw' | 'type' | 'upload' | 'date' | 'library'
+const signTabs = computed(() => [
+  { id: 'draw', label: t('sign_tab_draw'), icon: PenTool },
+  { id: 'type', label: t('sign_tab_type'), icon: Type },
+  { id: 'upload', label: t('sign_tab_upload'), icon: Upload },
+  { id: 'date', label: t('sign_tab_date'), icon: Calendar },
+]);
 const activeColor = ref('#0f172a');
 const colorOptions = [
   { value: '#0f172a', label: t('sign_color_black', 'Black') },
@@ -938,7 +963,9 @@ const dateFormats = computed(() => {
 // Board View Dimensions
 const boardWidth = ref(450);
 const boardHeight = ref(600);
+let currentPdfDoc = null;
 let currentPdfPageObj = null;
+let currentRenderTask = null;
 
 // Placed Signatures Array
 // Item: { id, pageIndex, x, y, width, height, dataUrl, origWidth, origHeight }
@@ -1032,6 +1059,7 @@ async function loadFile(file, password = '') {
       standardFontDataUrl: '/standard_fonts/'
     });
     const pdf = await loadingTask.promise;
+    currentPdfDoc = pdf;
     totalPages.value = pdf.numPages;
     await renderCurrentPage(pdf);
   } catch (e) {
@@ -1044,7 +1072,7 @@ async function renderCurrentPage(pdfDocObj = null) {
   await nextTick();
 
   try {
-    let pdf = pdfDocObj;
+    let pdf = pdfDocObj || currentPdfDoc;
     if (!pdf) {
       const loadingTask = pdfjsLib.getDocument({
         data: new Uint8Array(docBytes.value.slice(0)),
@@ -1054,6 +1082,15 @@ async function renderCurrentPage(pdfDocObj = null) {
         standardFontDataUrl: '/standard_fonts/'
       });
       pdf = await loadingTask.promise;
+      currentPdfDoc = pdf;
+    }
+
+    if (currentRenderTask) {
+      try {
+        currentRenderTask.cancel();
+        await currentRenderTask.promise.catch(() => {});
+      } catch (e) {}
+      currentRenderTask = null;
     }
 
     const page = await pdf.getPage(currentPage.value);
@@ -1079,12 +1116,17 @@ async function renderCurrentPage(pdfDocObj = null) {
     canvas.height = Math.round(viewport.height);
     const ctx = canvas.getContext('2d');
 
-    await page.render({
+    const renderTask = page.render({
       canvasContext: ctx,
       viewport
-    }).promise;
+    });
+    currentRenderTask = renderTask;
+    await renderTask.promise;
+    currentRenderTask = null;
   } catch (err) {
-    logger.warn('SIGN', `Failed to render page: ${err.message}`);
+    if (err.name !== 'RenderingCancelledException') {
+      logger.warn('SIGN', `Failed to render page: ${err.message}`);
+    }
   }
 }
 
@@ -1466,6 +1508,9 @@ function onResizeSigEnd() {
 async function executeSign() {
   if (!docBytes.value || placedSignatures.value.length === 0) return;
   isProcessing.value = true;
+  progressPercent.value = 5;
+  progressMessage.value = t('sign_progress_preparing') || '准备图章与文档资源...';
+  await new Promise(r => setTimeout(r, 40));
 
   try {
     const cleanDoc = await loadCleanPdfDocument(docBytes.value, unlockedPassword);
@@ -1473,9 +1518,11 @@ async function executeSign() {
 
     // Cache embedded PNGs so multi-page reused stamps are embedded only once
     const pngCache = new Map();
+    const totalStamps = placedSignatures.value.length;
 
     // Group signatures by pageIndex
-    for (const sig of placedSignatures.value) {
+    for (let i = 0; i < totalStamps; i++) {
+      const sig = placedSignatures.value[i];
       const targetPageIndex = sig.pageIndex - 1;
       if (targetPageIndex < 0 || targetPageIndex >= pages.length) continue;
       const targetPage = pages[targetPageIndex];
@@ -1510,7 +1557,16 @@ async function executeSign() {
         width: pdfW,
         height: pdfH
       });
+
+      // Active event loop yield for smooth UI animation & responsive capsule
+      progressPercent.value = Math.round(15 + ((i + 1) / totalStamps) * 70);
+      progressMessage.value = t('sign_progress_baking', { current: i + 1, total: totalStamps });
+      await new Promise(r => setTimeout(r, 40));
     }
+
+    progressPercent.value = 90;
+    progressMessage.value = t('sign_progress_saving') || '正在封装生成已签署的 PDF...';
+    await new Promise(r => setTimeout(r, 40));
 
     const outBytes = await cleanDoc.save({ useObjectStreams: true });
     let outName = (customOutputBaseName.value.trim() || `PDFSeal_Signed_${Date.now()}`);
@@ -1518,14 +1574,20 @@ async function executeSign() {
       outName += '.pdf';
     }
 
+    cachedSignedBytes = outBytes;
+    cachedSignedName = outName;
+
     triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
     logger.info('SIGN', `PDF signed successfully with ${placedSignatures.value.length} signature(s): ${outName}`);
 
     lastExportedFile.value = {
       name: outName,
-      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes,
+      size: outBytes.byteLength
     };
     showNextActions.value = true;
+    progressPercent.value = 100;
+    progressMessage.value = t('sign_progress_done') || '文档签署完成！';
 
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {
@@ -1543,6 +1605,24 @@ async function executeSign() {
     alert('Failed to stamp signatures: ' + err.message);
   } finally {
     isProcessing.value = false;
+  }
+}
+
+async function handleBackToEdit() {
+  lastExportedFile.value = null;
+  isProcessing.value = false;
+  progressPercent.value = 0;
+  progressMessage.value = '';
+  await nextTick();
+  await renderCurrentPage();
+}
+
+function handleReDownload() {
+  if (!lastExportedFile.value) return;
+  if (cachedSignedBytes) {
+    triggerDownload(new Blob([cachedSignedBytes], { type: 'application/pdf' }), lastExportedFile.value.name);
+  } else if (lastExportedFile.value.arrayBuffer) {
+    triggerDownload(new Blob([lastExportedFile.value.arrayBuffer], { type: 'application/pdf' }), lastExportedFile.value.name);
   }
 }
 
@@ -1575,6 +1655,16 @@ function reset() {
   clearDrawCanvas();
   showNextActions.value = false;
   lastExportedFile.value = null;
+  progressPercent.value = 0;
+  progressMessage.value = '';
+  cachedSignedBytes = null;
+  cachedSignedName = '';
+  currentPdfDoc = null;
+  currentPdfPageObj = null;
+  if (currentRenderTask) {
+    try { currentRenderTask.cancel(); } catch (e) {}
+    currentRenderTask = null;
+  }
 }
 
 function checkIncomingFile() {

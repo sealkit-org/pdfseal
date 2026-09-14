@@ -276,10 +276,10 @@ async function runSplitBusinessTest() {
     const extractEl = extractBtn.asElement();
     if (!extractEl) throw new Error('Primary Extract button not found');
     await extractEl.click();
-    console.log('  ✓ Clicked Extract button. Extracting pages in browser memory...');
+    console.log('  ✓ Clicked Extract button. Processing in browser memory via ResultDeliveryView...');
 
-    // Await download completion
-    console.log('  ⏳ Awaiting extracted split PDF file...');
+    // Await download completion & ResultDeliveryView delivery screen
+    console.log('  ⏳ Awaiting extracted split PDF file & delivery view...');
     let downloadedBytes = null;
     let finalFileName = 'E2E_Split_Extracted_Result.pdf';
 
@@ -311,6 +311,24 @@ async function runSplitBusinessTest() {
       throw new Error('Timeout: Split PDF was not downloaded within 15 seconds.');
     }
 
+    // Wait for ResultDeliveryView Stage 3 to show completed state
+    await page.waitForFunction(() => {
+      const text = document.body.innerText;
+      return text.includes('文档拆分成功') || text.includes('拆分新文件') || text.includes('返回调整') || text.includes('再次下载');
+    }, { timeout: 8000 });
+
+    const deliveryCardInfo = await page.evaluate(() => {
+      const heading = document.querySelector('h2')?.innerText?.trim();
+      const hasRedownload = Array.from(document.querySelectorAll('button')).some(b => b.textContent?.includes('再次下载'));
+      const hasNewTask = Array.from(document.querySelectorAll('button')).some(b => b.textContent?.includes('拆分新文件'));
+      const hasBackToEdit = Array.from(document.querySelectorAll('button')).some(b => b.textContent?.includes('返回调整') || b.textContent?.includes('返回'));
+      return { heading, hasRedownload, hasNewTask, hasBackToEdit };
+    });
+    console.log(`  ✓ ResultDeliveryView verified:`, deliveryCardInfo);
+    if (!deliveryCardInfo.hasRedownload || !deliveryCardInfo.hasNewTask || !deliveryCardInfo.hasBackToEdit) {
+      throw new Error('ResultDeliveryView action buttons missing');
+    }
+
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'split_04_completed.png') });
     console.log('  📷 Screenshot saved: split_04_completed.png');
 
@@ -330,8 +348,36 @@ async function runSplitBusinessTest() {
       throw new Error(`Expected exactly 3 extracted pages, but output contains ${totalPages} pages`);
     }
 
-    // 9. Test Clear All (Reset to empty state)
-    console.log('📍 [Step 9] Testing Clear All (Reset to empty dropzone)...');
+    // 9. Test "返回调整" (Back to Edit - preserve workspace state)
+    console.log('📍 [Step 9] Testing "返回调整" (Back to Edit)...');
+    const backBtn = await page.evaluateHandle(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      return btns.find(b => b.textContent && (b.textContent.includes('返回调整') || b.textContent.includes('返回') || b.textContent.includes('Back'))) || null;
+    });
+    const backEl = backBtn.asElement();
+    if (!backEl) throw new Error('Back to Edit button not found');
+    await backEl.click();
+    await new Promise(r => setTimeout(r, 500));
+
+    // Verify workspace restored with 6 cards and 3 selected
+    const restoredStatus = await page.evaluate(() => {
+      const cards = Array.from(document.querySelectorAll('.grid > div'));
+      const selectedCards = cards
+        .map((c, idx) => c.className.includes('border-emerald-400') ? idx + 1 : null)
+        .filter(n => n !== null);
+      const selectedBadge = document.querySelector('span.bg-blue-50')?.innerText?.trim();
+      return { totalCards: cards.length, selectedCards, selectedBadge };
+    });
+    console.log(`  ✓ Restored cards: ${restoredStatus.totalCards}, Selected: ${restoredStatus.selectedBadge}`, restoredStatus.selectedCards);
+    if (restoredStatus.totalCards !== 6 || JSON.stringify(restoredStatus.selectedCards) !== JSON.stringify([2, 4, 5])) {
+      throw new Error(`Workspace state not preserved on back-to-edit: expected 6 cards with [2, 4, 5] selected, got ${restoredStatus.totalCards} cards with ${JSON.stringify(restoredStatus.selectedCards)}`);
+    }
+
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'split_04b_back_to_edit.png') });
+    console.log('  📷 Screenshot saved: split_04b_back_to_edit.png');
+
+    // 10. Test "清空" / "拆分新文件" (Reset to empty dropzone)
+    console.log('📍 [Step 10] Testing Clear All (Reset to empty dropzone)...');
     const clearBtn = await page.evaluateHandle(() => {
       const btns = Array.from(document.querySelectorAll('button'));
       return btns.find(b => b.textContent && (b.textContent.includes('清空') || b.textContent.includes('Clear'))) || null;
@@ -355,6 +401,8 @@ async function runSplitBusinessTest() {
     console.log(`✓ Deselect & Card Toggle: Verified`);
     console.log(`✓ Range Parsing (2, 4-5): Verified`);
     console.log(`✓ Extraction Execution:  Verified (${finalFileName})`);
+    console.log(`✓ ResultDeliveryView:    Verified (Stage 3 + Action Trio)`);
+    console.log(`✓ Back to Edit:          Verified (Preserved 3 pages selected)`);
     console.log(`✓ Reset & Clear:         Verified`);
     console.log(`✓ Output PDF Integrity:  100% Validated by pdf-lib`);
     console.log('==========================================================\n');

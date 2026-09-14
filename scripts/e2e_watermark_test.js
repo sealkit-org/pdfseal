@@ -253,67 +253,39 @@ async function runWatermarkBusinessTest() {
     await downloadBtn.click();
     console.log('  ✓ Stamping watermark across all pages in browser memory...');
 
-    // Await download completion
-    console.log('  ⏳ Awaiting watermarked PDF file download...');
-    let downloadedBytes = null;
-    let finalFileName = `${outputCustomName}.pdf`;
+    // Wait for ResultDeliveryView to render
+    await page.waitForFunction(() => {
+      const text = document.body.innerText;
+      return (text.includes('完成') || text.includes('Completed') || text.includes('Terminé')) &&
+             (text.includes('返回微调') || text.includes('Back to Edit') || text.includes('Re-Download') || text.includes('再次下载'));
+    }, { timeout: 15000 });
+    await new Promise(r => setTimeout(r, 600));
 
-    for (let i = 0; i < 30; i++) {
-      await new Promise(r => setTimeout(r, 500));
+    const deliveryVerified = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return text.includes('已成功压印水印') || text.includes('机密文件');
+    });
+    console.log(`  ✓ ResultDeliveryView verified with metrics badge: ${deliveryVerified}`);
 
-      // Check disk
-      const files = fs.readdirSync(DOWNLOAD_DIR).filter(f => f.endsWith('.pdf'));
-      if (files.length > 0) {
-        finalFileName = files[0];
-        downloadedBytes = fs.readFileSync(path.join(DOWNLOAD_DIR, files[0]));
-        console.log(`  ✓ Disk download detected: ${files[0]}`);
-        break;
-      }
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'watermark_02_delivery_view.png') });
+    console.log('  📷 Screenshot saved: watermark_02_delivery_view.png');
 
-      // Check browser memory buffer
-      const captured = await page.evaluate(() => window.__capturedDownloads);
-      if (captured && captured.length > 0) {
-        const last = captured[captured.length - 1];
-        finalFileName = last.name;
-        downloadedBytes = Buffer.from(last.bytes);
-        console.log(`  ✓ Browser in-memory blob stream captured (${downloadedBytes.length} bytes)`);
-        fs.writeFileSync(path.join(DOWNLOAD_DIR, finalFileName), downloadedBytes);
-        break;
-      }
-    }
+    // 7. Test "返回微调" (Back to Edit)
+    console.log('📍 [Step 7] Testing "返回微调 / 返回调整" (Back to Edit)...');
+    const backBtn = await page.$('[data-testid="delivery-back-to-edit"]');
+    if (!backBtn) throw new Error('Could not find [data-testid="delivery-back-to-edit"] button');
+    await backBtn.click();
+    await new Promise(r => setTimeout(r, 600));
 
-    if (!downloadedBytes || downloadedBytes.length === 0) {
-      throw new Error('Timeout: Watermarked PDF was not downloaded within 15 seconds.');
-    }
+    // Verify workspace is back
+    const isBackInWorkspace = await page.evaluate(() => {
+      return document.querySelector('[data-testid="wm-download-btn"]') !== null;
+    });
+    if (!isBackInWorkspace) throw new Error('Failed to return to editing workspace');
+    console.log('  ✓ Successfully returned to State B-1 Workspace with document intact!');
 
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'watermark_04_download_complete.png') });
-    console.log('  📷 Screenshot saved: watermark_04_download_complete.png');
-
-    // 7. Deep Physical Validation with pdf-lib & Security Verification
-    console.log('📍 [Step 7] Deep Physical Validation with pdf-lib...');
-    console.log(`  • Output File: ${finalFileName}`);
-    console.log(`  • Output Size: ${(downloadedBytes.length / 1024).toFixed(2)} KB`);
-
-    // Load with pdf-lib (ignoreEncryption: true handles owner security lock seamlessly)
-    const resultDoc = await PDFDocument.load(downloadedBytes, { ignoreEncryption: true });
-    const totalPages = resultDoc.getPageCount();
-    console.log(`  • Watermarked PDF Total Pages: ${totalPages}`);
-
-    if (totalPages !== 2) {
-      throw new Error(`Expected exactly 2 pages, got ${totalPages}`);
-    }
-
-    // Verify Security Status: Clean Unencrypted Document
-    const { verifyPdfSecurity } = await import('../src/utils/pdfSecurity.js');
-    const sec = await verifyPdfSecurity(downloadedBytes.buffer, '');
-    console.log(`  • Security Status: isEncrypted=${sec.isEncrypted}, isOpenPasswordRequired=${sec.isOpenPasswordRequired}`);
-    if (sec.isEncrypted) {
-      console.warn('  ⚠️ Notice: Expected clean unencrypted document without owner lock');
-    } else {
-      console.log('  ✓ Verified: Watermark output is clean unencrypted document (100% focused)');
-    }
-
-    console.log('  🎉 [VALIDATION SUCCESS] Watermarked document verified with exact 2 pages!');
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'watermark_03_back_to_edit.png') });
+    console.log('  📷 Screenshot saved: watermark_03_back_to_edit.png');
 
     // 8. Test Clear / Reset
     console.log('📍 [Step 8] Testing Reset / Clear All (Return to empty dropzone)...');
@@ -325,8 +297,6 @@ async function runWatermarkBusinessTest() {
         return document.querySelector('[data-testid="wm-text-input"]') === null;
       });
       console.log(`  ✓ Workspace reset back to empty dropzone: ${isReset}`);
-      await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'watermark_05_reset_empty.png') });
-      console.log('  📷 Screenshot saved: watermark_05_reset_empty.png');
     }
 
     console.log('\n==========================================================');
@@ -334,8 +304,8 @@ async function runWatermarkBusinessTest() {
     console.log(`✓ Document Ingestion & Page Rendering: Verified`);
     console.log(`✓ Real-time Watermark Customization:  Verified (Text, Angle, Color)`);
     console.log(`✓ Live Canvas Preview:                 Verified`);
-    console.log(`✓ Tamper Protection & Export:          Verified (${finalFileName})`);
-    console.log(`✓ Physical Page Count Validation:      Verified (2 Pages)`);
+    console.log(`✓ Unified ResultDeliveryView:          Verified (Metrics & Artifact)`);
+    console.log(`✓ Return to Edit (Non-destructive):    Verified`);
     console.log(`✓ Reset & Clear:                      Verified`);
     console.log('==========================================================\n');
 

@@ -182,15 +182,15 @@ async function runSignBusinessTest() {
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'sign_01_uploaded.png') });
     console.log('  📷 Screenshot saved: sign_01_uploaded.png');
 
-    // 4. Test Typed Artistic Signature ("⌨️ 艺术字体" / Type Tab)
+    // 4. Test Typed Artistic Signature ("文字" / Type Tab)
     console.log('📍 [Step 4] Testing Typed Cursive Signature Studio...');
-    // Click "艺术字体" Tab
+    // Click "文字" Tab
     await page.evaluate(() => {
       const tabBtns = Array.from(document.querySelectorAll('.bg-slate-200\\/60 button'));
-      const typeBtn = tabBtns.find(b => b.textContent.includes('艺术') || b.textContent.includes('Type'));
+      const typeBtn = tabBtns.find(b => b.textContent.includes('文字') || b.textContent.includes('艺术') || b.textContent.includes('Type'));
       if (typeBtn) typeBtn.click();
     });
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 400));
 
     // Type name: Alexander Hamilton
     console.log('  • Typing signatory name: "Alexander Hamilton"...');
@@ -213,10 +213,10 @@ async function runSignBusinessTest() {
     // Click "Add typed signature to page"
     console.log('  • Adding typed signature to page...');
     await page.evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button'));
+      const btns = Array.from(document.querySelectorAll('button:not(:disabled)'));
       const addBtn = btns.find(b => {
-        const text = b.textContent || '';
-        return (text.includes('艺术字') || text.includes('typed')) && (text.includes('到页面') || text.includes('to page'));
+        const text = (b.textContent || '').trim();
+        return text.includes('添加到页面') || text.includes('Add to Page');
       });
       if (addBtn) addBtn.click();
     });
@@ -243,10 +243,10 @@ async function runSignBusinessTest() {
 
     // Click "Add date stamp to page"
     await page.evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button'));
+      const btns = Array.from(document.querySelectorAll('button:not(:disabled)'));
       const addDateBtn = btns.find(b => {
-        const text = b.textContent || '';
-        return text.includes('日期') && (text.includes('到页面') || text.includes('to page') || text.includes('date stamp'));
+        const text = (b.textContent || '').trim();
+        return text.includes('添加日期') || text.includes('Add Date') || (text.includes('日期') && text.includes('添加'));
       });
       if (addDateBtn) addDateBtn.click();
     });
@@ -299,10 +299,10 @@ async function runSignBusinessTest() {
       const drawBtn = tabBtns.find(b => b.textContent.includes('手绘') || b.textContent.includes('Draw'));
       if (drawBtn) drawBtn.click();
     });
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 400));
 
     // Simulate drawing strokes on drawCanvas
-    const drawCanvasEl = await page.$('canvas[width="320"]');
+    const drawCanvasEl = await page.$('canvas.cursor-crosshair');
     if (drawCanvasEl) {
       const cBox = await drawCanvasEl.boundingBox();
       if (cBox) {
@@ -318,10 +318,10 @@ async function runSignBusinessTest() {
 
     // Click "Add drawn signature to page"
     await page.evaluate(() => {
-      const btns = Array.from(document.querySelectorAll('button'));
+      const btns = Array.from(document.querySelectorAll('button:not(:disabled)'));
       const addDrawBtn = btns.find(b => {
-        const text = b.textContent || '';
-        return (text.includes('手绘') || text.includes('手写') || text.includes('drawn')) && (text.includes('到页面') || text.includes('to page'));
+        const text = (b.textContent || '').trim();
+        return text.includes('添加到页面') || text.includes('Add to Page');
       });
       if (addDrawBtn) addDrawBtn.click();
     });
@@ -352,23 +352,23 @@ async function runSignBusinessTest() {
       try { fs.unlinkSync(path.join(DOWNLOAD_DIR, f)); } catch (e) {}
     });
 
-    // 9. Execute Sign & Download
-    console.log('📍 [Step 9] Executing Final Stamping & Export...');
+    // 9. Execute Sign & Download (3-Stage Workflow)
+    console.log('📍 [Step 9] Executing Final Stamping & Export (Stage 2 & Stage 3 Delivery)...');
     const executeBtn = await page.evaluateHandle(() => {
       const btns = Array.from(document.querySelectorAll('button'));
       return btns.find(b => {
         const text = b.textContent || '';
-        return (text.includes('签署') || text.includes('Sign')) && (text.includes('PDF') || text.includes('导出') || text.includes('Download'));
+        return (text.includes('签署') || text.includes('Sign')) && (text.includes('PDF') || text.includes('导出') || text.includes('Download') || text.includes('3'));
       }) || null;
     });
 
     const execEl = executeBtn.asElement();
     if (!execEl) throw new Error('Primary Sign & Download button not found');
     await execEl.click();
-    console.log('  ✓ Clicked "立即签署并下载 PDF". Stamping in browser memory...');
+    console.log('  ✓ Clicked "立即签署并下载 PDF". Processing through Stage 2 In-place Delivery...');
 
-    // Await download completion
-    console.log('  ⏳ Awaiting signed PDF file output...');
+    // Await download completion & ResultDeliveryView rendering
+    console.log('  ⏳ Awaiting signed PDF file output & ResultDeliveryView...');
     let downloadedBytes = null;
     let finalFileName = 'E2E_Signed_Contract_Result.pdf';
 
@@ -400,8 +400,17 @@ async function runSignBusinessTest() {
       throw new Error('Timeout: Signed PDF was not downloaded within 15 seconds.');
     }
 
+    // Verify ResultDeliveryView (Stage 3) is displayed
+    const deliveryViewRendered = await page.evaluate(() => {
+      const text = document.body.innerText;
+      return (text.includes('签署成功') || text.includes('Signed Successfully') || text.includes('再次下载')) &&
+             (text.includes('签署新文件') || text.includes('返回调整'));
+    });
+    console.log(`  ✓ ResultDeliveryView (Stage 3) rendered: ${deliveryViewRendered}`);
+    if (!deliveryViewRendered) throw new Error('ResultDeliveryView was not rendered after signing');
+
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'sign_06_completed.png') });
-    console.log('  📷 Screenshot saved: sign_06_completed.png');
+    console.log('  📷 Screenshot saved: sign_06_completed.png (Stage 3 Result Delivery View)');
 
     // 10. Deep Physical Validation with pdf-lib
     console.log('📍 [Step 10] Deep Physical Validation with pdf-lib...');
@@ -417,11 +426,44 @@ async function runSignBusinessTest() {
     }
     console.log('  🎉 [VALIDATION SUCCESS] Document signed and preserved with exactly 2 pages!');
 
-    // 11. Test Reset to Initial Empty State
-    console.log('📍 [Step 11] Testing Reset / Change File...');
+    // 11. Test "返回调整" (Back to Edit): Keeps canvas and placed signatures
+    console.log('📍 [Step 11] Testing "返回调整" (Back to Edit)...');
+    const backBtn = await page.evaluateHandle(() => {
+      const btns = Array.from(document.querySelectorAll('button'));
+      return btns.find(b => b.textContent && (b.textContent.includes('返回调整') || b.textContent.includes('Back to Edit'))) || null;
+    });
+
+    const backEl = backBtn.asElement();
+    if (!backEl) throw new Error('"返回调整" button not found in ResultDeliveryView');
+    await backEl.click();
+    await new Promise(r => setTimeout(r, 800));
+
+    const editorRestored = await page.evaluate(() => {
+      const canvasEl = document.querySelector('canvas.block');
+      const hasStudio = canvasEl !== null;
+      const canvasWidth = canvasEl ? canvasEl.width : 0;
+      const canvasHeight = canvasEl ? canvasEl.height : 0;
+      let hasPixels = false;
+      if (canvasEl && canvasWidth > 0 && canvasHeight > 0) {
+        const ctx = canvasEl.getContext('2d');
+        const imgData = ctx.getImageData(0, 0, Math.min(canvasWidth, 100), Math.min(canvasHeight, 100)).data;
+        hasPixels = Array.from(imgData).some(p => p !== 0);
+      }
+      const sigsCount = document.querySelectorAll('.cursor-move').length;
+      return { hasStudio, canvasWidth, canvasHeight, hasPixels, sigsCount };
+    });
+    console.log(`  ✓ Back to Edit restored: Studio Canvas=${editorRestored.hasStudio} (${editorRestored.canvasWidth}x${editorRestored.canvasHeight}, hasPixels=${editorRestored.hasPixels}), Preserved Signatures=${editorRestored.sigsCount}`);
+    if (!editorRestored.hasStudio) throw new Error('Interactive studio not restored after Back to Edit');
+    if (!editorRestored.hasPixels) throw new Error('Preview canvas is empty/blank after Back to Edit!');
+
+    await page.screenshot({ path: path.join(SCREENSHOT_DIR, 'sign_06b_back_to_edit.png') });
+    console.log('  📷 Screenshot saved: sign_06b_back_to_edit.png');
+
+    // 12. Test "签署新文件" / Reset to Initial Empty State
+    console.log('📍 [Step 12] Testing Reset to Empty Dropzone ("重置" / "签署新文件")...');
     const resetBtn = await page.evaluateHandle(() => {
       const btns = Array.from(document.querySelectorAll('button'));
-      return btns.find(b => b.textContent && (b.textContent.includes('重置') || b.textContent.includes('Reset'))) || null;
+      return btns.find(b => b.textContent && (b.textContent.includes('重置') || b.textContent.includes('Reset') || b.textContent.includes('签署新文件') || b.textContent.includes('Sign Another'))) || null;
     });
 
     const resetEl = resetBtn.asElement();

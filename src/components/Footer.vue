@@ -15,8 +15,9 @@
 
       <div class="flex items-center space-x-4 text-xs">
         <a 
-          href="https://github.com/sealkit-org/pdfseal/blob/main/LICENSE" 
+          :href="siteConfig.githubRepoUrl ? `${siteConfig.githubRepoUrl}/blob/main/LICENSE` : 'https://www.gnu.org/licenses/agpl-3.0.en.html'" 
           target="_blank" 
+          rel="noopener noreferrer"
           class="text-slate-500 hover:text-slate-900 transition text-[11px]"
         >
           {{ t('footer_license') }}

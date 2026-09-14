@@ -293,7 +293,8 @@ export async function applyPageNumbers(docBytes, options = {}) {
     maskColor = '#ffffff',
     margin = 24,
     password = '',
-    preserveWatermarks = true
+    preserveWatermarks = true,
+    onProgress
   } = options;
 
   logger.info('PAGE_NUMBER', `Applying page numbers with format="${format}", position=${position}, skipCover=${skipCover}`);
@@ -344,6 +345,11 @@ export async function applyPageNumbers(docBytes, options = {}) {
   const hasCanvas = typeof document !== 'undefined' && typeof document.createElement === 'function';
 
   for (let i = 0; i < totalPages; i++) {
+    await new Promise(resolve => setTimeout(resolve, 0));
+    if (onProgress) {
+      onProgress({ current: i + 1, total: totalPages, phase: 'rendering' });
+    }
+
     const page = pages[i];
     const text = interpolatePageNumber(format, i, totalPages, { startNumber, skipCover });
 
@@ -422,6 +428,16 @@ export async function applyPageNumbers(docBytes, options = {}) {
     }
   }
 
+  if (onProgress) {
+    onProgress({ current: totalPages, total: totalPages, phase: 'saving' });
+  }
+  await new Promise(resolve => setTimeout(resolve, 0));
+
   const outBytes = await pdfDoc.save({ useObjectStreams: true });
+
+  if (onProgress) {
+    onProgress({ current: totalPages, total: totalPages, phase: 'done' });
+  }
+
   return { outBytes, pageCount: totalPages };
 }
