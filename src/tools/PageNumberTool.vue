@@ -1,9 +1,9 @@
 <template>
-  <section class="w-full flex-1 flex flex-col">
+  <section class="w-full flex-1 flex flex-col min-h-0">
     <!-- Main Card Container -->
-    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-slate-100 flex flex-col flex-1 min-h-0">
       <!-- Integrated Header with Badge -->
-      <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-9 h-9 rounded-2xl bg-violet-50 text-violet-600 flex items-center justify-center font-bold shadow-2xs">
             <ListOrdered class="w-4.5 h-4.5" />
@@ -26,7 +26,7 @@
         @dragleave.prevent="isDragOver = false"
         @drop.prevent="onDrop"
         :class="[
-          'border-2 border-dashed rounded-3xl p-8 sm:p-12 text-center transition flex-1 flex flex-col items-center justify-center relative select-none',
+          'flex-1 border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center transition flex flex-col items-center justify-center my-4 relative select-none',
           isDragOver ? 'border-violet-500 bg-violet-50/50' : 'border-slate-200/90 hover:border-violet-400 bg-slate-50/40 hover:bg-slate-50/80'
         ]"
       >
@@ -67,8 +67,32 @@
         </div>
       </div>
 
-      <!-- State B: Active Document Workspace -->
-      <div v-else class="flex-1 flex flex-col justify-between overflow-hidden">
+      <!-- State B: Active Document Workspace OR UNIFIED RESULT DELIVERY -->
+      <div v-else class="flex-1 flex flex-col justify-between pt-3 sm:pt-3.5 overflow-hidden">
+        <!-- Unified Processing & Result Delivery View -->
+        <ResultDeliveryView 
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
+          :file="lastExportedFile"
+          source-tool="page_number"
+          :page-count="totalPages"
+          @redownload="handleReDownload"
+          @new-task="handleNewTask"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+        >
+          <template #metrics>
+            <span class="inline-flex items-center space-x-1 text-xs font-semibold text-violet-700 bg-violet-50 px-2.5 py-1 rounded-lg border border-violet-200/60 shadow-2xs">
+              <ListOrdered class="w-3.5 h-3.5 text-violet-600" />
+              <span>{{ t('pn_metric_badge', { count: totalPages, format: pnFormat }) }}</span>
+            </span>
+          </template>
+        </ResultDeliveryView>
+
+        <!-- Staging Workspace & Bottom Execution Bar -->
+        <div v-else class="flex-1 flex flex-col justify-between min-h-0">
         <!-- Top Toolbar & Status Bar -->
         <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-slate-100 shrink-0">
           <div class="flex items-center space-x-2 min-w-0 flex-1">
@@ -110,6 +134,7 @@
             <!-- Clear / Reset -->
             <button 
               @click="reset" 
+              data-testid="pn-reset-btn"
               class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
             >
               {{ t('btn_clear_all') || 'Clear All' }}
@@ -132,7 +157,7 @@
         </div>
 
         <!-- Center Workspace: Controls & Live Preview (Calibrated Height to Prevent Page Scroll & Keep Footer in Sight) -->
-        <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 my-2 flex-1 items-stretch min-h-0 max-h-[460px] overflow-hidden">
+        <div v-else class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 my-2 flex-1 items-stretch min-h-0 max-h-[calc(100vh-310px)] overflow-hidden">
           <!-- Left Controls (5 cols on lg) -->
           <div class="lg:col-span-5 bg-slate-50/80 rounded-2xl p-2.5 sm:p-3 border border-slate-200/80 flex flex-col justify-between overflow-y-auto custom-scrollbar min-h-0">
             <div class="space-y-2">
@@ -456,7 +481,7 @@
 
             <!-- Canvas Container -->
             <div class="bg-white p-2 rounded-2xl shadow-md border border-slate-200/80 max-w-full flex-1 w-full overflow-hidden flex items-center justify-center relative min-h-0">
-              <canvas ref="previewCanvasRef" class="max-h-[350px] max-w-full object-contain rounded-lg shadow-2xs"></canvas>
+              <canvas ref="previewCanvasRef" class="max-h-[calc(100vh-400px)] max-w-full object-contain rounded-lg shadow-2xs"></canvas>
 
               <!-- Cover Skipped Indicator Overlay -->
               <div 
@@ -470,17 +495,8 @@
           </div>
         </div>
 
-        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <!-- Bottom Cluster: Output Settings Bar -->
         <div class="shrink-0 space-y-2.5 pt-2">
-          <!-- Next Action Relay Banner -->
-          <NextActionBanner 
-            v-if="showNextActions && lastExportedFile"
-            :current-tool="'page_number'"
-            :file="lastExportedFile"
-            @send-to-tool="(tId) => emit('send-to-tool', tId)"
-            @close="showNextActions = false"
-          />
-
           <!-- Assembly Bottom Action & Export Configuration Bar -->
           <div class="pt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2.5">
             <!-- Left: Output Filename & Auto-save Checkbox -->
@@ -492,6 +508,7 @@
                 <input 
                   v-model="customOutputBaseName"
                   type="text" 
+                  data-testid="pn-filename-input"
                   :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
                   class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1 focus:bg-white focus:ring-2 focus:ring-violet-500 outline-hidden font-medium text-slate-700 w-44 sm:w-60"
                 >
@@ -511,6 +528,7 @@
             <button 
               :disabled="isProcessing || isLoading"
               @click="executePageNumber" 
+              data-testid="pn-download-btn"
               class="bg-violet-600 hover:bg-violet-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-5 py-2 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-violet-600/25 disabled:opacity-50 cursor-pointer ml-auto"
             >
               <span v-if="!isProcessing">{{ t('pn_download_btn') }}</span>
@@ -519,6 +537,7 @@
               <Loader2 v-else class="w-4 h-4 animate-spin" />
             </button>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -544,7 +563,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, nextTick, inject, onMounted, onActivated } from 'vue';
 import { 
   ListOrdered, 
   Plus, 
@@ -553,9 +572,9 @@ import {
   Loader2, 
   FolderLock, 
   Unlock, 
-  RefreshCw,
-  Pipette,
-  Sparkles
+  RefreshCw, 
+  Pipette, 
+  Sparkles 
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { t, onLanguageChange } from '../i18n';
@@ -574,12 +593,51 @@ import {
 } from '../utils/pageNumberEngine';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
-import NextActionBanner from '../components/NextActionBanner.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
+const workspaceState = inject('workspaceActiveState', null);
+
+const lastExportedFile = ref(null);
+const showNextActions = ref(false);
+const progressPercent = ref(0);
+const progressMessage = ref('');
+let cachedPdfBlob = null;
+let cachedPdfName = '';
+
+function handleReDownload() {
+  if (cachedPdfBlob && cachedPdfName) {
+    triggerDownload(cachedPdfBlob, cachedPdfName);
+  }
+}
+
+function handleNewTask() {
+  reset();
+}
+
+async function handleBackToEdit() {
+  lastExportedFile.value = null;
+  isProcessing.value = false;
+  progressPercent.value = 0;
+  progressMessage.value = '';
+  await nextTick();
+  await renderPreview();
+  requestAnimationFrame(() => {
+    renderPreview();
+  });
+}
+
 // File & State
 const docBytes = ref(null);
+
+watch(() => Boolean(docBytes.value), (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+});
 const filename = ref('');
 const totalPages = ref(0);
 const isDragOver = ref(false);
@@ -605,10 +663,6 @@ const customOutputBaseName = ref('');
 watch(() => userSettings.autoSaveToVault, (newVal) => {
   autoSaveToVault.value = Boolean(newVal);
 });
-
-// Export & Next Action
-const lastExportedFile = ref(null);
-const showNextActions = ref(false);
 
 // Configuration options
 const pnFormat = ref(t('pn_preset_page_n_of_total') || 'Page {n} of {total}');
@@ -989,6 +1043,8 @@ async function renderPreview() {
 async function executePageNumber() {
   if (!docBytes.value) return;
   isProcessing.value = true;
+  progressPercent.value = 10;
+  progressMessage.value = t('pn_progress_rendering', { current: 1, total: totalPages.value }) || '正在编排页码...';
 
   try {
     const { outBytes, pageCount } = await applyPageNumbers(docBytes.value, {
@@ -1001,7 +1057,19 @@ async function executePageNumber() {
       maskMode: pnMaskMode.value,
       maskColor: getEffectiveMaskColor(),
       margin: pnMargin.value,
-      password: unlockedPassword || ''
+      password: unlockedPassword || '',
+      onProgress: ({ current, total, phase }) => {
+        if (phase === 'rendering') {
+          const pct = Math.round((current / total) * 80);
+          progressPercent.value = Math.min(80, Math.max(10, pct));
+          progressMessage.value = t('pn_progress_rendering', { current, total }) || `正在编排页码 (第 ${current} / ${total} 页)...`;
+        } else if (phase === 'saving') {
+          progressPercent.value = 85;
+          progressMessage.value = t('pn_progress_saving') || '正在封装并持久化页码文档...';
+        } else if (phase === 'done') {
+          progressPercent.value = 100;
+        }
+      }
     });
 
     let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, 'Numbered'));
@@ -1009,25 +1077,37 @@ async function executePageNumber() {
       outName += '.pdf';
     }
 
-    triggerDownload(new Blob([outBytes], { type: 'application/pdf' }), outName);
+    const pdfBlob = new Blob([outBytes], { type: 'application/pdf' });
+    cachedPdfBlob = pdfBlob;
+    cachedPdfName = outName;
+
+    triggerDownload(pdfBlob, outName);
+
+    const ab = outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes;
 
     lastExportedFile.value = {
       name: outName,
-      arrayBuffer: outBytes.buffer ? outBytes.buffer.slice(outBytes.byteOffset, outBytes.byteOffset + outBytes.byteLength) : outBytes
+      size: outBytes.byteLength || outBytes.length,
+      arrayBuffer: ab,
+      blob: pdfBlob
     };
     showNextActions.value = true;
 
     // Auto-save to Vault if checked
     if (autoSaveToVault.value) {
-      await saveFile({
-        name: outName,
-        arrayBuffer: outBytes,
-        folderId: 'default',
-        category: 'export',
-        pageCount,
-        isEncrypted: false
-      });
-      logger.info('VAULT', `Page numbered result auto-saved to Vault: ${outName}`);
+      try {
+        await saveFile({
+          name: outName,
+          arrayBuffer: ab,
+          folderId: 'default',
+          category: 'export',
+          pageCount,
+          isEncrypted: false
+        });
+        logger.info('VAULT', `Page numbered result auto-saved to Vault: ${outName}`);
+      } catch (e) {
+        logger.warn('VAULT', `Failed to auto-save to Vault: ${e.message}`);
+      }
     }
   } catch (err) {
     logger.error('PAGE_NUMBER', `Page numbering execution failed: ${err.message}`);
@@ -1049,6 +1129,10 @@ function reset() {
   unlockedPassword = '';
   showNextActions.value = false;
   lastExportedFile.value = null;
+  cachedPdfBlob = null;
+  cachedPdfName = '';
+  progressPercent.value = 0;
+  progressMessage.value = '';
   if (previewCanvasRef.value) {
     const ctx = previewCanvasRef.value.getContext('2d');
     ctx.clearRect(0, 0, previewCanvasRef.value.width, previewCanvasRef.value.height);
@@ -1064,5 +1148,13 @@ function checkIncomingFile() {
 }
 
 onMounted(checkIncomingFile);
-onActivated(checkIncomingFile);
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+  checkIncomingFile();
+  if (docBytes.value && !lastExportedFile.value) {
+    nextTick(() => {
+      renderPreview();
+    });
+  }
+});
 </script>

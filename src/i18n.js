@@ -48,17 +48,31 @@ export function setLanguage(lang) {
 }
 
 export function t(key, fallbackOrParams = null, fallback = null) {
+  let params = null;
+  let defaultStr = null;
+
+  if (fallbackOrParams && typeof fallbackOrParams === 'object') {
+    params = fallbackOrParams;
+    if (typeof fallback === 'string') defaultStr = fallback;
+  } else if (typeof fallbackOrParams === 'string') {
+    defaultStr = fallbackOrParams;
+    if (fallback && typeof fallback === 'object') {
+      params = fallback;
+    }
+  } else if (fallback && typeof fallback === 'object') {
+    params = fallback;
+  }
+
   let str = null;
   const dict = dictionaries[currentLang.value] || dictionaries.en;
   if (dict && dict[key] !== undefined) str = dict[key];
   else if (dictionaries.en && dictionaries.en[key] !== undefined) str = dictionaries.en[key];
-  else if (typeof fallbackOrParams === 'string') str = fallbackOrParams;
-  else if (fallback !== null && fallback !== undefined) str = fallback;
+  else if (defaultStr !== null) str = defaultStr;
   else str = key;
 
-  if (fallbackOrParams && typeof fallbackOrParams === 'object') {
-    Object.keys(fallbackOrParams).forEach(k => {
-      str = String(str).replaceAll('{' + k + '}', fallbackOrParams[k]);
+  if (params && typeof params === 'object') {
+    Object.keys(params).forEach(k => {
+      str = String(str).replaceAll('{' + k + '}', params[k]);
     });
   }
   return str;

@@ -1,9 +1,9 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
-    <div class="bg-white rounded-3xl p-5 sm:p-6 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-3.5 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
             <Minimize2 class="w-5 h-5" />
@@ -450,7 +450,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, inject, onMounted, onActivated } from 'vue';
 import { 
   Minimize2, 
   Plus, 
@@ -481,8 +481,18 @@ import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
+const workspaceState = inject('workspaceActiveState', null);
+
 const fileInputRef = ref(null);
 const docBytes = ref(null);
+
+watch(() => Boolean(docBytes.value), (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+});
 const filename = ref('');
 const totalPages = ref(0);
 const isDragOver = ref(false);

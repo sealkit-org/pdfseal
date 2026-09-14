@@ -89,7 +89,9 @@
                 'w-7 h-7 rounded-lg flex items-center justify-center font-black text-[10px] shrink-0 shadow-2xs border',
                 fileExtBadge === 'ZIP' 
                   ? 'bg-emerald-100 text-emerald-700 border-emerald-200/60' 
-                  : 'bg-red-100 text-red-600 border-red-200/60'
+                  : (fileExtBadge === 'PNG' || fileExtBadge === 'JPG' 
+                      ? 'bg-cyan-100 text-cyan-700 border-cyan-200/60' 
+                      : 'bg-red-100 text-red-600 border-red-200/60')
               ]"
             >
               {{ fileExtBadge }}
@@ -122,6 +124,7 @@
           <button 
             type="button"
             @click="emit('redownload')"
+            data-testid="delivery-redownload"
             class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-blue-600/25 transition flex items-center justify-center space-x-2 cursor-pointer"
           >
             <Download class="w-4 h-4" />
@@ -132,6 +135,7 @@
           <button 
             type="button"
             @click="emit('new-task')"
+            data-testid="delivery-new-task"
             class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 active:scale-98 text-slate-700 font-bold text-xs sm:text-sm border border-slate-200 transition flex items-center justify-center space-x-1.5 cursor-pointer"
           >
             <RotateCcw class="w-3.5 h-3.5 text-slate-600" />
@@ -142,10 +146,11 @@
           <button 
             type="button"
             @click="emit('back-to-edit')"
+            data-testid="delivery-back-to-edit"
             class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 active:scale-98 text-slate-600 hover:text-slate-800 font-bold text-xs sm:text-sm border border-slate-200/80 transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-2xs"
           >
             <Pencil class="w-3.5 h-3.5 text-slate-500" />
-            <span>{{ t('result_btn_back_to_edit') || '返回微调' }}</span>
+            <span>{{ t('result_btn_back_to_edit') || '返回调整' }}</span>
           </button>
         </div>
       </div>
@@ -255,5 +260,13 @@ const formattedSize = computed(() => {
   const sizes = ['B', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+});
+
+const fileExtBadge = computed(() => {
+  const name = props.file?.name?.toLowerCase() || '';
+  if (name.endsWith('.zip') || props.file?.isZip) return 'ZIP';
+  if (name.endsWith('.png')) return 'PNG';
+  if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'JPG';
+  return 'PDF';
 });
 </script>

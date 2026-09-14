@@ -70,10 +70,34 @@
         </div>
       </div>
 
-      <!-- 2. ACTIVE WORKSPACE -->
+      <!-- 2. ACTIVE WORKSPACE OR UNIFIED RESULT DELIVERY -->
       <div v-else class="flex-1 flex flex-col justify-between pt-4">
-        <!-- Assembly Control Bar -->
-        <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 shrink-0">
+        <!-- 2A. Unified Processing & Result Delivery View -->
+        <ResultDeliveryView 
+          v-if="isZipping || lastExportedFile"
+          :is-processing="isZipping"
+          :progress-percent="zipProgress"
+          :progress-message="progressMessage"
+          :file="lastExportedFile"
+          source-tool="pdf_to_image"
+          :page-count="pages.length"
+          @redownload="handleReDownload"
+          @new-task="handleNewTask"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+        >
+          <template #metrics>
+            <span class="inline-flex items-center space-x-1 text-xs font-semibold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-lg border border-cyan-200/60 shadow-2xs">
+              <ImageDown class="w-3.5 h-3.5 text-cyan-600" />
+              <span>{{ t('p2i_metric_bundle', { count: lastExportedCount || pages.length }) || `共导出 ${lastExportedCount || pages.length} 张高清图片` }}</span>
+            </span>
+          </template>
+        </ResultDeliveryView>
+
+        <!-- 2B. Staging Workspace & Bottom Execution Bar -->
+        <div v-else class="flex-1 flex flex-col justify-between min-h-0">
+          <!-- Assembly Control Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 shrink-0">
           <!-- Left Info Badges -->
           <div class="flex items-center space-x-2 min-w-0">
             <span class="text-xs bg-cyan-50 text-cyan-700 font-extrabold px-2.5 py-1 rounded-xl border border-cyan-200/80 shrink-0">
@@ -195,7 +219,7 @@
         <!-- Page Thumbnail Cards Grid -->
         <div
           v-else
-          class="flex-1 my-3 overflow-y-auto max-h-[460px] pr-1 grid content-start items-start grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 select-none"
+          class="flex-1 my-3 overflow-y-auto min-h-[200px] max-h-[calc(100vh-360px)] pr-1 grid content-start items-start grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-3 select-none"
         >
           <div
             v-for="(p, idx) in pages"
@@ -231,7 +255,7 @@
 
         <!-- Assembly Bottom Action Bar -->
         <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3 shrink-0">
-          <!-- Left: Output Filename -->
+          <!-- Left: Output Filename & Vault Auto-save Checkbox -->
           <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center space-x-1.5">
               <label class="text-xs text-slate-500 font-semibold shrink-0">
@@ -244,6 +268,17 @@
                 class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-cyan-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
               >
             </div>
+
+            <!-- Auto-save to Vault Checkbox -->
+            <label class="flex items-center space-x-1.5 text-xs text-slate-600 font-semibold cursor-pointer select-none">
+              <input
+                type="checkbox"
+                v-model="autoSaveToVault"
+                class="w-4 h-4 text-cyan-600 rounded-md border-slate-300 focus:ring-cyan-500 cursor-pointer"
+              >
+              <FolderLock class="w-3.5 h-3.5 text-cyan-600" />
+              <span>{{ t('vault_autosave_checkbox') }}</span>
+            </label>
           </div>
 
           <!-- Right: Big Primary Export Button (All pages as ZIP) -->
@@ -253,14 +288,15 @@
             class="bg-cyan-600 hover:bg-cyan-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-cyan-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
             <template v-if="!isZipping">
-              <span>{{ t('p2i_download_all') }}</span>
+              <span>{{ t('p2i_download_all') }} ({{ pages.length }})</span>
               <Package class="w-4 h-4" />
             </template>
             <template v-else>
-              <span>{{ t('p2i_zipping') }} ({{ zipProgress }}%)</span>
+              <span>{{ progressMessage || t('loading') || 'Processing...' }}</span>
               <Loader2 class="w-4 h-4 animate-spin" />
             </template>
           </button>
+        </div>
         </div>
       </div>
     </div>
@@ -286,7 +322,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onActivated, onDeactivated } from 'vue';
+import { ref, watch, inject, onMounted, onActivated, onDeactivated } from 'vue';
 import {
   ImageDown,
   Image,
@@ -308,9 +344,34 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
+import { saveFile } from '../utils/vaultDb';
+
+const emit = defineEmits(['send-to-tool']);
+
+const workspaceState = inject('workspaceActiveState', null);
+
+const lastExportedFile = ref(null);
+const lastExportedCount = ref(0);
+const progressMessage = ref('');
+let cachedZipBlob = null;
+let cachedZipName = '';
+
+const autoSaveToVault = ref(userSettings.autoSaveToVault);
+watch(() => userSettings.autoSaveToVault, (newVal) => {
+  autoSaveToVault.value = Boolean(newVal);
+}, { immediate: true });
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
+
+watch(() => Boolean(docBytes.value), (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+});
 const filename = ref('');
 const pages = ref([]);
 const isDragOver = ref(false);
@@ -529,27 +590,84 @@ async function downloadAllAsZip() {
   if (!pdfDoc || pages.value.length === 0 || isZipping.value || isRenderingPage.value !== null) return;
   isZipping.value = true;
   zipProgress.value = 0;
+  const total = pages.value.length;
+  progressMessage.value = t('p2i_progress_rendering', { current: 1, total });
+
   try {
     const ext = getExt();
     const files = [];
-    for (let i = 0; i < pages.value.length; i++) {
+    for (let i = 0; i < total; i++) {
+      progressMessage.value = t('p2i_progress_rendering', { current: i + 1, total });
+      zipProgress.value = Math.round((i / total) * 80);
+      // Yield to event loop for smooth UI animation
+      await new Promise(resolve => setTimeout(resolve, 0));
+
       const blob = await renderPageBlob(pages.value[i].pageIndex);
       const pageNum = String(i + 1).padStart(2, '0');
       files.push({ name: `${getBaseName()}_page_${pageNum}.${ext}`, data: blob });
     }
 
+    progressMessage.value = t('p2i_progress_zipping', { percent: 0 });
+    zipProgress.value = 80;
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     const zipName = `${getBaseName()}_Images.zip`;
-    await createAndDownloadZip(files, zipName, (pct) => {
-      zipProgress.value = pct;
+    const { zipBlob, zipFileName } = await createAndDownloadZip(files, zipName, (pct) => {
+      zipProgress.value = Math.min(99, 80 + Math.round(pct * 0.2));
+      progressMessage.value = t('p2i_progress_zipping', { percent: Math.round(pct) });
     });
-    logger.info('PDF_TO_IMAGE', `Exported ${files.length} pages as ZIP: ${zipName}`);
+
+    zipProgress.value = 100;
+    cachedZipBlob = zipBlob;
+    cachedZipName = zipFileName;
+    logger.info('PDF_TO_IMAGE', `Exported ${files.length} pages as ZIP: ${zipFileName}`);
+
+    // Auto-save to Vault if checked
+    if (autoSaveToVault.value) {
+      try {
+        const ab = await zipBlob.arrayBuffer();
+        await saveFile({
+          name: zipFileName,
+          arrayBuffer: ab,
+          folderId: 'default',
+          category: 'export',
+          pageCount: total
+        });
+        logger.info('VAULT', `Images ZIP auto-saved to Vault: ${zipFileName}`);
+      } catch (e) {
+        logger.warn('VAULT', `Failed to save ZIP to Vault: ${e.message}`);
+      }
+    }
+
+    const zipAb = await zipBlob.arrayBuffer();
+    lastExportedCount.value = total;
+    lastExportedFile.value = {
+      name: zipFileName,
+      size: zipBlob.size,
+      arrayBuffer: zipAb,
+      isZip: true,
+      blob: zipBlob
+    };
   } catch (err) {
     logger.error('PDF_TO_IMAGE', `Failed to export ZIP bundle: ${err.message}`);
     alert(t('p2i_err_export') + ' ' + err.message);
   } finally {
     isZipping.value = false;
-    zipProgress.value = 0;
   }
+}
+
+function handleReDownload() {
+  if (cachedZipBlob && cachedZipName) {
+    triggerDownload(cachedZipBlob, cachedZipName);
+  }
+}
+
+function handleNewTask() {
+  reset();
+}
+
+function handleBackToEdit() {
+  lastExportedFile.value = null;
 }
 
 async function reset() {
@@ -559,6 +677,11 @@ async function reset() {
   customOutputBaseName.value = '';
   isRenderingPage.value = null;
   isZipping.value = false;
+  lastExportedFile.value = null;
+  lastExportedCount.value = 0;
+  cachedZipBlob = null;
+  cachedZipName = '';
+  progressMessage.value = '';
   await destroyPdfDoc();
 }
 

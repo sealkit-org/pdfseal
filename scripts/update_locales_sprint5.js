@@ -1,0 +1,122 @@
+import fs from 'fs';
+
+const additions = {
+  zh: {
+    processing_title_watermark: '正在为 PDF 文档压印水印...',
+    result_success_watermark: '水印压印完成！',
+    result_btn_new_task_watermark: '水印新文件',
+    wm_progress_stamping: '正在压印第 {current}/{total} 页水印...',
+    wm_progress_saving: '正在封装并持久化水印文档...',
+    wm_metric_badge: '已成功压印水印「{text}」',
+    processing_title_page_number: '正在为 PDF 编排并绘制页码...',
+    result_success_page_number: '页码编排完成！',
+    result_btn_new_task_page_number: '编排新文件',
+    pn_progress_rendering: '正在编排第 {current}/{total} 页页码...',
+    pn_progress_saving: '正在生成规范页码文档...',
+    pn_metric_badge: '已成功编排 {count} 页页码',
+    processing_title_sanitize: '正在深度清理 PDF 隐私与冗余数据...',
+    result_success_sanitize: '隐私清理完成！',
+    result_btn_new_task_sanitize: '清理新文件',
+    san_progress_metadata: '正在抹除敏感元数据与文档信息...',
+    san_progress_scripts: '正在移除交互脚本与执行动作...',
+    san_progress_annots: '正在扁平化表单并清理冗余注释...',
+    san_progress_saving: '正在重组纯净无隐患 PDF 文档...',
+    san_metric_badge: '已安全清除元数据、动作脚本与隐私注释'
+  },
+  en: {
+    processing_title_watermark: 'Applying watermark to PDF document...',
+    result_success_watermark: 'Watermark Applied Successfully!',
+    result_btn_new_task_watermark: 'Watermark Another PDF',
+    wm_progress_stamping: 'Applying watermark on page {current} of {total}...',
+    wm_progress_saving: 'Packaging and finalizing watermarked PDF...',
+    wm_metric_badge: 'Watermark "{text}" applied successfully',
+    processing_title_page_number: 'Numbering and rendering pages...',
+    result_success_page_number: 'Page Numbering Completed!',
+    result_btn_new_task_page_number: 'Number Another PDF',
+    pn_progress_rendering: 'Rendering page numbers for page {current} of {total}...',
+    pn_progress_saving: 'Generating clean numbered PDF document...',
+    pn_metric_badge: 'Successfully numbered {count} pages',
+    processing_title_sanitize: 'Sanitizing metadata & removing sensitive data...',
+    result_success_sanitize: 'PDF Sanitized Successfully!',
+    result_btn_new_task_sanitize: 'Sanitize Another PDF',
+    san_progress_metadata: 'Purging sensitive document metadata...',
+    san_progress_scripts: 'Removing embedded scripts and interactive actions...',
+    san_progress_annots: 'Flattening forms and cleaning annotations...',
+    san_progress_saving: 'Rebuilding safe, sanitized PDF document...',
+    san_metric_badge: 'Metadata, scripts, and privacy annotations removed'
+  },
+  de: {
+    processing_title_watermark: 'Wasserzeichen wird auf PDF angewendet...',
+    result_success_watermark: 'Wasserzeichen erfolgreich hinzugefügt!',
+    result_btn_new_task_watermark: 'Weitere PDF stempeln',
+    wm_progress_stamping: 'Wasserzeichen auf Seite {current} von {total} anwenden...',
+    wm_progress_saving: 'Wasserzeichen-PDF wird fertiggestellt...',
+    wm_metric_badge: 'Wasserzeichen „{text}“ erfolgreich angewendet',
+    processing_title_page_number: 'Seitenzahlen werden formatiert...',
+    result_success_page_number: 'Seitennummerierung abgeschlossen!',
+    result_btn_new_task_page_number: 'Weitere PDF nummerieren',
+    pn_progress_rendering: 'Seitenzahl für Seite {current} von {total} wird erstellt...',
+    pn_progress_saving: 'Nummeriertes PDF wird gespeichert...',
+    pn_metric_badge: '{count} Seiten erfolgreich nummeriert',
+    processing_title_sanitize: 'Metadaten und sensible Daten werden bereinigt...',
+    result_success_sanitize: 'PDF erfolgreich bereinigt!',
+    result_btn_new_task_sanitize: 'Weitere PDF bereinigen',
+    san_progress_metadata: 'Sensible Metadaten werden entfernt...',
+    san_progress_scripts: 'Skripte und Aktionen werden entfernt...',
+    san_progress_annots: 'Formulare werden reduziert und Anmerkungen bereinigt...',
+    san_progress_saving: 'Bereinigtes PDF wird gespeichert...',
+    san_metric_badge: 'Metadaten, Skripte und Anmerkungen entfernt'
+  },
+  es: {
+    processing_title_watermark: 'Aplicando marca de agua al documento PDF...',
+    result_success_watermark: '¡Marca de agua aplicada con éxito!',
+    result_btn_new_task_watermark: 'Poner marca de agua a otro PDF',
+    wm_progress_stamping: 'Estampando página {current} de {total}...',
+    wm_progress_saving: 'Finalizando documento con marca de agua...',
+    wm_metric_badge: 'Marca de agua «{text}» aplicada con éxito',
+    processing_title_page_number: 'Numerando y diseñando páginas...',
+    result_success_page_number: '¡Numeración de páginas completada!',
+    result_btn_new_task_page_number: 'Numerar otro PDF',
+    pn_progress_rendering: 'Numerando página {current} de {total}...',
+    pn_progress_saving: 'Generando documento PDF numerado...',
+    pn_metric_badge: '{count} páginas numeradas con éxito',
+    processing_title_sanitize: 'Limpiando metadatos y datos confidenciales...',
+    result_success_sanitize: '¡PDF saneado con éxito!',
+    result_btn_new_task_sanitize: 'Sanear otro PDF',
+    san_progress_metadata: 'Purgando metadatos sensibles...',
+    san_progress_scripts: 'Eliminando scripts y acciones...',
+    san_progress_annots: 'Aplanando formularios y limpiando anotaciones...',
+    san_progress_saving: 'Reconstruyendo PDF limpio y seguro...',
+    san_metric_badge: 'Metadatos, scripts y anotaciones eliminados'
+  },
+  fr: {
+    processing_title_watermark: 'Application du filigrane sur le document PDF...',
+    result_success_watermark: 'Filigrane appliqué avec succès !',
+    result_btn_new_task_watermark: 'Filigraner un autre PDF',
+    wm_progress_stamping: 'Application du filigrane sur la page {current} sur {total}...',
+    wm_progress_saving: 'Finalisation du document avec filigrane...',
+    wm_metric_badge: 'Filigrane « {text} » appliqué avec succès',
+    processing_title_page_number: 'Numérotation des pages en cours...',
+    result_success_page_number: 'Numérotation terminée avec succès !',
+    result_btn_new_task_page_number: 'Numéroter un autre PDF',
+    pn_progress_rendering: 'Numérotation de la page {current} sur {total}...',
+    pn_progress_saving: 'Génération du PDF numéroté...',
+    pn_metric_badge: '{count} pages numérotées avec succès',
+    processing_title_sanitize: 'Nettoyage des métadonnées et données privées...',
+    result_success_sanitize: 'Nettoyage du PDF terminé avec succès !',
+    result_btn_new_task_sanitize: 'Nettoyer un autre PDF',
+    san_progress_metadata: 'Suppression des métadonnées sensibles...',
+    san_progress_scripts: 'Suppression des scripts et actions...',
+    san_progress_annots: 'Aplatissement des formulaires et annotations...',
+    san_progress_saving: 'Génération du PDF assaini et sécurisé...',
+    san_metric_badge: 'Métadonnées, scripts et annotations supprimés'
+  }
+};
+
+for (const lang of ['zh', 'en', 'de', 'es', 'fr']) {
+  const filePath = `src/locales/${lang}.json`;
+  const data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+  Object.assign(data, additions[lang]);
+  fs.writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n', 'utf8');
+  console.log(`${lang} updated, key count:`, Object.keys(data).length);
+}

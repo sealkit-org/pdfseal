@@ -161,7 +161,7 @@
           >
 
           <!-- Sortable Assembly Cards Board -->
-          <div class="flex-1 my-3 overflow-y-auto max-h-[460px] pr-1 space-y-2">
+          <div class="flex-1 my-3 overflow-y-auto min-h-[200px] max-h-[calc(100vh-350px)] pr-1 space-y-2">
             <div 
               v-for="(f, idx) in files" 
               :key="f.id || f.name + idx"
@@ -319,7 +319,7 @@
 </template>
 
 <script setup>
-import { ref, watch, nextTick, onMounted, onActivated } from 'vue';
+import { ref, watch, nextTick, inject, onMounted, onActivated } from 'vue';
 import { 
   Files, Plus, GripVertical, Trash2, Lock, Unlock, Download, 
   Loader2, FolderLock, ArrowUpDown, ArrowUp, ArrowDown, Layers
@@ -340,6 +340,8 @@ import { logger } from '../utils/logger';
 
 const emit = defineEmits(['send-to-tool']);
 
+const workspaceState = inject('workspaceActiveState', null);
+
 const fileInputRef = ref(null);
 const files = ref([]);
 const filePasswords = ref({});
@@ -347,6 +349,14 @@ const encryptedFiles = ref(new Set());
 const isDragOver = ref(false);
 const isProcessing = ref(false);
 const isVaultPickerOpen = ref(false);
+
+watch(() => files.value.length > 0, (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(files.value.length > 0);
+});
 
 const customOutputBaseName = ref(`${userSettings.defaultExportPrefix || 'PDFSeal'}_Merged_${new Date().toISOString().slice(0, 10)}`);
 const autoSaveToVault = ref(userSettings.autoSaveToVault !== false);

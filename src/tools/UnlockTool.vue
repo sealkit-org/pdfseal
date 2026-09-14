@@ -73,8 +73,32 @@
         </div>
       </div>
 
-      <!-- 2. ACTIVE UNLOCK WORKSPACE -->
+      <!-- 2. ACTIVE UNLOCK WORKSPACE OR UNIFIED RESULT DELIVERY -->
       <div v-else class="flex-1 flex flex-col justify-between pt-4">
+        <!-- 2A. Unified Processing & Result Delivery View -->
+        <ResultDeliveryView 
+          v-if="isProcessing || lastExportedFile"
+          :is-processing="isProcessing"
+          :progress-percent="progressPercent"
+          :progress-message="progressMessage"
+          :file="lastExportedFile"
+          source-tool="unlock"
+          :page-count="totalPages"
+          @redownload="handleReDownload"
+          @new-task="handleNewTask"
+          @back-to-edit="handleBackToEdit"
+          @send-to-tool="(tId) => emit('send-to-tool', tId)"
+        >
+          <template #metrics>
+            <span class="inline-flex items-center space-x-1 text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/60 shadow-2xs">
+              <Unlock class="w-3.5 h-3.5 text-emerald-600" />
+              <span>{{ t('unlock_metric_badge') || '已彻底解除密码与权限限制' }}</span>
+            </span>
+          </template>
+        </ResultDeliveryView>
+
+        <!-- 2B. Staging Workspace & Bottom Execution Bar -->
+        <div v-else class="flex-1 flex flex-col justify-between min-h-0">
         <div class="space-y-4">
           <!-- File Summary Card -->
           <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80">
@@ -164,17 +188,8 @@
           </div>
         </div>
 
-        <!-- Bottom Cluster: Next Action Relay Banner (Anchored to Bottom) & Output Settings Bar -->
+        <!-- Bottom Cluster: Output Settings Bar -->
         <div class="shrink-0 space-y-2.5 pt-2">
-          <!-- Next Action Relay Banner -->
-          <NextActionBanner 
-            v-if="showNextActions && lastExportedFile"
-            :current-tool="'unlock'"
-            :file="lastExportedFile"
-            @send-to-tool="(tId) => emit('send-to-tool', tId)"
-            @close="showNextActions = false"
-          />
-
           <!-- Bottom Execution & Output Settings Bar -->
           <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
             <!-- Output Filename & Vault Auto-Save Setting -->
@@ -218,6 +233,7 @@
             </button>
           </div>
         </div>
+        </div>
       </div>
     </div>
 
@@ -232,7 +248,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, inject, onMounted, onActivated } from 'vue';
 import { 
   Unlock, 
   Plus, 
@@ -255,15 +271,29 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import { generateExportFileName } from '../utils/filenameUtils';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
-import NextActionBanner from '../components/NextActionBanner.vue';
+import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
+const workspaceState = inject('workspaceActiveState', null);
+
 const lastExportedFile = ref(null);
 const showNextActions = ref(false);
+const progressPercent = ref(0);
+const progressMessage = ref('');
+let cachedPdfBlob = null;
+let cachedPdfName = '';
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
+
+watch(() => Boolean(docBytes.value), (active) => {
+  workspaceState?.setActiveFile(active);
+}, { immediate: true });
+
+onActivated(() => {
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+});
 const filename = ref('');
 const totalPages = ref(0);
 const isDragOver = ref(false);
@@ -345,6 +375,20 @@ async function loadFile(file, password = '') {
   }
 }
 
+function handleReDownload() {
+  if (cachedPdfBlob && cachedPdfName) {
+    triggerDownload(cachedPdfBlob, cachedPdfName);
+  }
+}
+
+function handleNewTask() {
+  reset();
+}
+
+function handleBackToEdit() {
+  lastExportedFile.value = null;
+}
+
 function reset() {
   docBytes.value = null;
   filename.value = '';
@@ -358,6 +402,10 @@ function reset() {
   customOutputBaseName.value = '';
   showNextActions.value = false;
   lastExportedFile.value = null;
+  progressPercent.value = 0;
+  progressMessage.value = '';
+  cachedPdfBlob = null;
+  cachedPdfName = '';
 }
 
 async function executeUnlock() {
@@ -368,6 +416,10 @@ async function executeUnlock() {
   }
   isProcessing.value = true;
   unlockError.value = '';
+  progressPercent.value = 15;
+  progressMessage.value = t('unlock_progress_verifying') || '正在验证文档密码与安全结构...';
+  // Yield to event loop for smooth UI animation
+  await new Promise(resolve => setTimeout(resolve, 0));
 
   try {
     const pwd = inputPassword.value || '';
@@ -377,7 +429,19 @@ async function executeUnlock() {
         throw new Error('Incorrect password');
       }
     }
+
+    progressPercent.value = 50;
+    progressMessage.value = t('unlock_progress_stripping') || '正在彻底清除密码保护与权限限制...';
+    // Yield to event loop
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     const cleanDoc = await loadCleanPdfDocument(docBytes.value, pwd);
+
+    progressPercent.value = 80;
+    progressMessage.value = t('unlock_progress_saving') || '正在生成无限制的纯净 PDF 文档...';
+    // Yield to event loop
+    await new Promise(resolve => setTimeout(resolve, 0));
+
     const unlockedBytes = await cleanDoc.save({ useObjectStreams: true });
 
     let outName = (customOutputBaseName.value.trim() || generateExportFileName(filename.value, ''));
@@ -385,27 +449,41 @@ async function executeUnlock() {
       outName += '.pdf';
     }
 
-    triggerDownload(new Blob([unlockedBytes], { type: 'application/pdf' }), outName);
+    const pdfBlob = new Blob([unlockedBytes], { type: 'application/pdf' });
+    cachedPdfBlob = pdfBlob;
+    cachedPdfName = outName;
+
+    triggerDownload(pdfBlob, outName);
     logger.info('UNLOCK', `PDF unlocked successfully: ${outName}`);
+
+    const ab = unlockedBytes.buffer ? unlockedBytes.buffer.slice(unlockedBytes.byteOffset, unlockedBytes.byteOffset + unlockedBytes.byteLength) : unlockedBytes;
 
     lastExportedFile.value = {
       name: outName,
-      arrayBuffer: unlockedBytes.buffer ? unlockedBytes.buffer.slice(unlockedBytes.byteOffset, unlockedBytes.byteOffset + unlockedBytes.byteLength) : unlockedBytes
+      size: unlockedBytes.byteLength || unlockedBytes.length,
+      arrayBuffer: ab,
+      blob: pdfBlob
     };
     showNextActions.value = true;
 
     // Auto-save to Vault if checked (with isEncrypted: false)
     if (autoSaveToVault.value) {
-      await saveFile({
-        name: outName,
-        arrayBuffer: unlockedBytes,
-        folderId: 'default',
-        category: 'export',
-        pageCount: totalPages.value,
-        isEncrypted: false
-      });
-      logger.info('VAULT', `Unlocked PDF auto-saved to Vault: ${outName} (isEncrypted=false)`);
+      try {
+        await saveFile({
+          name: outName,
+          arrayBuffer: ab,
+          folderId: 'default',
+          category: 'export',
+          pageCount: totalPages.value,
+          isEncrypted: false
+        });
+        logger.info('VAULT', `Unlocked PDF auto-saved to Vault: ${outName} (isEncrypted=false)`);
+      } catch (e) {
+        logger.warn('VAULT', `Failed to auto-save to Vault: ${e.message}`);
+      }
     }
+
+    progressPercent.value = 100;
   } catch (err) {
     logger.error('UNLOCK', `Unlock failed: ${err.message}`);
     unlockError.value = t('pwd_error_wrong') || 'Incorrect password. Please verify and try again.';
