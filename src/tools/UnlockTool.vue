@@ -229,7 +229,7 @@
             >
               <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
               <Unlock v-else class="w-4 h-4" />
-              <span>{{ t('unlock_btn_action') }}</span>
+              <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('unlock_btn_action') }}</span>
             </button>
           </div>
         </div>

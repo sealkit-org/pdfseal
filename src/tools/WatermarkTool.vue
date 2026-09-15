@@ -335,10 +335,9 @@
               data-testid="wm-download-btn"
               class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 cursor-pointer ml-auto"
             >
-              <span v-if="!isProcessing">{{ t('stamp_and_download') || '🦭 Stamp & Download PDF' }}</span>
-              <span v-else>{{ t('loading') || 'Processing...' }}</span>
-              <Download v-if="!isProcessing" class="w-4 h-4" />
-              <Loader2 v-else class="w-4 h-4 animate-spin" />
+              <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+              <Stamp v-else class="w-4 h-4" />
+              <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('stamp_and_download', 'Stamp & Download PDF') }}</span>
             </button>
           </div>
         </div>

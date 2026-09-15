@@ -531,10 +531,9 @@
               data-testid="pn-download-btn"
               class="bg-violet-600 hover:bg-violet-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-5 py-2 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-violet-600/25 disabled:opacity-50 cursor-pointer ml-auto"
             >
-              <span v-if="!isProcessing">{{ t('pn_download_btn') }}</span>
-              <span v-else>{{ t('loading') || 'Processing...' }}</span>
-              <Download v-if="!isProcessing" class="w-4 h-4" />
-              <Loader2 v-else class="w-4 h-4 animate-spin" />
+              <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+              <ListOrdered v-else class="w-4 h-4" />
+              <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('pn_download_btn') }}</span>
             </button>
           </div>
         </div>

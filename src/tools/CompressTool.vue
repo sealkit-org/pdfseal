@@ -413,7 +413,7 @@
             >
               <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
               <Minimize2 v-else class="w-4 h-4" />
-              <span>{{ t('compress_btn_action') }}</span>
+              <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('compress_btn_action') }}</span>
             </button>
           </div>
         </div>
