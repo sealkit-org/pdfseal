@@ -314,6 +314,7 @@ export async function applyPageNumbers(docBytes, options = {}) {
   if (effectiveMaskColor === 'auto') {
     effectiveMaskColor = '#ffffff';
     if (typeof document !== 'undefined' && typeof document.createElement === 'function' && typeof pdfjsLib !== 'undefined' && pdfjsLib.getDocument) {
+      let doc = null;
       try {
         const rawData = docBytes instanceof Uint8Array ? docBytes : new Uint8Array(docBytes);
         const loadingTask = pdfjsLib.getDocument({
@@ -323,7 +324,7 @@ export async function applyPageNumbers(docBytes, options = {}) {
           cMapPacked: true,
           standardFontDataUrl: '/standard_fonts/'
         });
-        const doc = await loadingTask.promise;
+        doc = await loadingTask.promise;
         const pageIdxToSample = (skipCover && doc.numPages > 1) ? 2 : 1;
         const pdfPage = await doc.getPage(pageIdxToSample);
         const viewport = pdfPage.getViewport({ scale: 0.5 });
@@ -337,6 +338,8 @@ export async function applyPageNumbers(docBytes, options = {}) {
       } catch (err) {
         logger.warn('PAGE_NUMBER', `Failed to auto-detect background color: ${err.message}, falling back to #ffffff`);
         effectiveMaskColor = '#ffffff';
+      } finally {
+        try { if (doc) await doc.destroy(); } catch (e) {}
       }
     }
   }

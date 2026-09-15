@@ -13,9 +13,11 @@ import { t } from '../i18n';
  * @returns {Promise<{ type: 'vector' | 'scanned', confidence: number, textCount: number, imageCount: number }>}
  */
 export async function detectDocumentType(arrayBuffer, password = '') {
+  let pdf = null;
+  let loadingTask = null;
   try {
     const pdfData = new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
-    const loadingTask = pdfjsLib.getDocument({
+    loadingTask = pdfjsLib.getDocument({
       data: pdfData,
       password: password || undefined,
       cMapUrl: typeof window !== 'undefined' ? (window.location.origin + '/cmaps/') : '/cmaps/',
@@ -23,7 +25,7 @@ export async function detectDocumentType(arrayBuffer, password = '') {
       standardFontDataUrl: typeof window !== 'undefined' ? (window.location.origin + '/standard_fonts/') : '/standard_fonts/'
     });
 
-    const pdf = await loadingTask.promise;
+    pdf = await loadingTask.promise;
     const pagesToCheck = Math.min(pdf.numPages, 3);
     let totalTextChars = 0;
     let totalImageOps = 0;
@@ -79,6 +81,9 @@ export async function detectDocumentType(arrayBuffer, password = '') {
       textCount: 0,
       imageCount: 0
     };
+  } finally {
+    try { if (pdf) await pdf.destroy(); } catch (e) {}
+    try { if (loadingTask) await loadingTask.destroy(); } catch (e) {}
   }
 }
 
@@ -235,6 +240,7 @@ export async function compressPdfRaster(arrayBuffer, options = {}, onProgress = 
     onProgress(100, t('compress_progress_done', 'Compression complete!'));
   }
   logger.info('COMPRESS', `[Raster Mode] Completed (${pdf.numPages} pages compressed to ${(outBytes.byteLength / 1024).toFixed(1)} KB)`);
+  try { await pdf.destroy(); } catch (e) {}
   return outBytes;
 }
 
@@ -269,16 +275,18 @@ export function paramFromQualityIndex(t) {
  */
 export async function renderPdfPagePreview(arrayBuffer, pageNumber = 1, scale = 1.5, password = '') {
   if (typeof document === 'undefined') return '';
+  let pdf = null;
+  let loadingTask = null;
   try {
     const pdfData = new Uint8Array(arrayBuffer.slice ? arrayBuffer.slice(0) : arrayBuffer);
-    const loadingTask = pdfjsLib.getDocument({
+    loadingTask = pdfjsLib.getDocument({
       data: pdfData,
       password: password || undefined,
       cMapUrl: typeof window !== 'undefined' ? (window.location.origin + '/cmaps/') : '/cmaps/',
       cMapPacked: true,
       standardFontDataUrl: typeof window !== 'undefined' ? (window.location.origin + '/standard_fonts/') : '/standard_fonts/'
     });
-    const pdf = await loadingTask.promise;
+    pdf = await loadingTask.promise;
     const targetPageNum = Math.max(1, Math.min(pageNumber, pdf.numPages));
     const page = await pdf.getPage(targetPageNum);
 
@@ -295,6 +303,9 @@ export async function renderPdfPagePreview(arrayBuffer, pageNumber = 1, scale = 
   } catch (err) {
     logger.warn('COMPRESS_PREVIEW', `Failed to render preview: ${err.message}`);
     return '';
+  } finally {
+    try { if (pdf) await pdf.destroy(); } catch (e) {}
+    try { if (loadingTask) await loadingTask.destroy(); } catch (e) {}
   }
 }
 
@@ -517,9 +528,11 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   // Universal Size Guard: Never allow output to be larger than original!
   if (outBytes && outBytes.byteLength >= origBytes.byteLength) {
     logger.info('COMPRESS_TARGET', `Compressed output (${outBytes.byteLength} B) >= original (${origBytes.byteLength} B). Returning original bytes.`);
+    try { await pdf.destroy(); } catch (e) {}
     return origBytes;
   }
 
+  try { await pdf.destroy(); } catch (e) {}
   if (onProgress) onProgress(100, 'Target size compression complete');
   return outBytes;
 }

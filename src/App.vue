@@ -27,7 +27,7 @@
       ]"
     >
       <router-view v-slot="{ Component }">
-        <KeepAlive>
+        <KeepAlive :max="3">
           <component 
             :is="Component" 
             :share-id="activeShareId" 
