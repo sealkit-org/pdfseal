@@ -148,7 +148,7 @@
               data-testid="san-reset-btn"
               class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
             >
-              {{ t('btn_clear_all') || 'Clear All' }}
+              {{ t('btn_clear_all')}}
             </button>
           </div>
         </div>

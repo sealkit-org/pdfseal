@@ -122,6 +122,7 @@
                 @click="prevPage" 
                 :disabled="currentPage <= 1"
                 class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer"
+                :title="t('page_prev', 'Previous Page')"
               >
                 <ChevronLeft class="w-4 h-4 text-slate-600" />
               </button>
@@ -132,6 +133,7 @@
                 @click="nextPage" 
                 :disabled="currentPage >= totalPages"
                 class="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-30 disabled:hover:bg-transparent transition cursor-pointer"
+                :title="t('page_next', 'Next Page')"
               >
                 <ChevronRight class="w-4 h-4 text-slate-600" />
               </button>
@@ -139,8 +141,9 @@
               <button 
                 @click="reset" 
                 class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2 py-1 rounded-lg hover:bg-slate-100 transition cursor-pointer ml-2"
+                :title="t('btn_reset_file', 'Reset / Change File')"
               >
-                {{ t('btn_reset_file') || 'Reset / Change File' }}
+                {{ t('btn_reset_file', 'Reset / Change File') }}
               </button>
             </div>
           </div>
@@ -246,7 +249,7 @@
                       @click="clearDrawCanvas" 
                       :disabled="!hasDrawn"
                       class="px-2.5 py-2 text-slate-500 hover:text-rose-600 active:scale-98 disabled:opacity-40 border border-slate-200 hover:border-rose-200 rounded-xl text-xs font-semibold transition cursor-pointer bg-white"
-                      :title="t('clear_signature')"
+                      :title="t('clear_signature', 'Clear Current Signature')"
                     >
                       <Trash2 class="w-3.5 h-3.5" />
                     </button>
@@ -354,7 +357,7 @@
                     </div>
                     <div v-else class="flex flex-col items-center">
                       <Upload class="w-5 h-5 text-indigo-500 mb-1" />
-                      <span class="text-[11px] font-bold text-slate-700">{{ t('sign_upload_prompt') }}</span>
+                      <span class="text-[11px] font-bold text-slate-700">{{ t('sign_upload_prompt', 'Click or drag signature image here (PNG / JPG)') }}</span>
                       <span class="text-[10px] text-slate-400 mt-0.5">{{ t('sign_upload_hint') }}</span>
                     </div>
                   </div>

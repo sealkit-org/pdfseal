@@ -158,7 +158,7 @@
                 <button 
                   type="button"
                   data-testid="toggle-pwd-btn"
-                  title="Toggle password visibility"
+                  :title="showPassword ? t('pwd_hide', 'Hide Password') : t('pwd_show', 'Show Password')"
                   @click="showPassword = !showPassword"
                   class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >

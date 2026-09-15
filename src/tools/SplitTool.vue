@@ -365,7 +365,7 @@
                   v-if="customRanges.length > 1"
                   @click="removeRange(idx)" 
                   class="text-slate-400 hover:text-rose-600 transition p-0.5 cursor-pointer"
-                  title="Delete"
+                  :title="t('action_delete', 'Delete')"
                 >
                   <X class="w-3.5 h-3.5" />
                 </button>

@@ -228,6 +228,7 @@
                       type="button" 
                       @click="showUserPassword = !showUserPassword"
                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      :title="showUserPassword ? t('pwd_hide', 'Hide Password') : t('pwd_show', 'Show Password')"
                     >
                       <Eye v-if="!showUserPassword" class="w-4 h-4" />
                       <EyeOff v-else class="w-4 h-4" />
@@ -317,6 +318,7 @@
                       type="button"
                       @click="showOwnerPassword = !showOwnerPassword"
                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      :title="showOwnerPassword ? t('pwd_hide', 'Hide Password') : t('pwd_show', 'Show Password')"
                     >
                       <Eye v-if="!showOwnerPassword" class="w-4 h-4" />
                       <EyeOff v-else class="w-4 h-4" />
@@ -405,6 +407,7 @@
                       type="button"
                       @click="showOwnerPassword = !showOwnerPassword"
                       class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                      :title="showOwnerPassword ? t('pwd_hide', 'Hide Password') : t('pwd_show', 'Show Password')"
                     >
                       <Eye v-if="!showOwnerPassword" class="w-4 h-4" />
                       <EyeOff v-else class="w-4 h-4" />

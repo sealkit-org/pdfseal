@@ -33,6 +33,7 @@
             v-if="searchQuery" 
             @click="clearSearch" 
             class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 rounded-full cursor-pointer"
+            :title="t('btn_clear', 'Clear')"
           >
             <X class="w-3.5 h-3.5" />
           </button>
@@ -50,7 +51,7 @@
               ]"
               :title="t('vault_view_grid')"
             >
-              <LayoutGrid class="w-4 h-4" />
+              <LayoutGrid class="w-3.5 h-3.5" />
             </button>
             <button 
               @click="setViewMode('list')" 
@@ -60,17 +61,17 @@
               ]"
               :title="t('vault_view_list')"
             >
-              <List class="w-4 h-4" />
+              <List class="w-3.5 h-3.5" />
             </button>
           </div>
 
-          <!-- Sort Dropdown -->
+          <!-- Sort Select Menu -->
           <div class="relative">
             <select 
-              v-model="sortBy" 
-              class="appearance-none bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 pl-2.5 pr-6 py-2 focus:outline-hidden hover:bg-slate-100 transition cursor-pointer"
+              v-model="sortBy"
+              class="text-xs bg-slate-50 hover:bg-slate-100 text-slate-700 font-semibold py-2 pl-3 pr-7 rounded-xl border border-slate-200 transition cursor-pointer appearance-none outline-hidden focus:ring-2 focus:ring-blue-500"
             >
-              <option value="createdAt">{{ t('vault_sort_date') }}</option>
+              <option value="date">{{ t('vault_sort_date') }}</option>
               <option value="size">{{ t('vault_sort_size') }}</option>
               <option value="name">{{ t('vault_sort_name') }}</option>
             </select>
@@ -81,7 +82,7 @@
           <button 
             @click="sortOrder = sortOrder === 'desc' ? 'asc' : 'desc'" 
             class="p-2 bg-slate-50 hover:bg-slate-100 text-slate-600 border border-slate-200 rounded-xl transition cursor-pointer"
-            :title="sortOrder === 'desc' ? 'Descending' : 'Ascending'"
+            :title="sortOrder === 'desc' ? t('vault_sort_desc', 'Descending') : t('vault_sort_asc', 'Ascending')"
           >
             <ArrowDownNarrowWide v-if="sortOrder === 'desc'" class="w-4 h-4" />
             <ArrowUpNarrowWide v-else class="w-4 h-4" />
@@ -186,14 +187,14 @@
                   <button 
                     @click.stop="promptRenameFolder(folder)" 
                     class="p-1 hover:text-blue-600 rounded-md"
-                    :title="t('vault_prompt_rename_folder')"
+                    :title="t('vault_action_rename_folder', 'Rename Folder')"
                   >
                     <Pencil class="w-3 h-3" />
                   </button>
                   <button 
                     @click.stop="confirmDeleteFolder(folder)" 
                     class="p-1 hover:text-rose-600 rounded-md"
-                    :title="t('vault_confirm_delete_folder')"
+                    :title="t('vault_action_delete_folder', 'Delete Folder')"
                   >
                     <Trash2 class="w-3 h-3" />
                   </button>
@@ -279,35 +280,35 @@
                         v-if="file.isEncrypted && !unlockedSessionPasswords.has(file.id)"
                         @click.stop="promptUnlock(file)"
                         class="p-1 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-lg transition cursor-pointer"
-                        :title="t('btn_unlock_pdf') || '🦭 Unlock Document'"
+                        :title="t('vault_action_unlock', 'Unlock with Password')"
                       >
                         <Key class="w-3.5 h-3.5" />
                       </button>
                       <button 
                         @click.stop="promptRenameFile(file)" 
                         class="p-1 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                        :title="t('vault_prompt_rename_file') || 'Enter new file name (will auto append .pdf):'"
+                        :title="t('vault_action_rename_file', 'Enter new file name (will auto append .pdf)')"
                       >
                         <Pencil class="w-3.5 h-3.5" />
                       </button>
                       <button 
                         @click="previewFile(file)" 
                         class="p-1 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                        :title="t('vault_action_preview')"
+                        :title="t('vault_action_preview', 'Preview File')"
                       >
                         <Eye class="w-3.5 h-3.5" />
                       </button>
                       <button 
                         @click="downloadVaultFile(file)" 
                         class="p-1 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                        :title="t('vault_action_download')"
+                        :title="t('vault_action_download', 'Download')"
                       >
                         <Download class="w-3.5 h-3.5" />
                       </button>
                       <button 
                         @click="confirmDeleteFile(file)" 
                         class="p-1 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition cursor-pointer"
-                        :title="t('btn_delete')"
+                        :title="t('btn_delete', 'Delete')"
                       >
                         <Trash2 class="w-3.5 h-3.5" />
                       </button>
@@ -332,7 +333,7 @@
                       v-else-if="file.isEncrypted" 
                       @click.stop="promptUnlock(file)"
                       class="inline-flex items-center px-1 py-0.2 text-[8px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 hover:border-amber-300 rounded shrink-0 cursor-pointer transition active:scale-95"
-                      :title="t('btn_unlock_pdf') || '🦭 Unlock Document'"
+                      :title="t('vault_action_unlock', 'Unlock with Password')"
                     >
                       <Lock class="w-2 h-2 mr-0.5" />
                       {{ t('badge_pwd_required') }}
@@ -496,7 +497,7 @@
                             v-else-if="file.isEncrypted" 
                             @click.stop="promptUnlock(file)"
                             class="inline-flex items-center px-1.5 py-0.2 text-[9px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 hover:border-amber-300 rounded-md shrink-0 cursor-pointer transition active:scale-95"
-                            :title="t('btn_unlock_pdf') || '🦭 Unlock Document'"
+                            :title="t('vault_action_unlock', 'Unlock with Password')"
                           >
                             <Lock class="w-2.5 h-2.5 mr-0.5" />
                             {{ t('badge_pwd_required') }}
@@ -529,28 +530,28 @@
                             v-if="file.isEncrypted && !unlockedSessionPasswords.has(file.id)"
                             @click.stop="promptUnlock(file)" 
                             class="p-1.5 text-amber-600 hover:text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200/80 rounded-lg transition cursor-pointer"
-                            :title="t('btn_unlock_pdf') || '🦭 Unlock Document'"
+                            :title="t('vault_action_unlock', 'Unlock with Password')"
                           >
                             <Key class="w-3.5 h-3.5" />
                           </button>
                           <button 
                             @click.stop="promptRenameFile(file)" 
                             class="p-1.5 text-slate-400 hover:text-indigo-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                            :title="t('vault_prompt_rename_file') || 'Enter new file name (will auto append .pdf):'"
+                            :title="t('vault_action_rename_file', 'Enter new file name (will auto append .pdf)')"
                           >
                             <Pencil class="w-3.5 h-3.5" />
                           </button>
                           <button 
                             @click="previewFile(file)" 
                             class="p-1.5 text-slate-400 hover:text-blue-600 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                            :title="t('vault_action_preview')"
+                            :title="t('vault_action_preview', 'Preview')"
                           >
                             <Eye class="w-3.5 h-3.5" />
                           </button>
                           <button 
                             @click="downloadVaultFile(file)" 
                             class="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-100 transition cursor-pointer"
-                            :title="t('vault_action_download')"
+                            :title="t('vault_action_download', 'Download')"
                           >
                             <Download class="w-3.5 h-3.5" />
                           </button>
@@ -634,7 +635,7 @@
                                 class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
                               >
                                 <Send class="w-4 h-4 text-blue-600" />
-                                <span>{{ t('vault_action_send_e2ee') || '🚀 Seal Send' }}</span>
+                                <span>{{ t('vault_action_send_e2ee') || 'Seal Send' }}</span>
                               </button>
                             </div>
                           </div>
@@ -642,7 +643,7 @@
                           <button 
                             @click="confirmDeleteFile(file)" 
                             class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition cursor-pointer"
-                            :title="t('btn_delete')"
+                            :title="t('btn_delete', 'Delete')"
                           >
                             <Trash2 class="w-3.5 h-3.5" />
                           </button>

@@ -13,16 +13,16 @@
         <button 
           @click.stop="$emit('open-privacy')"
           class="text-[11px] bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/80 px-2 sm:px-2.5 py-0.5 rounded-full font-bold flex items-center cursor-pointer transition shadow-2xs group shrink-0"
-          :title="t('privacy_modal_title') || '100% Local Processing Guarantee'"
+          :title="t('privacy_modal_title', '100% Local Processing Guarantee')"
         >
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 sm:mr-1.5 animate-pulse"></span>
-          <span class="hidden sm:inline">{{ t('local_badge') }}</span>
+          <span class="hidden md:inline">{{ t('local_badge') }}</span>
           <ShieldCheck class="w-3 h-3 sm:ml-1 text-emerald-700 opacity-70 group-hover:opacity-100" />
         </button>
       </div>
 
       <!-- 2. Center: Core Tools Navigation Pills & Shortcuts -->
-      <div class="flex items-center space-x-1 sm:space-x-1.5 py-1 min-w-0 flex-1 justify-center overflow-visible">
+      <div class="flex items-center space-x-1 sm:space-x-1.5 py-1 min-w-0 flex-1 justify-center overflow-visible px-1 sm:px-2">
         <!-- 5 Core Tools -->
         <button 
           v-for="tool in primaryTools" 
@@ -34,7 +34,7 @@
               ? 'bg-blue-50 text-blue-700 font-bold shadow-2xs border border-blue-200/60' 
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
           ]"
-          :title="t(tool.labelKey)"
+          :title="t(`${tool.id}_title`, t(tool.labelKey))"
         >
           <component :is="tool.icon" class="w-3.5 h-3.5 shrink-0" :class="activeTab === tool.id ? 'text-blue-600' : 'text-slate-500'" />
           <span :class="activeTab === tool.id ? 'inline' : 'hidden xl:inline'">{{ t(tool.labelKey) }}</span>
@@ -50,7 +50,7 @@
                 ? 'bg-blue-50 text-blue-700 font-bold shadow-2xs border border-blue-200/60' 
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
             ]"
-            :title="t('tab_more')"
+            :title="t('more_tools_tooltip', 'More Useful PDF Tools')"
           >
             <component :is="activeMoreIcon || Sparkles" class="w-3.5 h-3.5 shrink-0" :class="isMoreActive ? 'text-blue-600' : 'text-slate-500'" />
             <span>{{ activeMoreToolName || t('tab_more') }}</span>
@@ -72,6 +72,7 @@
                   ? 'bg-blue-50 text-blue-700 font-bold' 
                   : 'hover:bg-slate-50 hover:text-slate-900 text-slate-700'
               ]"
+              :title="t(`${tool.id}_title`, t(tool.labelKey))"
             >
               <component :is="tool.icon" class="w-4 h-4 shrink-0" :class="tool.color" />
               <span class="truncate">{{ t(tool.labelKey) }}</span>
@@ -91,10 +92,10 @@
               ? 'bg-indigo-600 text-white shadow-xs' 
               : 'text-indigo-700 hover:bg-indigo-50 border border-indigo-200/80 bg-indigo-50/40 shadow-2xs'
           ]"
-          :title="t('tab_pipeline') || 'Pipeline'"
+          :title="t('pipeline_title', t('tab_pipeline'))"
         >
           <Zap class="w-3.5 h-3.5 shrink-0" :class="activeTab === 'pipeline' ? 'text-white' : 'text-indigo-600'" />
-          <span class="hidden 2xl:inline">{{ t('tab_pipeline') || 'Pipeline' }}</span>
+          <span :class="activeTab === 'pipeline' ? 'inline' : 'hidden 2xl:inline'">{{ t('tab_pipeline') || 'Pipeline' }}</span>
         </button>
 
         <!-- Vault shortcut -->
@@ -106,10 +107,10 @@
               ? 'bg-blue-600 text-white shadow-xs' 
               : 'text-slate-700 hover:text-blue-600 hover:bg-slate-100 border border-slate-200/80 bg-white shadow-2xs'
           ]"
-          :title="t('tab_vault')"
+          :title="t('vault_title', t('tab_vault'))"
         >
           <FolderLock class="w-3.5 h-3.5 shrink-0" :class="activeTab === 'vault' ? 'text-white' : 'text-blue-600'" />
-          <span class="hidden 2xl:inline">{{ t('tab_vault') }}</span>
+          <span :class="activeTab === 'vault' ? 'inline' : 'hidden 2xl:inline'">{{ t('tab_vault') }}</span>
         </button>
       </div>
 
@@ -120,10 +121,10 @@
           v-if="canInstallPwa"
           @click="installPwa"
           class="flex items-center space-x-1 text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300/90 px-2 sm:px-2.5 py-1.5 rounded-xl transition font-bold cursor-pointer shadow-2xs whitespace-nowrap shrink-0"
-          :title="t('install_app_btn') || 'Install App'"
+          :title="t('install_app_btn', 'Install App')"
         >
           <DownloadCloud class="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-          <span class="hidden xl:inline">{{ t('install_app_btn') || 'Install' }}</span>
+          <span class="hidden xl:inline">{{ t('install_app_btn', 'Install App') }}</span>
         </button>
 
         <!-- Pro / Supporter Badge (If active) -->
@@ -131,7 +132,7 @@
           v-if="isProSupporter"
           @click="$emit('open-settings')"
           class="flex items-center space-x-1 text-xs px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-indigo-500/15 text-slate-800 border border-amber-300 font-bold shrink-0 shadow-2xs cursor-pointer"
-          :title="activeTierLabel"
+          :title="`${activeTierLabel} (${t('nav_active_tooltip_hint', 'Click to manage license')})`"
         >
           <Crown class="w-3.5 h-3.5 text-amber-600 shrink-0" />
           <span class="hidden xl:inline">{{ activeTierLabel }}</span>
@@ -143,13 +144,13 @@
             :value="currentLang" 
             @change="setLanguage($event.target.value)"
             class="text-xs bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold py-1.5 pl-2.5 pr-6 rounded-xl border border-slate-200/80 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition cursor-pointer appearance-none"
-            :title="t('select_language') || 'Language'"
+            :title="t('select_language', 'Select Language')"
           >
             <option value="en">🇺🇸 EN</option>
             <option value="de">🇩🇪 DE</option>
             <option value="es">🇪🇸 ES</option>
             <option value="fr">🇫🇷 FR</option>
-            <option value="zh">🇨🇳 简中</option>
+            <option value="zh">🇨🇳 中文</option>
           </select>
           <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
             <ChevronDown class="w-3 h-3" />

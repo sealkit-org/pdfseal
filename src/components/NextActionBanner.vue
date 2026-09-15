@@ -72,7 +72,7 @@
         type="button"
         @click="emit('close')"
         class="text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 p-1 rounded-lg transition cursor-pointer ml-0.5"
-        title="Dismiss"
+        :title="t('btn_close', 'Close')"
       >
         <X class="w-4 h-4" />
       </button>
