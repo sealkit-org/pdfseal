@@ -582,7 +582,7 @@
               >
                 <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
                 <PenTool v-else class="w-4 h-4" />
-                <span>{{ t('sign_btn_action') }} ({{ placedSignatures.length }})</span>
+                <span>{{ isProcessing ? (t('loading') || 'Processing...') : `${t('sign_btn_action')} (${placedSignatures.length})` }}</span>
               </button>
             </div>
           </div>

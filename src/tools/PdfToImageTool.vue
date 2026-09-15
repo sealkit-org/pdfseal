@@ -287,14 +287,9 @@
             @click="downloadAllAsZip"
             class="bg-cyan-600 hover:bg-cyan-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-cyan-600/25 disabled:opacity-50 cursor-pointer ml-auto"
           >
-            <template v-if="!isZipping">
-              <span>{{ t('p2i_download_all') }} ({{ pages.length }})</span>
-              <Package class="w-4 h-4" />
-            </template>
-            <template v-else>
-              <span>{{ progressMessage || t('loading') || 'Processing...' }}</span>
-              <Loader2 class="w-4 h-4 animate-spin" />
-            </template>
+            <Loader2 v-if="isZipping" class="w-4 h-4 animate-spin" />
+            <ImageDown v-else class="w-4 h-4" />
+            <span>{{ isZipping ? (progressMessage || t('loading') || 'Processing...') : `${t('p2i_download_all')} (${pages.length})` }}</span>
           </button>
         </div>
         </div>

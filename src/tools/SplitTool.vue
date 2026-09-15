@@ -525,12 +525,9 @@
                 @click="handlePrimarySplitClick" 
                 class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25 disabled:opacity-50 cursor-pointer ml-auto"
               >
-                <span v-if="!isProcessing">
-                  {{ primaryButtonText }}
-                </span>
-                <span v-else>{{ deliveryStatusMessage || t('loading') || 'Processing...' }}</span>
-                <Download v-if="!isProcessing" class="w-4 h-4" />
-                <Loader2 v-else class="w-4 h-4 animate-spin" />
+                <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+                <Scissors v-else class="w-4 h-4" />
+                <span>{{ isProcessing ? (deliveryStatusMessage || t('loading') || 'Processing...') : primaryButtonText }}</span>
               </button>
             </div>
           </div>
@@ -688,17 +685,17 @@ const computedIntervalPlan = computed(() => {
 const primaryButtonText = computed(() => {
   if (activeMode.value === 'extract') {
     if (extractFormat.value === 'merge') {
-      return `${t('extract_selected', '🦭 Extract Selected')} (${selectedIndices.value.size})`;
+      return `${t('extract_selected', 'Extract Selected')} (${selectedIndices.value.size})`;
     }
     const prefix = deliveryFormat.value === 'zip' 
-      ? t('split_btn_execute_zip', '🦭 Download ZIP') 
-      : t('split_btn_execute_separate', '🦭 Download Separate PDFs');
+      ? t('split_btn_execute_zip', 'Download ZIP') 
+      : t('split_btn_execute_separate', 'Download Separate PDFs');
     return `${prefix} (${selectedIndices.value.size} ${t('pages_label', 'pages')})`;
   }
 
   const prefix = deliveryFormat.value === 'zip' 
-    ? t('split_btn_execute_zip', '🦭 Download ZIP') 
-    : t('split_btn_execute_separate', '🦭 Download Separate PDFs');
+    ? t('split_btn_execute_zip', 'Download ZIP') 
+    : t('split_btn_execute_separate', 'Download Separate PDFs');
 
   if (activeMode.value === 'burst') {
     return `${prefix} (${totalPages.value} ${t('pages_label') || 'pages'})`;

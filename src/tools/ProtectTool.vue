@@ -616,10 +616,10 @@
             <button 
               :disabled="isProcessing"
               @click="executeProtect"
-              class="bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center space-x-2 shadow-md hover:shadow-rose-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+              class="bg-rose-600 hover:bg-rose-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-rose-600/25 disabled:opacity-50 cursor-pointer ml-auto"
             >
-              <Lock v-if="!isProcessing" class="w-4 h-4" />
-              <Loader2 v-else class="w-4 h-4 animate-spin" />
+              <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+              <Lock v-else class="w-4 h-4" />
               <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('protect_btn_action') }}</span>
             </button>
           </div>
