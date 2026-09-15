@@ -562,7 +562,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, nextTick, inject, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, nextTick, inject, onMounted, onActivated, onUnmounted } from 'vue';
 import { 
   ListOrdered, 
   Plus, 
@@ -839,14 +839,16 @@ async function loadFile(fileObj, password = '') {
     filename.value = fileObj.name || 'document.pdf';
 
     const pdfDataForViewer = arrayBuffer.slice(0);
-    const loadingTask = pdfjsLib.getDocument({ 
+    const loadingTask = pdfjsLib.getDocument({
       data: pdfDataForViewer,
       password: password || undefined,
       cMapUrl: '/cmaps/',
       cMapPacked: true,
       standardFontDataUrl: '/standard_fonts/'
     });
-    
+
+    // Destroy the previous document proxy before replacing (e.g. reloading another file)
+    if (activePdfDoc) { try { await activePdfDoc.destroy(); } catch (e) {} }
     activePdfDoc = await loadingTask.promise;
     totalPages.value = activePdfDoc.numPages;
     previewPageIndex.value = 0;
@@ -924,6 +926,19 @@ function sampleCurrentPageBackground() {
 }
 
 /**
+ * Sliding-window eviction: keep only canvases within ±2 pages of the current
+ * page (~5 canvases max, each ~8MB for A4 @1.5x). Distant pages are re-rendered
+ * on demand when the user navigates back, capping preview memory for large docs.
+ */
+function evictDistantPageCanvases(currentIdx) {
+  for (const [key] of renderedPageCanvases) {
+    if (Math.abs(key - currentIdx) > 2) {
+      renderedPageCanvases.delete(key);
+    }
+  }
+}
+
+/**
  * Renders the live interactive preview on <canvas> for previewPageIndex.
  */
 async function renderPreview() {
@@ -949,14 +964,7 @@ async function renderPreview() {
       const bctx = baseCanvas.getContext('2d');
       await pdfPage.render({ canvasContext: bctx, viewport }).promise;
       renderedPageCanvases.set(pageIdx, baseCanvas);
-
-      if (renderedPageCanvases.size > 20) {
-        for (const [key] of renderedPageCanvases) {
-          if (key !== 0 && key !== pageIdx) {
-            renderedPageCanvases.delete(key);
-          }
-        }
-      }
+      evictDistantPageCanvases(pageIdx);
     }
 
     if (pageIdx !== previewPageIndex.value) {
@@ -1121,6 +1129,7 @@ function reset() {
   filename.value = '';
   totalPages.value = 0;
   previewPageIndex.value = 0;
+  if (activePdfDoc) { try { activePdfDoc.destroy()?.catch(() => {}); } catch (e) {} }
   activePdfDoc = null;
   renderedPageCanvases.clear();
   isRendering = false;
@@ -1137,6 +1146,14 @@ function reset() {
     ctx.clearRect(0, 0, previewCanvasRef.value.width, previewCanvasRef.value.height);
   }
 }
+
+// Final backstop: when the KeepAlive LRU evicts this tool page, release the
+// pdf.js worker resources (GC alone does not clean the shared worker side).
+onUnmounted(() => {
+  if (activePdfDoc) { try { activePdfDoc.destroy()?.catch(() => {}); } catch (e) {} }
+  activePdfDoc = null;
+  renderedPageCanvases.clear();
+});
 
 function checkIncomingFile() {
   const incoming = consumePendingFile('page_number');
