@@ -121,7 +121,7 @@
               <button 
                 @click="fileInputRef.click()"
                 class="text-xs text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 font-medium px-2 py-1 rounded-lg transition flex items-center space-x-1 cursor-pointer"
-                :title="t('btn_choose_another') || 'Replace File'"
+                :title="t('org_btn_replace_file', 'Replace File')"
               >
                 <RefreshCw class="w-3.5 h-3.5" />
                 <span class="hidden lg:inline text-[11px]">{{ t('org_btn_replace_file') }}</span>
@@ -129,7 +129,7 @@
               <button 
                 @click="reset" 
                 class="text-xs text-slate-400 hover:text-rose-600 hover:bg-rose-50 font-medium p-1 rounded-lg transition cursor-pointer"
-                :title="t('btn_clear_all') || 'Clear All'"
+                :title="t('btn_clear_all', 'Clear All')"
               >
                 <Trash2 class="w-3.5 h-3.5" />
               </button>
@@ -173,18 +173,18 @@
             <button 
               @click="insertBlankPageAt(null)" 
               class="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 font-bold px-2.5 py-1.5 rounded-xl border border-amber-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
-              :title="t('org_insert_blank_here') || 'Insert blank A4 page'"
+              :title="t('org_insert_blank_here', 'Insert blank A4 page')"
             >
               <FilePlus class="w-3.5 h-3.5 text-amber-600" />
               <span>{{ t('org_btn_insert_blank') }}</span>
             </button>
 
-            <!-- Append External File (Split Button: + File / + 外部文件) -->
+            <!-- Append External File (Split Button: + File / + External File) -->
             <div class="inline-flex rounded-xl shadow-2xs">
               <button 
                 @click="appendFileInputRef.click()" 
                 class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2.5 py-1.5 rounded-l-xl border border-indigo-200/80 transition flex items-center space-x-1 cursor-pointer"
-                :title="t('merge_btn_from_local') || 'Add from Computer'"
+                :title="t('merge_btn_from_local', 'Add from Computer')"
               >
                 <FileUp class="w-3.5 h-3.5 text-indigo-600" />
                 <span>{{ t('org_btn_append_file') }}</span>
@@ -192,27 +192,27 @@
               <button 
                 @click="isAppendVaultOpen = true" 
                 class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-2 py-1.5 rounded-r-xl border-t border-b border-r border-indigo-200/80 transition flex items-center cursor-pointer"
-                :title="t('merge_btn_from_vault') || 'Pick from Vault'"
+                :title="t('merge_btn_from_vault', 'Pick from Vault')"
               >
                 <FolderLock class="w-3.5 h-3.5 text-indigo-600" />
               </button>
             </div>
 
-            <!-- Rotate All (Concise: Rotate All / 全部旋转) -->
+            <!-- Rotate All -->
             <button 
-              @click="rotateAllPages(90)" 
-              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
+              @click="rotateAll()" 
+              class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
               :title="t('rotate_all_90')"
             >
-              <RotateCw class="w-3.5 h-3.5 text-slate-600" />
-              <span class="hidden sm:inline">{{ t('org_btn_rotate_all') }}</span>
+              <RotateCw class="w-3.5 h-3.5" />
+              <span class="hidden md:inline">{{ t('rotate_all_90') }}</span>
             </button>
 
             <!-- Magic A4 -->
             <button 
               @click="magicStandardizeA4()" 
               class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer shadow-2xs"
-              title="Scale & Center to A4"
+              :title="t('org_btn_a4_tip', 'Scale & Center to A4')"
             >
               <Wand2 class="w-3.5 h-3.5 text-amber-600" />
               <span>A4</span>
@@ -322,7 +322,7 @@
                 <!-- Delete Page -->
                 <button
                   @click.stop="deletePage(idx)"
-                  title="Delete Page"
+                  :title="t('action_delete', 'Delete')"
                   class="p-1 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-md transition cursor-pointer"
                 >
                   <Trash2 class="w-3.5 h-3.5" />
