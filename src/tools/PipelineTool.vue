@@ -2467,6 +2467,7 @@ import { isProSupporter } from '../utils/security/certificateStore';
 import { t } from '../i18n';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import VaultPreviewModal from '../components/VaultPreviewModal.vue';
+import { consumePendingFile } from '../utils/toolBridge';
 
 const emit = defineEmits(['open-enterprise', 'send-to-tool']);
 
@@ -2547,8 +2548,28 @@ watch(() => inputFiles.value.length > 0, (active) => {
   workspaceState?.setActiveFile(active);
 }, { immediate: true });
 
+function checkIncomingFile() {
+  const incoming = consumePendingFile('pipeline');
+  if (incoming) {
+    const blob = new Blob([incoming.arrayBuffer], { type: 'application/pdf' });
+    appendFiles([{
+      name: incoming.name,
+      size: incoming.size || incoming.arrayBuffer?.byteLength || 0,
+      blob,
+      arrayBuffer: incoming.arrayBuffer,
+      data: incoming.arrayBuffer,
+      password: incoming.password || ''
+    }]);
+  }
+}
+
+onMounted(() => {
+  checkIncomingFile();
+});
+
 onActivated(() => {
   workspaceState?.setActiveFile(inputFiles.value.length > 0);
+  checkIncomingFile();
 });
 
 const isDragging = ref(false);

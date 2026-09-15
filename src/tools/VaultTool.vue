@@ -359,79 +359,126 @@
                       @click="activeToolMenuId = activeToolMenuId === file.id ? null : file.id"
                       class="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 text-[11px] font-bold px-2.5 py-0.5 rounded-lg transition flex items-center space-x-1 cursor-pointer shadow-2xs"
                     >
-                      <span>🚀 {{ t('vault_action_send_to') }}</span>
+                      <Send class="w-3 h-3 text-blue-600 shrink-0" />
+                      <span>{{ t('vault_action_send_to') }}</span>
                       <ChevronDown class="w-3 h-3" />
                     </button>
 
                     <!-- Tool Dispatch Menu -->
                     <div 
                       v-if="activeToolMenuId === file.id" 
-                      class="absolute right-0 bottom-8 z-50 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150"
+                      class="absolute right-0 bottom-8 z-50 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left select-none"
                     >
-                      <button 
-                        @click="sendToTool('compress', file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                      >
-                        <Minimize2 class="w-4 h-4 text-amber-600" />
-                        <span>{{ t('tab_compress') }}</span>
-                      </button>
-                      <button 
-                        @click="sendToTool('organize', file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                      >
-                        <Layers class="w-4 h-4 text-indigo-600" />
-                        <span>{{ t('tab_organize') }}</span>
-                      </button>
-                      <button 
-                        @click="sendToTool('split', file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                      >
-                        <Scissors class="w-4 h-4 text-emerald-600" />
-                        <span>{{ t('tab_split') }}</span>
-                      </button>
-                      <button 
-                        @click="sendToTool('sign', file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                      >
-                        <PenTool class="w-4 h-4 text-indigo-600" />
-                        <span>{{ t('tab_sign') }}</span>
-                      </button>
-                      <button 
-                        @click="sendToTool('unlock', file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                      >
-                        <Unlock class="w-4 h-4 text-emerald-600" />
-                        <span>{{ t('tab_unlock') }}</span>
-                      </button>
-                      <button 
-                        @click="sendToTool('watermark', file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                      >
-                        <Stamp class="w-4 h-4 text-amber-600" />
-                        <span>{{ t('tab_watermark') }}</span>
-                      </button>
-                      <button 
-                        @click="sendToTool('sanitize', file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                      >
-                        <ShieldCheck class="w-4 h-4 text-cyan-600" />
-                        <span>{{ t('tab_sanitize') }}</span>
-                      </button>
-                      <button 
-                        @click="sendToTool('merge', file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                      >
-                        <Files class="w-4 h-4 text-blue-600" />
-                        <span>{{ t('tab_merge') }}</span>
-                      </button>
+                      <!-- 2-Column Grid of Tools -->
+                      <div class="grid grid-cols-2 gap-1">
+                        <button 
+                          @click="sendToTool('compress', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_compress')"
+                        >
+                          <Minimize2 class="w-4 h-4 text-amber-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_compress') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('organize', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_organize')"
+                        >
+                          <LayoutGrid class="w-4 h-4 text-indigo-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_organize') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('split', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_split')"
+                        >
+                          <Scissors class="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_split') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('merge', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_merge')"
+                        >
+                          <Layers class="w-4 h-4 text-blue-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_merge') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('sign', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_sign')"
+                        >
+                          <PenTool class="w-4 h-4 text-indigo-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_sign') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('watermark', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_watermark')"
+                        >
+                          <Stamp class="w-4 h-4 text-amber-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_watermark') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('page_number', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_page_number')"
+                        >
+                          <ListOrdered class="w-4 h-4 text-violet-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_page_number') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('protect', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_protect')"
+                        >
+                          <Lock class="w-4 h-4 text-rose-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_protect') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('unlock', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_unlock')"
+                        >
+                          <Unlock class="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_unlock') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('sanitize', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_sanitize')"
+                        >
+                          <ShieldCheck class="w-4 h-4 text-cyan-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_sanitize') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('pdf_to_image', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_pdf_to_image')"
+                        >
+                          <ImageDown class="w-4 h-4 text-teal-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_pdf_to_image') }}</span>
+                        </button>
+                        <button 
+                          @click="sendToTool('pipeline', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_pipeline')"
+                        >
+                          <Zap class="w-4 h-4 text-indigo-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_pipeline') }}</span>
+                        </button>
+                      </div>
 
-                      <button 
-                        @click="openSendModalForFile(file)"
-                        class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
-                      >
-                        <Send class="w-4 h-4 text-blue-600" />
-                        <span>{{ t('vault_action_send_e2ee') || '🚀 Seal Send' }}</span>
-                      </button>
+                      <!-- Bottom Full-Width Strip: Seal Send E2EE -->
+                      <div class="border-t border-slate-100 mt-1.5 pt-1.5">
+                        <button 
+                          @click="openSendModalForFile(file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600"
+                        >
+                          <Send class="w-4 h-4 text-blue-600 shrink-0" />
+                          <span>{{ t('vault_action_send_e2ee') || 'Seal Send' }}</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -561,82 +608,129 @@
                             <button 
                               @click="activeToolMenuId = activeToolMenuId === file.id ? null : file.id"
                               class="bg-white hover:bg-blue-50 text-blue-600 border border-blue-200 text-[11px] font-bold px-2 py-1 rounded-lg transition flex items-center space-x-1 cursor-pointer shadow-2xs"
+                              :title="t('vault_action_send_to')"
                             >
-                              <span>🚀</span>
+                              <Send class="w-3 h-3 text-blue-600 shrink-0" />
                               <ChevronDown class="w-3 h-3" />
                             </button>
                             <!-- Tool Dispatch Menu -->
                             <div 
                               v-if="activeToolMenuId === file.id" 
                               :class="[
-                                'absolute right-0 z-50 w-48 bg-white rounded-2xl shadow-xl border border-slate-200 p-1.5 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left',
-                                fileIndex >= Math.max(1, paginatedFiles.length - 2) ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
+                                'absolute right-0 z-50 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left select-none',
+                                fileIndex >= Math.max(1, paginatedFiles.length - 3) ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
                               ]"
                             >
-                              <button 
-                                @click="sendToTool('compress', file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                              >
-                                <Minimize2 class="w-4 h-4 text-amber-600" />
-                                <span>{{ t('tab_compress') }}</span>
-                              </button>
-                              <button 
-                                @click="sendToTool('organize', file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                              >
-                                <Layers class="w-4 h-4 text-indigo-600" />
-                                <span>{{ t('tab_organize') }}</span>
-                              </button>
-                              <button 
-                                @click="sendToTool('split', file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                              >
-                                <Scissors class="w-4 h-4 text-emerald-600" />
-                                <span>{{ t('tab_split') }}</span>
-                              </button>
-                              <button 
-                                @click="sendToTool('sign', file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                              >
-                                <PenTool class="w-4 h-4 text-indigo-600" />
-                                <span>{{ t('tab_sign') }}</span>
-                              </button>
-                              <button 
-                                @click="sendToTool('unlock', file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                              >
-                                <Unlock class="w-4 h-4 text-emerald-600" />
-                                <span>{{ t('tab_unlock') }}</span>
-                              </button>
-                              <button 
-                                @click="sendToTool('watermark', file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                              >
-                                <Stamp class="w-4 h-4 text-amber-600" />
-                                <span>{{ t('tab_watermark') }}</span>
-                              </button>
-                              <button 
-                                @click="sendToTool('sanitize', file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                              >
-                                <ShieldCheck class="w-4 h-4 text-cyan-600" />
-                                <span>{{ t('tab_sanitize') }}</span>
-                              </button>
-                              <button 
-                                @click="sendToTool('merge', file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer"
-                              >
-                                <Files class="w-4 h-4 text-blue-600" />
-                                <span>{{ t('tab_merge') }}</span>
-                              </button>
+                              <!-- 2-Column Grid of Tools -->
+                              <div class="grid grid-cols-2 gap-1">
+                                <button 
+                                  @click="sendToTool('compress', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_compress')"
+                                >
+                                  <Minimize2 class="w-4 h-4 text-amber-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_compress') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('organize', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_organize')"
+                                >
+                                  <LayoutGrid class="w-4 h-4 text-indigo-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_organize') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('split', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_split')"
+                                >
+                                  <Scissors class="w-4 h-4 text-emerald-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_split') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('merge', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_merge')"
+                                >
+                                  <Layers class="w-4 h-4 text-blue-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_merge') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('sign', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_sign')"
+                                >
+                                  <PenTool class="w-4 h-4 text-indigo-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_sign') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('watermark', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_watermark')"
+                                >
+                                  <Stamp class="w-4 h-4 text-amber-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_watermark') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('page_number', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_page_number')"
+                                >
+                                  <ListOrdered class="w-4 h-4 text-violet-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_page_number') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('protect', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_protect')"
+                                >
+                                  <Lock class="w-4 h-4 text-rose-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_protect') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('unlock', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_unlock')"
+                                >
+                                  <Unlock class="w-4 h-4 text-emerald-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_unlock') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('sanitize', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_sanitize')"
+                                >
+                                  <ShieldCheck class="w-4 h-4 text-cyan-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_sanitize') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('pdf_to_image', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_pdf_to_image')"
+                                >
+                                  <ImageDown class="w-4 h-4 text-teal-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_pdf_to_image') }}</span>
+                                </button>
+                                <button 
+                                  @click="sendToTool('pipeline', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_pipeline')"
+                                >
+                                  <Zap class="w-4 h-4 text-indigo-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_pipeline') }}</span>
+                                </button>
+                              </div>
 
-                              <button 
-                                @click="openSendModalForFile(file)"
-                                class="w-full text-left px-3 py-2 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600 border-t border-slate-100 mt-1 pt-2"
-                              >
-                                <Send class="w-4 h-4 text-blue-600" />
-                                <span>{{ t('vault_action_send_e2ee') || 'Seal Send' }}</span>
-                              </button>
+                              <!-- Bottom Full-Width Strip: Seal Send E2EE -->
+                              <div class="border-t border-slate-100 mt-1.5 pt-1.5">
+                                <button 
+                                  @click="openSendModalForFile(file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer font-bold text-blue-600"
+                                >
+                                  <Send class="w-4 h-4 text-blue-600 shrink-0" />
+                                  <span>{{ t('vault_action_send_e2ee') || 'Seal Send' }}</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
 
@@ -738,7 +832,7 @@ import {
   FolderLock, Search, Plus, Folder, FolderOpen, Inbox, FileCheck, 
   ChevronDown, ArrowDownNarrowWide, ArrowUpNarrowWide, Eye, Download, 
   Trash2, Pencil, Lock, Unlock, Key, X, Layers, Scissors, Stamp, ShieldCheck, Files,
-  LayoutGrid, List, Send, Minimize2, PenTool
+  LayoutGrid, List, Send, Minimize2, PenTool, ListOrdered, ImageDown, Zap
 } from 'lucide-vue-next';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
