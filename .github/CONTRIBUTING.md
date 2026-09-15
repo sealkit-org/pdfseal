@@ -16,7 +16,7 @@ Before writing any code, please keep in mind PDFSeal's core architectural invari
 ## 🛠️ Local Development Setup
 
 ### Prerequisites
-- Node.js 20.x or 22.x
+- Node.js 22.x, 24.x, or 26.x (Node 20 is not supported: pdfjs-dist 4.10+ requires `Promise.withResolvers`)
 - npm 10+ (or pnpm)
 
 ### Getting Started
