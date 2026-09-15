@@ -56,7 +56,8 @@ export async function verifyPdfSecurity(arrayBuffer, password = '') {
       data: pdfData,
       password: password || undefined
     });
-    await loadingTask.promise;
+    const probeDoc = await loadingTask.promise;
+    try { await probeDoc.destroy(); } catch (e) {}
     
     // If it opens successfully without password, but rawEncrypted is true:
     if (rawEncrypted) {
@@ -252,6 +253,7 @@ export async function loadCleanPdfDocument(arrayBuffer, passwordOrOptions = '') 
       }
 
       logger.info('PDF_PIPELINE', `[Tier 2 Preserve] Decryption & rendering completed (${pdf.numPages} pages)`);
+      try { await pdf.destroy(); } catch (e) {}
       return cleanDoc;
     } catch (err2) {
       logger.error('PDF_PIPELINE', `[Tier 2 Preserve] Failed to decrypt: ${err2.message}`);
@@ -314,6 +316,7 @@ export async function loadCleanPdfDocument(arrayBuffer, passwordOrOptions = '') 
     }
 
     logger.info('PDF_PIPELINE', `[Clean Mode] Completed clean rendering with floating annotations stripped (${pdf.numPages} pages)`);
+    try { await pdf.destroy(); } catch (e) {}
     return cleanDoc;
   } catch (cleanErr) {
     if (cleanErr.name === 'PasswordException' || cleanErr.message?.toLowerCase().includes('password')) {
