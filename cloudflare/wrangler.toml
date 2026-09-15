@@ -1,4 +1,4 @@
-﻿name = "pdfseal-send"
+name = "pdfseal-send"
 main = "worker.js"
 compatibility_date = "2024-09-01"
 
@@ -11,3 +11,10 @@ bucket_name = "pdfseal-bucket"
 [[kv_namespaces]]
 binding = "PDFSEAL_KV"
 id = "YOUR_KV_NAMESPACE_ID"
+
+# 3. Cloudflare Cron Trigger (Hourly Storage Reconciliation & Orphan Sweeper)
+# Note: In Cloudflare Dashboard -> R2 -> pdfseal-bucket -> Settings -> Lifecycle Rules,
+# you can also optionally configure an object expiration rule (e.g. Delete payload_* after 7 days) as defense-in-depth.
+[triggers]
+crons = ["0 * * * *"]
+

@@ -27,18 +27,14 @@ const MAGIC_HEADER_BYTES = [0x53, 0x45, 0x41, 0x4c, 0x53, 0x45, 0x4e, 0x44, 0x5f
 // Rate limit parameters
 const IP_RATE_LIMIT_PER_MINUTE = 10; // max 10 uploads per min per IP
 
-// Configurable Allowed Origins (Empty/null = allow all legitimate browser domains, or specify your domain)
-const ALLOWED_ORIGIN_PATTERNS = [
-  /^https?:\/\/localhost(:\d+)?$/,
-  /^https?:\/\/127\.0\.0\.1(:\d+)?$/,
-  /sealkit\.org$/,
-  /\.pages\.dev$/,
-  /\.github\.io$/,
-  /\.workers\.dev$/
-];
+// Expiration time limits (defense against persistent storage exhaustion DoS)
+const MIN_EXPIRATION_SECONDS = 60; // 1 minute minimum
+const MAX_EXPIRATION_SECONDS = 7 * 86400; // 7 days hard cap (604,800 seconds)
+const DEFAULT_EXPIRATION_SECONDS = 3600; // 1 hour default
 
 const I18N_MESSAGES = {
   zh: {
+    STORAGE_UNAVAILABLE: '中转存储后端服务未就绪或未正确配置。',
     STORAGE_QUOTA_FULL: '当前中转存储池已达 95% 保护上限，暂时停止接收新文件，请等待现有文件到期或被提取后重试。',
     WATERMARK_RESTRICTED_10M: '当前存储池占用已超过 85%，为保障服务可用性进入快速周转模式，仅支持 10 分钟有效时长。',
     EMPTY_PAYLOAD: '上传的文件载荷为空。',
@@ -55,6 +51,7 @@ const I18N_MESSAGES = {
     INTERNAL_SERVER_ERROR: '中转服务端发生内部异常。'
   },
   en: {
+    STORAGE_UNAVAILABLE: 'Storage backend service is not ready or misconfigured.',
     STORAGE_QUOTA_FULL: 'Storage pool has reached 95% capacity. Uploads temporarily paused to maintain service availability.',
     WATERMARK_RESTRICTED_10M: 'Storage pool is over 85% full. Fast turnover mode enabled: only 10-minute expiration is permitted.',
     EMPTY_PAYLOAD: 'Uploaded payload is empty.',
@@ -71,6 +68,7 @@ const I18N_MESSAGES = {
     INTERNAL_SERVER_ERROR: 'Internal server error occurred.'
   },
   de: {
+    STORAGE_UNAVAILABLE: 'Speicherdienst ist nicht bereit oder falsch konfiguriert.',
     STORAGE_QUOTA_FULL: 'Speicherpool hat 95% Kapazität erreicht. Uploads vorübergehend pausiert.',
     WATERMARK_RESTRICTED_10M: 'Speicherpool über 85% voll. Schnellwechselmodus aktiv: Nur 10 Minuten Ablaufzeit zulässig.',
     EMPTY_PAYLOAD: 'Hochgeladene Datei ist leer.',
@@ -87,6 +85,7 @@ const I18N_MESSAGES = {
     INTERNAL_SERVER_ERROR: 'Interner Serverfehler aufgetreten.'
   },
   es: {
+    STORAGE_UNAVAILABLE: 'El servicio de almacenamiento no está listo o está mal configurado.',
     STORAGE_QUOTA_FULL: 'El grupo de almacenamiento ha alcanzado el 95%. Subidas temporalmente pausadas.',
     WATERMARK_RESTRICTED_10M: 'Almacenamiento superior al 85%. Modo de rotación rápida activo: solo se permite validez de 10 minutos.',
     EMPTY_PAYLOAD: 'La carga útil subida está vacía.',
@@ -103,6 +102,7 @@ const I18N_MESSAGES = {
     INTERNAL_SERVER_ERROR: 'Se produjo un error interno del servidor.'
   },
   fr: {
+    STORAGE_UNAVAILABLE: 'Le service de stockage n\'est pas prêt ou mal configuré.',
     STORAGE_QUOTA_FULL: 'Le stockage a atteint 95% de capacité. Téléversements temporairement suspendus.',
     WATERMARK_RESTRICTED_10M: 'Stockage plein à plus de 85%. Mode rotation rapide actif : seule une expiration de 10 minutes est autorisée.',
     EMPTY_PAYLOAD: 'Le fichier téléversé est vide.',
@@ -157,10 +157,45 @@ export default {
         }, 200, requestOrigin);
       }
 
+      // 2.5 Admin: Manual Storage Reconciliation Trigger
+      if (request.method === 'POST' && url.pathname === '/api/send/admin/reconcile') {
+        const clientToken = request.headers.get('X-Seal-Token') || url.searchParams.get('token');
+        if (!env.AUTH_SECRET_TOKEN || clientToken !== env.AUTH_SECRET_TOKEN) {
+          return jsonResponse({
+            error: 'UNAUTHORIZED_TOKEN',
+            message: getI18nMessage(locale, 'UNAUTHORIZED_TOKEN')
+          }, 401, requestOrigin);
+        }
+        const summary = await reconcileStorage(env);
+        return jsonResponse({
+          status: 'ok',
+          message: 'Storage reconciliation completed successfully.',
+          summary
+        }, 200, requestOrigin);
+      }
+
       // 3. Upload Encrypted Binary Payload
       if (request.method === 'POST' && url.pathname === '/api/send/upload') {
+        // Readiness Check: Ensure both R2 and KV bindings exist
+        if (!env.PDFSEAL_BUCKET || !env.PDFSEAL_KV) {
+          return jsonResponse({
+            error: 'STORAGE_UNAVAILABLE',
+            message: getI18nMessage(locale, 'STORAGE_UNAVAILABLE')
+          }, 503, requestOrigin);
+        }
+
         // Security Check 1: Origin Validation
-        if (requestOrigin && !isOriginAllowed(requestOrigin, env)) {
+        if (!requestOrigin) {
+          // Non-browser client (curl, script, etc.) without Origin/Referer:
+          // Must provide AUTH_SECRET_TOKEN to be allowed, otherwise reject
+          const clientToken = request.headers.get('X-Seal-Token') || url.searchParams.get('token');
+          if (!env.AUTH_SECRET_TOKEN || clientToken !== env.AUTH_SECRET_TOKEN) {
+            return jsonResponse({
+              error: 'UNAUTHORIZED_ORIGIN',
+              message: getI18nMessage(locale, 'UNAUTHORIZED_ORIGIN')
+            }, 403, requestOrigin);
+          }
+        } else if (!isOriginAllowed(requestOrigin, env)) {
           return jsonResponse({
             error: 'UNAUTHORIZED_ORIGIN',
             message: getI18nMessage(locale, 'UNAUTHORIZED_ORIGIN')
@@ -200,7 +235,12 @@ export default {
           }, 503, requestOrigin);
         }
 
-        let expSeconds = parseInt(request.headers.get('X-Expiration-Seconds') || '3600', 10);
+        let expSeconds = parseInt(request.headers.get('X-Expiration-Seconds') || `${DEFAULT_EXPIRATION_SECONDS}`, 10);
+        if (isNaN(expSeconds) || expSeconds <= 0) {
+          expSeconds = DEFAULT_EXPIRATION_SECONDS;
+        }
+        // Enforce hard lower and upper bounds [60s, 7 days]
+        expSeconds = Math.min(Math.max(expSeconds, MIN_EXPIRATION_SECONDS), MAX_EXPIRATION_SECONDS);
 
         // Watermark 85% Check: Force 10-minute TTL for fast turnover
         if (usageRatio >= WATERMARK_HIGH) {
@@ -255,11 +295,9 @@ export default {
         const isPasswordProtected = request.headers.get('X-Password-Protected') === 'true';
 
         // Save encrypted blob to R2
-        if (env.PDFSEAL_BUCKET) {
-          await env.PDFSEAL_BUCKET.put(`payload_${id}`, encryptedBytes, {
-            httpMetadata: { contentType: 'application/octet-stream' }
-          });
-        }
+        await env.PDFSEAL_BUCKET.put(`payload_${id}`, encryptedBytes, {
+          httpMetadata: { contentType: 'application/octet-stream' }
+        });
 
         const now = Date.now();
         const expiresAt = now + (expSeconds * 1000);
@@ -273,13 +311,11 @@ export default {
         };
 
         // Save metadata to KV with TTL
-        if (env.PDFSEAL_KV) {
-          await env.PDFSEAL_KV.put(`meta_${id}`, JSON.stringify(meta), {
-            expirationTtl: Math.max(60, expSeconds)
-          });
-          // Increment active storage bytes
-          ctx.waitUntil(updateActiveStorageBytes(env, encryptedBytes.byteLength));
-        }
+        await env.PDFSEAL_KV.put(`meta_${id}`, JSON.stringify(meta), {
+          expirationTtl: Math.max(60, expSeconds)
+        });
+        // Increment active storage bytes
+        ctx.waitUntil(updateActiveStorageBytes(env, encryptedBytes.byteLength));
 
         return jsonResponse({
           success: true,
@@ -387,18 +423,46 @@ export default {
         detail: err.message 
       }, 500, requestOrigin);
     }
+  },
+
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(reconcileStorage(env));
   }
 };
 
 function isOriginAllowed(origin, env) {
-  if (!origin) return true;
-  // If custom allowed origins are configured in env variable
-  if (env?.ALLOWED_ORIGINS) {
-    const list = env.ALLOWED_ORIGINS.split(',').map(s => s.trim());
-    return list.some(item => origin.includes(item) || item === '*');
+  if (!origin) return false;
+  let url;
+  try {
+    url = new URL(origin);
+  } catch (e) {
+    return false;
   }
-  // Default trusted developer and deploy hosts
-  return ALLOWED_ORIGIN_PATTERNS.some(pattern => pattern.test(origin));
+  const hostname = url.hostname.toLowerCase();
+
+  // If custom allowed origins are configured in env variable (comma-separated domains or URLs)
+  if (env?.ALLOWED_ORIGINS) {
+    const list = env.ALLOWED_ORIGINS.split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+    for (const item of list) {
+      if (item === '*') return true;
+      try {
+        const itemUrl = item.includes('://') ? new URL(item) : new URL(`https://${item}`);
+        if (hostname === itemUrl.hostname || hostname.endsWith(`.${itemUrl.hostname}`)) {
+          return true;
+        }
+      } catch (e) {
+        if (hostname === item || hostname.endsWith(`.${item}`)) return true;
+      }
+    }
+    return false;
+  }
+
+  // Default trusted developer and official deploy hosts
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return true;
+  if (hostname === 'sealkit.org' || hostname.endsWith('.sealkit.org')) return true;
+  if (hostname === 'pdfseal.pages.dev' || hostname.endsWith('.pdfseal.pages.dev')) return true;
+
+  return false;
 }
 
 function verifyMagicHeader(bytes) {
@@ -485,4 +549,89 @@ function jsonResponse(data, status = 200, requestOrigin = '*') {
     }
   });
 }
+
+/**
+ * Storage Reconciliation & Orphan Sweeper Engine
+ * Periodically invoked via Cloudflare Cron Trigger (or on-demand via admin endpoint):
+ * 1. Scans R2 bucket for payload objects.
+ * 2. Cross-references with KV metadata.
+ * 3. Deletes orphaned R2 blobs whose KV metadata has naturally expired.
+ * 4. Calibrates stats_active_storage_bytes counter to exact physical usage.
+ */
+async function reconcileStorage(env) {
+  if (!env.PDFSEAL_BUCKET || !env.PDFSEAL_KV) {
+    return { scanned: 0, orphansDeleted: 0, activeBytes: 0, skipped: true };
+  }
+
+  let truncated = true;
+  let cursor = undefined;
+  let scanned = 0;
+  let orphansDeleted = 0;
+  let actualActiveBytes = 0;
+  const now = Date.now();
+
+  try {
+    while (truncated) {
+      const listResult = await env.PDFSEAL_BUCKET.list({
+        prefix: 'payload_',
+        cursor,
+        limit: 500
+      });
+
+      for (const object of (listResult.objects || [])) {
+        scanned++;
+        const id = object.key.replace(/^payload_/, '');
+        const metaRaw = await env.PDFSEAL_KV.get(`meta_${id}`);
+
+        let isOrphan = false;
+        if (!metaRaw) {
+          isOrphan = true;
+        } else {
+          try {
+            const meta = JSON.parse(metaRaw);
+            if (meta.expiresAt && now > meta.expiresAt) {
+              isOrphan = true;
+            }
+          } catch (e) {
+            isOrphan = true;
+          }
+        }
+
+        if (isOrphan) {
+          orphansDeleted++;
+          await env.PDFSEAL_BUCKET.delete(object.key);
+          if (metaRaw) {
+            await env.PDFSEAL_KV.delete(`meta_${id}`);
+          }
+        } else {
+          actualActiveBytes += object.size;
+        }
+      }
+
+      truncated = Boolean(listResult.truncated);
+      cursor = listResult.cursor;
+    }
+
+    // Atomically calibrate the active storage counter with actual physical usage
+    await env.PDFSEAL_KV.put(STORAGE_COUNTER_KEY, actualActiveBytes.toString());
+  } catch (e) {
+    console.error('Storage reconciliation error:', e);
+  }
+
+  return { scanned, orphansDeleted, activeBytes: actualActiveBytes };
+}
+
+export {
+  isOriginAllowed,
+  reconcileStorage,
+  verifyMagicHeader,
+  checkRateLimit,
+  getActiveStorageBytes,
+  updateActiveStorageBytes,
+  getCorsHeaders,
+  MIN_EXPIRATION_SECONDS,
+  MAX_EXPIRATION_SECONDS,
+  DEFAULT_EXPIRATION_SECONDS
+};
+
 

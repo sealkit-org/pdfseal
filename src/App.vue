@@ -81,15 +81,15 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, provide, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, provide, onMounted, onUnmounted, defineAsyncComponent } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
-import FeedbackModal from './components/FeedbackModal.vue';
-import PrivacyModal from './components/PrivacyModal.vue';
-import GlobalSettingsModal from './components/GlobalSettingsModal.vue';
-import DiagnosticLogModal from './components/DiagnosticLogModal.vue';
-import EnterpriseModal from './components/EnterpriseModal.vue';
+const FeedbackModal = defineAsyncComponent(() => import('./components/FeedbackModal.vue'));
+const PrivacyModal = defineAsyncComponent(() => import('./components/PrivacyModal.vue'));
+const GlobalSettingsModal = defineAsyncComponent(() => import('./components/GlobalSettingsModal.vue'));
+const DiagnosticLogModal = defineAsyncComponent(() => import('./components/DiagnosticLogModal.vue'));
+const EnterpriseModal = defineAsyncComponent(() => import('./components/EnterpriseModal.vue'));
 import { TOOL_ROUTES } from './router';
 import { t } from './i18n';
 import { initCertificateStore } from './utils/security/certificateStore';
