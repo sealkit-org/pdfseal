@@ -147,6 +147,19 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'esnext',
       outDir: 'dist',
+      rollupOptions: {
+        output: {
+          manualChunks(id) {
+            if (id.includes('node_modules')) {
+              if (id.includes('pdfjs-dist')) return 'vendor-pdfjs';
+              if (id.includes('pdf-lib') || id.includes('@pdfsmaller/pdf-encrypt')) return 'vendor-pdflib';
+              if (id.includes('jszip')) return 'vendor-jszip';
+              if (id.includes('lucide-vue-next')) return 'vendor-lucide';
+              if (id.includes('vue') || id.includes('vue-router')) return 'vendor-vue';
+            }
+          }
+        }
+      }
     }
   };
 });
