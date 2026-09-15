@@ -98,19 +98,19 @@
           <span :class="activeTab === 'pipeline' ? 'inline' : 'hidden 2xl:inline'">{{ t('tab_pipeline') || 'Pipeline' }}</span>
         </button>
 
-        <!-- Vault shortcut -->
-        <button 
+        <!-- Vault shortcut (icon-only; label shown in tooltip) -->
+        <button
           @click="$emit('switch-tab', 'vault')"
           :class="[
-            'flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer shrink-0',
-            activeTab === 'vault' 
-              ? 'bg-blue-600 text-white shadow-xs' 
+            'flex items-center justify-center px-2 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0',
+            activeTab === 'vault'
+              ? 'bg-blue-600 text-white shadow-xs'
               : 'text-slate-700 hover:text-blue-600 hover:bg-slate-100 border border-slate-200/80 bg-white shadow-2xs'
           ]"
           :title="t('vault_title', t('tab_vault'))"
+          :aria-label="t('tab_vault')"
         >
-          <FolderLock class="w-3.5 h-3.5 shrink-0" :class="activeTab === 'vault' ? 'text-white' : 'text-blue-600'" />
-          <span :class="activeTab === 'vault' ? 'inline' : 'hidden 2xl:inline'">{{ t('tab_vault') }}</span>
+          <FolderLock class="w-4 h-4 shrink-0" :class="activeTab === 'vault' ? 'text-white' : 'text-blue-600'" />
         </button>
       </div>
 
