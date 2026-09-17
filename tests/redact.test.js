@@ -271,6 +271,32 @@ describe('redactEngine: True Stream Redaction', () => {
     expect(report.pages[0].removedOps).toBeGreaterThanOrEqual(1);
     expect(report.verify.ok).toBe(true);
   }, 60000);
+
+  it('⑧ 工具注册：路由与 5 语 i18n key 完整', async () => {
+    const { TOOL_ROUTES } = await import('../src/router/toolRoutes.js');
+    expect(TOOL_ROUTES['redact']).toBe('/redact-pdf');
+
+    const en = (await import('../src/locales/en.json')).default;
+    const zh = (await import('../src/locales/zh.json')).default;
+    const de = (await import('../src/locales/de.json')).default;
+    const es = (await import('../src/locales/es.json')).default;
+    const fr = (await import('../src/locales/fr.json')).default;
+
+    // en（master）里所有 redact_ / seo_*_redact / result_*_redact / next_action_redact / tab_redact keys
+    const redactKeys = Object.keys(en).filter((k) =>
+      k === 'tab_redact' || k === 'next_action_redact' ||
+      k.endsWith('_redact') || k.startsWith('redact_')
+    );
+    expect(redactKeys.length).toBeGreaterThanOrEqual(45);
+
+    for (const dict of [zh, de, es, fr]) {
+      const missing = redactKeys.filter((k) => !dict[k]);
+      expect(missing).toEqual([]);
+    }
+    // zh 术语改名断言：sanitize = 隐私清理，redact = 内容涂黑
+    expect(zh['tab_sanitize']).toBe('隐私清理');
+    expect(zh['tab_redact']).toBe('内容涂黑');
+  }, 30000);
 });
 
 describe('contentStreamParser: lexer', () => {
