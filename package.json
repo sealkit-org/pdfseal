@@ -20,6 +20,7 @@
     "test:unlock": "node scripts/e2e_unlock_test.js",
     "test:watermark": "node scripts/e2e_watermark_test.js",
     "test:sanitize": "node scripts/e2e_sanitize_test.js",
+    "test:redact": "node scripts/e2e_redact_test.js",
     "test:pipeline": "node scripts/e2e_pipeline_test.js",
     "test:all": "node scripts/run_all_tests.js",
     "deploy": "npm run build && wrangler deploy"

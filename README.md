@@ -36,7 +36,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 
 ## ✨ Features & Architecture
 
-### 🛠️ 13 Core Local PDF Utilities (100% Free & Unlimited)
+### 🛠️ 14 Core Local PDF Utilities (100% Free & Unlimited)
 
 *All atomic utilities execute entirely client-side in browser RAM with zero arbitrary limits, no watermark penalties, and zero data leakage:*
 
@@ -51,10 +51,11 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **Image to PDF**: Convert batches of PNG, JPG, WebP, and BMP images into a unified multi-page PDF. Offers standardized A4 dimensions (with auto-orientation and proportional centered margins) or adaptive native-image sizing, ideal for expense receipt collation and identity document archiving.
 - **Protect & Encrypt**: Modern high-grade AES-256 client-side encryption. Protect documents with an **Open Password (User Password)** to prevent unauthorized reading, and set an **Owner Password** to enforce granular operational restrictions (prohibiting unauthorized printing, text/image extraction, form alterations, and annotating), securing distributed contracts without sending keys to the cloud.
 - **Unlock & Strip Restrictions**: Permanently remove encryption locks and permission restrictions. After validating the document password, the client engine restructures the internal object streams to permanently purge encryption dictionaries, yielding a clean, unrestricted, plaintext PDF.
-- **Deep Metadata Sanitizer**: Essential privacy purification for government, corporate audits, and sensitive disclosures. Deeply audits and permanently purges hidden forensic metadata: document titles, author names, company names, software fingerprints (Word, WPS, InDesign), timestamps, camera GPS coordinates, private application dictionaries (PieceInfo), and embedded thumbnail caches.
+- **Scrub Metadata**: Essential privacy purification for government, corporate audits, and sensitive disclosures. Deeply audits and permanently purges hidden forensic metadata and underlying attributes: document titles, author names, company names, software fingerprints (Word, WPS, InDesign), timestamps, camera GPS coordinates, private application dictionaries (PieceInfo), and embedded thumbnail caches.
+- **Redact Content**: High-assurance physical byte-level redaction for sensitive text and images in document content streams. Draw visual boxes with automatic snap-to-text boundary precision, or batch-mark via smart search (keywords or localized regex presets for ID/SSN, phone, bank cards, emails, and universal dates). Supports per-mark and whole-page replication, blackout, whiteout, dark gray, custom color blocks, and [REDACTED] stamps. Re-parses output to verify zero extractable text residue before export; target text is permanently destroyed and cannot be recovered.
 - **Local Privacy Vault**: Secure in-browser document staging and archive powered by IndexedDB with zero network telemetry. Leverages native Web Crypto SHA-256 content hashing for automatic deduplication, toggleable grid/list views, automatic or one-click post-processing storage, and instant reloading into downstream editing tools.
 
-> 💡 **Unified Three-Stage Delivery Architecture**: All 12 core interactive processing tools feature a standardized three-step workflow (« ① Upload File → ② Configure & Process → ③ Delivery & Next Relays »), complete with before/after size & ratio metric badges, seamless full-screen preview, one-click re-download, « Return to Edit » state preservation, and next-action relays (e.g., compress immediately after merging, or add watermarks right after signing).
+> 💡 **Unified Three-Stage Delivery Architecture**: All 13 core interactive processing tools feature a standardized three-step workflow (« ① Upload File → ② Configure & Process → ③ Delivery & Next Relays »), complete with before/after size & ratio metric badges, seamless full-screen preview, one-click re-download, « Return to Edit » state preservation, and next-action relays (e.g., compress immediately after merging, or add watermarks right after signing).
 
 ---
 
@@ -63,7 +64,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 *Chain multiple standalone PDF operations into an automated, single-click assembly line:*
 
 - **Battle-Tested Presets**:
-  - 📁 **Tender & Sensitive Document Sanitizer**: Deep metadata sanitization $\rightarrow$ Balanced compression $\rightarrow$ Anti-leak watermark stamping.
+  - 📁 **Tender & Sensitive Document Sanitizer**: Metadata scrubbing $\rightarrow$ Balanced compression $\rightarrow$ Anti-leak watermark stamping.
   - 🧾 **Expense Receipts Auto-Packer**: Multi-image to A4 PDF conversion $\rightarrow$ Compression sized for reimbursement portals.
   - 📑 **Contract Batch Stamping & Archive**: Permission unlock $\rightarrow$ Last page signature stamping $\rightarrow$ Security watermark.
 - **Visual Drag & Drop Pipeline Builder**:
@@ -106,7 +107,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **Internationalization**: Vue I18n (Full support for 🇺🇸 English, 🇩🇪 German, 🇪🇸 Spanish, 🇫🇷 French, 🇨🇳 Simplified Chinese)
 - **Local Storage**: IndexedDB with structured transactional stores (Privacy Vault)
 - **Performance & Scheduling**: Active Event Loop Yielding to prevent UI freezing during intensive WASM/canvas computations
-- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**28 unit test suites, 137 unit tests 100% passing**, plus headless browser E2E regression suites)
+- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**30 unit test suites, 186 unit tests 100% passing**, plus headless browser E2E regression suites)
 
 ---
 

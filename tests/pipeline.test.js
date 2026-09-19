@@ -1,13 +1,15 @@
 import { describe, it, expect } from 'vitest';
-import { PDFDocument } from 'pdf-lib';
-import { validatePipelinePreflight, canSaveNewPipeline, PIPELINE_POLICY } from '../src/utils/pipeline/pipelinePolicy';
+import { PDFDocument, StandardFonts } from 'pdf-lib';
+import { validatePipelinePreflight, canSaveNewPipeline, validateStepParameters, PIPELINE_POLICY } from '../src/utils/pipeline/pipelinePolicy';
 import { checkNodeCompatibility, AVAILABLE_NODES } from '../src/utils/pipeline/pipelineTypes';
 import { executeMergeNode } from '../src/utils/pipeline/nodes/mergeNode';
 import { executeSanitizeNode } from '../src/utils/pipeline/nodes/sanitizeNode';
+import { executeRedactNode } from '../src/utils/pipeline/nodes/redactNode';
 import { parseRangeExpression } from '../src/utils/pipeline/nodes/splitNode';
 import { runPipeline } from '../src/utils/pipeline/pipelineRunner';
 import { saveUserPipeline, loadUserPipelines, deleteUserPipeline } from '../src/utils/pipeline/userPipelines';
 import { PRESET_PIPELINES } from '../src/utils/pipeline/presetPipelines';
+import { PII_PRESETS } from '../src/utils/redaction/ruleMatcher';
 import enLocale from '../src/locales/en.json';
 import zhLocale from '../src/locales/zh.json';
 
@@ -208,6 +210,7 @@ describe('Pipeline Automation & Policy Engine', () => {
         }
       };
 
+      try {
       // 1. Initial load should be empty
       expect(loadUserPipelines()).toEqual([]);
 
@@ -245,6 +248,10 @@ describe('Pipeline Automation & Policy Engine', () => {
       const deleted = deleteUserPipeline(saved.id);
       expect(deleted).toBe(true);
       expect(loadUserPipelines()).toEqual([]);
+      } finally {
+        // 清理全局污染：pdf.js 在 Node 下检测到 window 会走浏览器路径（window.location.origin）
+        delete global.window;
+      }
     });
 
     it('should allow saving as new flow without overwriting existing flow when id is not supplied', () => {
@@ -257,6 +264,7 @@ describe('Pipeline Automation & Policy Engine', () => {
         }
       };
 
+      try {
       // Save flow 1
       const flow1 = saveUserPipeline({
         name: 'Flow 1',
@@ -284,6 +292,9 @@ describe('Pipeline Automation & Policy Engine', () => {
         steps: [{ nodeId: 'node_compress' }]
       });
       expect(loadUserPipelines()).toHaveLength(3);
+      } finally {
+        delete global.window;
+      }
     });
   });
 
@@ -497,5 +508,192 @@ describe('Pipeline Automation & Policy Engine', () => {
       const reloadedDoc1 = await PDFDocument.load(extractedBytes1);
       expect(reloadedDoc1.getPageCount()).toBe(1);
     });
+  });
+
+  describe('Redact Node (rule-based batch redaction)', () => {
+    /** 带已知文本行的 PDF（供规则命中） */
+    async function createTextPdf() {
+      const doc = await PDFDocument.create();
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+      const page = doc.addPage([595.28, 841.89]);
+      page.drawText('Reach me at john.doe@example.com today', { x: 72, y: 720, size: 12, font });
+      page.drawText('Safe public line stays', { x: 72, y: 690, size: 12, font });
+      page.drawText('Call 13800138000 for details', { x: 72, y: 660, size: 12, font });
+      return doc.save();
+    }
+
+    async function extractText(bytes) {
+      const pdfjs = await import('pdfjs-dist');
+      const task = pdfjs.getDocument({
+        data: bytes instanceof Uint8Array ? bytes.slice() : new Uint8Array(bytes).slice(),
+        isEvalSupported: false,
+        disableFontFace: true
+      });
+      const pdf = await task.promise;
+      const page = await pdf.getPage(1);
+      const tc = await page.getTextContent();
+      await pdf.destroy();
+      return tc.items.map((i) => i.str).join(' ');
+    }
+
+    it('should define node_redact with map topology, security category and empty default rules', () => {
+      const node = AVAILABLE_NODES.node_redact;
+      expect(node).toBeDefined();
+      expect(node.category).toBe('security');
+      expect(node.topology).toBe('map');
+      expect(node.inputs).toContain('pdf_docs');
+      expect(node.outputs).toContain('pdf_docs');
+      expect(node.defaultParams).toEqual({ rules: [], style: 'black' });
+      expect(node.nameKey).toBe('tab_redact');
+      expect(enLocale[node.descKey]).toBeDefined();
+      expect(zhLocale[node.descKey]).toBeDefined();
+    });
+
+    it('should be type-compatible with pdf_docs neighbors (sanitize -> redact -> compress)', () => {
+      expect(checkNodeCompatibility('node_sanitize', 'node_redact').compatible).toBe(true);
+      expect(checkNodeCompatibility('node_redact', 'node_compress').compatible).toBe(true);
+    });
+
+    it('should have all 5 PII presets with i18n labels registered', () => {
+      expect(PII_PRESETS.map((p) => p.id)).toEqual(['id', 'phone', 'bank', 'email', 'date']);
+      for (const preset of PII_PRESETS) {
+        expect(enLocale[preset.labelKey]).toBeDefined();
+        expect(zhLocale[preset.labelKey]).toBeDefined();
+        expect(preset.type).toBe('regex');
+      }
+    });
+
+    it('should burn matched keyword/regex hits and keep sibling text intact', async () => {
+      const pdf = await createTextPdf();
+      const items = [{ id: '1', name: 'contacts.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const out = await executeRedactNode(items, {
+        rules: [
+          { type: 'regex', value: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}' },
+          { type: 'regex', value: '\\b1[3-9]\\d{9}\\b' }
+        ],
+        style: 'black'
+      });
+
+      expect(out).toHaveLength(1);
+      expect(out[0].name).toBe('contacts_Redacted.pdf');
+      expect(out[0].redactReport.ok).toBe(true);
+      expect(out[0].redactReport.zeroHits).toBe(false);
+      expect(out[0].redactReport.ruleStats.map((s) => s.hits)).toEqual([1, 1]);
+      expect(out[0].redactReport.imagePages).toEqual([]);
+
+      const text = await extractText(out[0].data);
+      expect(text).not.toContain('john.doe@example.com');
+      expect(text).not.toContain('13800138000');
+      expect(text).toContain('Safe public line stays');
+    }, 60000);
+
+    it('should support custom stampText and custom style in executeRedactNode', async () => {
+      const pdf = await createTextPdf();
+      const items = [{ id: '1', name: 'contacts.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const out = await executeRedactNode(items, {
+        rules: [{ type: 'keyword', value: 'john.doe@example.com' }],
+        style: 'stamp',
+        stampText: '[CLASSIFIED]'
+      });
+
+      expect(out).toHaveLength(1);
+      expect(out[0].redactReport.ok).toBe(true);
+      const text = await extractText(out[0].data);
+      expect(text).not.toContain('john.doe@example.com');
+      expect(text).toContain('[CLASSIFIED]');
+    }, 60000);
+
+    it('should pass items through unchanged with zeroHits report when no rule matches', async () => {
+      const pdf = await createTextPdf();
+      const items = [{ id: '1', name: 'plain.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const out = await executeRedactNode(items, {
+        rules: [{ type: 'keyword', value: 'NO-SUCH-WORD-XYZ' }]
+      });
+
+      expect(out).toHaveLength(1);
+      expect(out[0].name).toBe('plain.pdf'); // 原名透传
+      expect(out[0].redactReport.zeroHits).toBe(true);
+      expect(out[0].redactReport.ruleStats[0].hits).toBe(0);
+    }, 60000);
+
+    it('should bypass silently-invalid regex rules instead of throwing', async () => {
+      const pdf = await createTextPdf();
+      const items = [{ id: '1', name: 'bad_rx.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const out = await executeRedactNode(items, {
+        rules: [{ type: 'regex', value: '([unclosed' }, { type: 'keyword', value: 'Safe public line' }]
+      });
+
+      expect(out).toHaveLength(1);
+      expect(out[0].redactReport.ok).toBe(true);
+      // 无效规则 hits=0，有效规则正常命中
+      expect(out[0].redactReport.ruleStats[0].valid).toBe(false);
+      expect(out[0].redactReport.ruleStats[1].hits).toBeGreaterThan(0);
+    }, 60000);
+
+    it('should block runPipeline when node_redact has no rules configured', async () => {
+      const flow = {
+        name: 'Redact Without Rules',
+        steps: [{ id: 's1', nodeId: 'node_redact', params: { rules: [], style: 'black' } }]
+      };
+      const pdf = await createTextPdf();
+      const files = [{ name: 'doc.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const result = await runPipeline(flow, files, { userTier: 'free' });
+      expect(result.success).toBe(false);
+      expect(result.code).toBe('ERR_MISSING_REDACT_RULES');
+      expect(result.reason).toContain('At least one keyword or pattern rule');
+
+      // validateStepParameters 直测同样拦截
+      const direct = validateStepParameters(flow.steps);
+      expect(direct.valid).toBe(false);
+      expect(direct.code).toBe('ERR_MISSING_REDACT_RULES');
+    }, 60000);
+
+    it('should execute sanitize -> redact pipeline end-to-end in free tier', async () => {
+      const doc = await PDFDocument.create();
+      const font = await doc.embedFont(StandardFonts.Helvetica);
+      const page = doc.addPage([595.28, 841.89]);
+      page.drawText('Email bob@test.org inside', { x: 72, y: 700, size: 12, font });
+      page.drawText('Public footer line', { x: 72, y: 670, size: 12, font });
+      doc.setTitle('Secret Memo');
+      doc.setAuthor('Agent X');
+      const pdf = await doc.save();
+
+      const flow = {
+        name: 'Privacy Flow',
+        steps: [
+          { id: 's1', nodeId: 'node_sanitize', params: { stripDocInfo: true } },
+          { id: 's2', nodeId: 'node_redact', params: { rules: [{ type: 'regex', value: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}' }], style: 'black' } }
+        ]
+      };
+      const files = [{ name: 'memo.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const result = await runPipeline(flow, files, { userTier: 'free' });
+      expect(result.success).toBe(true);
+      expect(result.items).toHaveLength(1);
+
+      const reloaded = await PDFDocument.load(result.items[0].data, { updateMetadata: false });
+      expect(reloaded.getTitle()).toBeFalsy();
+      expect(reloaded.getAuthor()).toBeFalsy();
+
+      const pdfjs = await import('pdfjs-dist');
+      const task = pdfjs.getDocument({
+        data: result.items[0].data.slice(),
+        isEvalSupported: false,
+        disableFontFace: true
+      });
+      const outPdf = await task.promise;
+      const p = await outPdf.getPage(1);
+      const tc = await p.getTextContent();
+      await outPdf.destroy();
+      const text = tc.items.map((i) => i.str).join(' ');
+      expect(text).not.toContain('bob@test.org');
+      // email 与 'inside' 同一 show-text 操作符（同 item），随整行删除；无关行必须保留
+      expect(text).toContain('Public footer line');
+    }, 60000);
   });
 });

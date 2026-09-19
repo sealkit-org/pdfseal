@@ -62,6 +62,7 @@ describe('filenameUtils', () => {
       expect(generateExportFileName('PDFSeal_Contract.pdf', 'Watermarked')).toBe('PDFSeal_Watermarked_Contract');
       expect(generateExportFileName('PDFSeal_Watermarked_Contract.pdf', 'Protected')).toBe('PDFSeal_Protected_Watermarked_Contract');
       expect(generateExportFileName('PDFSeal_Watermarked_PDFSeal_Clean_PDFSeal_Unlocked.pdf', 'Split')).toBe('PDFSeal_Split_Watermarked_Clean');
+      expect(generateExportFileName('SensitiveDoc.pdf', 'Redacted')).toBe('PDFSeal_Redacted_SensitiveDoc');
     });
 
     it('should respect custom or empty userSettings prefix', () => {

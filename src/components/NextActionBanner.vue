@@ -86,12 +86,12 @@ import { useRouter } from 'vue-router';
 import { 
   Sparkles, 
   PenTool, 
-  Minimize2, 
-  Lock, 
-  Stamp, 
-  Scissors, 
-  Layers, 
-  ShieldCheck, 
+  Minimize2,
+  Lock,
+  Stamp,
+  Scissors,
+  Layers,
+  ShieldCheck,
   Files,
   ImageDown,
   ListOrdered,
@@ -99,7 +99,8 @@ import {
   CheckCircle2,
   FolderPlus,
   ArrowUpRight,
-  Loader2
+  Loader2,
+  EyeOff
 } from 'lucide-vue-next';
 import { t } from '../i18n';
 import { dispatchToTool } from '../utils/toolBridge';
@@ -187,6 +188,7 @@ const actionCatalog = [
   { id: 'split', labelKey: 'next_action_split', icon: Scissors, color: 'text-teal-700 bg-teal-50 border-teal-200 hover:bg-teal-100' },
   { id: 'organize', labelKey: 'next_action_organize', icon: Layers, color: 'text-purple-700 bg-purple-50 border-purple-200 hover:bg-purple-100' },
   { id: 'sanitize', labelKey: 'next_action_sanitize', icon: ShieldCheck, color: 'text-cyan-700 bg-cyan-50 border-cyan-200 hover:bg-cyan-100' },
+  { id: 'redact', labelKey: 'next_action_redact', icon: EyeOff, color: 'text-slate-700 bg-slate-100 border-slate-200 hover:bg-slate-200' },
   { id: 'pdf_to_image', labelKey: 'next_action_pdf_to_image', icon: ImageDown, color: 'text-teal-700 bg-teal-50 border-teal-200 hover:bg-teal-100' },
   { id: 'merge', labelKey: 'next_action_merge', icon: Files, color: 'text-slate-700 bg-slate-100 border-slate-200 hover:bg-slate-200' }
 ];
@@ -198,8 +200,9 @@ const priorityMap = {
   split: ['compress', 'sign', 'protect', 'pdf_to_image', 'organize'],
   page_number: ['compress', 'protect', 'sign', 'pdf_to_image', 'watermark'],
   watermark: ['protect', 'compress', 'sign', 'sanitize', 'page_number'],
-  protect: ['watermark', 'compress', 'sign', 'sanitize', 'page_number'],
-  sanitize: ['protect', 'watermark', 'compress', 'sign', 'page_number'],
+  protect: ['redact', 'watermark', 'compress', 'sign', 'sanitize', 'page_number'],
+  sanitize: ['redact', 'protect', 'watermark', 'compress', 'sign', 'page_number'],
+  redact: ['sanitize', 'protect', 'sign', 'compress', 'watermark'],
   unlock: ['split', 'organize', 'compress', 'watermark', 'sign'],
   sign: ['protect', 'compress', 'watermark', 'page_number', 'pdf_to_image'],
   image_to_pdf: ['watermark', 'compress', 'protect', 'sign', 'page_number']

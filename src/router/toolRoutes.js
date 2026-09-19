@@ -15,6 +15,7 @@ export const TOOL_ROUTES = {
   watermark: '/watermark-pdf',
   page_number: '/page-number',
   sanitize: '/sanitize-pdf',
+  redact: '/redact-pdf',
   pipeline: '/pipeline',
   vault: '/vault',
   receive: '/receive'

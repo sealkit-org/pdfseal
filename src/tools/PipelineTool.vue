@@ -1225,6 +1225,205 @@
             </label>
           </div>
 
+          <!-- Redact Parameters -->
+          <div v-else-if="currentEditingStepNodeId === 'node_redact'" class="space-y-3">
+            <!-- Boundary note: rules cannot cover image-based pages -->
+            <div class="flex items-start space-x-2 p-3 rounded-xl bg-amber-50 border border-amber-200 text-[11px] text-amber-800 leading-relaxed">
+              <Info class="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+              <span>{{ t('node_redact_boundary_note') }}</span>
+            </div>
+
+            <!-- PII Preset Chips -->
+            <div class="flex flex-wrap gap-1.5">
+              <button
+                v-for="preset in localizedRedactPresets"
+                :key="preset.id"
+                type="button"
+                @click="addRedactPreset(preset)"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-bold border border-slate-300 text-slate-600 bg-white hover:border-indigo-400 hover:text-indigo-600 hover:bg-indigo-50 transition cursor-pointer"
+              >
+                + {{ t(preset.labelKey) }}
+              </button>
+            </div>
+
+            <!-- Rule List Editor -->
+            <div class="space-y-2">
+              <div
+                v-for="(rule, ri) in editingStepDraft.rules"
+                :key="ri"
+                class="p-3 rounded-xl border border-slate-200 space-y-2"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-3 text-[11px] font-bold">
+                    <label class="inline-flex items-center space-x-1 cursor-pointer">
+                      <input type="radio" :name="`redact_type_${ri}`" value="keyword" v-model="rule.type" class="text-indigo-600 w-3.5 h-3.5" />
+                      <span class="text-slate-600">{{ t('node_redact_rule_keyword') }}</span>
+                    </label>
+                    <label class="inline-flex items-center space-x-1 cursor-pointer">
+                      <input type="radio" :name="`redact_type_${ri}`" value="regex" v-model="rule.type" class="text-indigo-600 w-3.5 h-3.5" />
+                      <span class="text-slate-600">{{ t('node_redact_rule_regex') }}</span>
+                    </label>
+                  </div>
+                  <button
+                    type="button"
+                    @click="removeRedactRule(ri)"
+                    class="text-slate-300 hover:text-rose-600 p-1 rounded-lg hover:bg-rose-50 transition cursor-pointer"
+                  >
+                    <Trash2 class="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  v-model="rule.value"
+                  :placeholder="rule.type === 'regex' ? '\\d{16,19}' : 'Secret'"
+                  class="w-full px-3 py-2 rounded-lg border border-slate-200 text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 font-mono"
+                />
+                <label class="inline-flex items-center space-x-1.5 text-[11px] text-slate-500 cursor-pointer">
+                  <input type="checkbox" v-model="rule.caseSensitive" class="rounded text-indigo-600 w-3.5 h-3.5" />
+                  <span>{{ t('node_redact_case_sensitive') }}</span>
+                </label>
+              </div>
+
+              <button
+                type="button"
+                @click="addRedactRule"
+                class="w-full py-2 rounded-xl border border-dashed border-slate-300 text-slate-500 hover:border-indigo-400 hover:text-indigo-600 text-xs font-bold transition cursor-pointer flex items-center justify-center space-x-1"
+              >
+                <Plus class="w-3.5 h-3.5" />
+                <span>{{ t('node_redact_rules_add') }}</span>
+              </button>
+            </div>
+
+            <!-- Mask Style: 2-Mode Cards + Universal Color + Stamp Config -->
+            <div class="p-4 rounded-xl border border-slate-200 space-y-2.5">
+              <span class="text-slate-800 font-bold block text-xs">{{ t('redact_confirm_style') }}</span>
+
+              <!-- Two Primary Mask Mode Cards (Solid Block vs Text Stamp) -->
+              <div class="grid grid-cols-2 gap-1.5">
+                <!-- Block Mode Card -->
+                <button
+                  type="button"
+                  @click="setPipelineRedactMode('block')"
+                  :class="[
+                    'border rounded-xl p-2 text-left transition cursor-pointer flex items-center gap-2 select-none',
+                    editingStepDraft.style !== 'stamp'
+                      ? 'border-indigo-600 bg-white ring-1 ring-indigo-600 shadow-xs text-indigo-900'
+                      : 'border-slate-200 bg-white/70 hover:border-slate-300 text-slate-700'
+                  ]"
+                >
+                  <div
+                    class="w-14 sm:w-16 h-6 rounded-md shrink-0 border border-black/15 shadow-2xs flex items-center justify-center transition-colors"
+                    :style="{ backgroundColor: editingStepDraft.customColor || '#000000' }"
+                  >
+                    <span v-if="(editingStepDraft.customColor || '#000000').toLowerCase() === '#ffffff'" class="text-[7.5px] text-slate-400 font-bold uppercase tracking-wider">WHITE</span>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[11px] font-bold truncate leading-tight">{{ t('redact_type_block') }}</div>
+                    <div class="text-[9.5px] text-slate-400 truncate leading-tight mt-0.5">{{ t('redact_type_block_desc') }}</div>
+                  </div>
+                </button>
+
+                <!-- Stamp Mode Card -->
+                <button
+                  type="button"
+                  @click="setPipelineRedactMode('stamp')"
+                  :class="[
+                    'border rounded-xl p-2 text-left transition cursor-pointer flex items-center gap-2 select-none',
+                    editingStepDraft.style === 'stamp'
+                      ? 'border-indigo-600 bg-white ring-1 ring-indigo-600 shadow-xs text-indigo-900'
+                      : 'border-slate-200 bg-white/70 hover:border-slate-300 text-slate-700'
+                  ]"
+                >
+                  <div
+                    class="w-14 sm:w-16 h-6 rounded-md shrink-0 border border-black/15 shadow-2xs flex items-center justify-center text-[7.5px] font-black uppercase px-1 truncate transition-colors"
+                    :style="{
+                      backgroundColor: editingStepDraft.customColor || '#000000',
+                      color: isLightPipelineColor(editingStepDraft.customColor || '#000000') ? '#000000' : '#ffffff'
+                    }"
+                  >
+                    {{ editingStepDraft.stampText || '[REDACTED]' }}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-[11px] font-bold truncate leading-tight">{{ t('redact_type_stamp') }}</div>
+                    <div class="text-[9.5px] text-slate-400 truncate leading-tight mt-0.5">{{ t('redact_type_stamp_desc') }}</div>
+                  </div>
+                </button>
+              </div>
+
+              <!-- Universal Color Bar (for BOTH Block and Stamp) -->
+              <div class="pt-2 border-t border-slate-100 space-y-1.5">
+                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-700">
+                  <span>{{ editingStepDraft.style === 'stamp' ? t('redact_stamp_color_label') : t('redact_custom_color_label') }}</span>
+                  <span class="text-[10px] text-slate-500 font-mono uppercase">{{ editingStepDraft.customColor || '#000000' }}</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                  <div class="flex items-center space-x-1.5 flex-1 overflow-x-auto py-0.5">
+                    <button
+                      v-for="c in ['#000000', '#334155', '#ffffff', '#b91c1c', '#1e3a8a', '#047857']"
+                      :key="c"
+                      type="button"
+                      @click="setPipelineRedactColor(c)"
+                      :style="{ backgroundColor: c }"
+                      :class="[
+                        'w-5 h-5 rounded-full ring-2 ring-offset-1 transition cursor-pointer shrink-0 border border-black/15',
+                        (editingStepDraft.customColor || '#000000').toLowerCase() === c.toLowerCase() ? 'ring-indigo-600 scale-110 shadow-xs' : 'ring-transparent opacity-85 hover:opacity-100'
+                      ]"
+                      :title="c"
+                    />
+                  </div>
+                  <div class="relative w-6 h-6 rounded-lg border border-slate-300 overflow-hidden shadow-2xs cursor-pointer shrink-0">
+                    <input
+                      type="color"
+                      :value="editingStepDraft.customColor || '#000000'"
+                      @input="setPipelineRedactColor($event.target.value)"
+                      class="absolute inset-0 opacity-0 w-full h-full cursor-pointer"
+                    />
+                    <div class="w-full h-full" :style="{ backgroundColor: editingStepDraft.customColor || '#000000' }"></div>
+                  </div>
+                  <div class="relative w-18 shrink-0">
+                    <span class="absolute left-1.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-[10px]">#</span>
+                    <input
+                      :value="(editingStepDraft.customColor || '#000000').replace(/^#/, '')"
+                      @input="handlePipelineRedactColorInput"
+                      type="text"
+                      maxlength="6"
+                      placeholder="000000"
+                      class="w-full text-[11px] bg-white border border-slate-200 rounded-lg pl-3.5 pr-1 py-0.5 focus:ring-2 focus:ring-indigo-500 outline-hidden font-mono uppercase text-slate-700 shadow-2xs font-semibold"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Stamp Text Input (when style === 'stamp') -->
+              <div v-if="editingStepDraft.style === 'stamp'" class="pt-2 border-t border-slate-100 space-y-2 animate-in fade-in duration-150">
+                <div class="flex items-center justify-between text-[11px] font-semibold text-slate-700">
+                  <span>{{ t('redact_stamp_text_label') }}</span>
+                  <span class="text-[9.5px] text-slate-400 font-mono">{{ (editingStepDraft.stampText || '').length }} chars</span>
+                </div>
+                <input
+                  type="text"
+                  v-model="editingStepDraft.stampText"
+                  placeholder="[REDACTED]"
+                  class="w-full px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400"
+                />
+                <div class="flex flex-wrap gap-1">
+                  <button
+                    v-for="chip in ['[REDACTED]', '[已脱敏]', '[CONFIDENTIAL]', '(b)(4)', '[GESCHWÄRZT]', '[CAVIARDÉ]']"
+                    :key="chip"
+                    type="button"
+                    @click="editingStepDraft.stampText = chip"
+                    :class="[
+                      'text-[10px] px-2 py-0.5 rounded-md border font-semibold transition cursor-pointer',
+                      editingStepDraft.stampText === chip ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-200 hover:border-slate-400'
+                    ]"
+                  >
+                    {{ chip }}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- 4. Img2Pdf Parameters -->
           <div v-else-if="currentEditingStepNodeId === 'node_img2pdf'" class="space-y-3.5">
             <label class="flex items-center space-x-3 p-3.5 rounded-xl border border-slate-200 hover:bg-slate-50 cursor-pointer text-slate-700 font-medium">
@@ -2455,6 +2654,7 @@ import {
 } from 'lucide-vue-next';
 import { PRESET_PIPELINES } from '../utils/pipeline/presetPipelines';
 import { AVAILABLE_NODES } from '../utils/pipeline/pipelineTypes';
+import { getLocalizedPiiPresets } from '../utils/redaction/ruleMatcher';
 import { runPipeline } from '../utils/pipeline/pipelineRunner';
 import { validateStepParameters } from '../utils/pipeline/pipelinePolicy';
 import { loadUserPipelines, saveUserPipeline, deleteUserPipeline } from '../utils/pipeline/userPipelines';
@@ -2464,7 +2664,7 @@ import { saveFile } from '../utils/vaultDb';
 import { createAndDownloadZip } from '../utils/zipUtils';
 import { siteConfig } from '../config/siteConfig';
 import { isProSupporter } from '../utils/security/certificateStore';
-import { t } from '../i18n';
+import { t, currentLang } from '../i18n';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import VaultPreviewModal from '../components/VaultPreviewModal.vue';
 import { consumePendingFile } from '../utils/toolBridge';
@@ -2733,11 +2933,92 @@ function getEffectiveProtectSummary(draft) {
   }
 }
 
+// --- Node Redact: rule list editing helpers ---
+function addRedactRule() {
+  if (!editingStepDraft.value) return;
+  if (!Array.isArray(editingStepDraft.value.rules)) {
+    editingStepDraft.value.rules = [];
+  }
+  editingStepDraft.value.rules.push({ type: 'keyword', value: '', caseSensitive: false });
+}
+
+function removeRedactRule(ri) {
+  if (!editingStepDraft.value || !Array.isArray(editingStepDraft.value.rules)) return;
+  editingStepDraft.value.rules.splice(ri, 1);
+}
+
+function addRedactPreset(preset) {
+  if (!editingStepDraft.value) return;
+  if (!Array.isArray(editingStepDraft.value.rules)) {
+    editingStepDraft.value.rules = [];
+  }
+  editingStepDraft.value.rules.push({
+    type: preset.type,
+    value: preset.value,
+    caseSensitive: Boolean(preset.caseSensitive)
+  });
+}
+
+const localizedRedactPresets = computed(() => getLocalizedPiiPresets(currentLang.value));
+
+function isLightPipelineColor(hex) {
+  if (!hex || typeof hex !== 'string') return false;
+  let clean = hex.replace('#', '').trim();
+  if (clean.length === 3) clean = clean.split('').map((c) => c + c).join('');
+  if (clean.length !== 6) return false;
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  return (r * 0.299 + g * 0.587 + b * 0.114) > 0.65;
+}
+
+function setPipelineRedactMode(mode) {
+  if (!editingStepDraft.value) return;
+  if (mode === 'stamp') {
+    editingStepDraft.value.style = 'stamp';
+  } else {
+    const c = (editingStepDraft.value.customColor || '#000000').toLowerCase();
+    if (c === '#000000') editingStepDraft.value.style = 'black';
+    else if (c === '#ffffff') editingStepDraft.value.style = 'white';
+    else if (c === '#334155') editingStepDraft.value.style = 'gray';
+    else editingStepDraft.value.style = 'custom';
+  }
+}
+
+function setPipelineRedactColor(color) {
+  if (!editingStepDraft.value) return;
+  editingStepDraft.value.customColor = color;
+  if (editingStepDraft.value.style !== 'stamp') {
+    const c = color.toLowerCase();
+    if (c === '#000000') editingStepDraft.value.style = 'black';
+    else if (c === '#ffffff') editingStepDraft.value.style = 'white';
+    else if (c === '#334155') editingStepDraft.value.style = 'gray';
+    else editingStepDraft.value.style = 'custom';
+  }
+}
+
+function handlePipelineRedactColorInput(e) {
+  if (!editingStepDraft.value) return;
+  let val = e.target.value.replace(/[^0-9a-fA-F]/g, '');
+  if (val.length <= 6) {
+    setPipelineRedactColor('#' + val);
+  }
+}
+
 function openStepConfigModal(idx) {
   editingStepIndex.value = idx;
   const step = activeWorkflowSteps.value[idx];
   editingStepDraft.value = JSON.parse(JSON.stringify(step.params || {}));
   signPreviewOrientation.value = 'portrait';
+
+  if (step.nodeId === 'node_redact') {
+    if (!Array.isArray(editingStepDraft.value.rules)) {
+      editingStepDraft.value.rules = [];
+    }
+    if (!editingStepDraft.value.style) {
+      editingStepDraft.value.style = 'black';
+    }
+  }
 
   if (step.nodeId === 'node_sign') {
     if (!editingStepDraft.value.position) {
@@ -2885,6 +3166,19 @@ function getStepSummary(step) {
       if (step.params.stripAnnots) parts.push(t('pipe_san_annots', 'Remove annots'));
       return parts.length > 0 ? parts.join(' + ') : t('pipe_san_basic', 'Sanitize');
     }
+    case 'node_redact': {
+      const rules = Array.isArray(step.params?.rules) ? step.params.rules.filter((r) => r?.value?.trim()) : [];
+      if (!rules.length) {
+        return `⚠️ ${t('node_redact_rules_add')}`;
+      }
+      const styleMap = {
+        black: t('redact_style_black'),
+        white: t('redact_style_white'),
+        stamp: t('redact_style_stamp')
+      };
+      const styleTxt = styleMap[step.params.style] || styleMap.black;
+      return `${t('node_redact_rules_count', '{count} rule(s)', { count: rules.length })} · ${styleTxt}`;
+    }
     case 'node_img2pdf': {
       const merge = step.params.mergeIntoOne ? t('pipe_merge_one', 'Merged') : t('pipe_merge_split', '1 Page/Img');
       const sz = step.params.pageSize === 'a4' ? 'A4' : t('pipe_sz_fit', 'Original');
@@ -2957,6 +3251,10 @@ function getStepTagClass(nodeId, step) {
       return 'bg-blue-50 text-blue-700 border-blue-200/80';
     case 'node_sanitize':
       return 'bg-emerald-50 text-emerald-700 border-emerald-200/80';
+    case 'node_redact':
+      return !step?.params?.rules?.some((r) => r?.value?.trim())
+        ? 'bg-amber-50 text-amber-700 border-amber-300 font-semibold'
+        : 'bg-slate-50 text-slate-700 border-slate-200/80';
     case 'node_img2pdf':
       return 'bg-purple-50 text-purple-700 border-purple-200/80';
     case 'node_pdf2img':

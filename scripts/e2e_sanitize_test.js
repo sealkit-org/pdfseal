@@ -124,8 +124,8 @@ async function runSanitizeBusinessTest() {
       };
     });
 
-    // 2. Navigate to "隐私清理" via "更多工具" Dropdown in Navbar
-    console.log('📍 [Step 2] Navigating to "隐私清理" (Sanitize) via Navbar More Tools menu...');
+    // 2. Navigate to "元数据清理" via "更多工具" Dropdown in Navbar
+    console.log('📍 [Step 2] Navigating to "元数据清理" (Sanitize) via Navbar More Tools menu...');
     await page.evaluate(() => {
       const buttons = Array.from(document.querySelectorAll('header button'));
       const moreBtn = buttons.find(b => {
@@ -140,7 +140,7 @@ async function runSanitizeBusinessTest() {
       const popoverBtns = Array.from(document.querySelectorAll('.absolute button, header button'));
       const sBtn = popoverBtns.find(b => {
         const t = b.textContent || '';
-        return t.includes('隐私清理') || t.includes('清理') || t.includes('Sanitize');
+        return t.includes('元数据清理') || t.includes('清理') || t.includes('Sanitize');
       });
       if (sBtn) {
         sBtn.click();
@@ -148,7 +148,7 @@ async function runSanitizeBusinessTest() {
       }
       return false;
     });
-    if (!sanitizeClicked) throw new Error('Could not find "隐私清理" menu item in Navbar dropdown');
+    if (!sanitizeClicked) throw new Error('Could not find "元数据清理" menu item in Navbar dropdown');
     await new Promise(r => setTimeout(r, 600));
 
     // Verify empty dropzone is visible
