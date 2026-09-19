@@ -1,6 +1,68 @@
 <template>
   <header class="bg-white border-b border-slate-200/90 sticky top-0 z-40 shadow-2xs select-none">
-    <div class="max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-6 h-14 flex items-center justify-between gap-2 sm:gap-4">
+    <!-- 1. MOBILE VIEW ONLY (< 768px): Ultra-Clean, Non-Overlapping Header -->
+    <div class="flex md:hidden max-w-screen-2xl mx-auto px-3 h-14 items-center justify-between gap-2 w-full">
+      <!-- Mobile Left: Brand & Local Trust Mini Badge -->
+      <div class="flex items-center space-x-2 shrink-0">
+        <div class="flex items-center space-x-1.5 cursor-pointer active:opacity-80 transition" @click="$emit('switch-tab', 'merge')">
+          <span class="text-2xl select-none">🦭</span>
+          <span class="font-extrabold text-base text-slate-900 tracking-tight">PDFSeal</span>
+        </div>
+
+        <!-- Interactive Privacy Guarantee Mini Pill -->
+        <button 
+          @click.stop="$emit('open-privacy')"
+          class="text-[10px] bg-emerald-50 active:bg-emerald-100 text-emerald-800 border border-emerald-300/80 px-2 py-0.5 rounded-full font-bold flex items-center cursor-pointer transition shadow-2xs shrink-0"
+          :title="t('privacy_modal_title', '100% Local Processing Guarantee')"
+        >
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
+          <span>{{ t('local_badge') }}</span>
+        </button>
+      </div>
+
+      <!-- Mobile Right: Language, Settings & Tools Menu -->
+      <div class="flex items-center space-x-1.5 shrink-0">
+        <!-- Language Selector -->
+        <div class="relative shrink-0">
+          <select 
+            :value="currentLang" 
+            @change="setLanguage($event.target.value)"
+            class="text-xs bg-slate-100 text-slate-700 font-bold py-1.5 pl-2 pr-5 rounded-xl border border-slate-200/80 focus:outline-hidden transition cursor-pointer appearance-none"
+            :title="t('select_language', 'Select Language')"
+          >
+            <option value="en">🇺🇸 EN</option>
+            <option value="de">🇩🇪 DE</option>
+            <option value="es">🇪🇸 ES</option>
+            <option value="fr">🇫🇷 FR</option>
+            <option value="zh">🇨🇳 中文</option>
+          </select>
+          <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-slate-400">
+            <ChevronDown class="w-2.5 h-2.5" />
+          </div>
+        </div>
+
+        <!-- Global Settings Button -->
+        <button 
+          @click="$emit('open-settings')" 
+          class="p-2 text-slate-600 active:bg-slate-100 rounded-xl transition cursor-pointer shrink-0 border border-slate-200/80 shadow-2xs"
+          :title="t('settings_modal_title', 'Global Preferences')"
+        >
+          <Settings class="w-4 h-4 text-slate-600 shrink-0" />
+        </button>
+
+        <!-- All Tools Menu Button (Drawer trigger) -->
+        <button 
+          @click="$emit('open-drawer')" 
+          class="p-2 text-blue-600 active:bg-blue-50 rounded-xl transition cursor-pointer shrink-0 border border-blue-200/80 bg-blue-50/50 shadow-2xs"
+          :title="t('nav_all_tools', 'All Tools')"
+        >
+          <Sparkles class="w-4 h-4 text-amber-500 shrink-0" />
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. DESKTOP VIEW ONLY (>= 768px): Full-Featured Desktop Bar -->
+    <div class="hidden md:flex max-w-screen-2xl mx-auto px-3 sm:px-5 lg:px-6 h-14 items-center justify-between gap-2 sm:gap-4">
       
       <!-- 1. Left: Brand & Local Trust Mini Badge -->
       <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
@@ -346,6 +408,7 @@ import { currentLang, setLanguage, t } from '../i18n';
 import { recordToolUsage } from '../utils/usageTracker';
 import { siteConfig } from '../config/siteConfig';
 import { isProSupporter, activeTierLabel } from '../utils/security/certificateStore';
+import { usePwaInstall } from '../utils/usePwaInstall';
 
 const props = defineProps({
   activeTab: {
@@ -354,7 +417,7 @@ const props = defineProps({
   }
 });
 
-const emit = defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-about', 'open-logs', 'open-enterprise']);
+const emit = defineEmits(['switch-tab', 'open-feedback', 'open-privacy', 'open-settings', 'open-about', 'open-logs', 'open-enterprise', 'open-drawer']);
 
 // Primary Core Tools (Strictly fixed 5 pillars for predictable muscle memory)
 const primaryTools = [
@@ -420,36 +483,13 @@ function handleOutsideClick(e) {
 }
 
 // PWA Install State & Logic
-const deferredInstallPrompt = ref(null);
-const canInstallPwa = computed(() => !!deferredInstallPrompt.value);
-
-function handleBeforeInstallPrompt(e) {
-  e.preventDefault();
-  deferredInstallPrompt.value = e;
-}
-
-function handleAppInstalled() {
-  deferredInstallPrompt.value = null;
-}
-
-async function installPwa() {
-  if (!deferredInstallPrompt.value) return;
-  deferredInstallPrompt.value.prompt();
-  const { outcome } = await deferredInstallPrompt.value.userChoice;
-  if (outcome === 'accepted') {
-    deferredInstallPrompt.value = null;
-  }
-}
+const { canInstallPwa, installPwa } = usePwaInstall();
 
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick);
-  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  window.addEventListener('appinstalled', handleAppInstalled);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleOutsideClick);
-  window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  window.removeEventListener('appinstalled', handleAppInstalled);
 });
 </script>

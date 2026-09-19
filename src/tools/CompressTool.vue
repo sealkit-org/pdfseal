@@ -1,11 +1,11 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
-    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
             <Minimize2 class="w-5 h-5" />
           </div>
           <div>
@@ -27,25 +27,25 @@
         @dragleave.prevent="isDragOver = false"
         @drop.prevent="onDrop"
         :class="[
-          'flex-1 border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center transition flex flex-col items-center justify-center my-4',
+          'flex-1 border-2 border-dashed rounded-2xl sm:rounded-3xl p-6 sm:p-14 text-center transition flex flex-col items-center justify-center my-3 sm:my-4',
           isDragOver ? 'border-amber-500 bg-amber-50/50 scale-[0.99]' : 'border-slate-200 hover:border-amber-400 bg-slate-50/50'
         ]"
       >
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           class="hidden" 
           @change="onFileSelected" 
         >
 
-        <div class="w-16 h-16 bg-amber-100/60 text-amber-600 rounded-3xl flex items-center justify-center mb-4 shadow-sm">
-          <Minimize2 class="w-8 h-8" />
+        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-amber-100/60 text-amber-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
+          <Minimize2 class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
         <h3 class="text-base sm:text-lg font-bold text-slate-800">
           {{ t('compress_drop_title') }}
         </h3>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm">
+        <p class="text-xs text-slate-400 mt-1 max-w-sm hidden sm:block">
           {{ t('compress_drop_subtitle') }}
         </p>
 
@@ -160,35 +160,35 @@
               </button>
             </div>
 
-            <!-- Compression Preset Selector Cards (4 Options) -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+            <!-- Compression Preset Selector Cards (2x2 Grid on Mobile, 4 Cols on Desktop) -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
                 <!-- 1. Balanced Compression (Recommended) -->
                 <div 
                   @click="selectedLevel = 'balanced'"
                   :class="[
-                    'p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                    'p-2.5 sm:p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
                     selectedLevel === 'balanced' 
                       ? 'border-amber-500 bg-amber-50/40 shadow-sm' 
                       : 'border-slate-200 hover:border-amber-300 bg-white'
                   ]"
                 >
                   <div>
-                    <div class="flex items-start justify-between gap-1.5 mb-1">
+                    <div class="flex items-start justify-between gap-1 mb-1">
                       <div class="flex items-start space-x-1.5 min-w-0 flex-1">
                         <span class="w-2 h-2 rounded-full bg-amber-500 shrink-0 mt-1"></span>
-                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug">
+                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug truncate sm:whitespace-normal">
                           {{ t('compress_mode_balanced_title') }}
                         </span>
                       </div>
-                      <span class="text-[10px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
+                      <span class="text-[9px] sm:text-[10px] font-bold text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
                         -50% ~ -75%
                       </span>
                     </div>
-                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-2 sm:line-clamp-none">
                       {{ t('compress_mode_balanced_desc') }}
                     </p>
                   </div>
-                  <div class="text-[10px] font-mono text-slate-400 mt-2 font-semibold">
+                  <div class="text-[9px] sm:text-[10px] font-mono text-slate-400 mt-1.5 sm:mt-2 font-semibold">
                     ~200-300 DPI
                   </div>
                 </div>
@@ -197,29 +197,29 @@
                 <div 
                   @click="selectedLevel = 'extreme'"
                   :class="[
-                    'p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                    'p-2.5 sm:p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
                     selectedLevel === 'extreme' 
                       ? 'border-amber-500 bg-amber-50/40 shadow-sm' 
                       : 'border-slate-200 hover:border-amber-300 bg-white'
                   ]"
                 >
                   <div>
-                    <div class="flex items-start justify-between gap-1.5 mb-1">
+                    <div class="flex items-start justify-between gap-1 mb-1">
                       <div class="flex items-start space-x-1.5 min-w-0 flex-1">
                         <span class="w-2 h-2 rounded-full bg-rose-500 shrink-0 mt-1"></span>
-                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug">
+                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug truncate sm:whitespace-normal">
                           {{ t('compress_mode_extreme_title') }}
                         </span>
                       </div>
-                      <span class="text-[10px] font-bold text-rose-700 bg-rose-100/80 px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
+                      <span class="text-[9px] sm:text-[10px] font-bold text-rose-700 bg-rose-100/80 px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
                         -75% ~ -90%
                       </span>
                     </div>
-                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-2 sm:line-clamp-none">
                       {{ t('compress_mode_extreme_desc') }}
                     </p>
                   </div>
-                  <div class="text-[10px] font-mono text-slate-400 mt-2 font-semibold">
+                  <div class="text-[9px] sm:text-[10px] font-mono text-slate-400 mt-1.5 sm:mt-2 font-semibold">
                     ~120-150 DPI
                   </div>
                 </div>
@@ -228,29 +228,29 @@
                 <div 
                   @click="selectedLevel = 'target'"
                   :class="[
-                    'p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                    'p-2.5 sm:p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
                     selectedLevel === 'target' 
                       ? 'border-amber-500 bg-amber-50/40 shadow-sm' 
                       : 'border-slate-200 hover:border-amber-300 bg-white'
                   ]"
                 >
                   <div>
-                    <div class="flex items-start justify-between gap-1.5 mb-1">
+                    <div class="flex items-start justify-between gap-1 mb-1">
                       <div class="flex items-start space-x-1.5 min-w-0 flex-1">
                         <span class="w-2 h-2 rounded-full bg-indigo-500 shrink-0 mt-1"></span>
-                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug">
+                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug truncate sm:whitespace-normal">
                           {{ t('compress_mode_target_title') }}
                         </span>
                       </div>
-                      <span class="text-[10px] font-bold text-indigo-700 bg-indigo-100/80 px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
+                      <span class="text-[9px] sm:text-[10px] font-bold text-indigo-700 bg-indigo-100/80 px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
                         ≤ {{ targetSizeMb }} MB
                       </span>
                     </div>
-                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-2 sm:line-clamp-none">
                       {{ t('compress_mode_target_desc') }}
                     </p>
                   </div>
-                  <div class="text-[10px] font-mono text-indigo-600 mt-2 font-bold flex items-center space-x-1">
+                  <div class="text-[9px] sm:text-[10px] font-mono text-indigo-600 mt-1.5 sm:mt-2 font-bold flex items-center space-x-1">
                     <Target class="w-3 h-3" />
                     <span>{{ t('compress_target_badge') }}</span>
                   </div>
@@ -260,29 +260,29 @@
                 <div 
                   @click="selectedLevel = 'lossless'"
                   :class="[
-                    'p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
+                    'p-2.5 sm:p-3 rounded-2xl border-2 transition cursor-pointer flex flex-col justify-between relative select-none',
                     selectedLevel === 'lossless' 
                       ? 'border-amber-500 bg-amber-50/40 shadow-sm' 
                       : 'border-slate-200 hover:border-amber-300 bg-white'
                   ]"
                 >
                   <div>
-                    <div class="flex items-start justify-between gap-1.5 mb-1">
+                    <div class="flex items-start justify-between gap-1 mb-1">
                       <div class="flex items-start space-x-1.5 min-w-0 flex-1">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0 mt-1"></span>
-                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug">
+                        <span class="text-xs sm:text-sm font-extrabold text-slate-800 leading-snug truncate sm:whitespace-normal">
                           {{ t('compress_mode_lossless_title') }}
                         </span>
                       </div>
-                      <span class="text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
+                      <span class="text-[9px] sm:text-[10px] font-bold text-emerald-700 bg-emerald-100/80 px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap">
                         100% {{ t('compress_badge_lossless_ratio', 'Lossless') }}
                       </span>
                     </div>
-                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">
+                    <p class="text-[10px] sm:text-[11px] text-slate-500 font-medium leading-relaxed line-clamp-2 sm:line-clamp-none">
                       {{ t('compress_mode_lossless_desc') }}
                     </p>
                   </div>
-                  <div class="text-[10px] font-mono text-slate-400 mt-2 font-semibold">
+                  <div class="text-[9px] sm:text-[10px] font-mono text-slate-400 mt-1.5 sm:mt-2 font-semibold">
                     {{ t('compress_lossless_hint') }}
                   </div>
                 </div>
@@ -377,44 +377,46 @@
             </div>
           </div>
 
-          <!-- Bottom Execution & Output Settings Bar (Identical to MergeTool) -->
-          <div class="shrink-0 pt-3 sm:pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <!-- Output Filename & Vault Auto-Save Setting -->
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex items-center space-x-1.5">
-                <label class="text-xs text-slate-500 font-semibold shrink-0">
-                  {{ t('vault_field_name') }}:
+          <!-- Bottom Execution & Output Settings Bar (Sticky Bottom on Mobile) -->
+          <div class="shrink-0 pt-2 sticky bottom-14 md:static z-20 bg-white/95 backdrop-blur-md -mx-3.5 sm:mx-0 px-3.5 sm:px-0 pb-2 sm:pb-0 border-t border-slate-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:shadow-none">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+              <!-- Output Filename & Vault Auto-Save Setting (Desktop visible, phone hidden for thumb bar) -->
+              <div class="hidden sm:flex flex-wrap items-center gap-3">
+                <div class="flex items-center space-x-1.5">
+                  <label class="text-xs text-slate-500 font-semibold shrink-0">
+                    {{ t('vault_field_name') }}:
+                  </label>
+                  <input 
+                    v-model="customOutputBaseName" 
+                    type="text" 
+                    :placeholder="defaultFileNamePlaceholder"
+                    class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
+                  >
+                </div>
+
+                <!-- Auto-save to Vault Checkbox -->
+                <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                  <input 
+                    type="checkbox" 
+                    v-model="autoSaveToVault" 
+                    class="w-3.5 h-3.5 rounded-sm border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
+                  >
+                  <FolderLock class="w-3.5 h-3.5 text-amber-600" />
+                  <span>{{ t('vault_autosave_checkbox') }}</span>
                 </label>
-                <input 
-                  v-model="customOutputBaseName" 
-                  type="text" 
-                  :placeholder="defaultFileNamePlaceholder"
-                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-amber-500 outline-hidden font-medium text-slate-700 w-44 sm:w-56"
-                >
               </div>
 
-              <!-- Auto-save to Vault Checkbox -->
-              <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
-                <input 
-                  type="checkbox" 
-                  v-model="autoSaveToVault" 
-                  class="w-3.5 h-3.5 rounded-sm border-slate-300 text-amber-600 focus:ring-amber-500 cursor-pointer"
-                >
-                <FolderLock class="w-3.5 h-3.5 text-amber-600" />
-                <span>{{ t('vault_autosave_checkbox') }}</span>
-              </label>
+              <!-- Main Compress Action Button -->
+              <button 
+                @click="executeCompress" 
+                :disabled="isProcessing"
+                class="w-full sm:w-auto sm:ml-auto bg-amber-600 hover:bg-amber-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-amber-600/25 cursor-pointer"
+              >
+                <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+                <Minimize2 v-else class="w-4 h-4" />
+                <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('compress_btn_action') }}</span>
+              </button>
             </div>
-
-            <!-- Main Compress Action Button -->
-            <button 
-              @click="executeCompress" 
-              :disabled="isProcessing"
-              class="w-full sm:w-auto bg-amber-600 hover:bg-amber-700 active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 cursor-pointer ml-auto"
-            >
-              <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
-              <Minimize2 v-else class="w-4 h-4" />
-              <span>{{ isProcessing ? (t('loading') || 'Processing...') : t('compress_btn_action') }}</span>
-            </button>
           </div>
         </div>
       </div>

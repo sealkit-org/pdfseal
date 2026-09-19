@@ -17,12 +17,14 @@
       @open-settings="isSettingsOpen = true"
       @open-logs="isLogsOpen = true"
       @open-enterprise="isEnterpriseOpen = true"
+      @open-drawer="isDrawerOpen = true"
     />
 
     <!-- Main Workspace (Clean, Uncluttered, 100% Focused) -->
     <main 
       :class="[
-        'flex-1 w-full mx-auto px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5 flex flex-col transition-all duration-300 min-h-0',
+        'flex-1 w-full mx-auto px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5 flex flex-col transition-all duration-300 min-h-0 pb-16 md:pb-2.5',
+
         hasActiveFile ? 'max-w-screen-2xl' : 'max-w-7xl'
       ]"
     >
@@ -40,12 +42,32 @@
       </router-view>
     </main>
 
-    <!-- Ultra-Slim Minimalist Footer (Web Only: Hidden in PWA/Desktop or when File is Active) -->
+    <!-- Ultra-Slim Minimalist Footer (Desktop Web Only: Hidden on Mobile & PWA/Desktop wrappers or when File is Active) -->
     <Footer 
       v-if="!isStandalone && !hasActiveFile"
+      class="hidden md:block"
       @open-feedback="isFeedbackOpen = true" 
       @open-privacy="isPrivacyOpen = true"
       @open-enterprise="isEnterpriseOpen = true"
+    />
+
+    <!-- Mobile Bottom Navigation Bar (Phone view only) -->
+    <MobileBottomNav 
+      :active-tab="activeTab"
+      :is-drawer-open="isDrawerOpen"
+      @switch-tab="switchTool"
+      @open-drawer="isDrawerOpen = true"
+    />
+
+    <!-- Mobile Full Tools Drawer (Phone view only) -->
+    <MobileToolsDrawer 
+      :is-open="isDrawerOpen"
+      :active-tab="activeTab"
+      @close="isDrawerOpen = false"
+      @switch-tab="switchTool"
+      @open-privacy="isPrivacyOpen = true"
+      @open-settings="isSettingsOpen = true"
+      @open-logs="isLogsOpen = true"
     />
 
     <!-- Diagnostic Logs Modal -->
@@ -85,6 +107,8 @@ import { ref, computed, watch, provide, onMounted, onUnmounted, defineAsyncCompo
 import { useRoute, useRouter } from 'vue-router';
 import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
+import MobileBottomNav from './components/MobileBottomNav.vue';
+import MobileToolsDrawer from './components/MobileToolsDrawer.vue';
 const FeedbackModal = defineAsyncComponent(() => import('./components/FeedbackModal.vue'));
 const PrivacyModal = defineAsyncComponent(() => import('./components/PrivacyModal.vue'));
 const GlobalSettingsModal = defineAsyncComponent(() => import('./components/GlobalSettingsModal.vue'));
@@ -98,6 +122,7 @@ const route = useRoute();
 const router = useRouter();
 
 const isSettingsOpen = ref(false);
+const isDrawerOpen = ref(false);
 
 const isLogsOpen = ref(false);
 const isFeedbackOpen = ref(false);
