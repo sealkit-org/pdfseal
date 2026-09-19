@@ -59,6 +59,7 @@ async function main() {
   } finally {
     await browser.close();
     preview.kill();
+    process.exit(0);
   }
 }
 
