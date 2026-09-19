@@ -2,22 +2,69 @@
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
     <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
-      <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
-        <div class="flex items-center space-x-3">
+      <!-- Universal File Input -->
+      <input 
+        ref="fileInputRef" 
+        type="file" 
+        accept="application/pdf,.pdf" 
+        class="hidden" 
+        @change="onFileSelected" 
+      >
+
+      <!-- Top Title Header (Fused Compact Header with Dynamic Subtitle & Action Bar) -->
+      <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 sm:pb-3 border-b border-slate-100 shrink-0">
+        <div class="flex items-center space-x-3 min-w-0">
           <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
-            <Unlock class="w-5 h-5" />
+            <Unlock class="w-4.5 h-4.5 sm:w-5 sm:h-5" />
           </div>
-          <div>
+          <div class="min-w-0">
             <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
               {{ t('unlock_title') }}
             </h2>
-            <p class="text-xs text-slate-400 font-medium hidden sm:block mt-0.5">
+            <!-- Dynamic Subtitle: File selection info when active, otherwise tool description -->
+            <div v-if="docBytes && !isProcessing && !lastExportedFile" class="flex items-center space-x-2 mt-0.5 min-w-0">
+              <span class="text-xs sm:text-sm font-extrabold text-slate-800 shrink-0">
+                {{ originalSizeMb }} MB · {{ totalPages }} {{ t('pages_label') || 'pages' }}
+              </span>
+              <span class="text-xs font-bold text-slate-700 truncate max-w-[140px] sm:max-w-xs" :title="filename">
+                {{ filename }}
+              </span>
+            </div>
+            <p v-else class="text-xs text-slate-400 font-medium hidden sm:block mt-0.5">
               {{ t('unlock_desc') }}
             </p>
           </div>
         </div>
 
+        <!-- Quick Action Buttons (Fused into Top Header when file is active) -->
+        <div v-if="docBytes && !isProcessing && !lastExportedFile" class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          <!-- Choose Another Local File -->
+          <button 
+            @click="fileInputRef.click()"
+            class="text-xs text-emerald-600 hover:bg-emerald-50 font-semibold px-2.5 py-1.5 rounded-xl border border-emerald-200 transition flex items-center space-x-1 cursor-pointer"
+          >
+            <RefreshCw class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ t('btn_choose_another') || 'Choose Another File' }}</span>
+          </button>
+
+          <!-- Choose From Vault -->
+          <button 
+            @click="isVaultPickerOpen = true"
+            class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
+          >
+            <FolderLock class="w-3.5 h-3.5 text-emerald-600" />
+            <span class="hidden sm:inline">{{ t('merge_btn_from_vault') || 'Pick from Vault' }}</span>
+          </button>
+
+          <!-- Clear / Reset -->
+          <button 
+            @click="reset" 
+            data-testid="unlock-reset-btn"
+            class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
+          >
+            {{ t('btn_clear_all') || 'Clear All' }}
+          </button>
+        </div>
       </div>
 
       <!-- 1. EMPTY STATE DROPZONE (Spacious with Dual-Source Import) -->
@@ -31,14 +78,6 @@
           isDragOver ? 'border-emerald-500 bg-emerald-50/50 scale-[0.99]' : 'border-slate-200 hover:border-emerald-400 bg-slate-50/50'
         ]"
       >
-        <input 
-          ref="fileInputRef" 
-          type="file" 
-          accept="application/pdf,.pdf" 
-          class="hidden" 
-          @change="onFileSelected" 
-        >
-
         <div class="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-100/60 text-emerald-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
           <Unlock class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
@@ -74,7 +113,7 @@
       </div>
 
       <!-- 2. ACTIVE UNLOCK WORKSPACE OR UNIFIED RESULT DELIVERY -->
-      <div v-else class="flex-1 flex flex-col justify-between pt-4">
+      <div v-else :class="['flex-1 flex flex-col justify-between min-h-0 overflow-hidden', isProcessing || lastExportedFile ? 'pt-4' : 'pt-2.5 sm:pt-3']">
         <!-- 2A. Unified Processing & Result Delivery View -->
         <ResultDeliveryView 
           v-if="isProcessing || lastExportedFile"
@@ -99,33 +138,7 @@
 
         <!-- 2B. Staging Workspace & Bottom Execution Bar -->
         <div v-else class="flex-1 flex flex-col justify-between min-h-0">
-        <div class="space-y-4">
-          <!-- File Summary Card -->
-          <div class="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50/90 border border-slate-200/80">
-            <div class="flex items-center space-x-3 min-w-0">
-              <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-xs shrink-0">
-                PDF
-              </div>
-              <div class="min-w-0">
-                <p class="text-xs font-bold text-slate-800 truncate max-w-xs sm:max-w-md" :title="filename">
-                  {{ filename }}
-                </p>
-                <div class="flex items-center space-x-2 text-[11px] text-slate-400 font-mono mt-0.5">
-                  <span class="font-bold text-slate-600">{{ originalSizeMb }} MB</span>
-                  <span>•</span>
-                  <span>{{ totalPages }} {{ t('pages_label') || 'pages' }}</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Replace Button -->
-            <button 
-              @click="reset" 
-              class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-2.5 py-1.5 rounded-xl hover:bg-slate-200/60 transition cursor-pointer"
-            >
-              {{ t('btn_reset_file') || 'Reset / Change File' }}
-            </button>
-          </div>
+        <div class="space-y-3 sm:space-y-3.5">
 
           <!-- Security Status & Decryption Input Card -->
           <div class="p-4 rounded-2xl border bg-slate-50/60 border-slate-200 space-y-3">
@@ -259,7 +272,8 @@ import {
   AlertCircle, 
   Eye, 
   EyeOff, 
-  Loader2 
+  Loader2,
+  RefreshCw 
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { t } from '../i18n';
@@ -370,6 +384,7 @@ async function loadFile(file, password = '') {
     });
     const pdf = await loadingTask.promise;
     totalPages.value = pdf.numPages;
+    try { await pdf.destroy(); } catch (e) {}
   } catch (e) {
     totalPages.value = 1;
   }

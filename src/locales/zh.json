@@ -825,6 +825,7 @@
   "compress_scanned_warn_desc": "该文档主要由扫描图像构成。「无损优化」不会压缩图像像素。如需大幅减小体积，建议选用「高清推荐 (200~300 DPI)」，兼顾清晰度的同时可缩减 50%~75%！",
   "img2pdf_selected": "已选",
   "img2pdf_images": "张图片",
+  "img2pdf_selected_hint": "拖拽卡片调整图片顺序，支持单独旋转微调",
   "img2pdf_add_more": "继续添加",
   "img2pdf_clear_all": "清空全部",
   "action_delete": "删除",

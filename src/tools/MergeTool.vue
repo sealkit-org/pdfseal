@@ -2,22 +2,79 @@
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
     <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
-      <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
-        <div class="flex items-center space-x-3">
+      <!-- Universal File Input -->
+      <input 
+        ref="fileInputRef" 
+        type="file" 
+        multiple 
+        accept="application/pdf,.pdf" 
+        class="hidden" 
+        @change="onFileSelected" 
+      >
+
+      <!-- Top Title Header (Fused Compact Header with Dynamic Subtitle & Action Bar) -->
+      <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 sm:pb-3 border-b border-slate-100 shrink-0">
+        <div class="flex items-center space-x-3 min-w-0">
           <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
             <Files class="w-5 h-5" />
           </div>
-          <div>
+          <div class="min-w-0">
             <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
               {{ t('merge_title') }}
             </h2>
-            <p class="text-xs text-slate-400 font-medium hidden sm:block mt-0.5">
+            <!-- Dynamic Subtitle: File selection info when active, otherwise tool description -->
+            <div v-if="files.length > 0 && !isProcessing && !lastExportedFile" class="flex items-center space-x-2 mt-0.5">
+              <span class="text-xs sm:text-sm font-extrabold text-slate-800">
+                {{ t('merge_selected_title') }} ({{ files.length }})
+              </span>
+              <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">
+                {{ t('merge_selected_hint') }}
+              </span>
+            </div>
+            <p v-else class="text-xs text-slate-400 font-medium hidden sm:block mt-0.5">
               {{ t('merge_desc') }}
             </p>
           </div>
         </div>
 
+        <!-- Quick Action Buttons (Fused into Top Header when files are active) -->
+        <div v-if="files.length > 0 && !isProcessing && !lastExportedFile" class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          <!-- Add from Computer -->
+          <button 
+            @click="fileInputRef.click()"
+            class="text-xs text-blue-600 hover:bg-blue-50 font-semibold px-2.5 py-1.5 rounded-xl border border-blue-200 transition flex items-center space-x-1 cursor-pointer"
+          >
+            <Plus class="w-3.5 h-3.5" />
+            <span>{{ t('merge_btn_from_local') }}</span>
+          </button>
+
+          <!-- Add from Vault -->
+          <button 
+            @click="isVaultPickerOpen = true"
+            class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
+          >
+            <FolderLock class="w-3.5 h-3.5 text-blue-600" />
+            <span>{{ t('merge_btn_from_vault') }}</span>
+          </button>
+
+          <!-- Reverse Order -->
+          <button 
+            @click="reverseFiles" 
+            class="text-xs text-slate-600 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
+            :title="t('merge_btn_reverse')"
+          >
+            <ArrowUpDown class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ t('merge_btn_reverse') }}</span>
+          </button>
+
+          <!-- Clear All -->
+          <button 
+            @click="clearAll" 
+            class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
+          >
+            {{ t('btn_clear_all') }}
+          </button>
+        </div>
       </div>
 
       <!-- 1. EMPTY STATE DROPZONE (Spacious with Dual-Source Import) -->
@@ -31,15 +88,6 @@
           isDragOver ? 'border-blue-500 bg-blue-50/50 scale-[0.99]' : 'border-slate-200 hover:border-blue-400 bg-slate-50/50'
         ]"
       >
-        <input 
-          ref="fileInputRef" 
-          type="file" 
-          multiple 
-          accept="application/pdf,.pdf" 
-          class="hidden" 
-          @change="onFileSelected" 
-        >
-
         <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-100/60 text-blue-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
           <Files class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
@@ -75,7 +123,7 @@
       </div>
 
       <!-- 2. ACTIVE ASSEMBLY WORKSPACE OR UNIFIED RESULT DELIVERY -->
-      <div v-else class="flex-1 flex flex-col justify-between pt-4">
+      <div v-else :class="['flex-1 flex flex-col justify-between min-h-0', isProcessing || lastExportedFile ? 'pt-4' : 'pt-2.5 sm:pt-3']">
         <!-- 2A. Unified Processing & Result Delivery View -->
         <ResultDeliveryView 
           v-if="isProcessing || lastExportedFile"
@@ -100,68 +148,8 @@
 
         <!-- 2B. Staging Workspace & Bottom Execution Bar -->
         <div v-else class="flex-1 flex flex-col justify-between min-h-0">
-          <!-- Assembly Control Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 shrink-0">
-            <div class="flex items-center space-x-2">
-              <span class="text-xs sm:text-sm font-extrabold text-slate-800">
-                {{ t('merge_selected_title') }} ({{ files.length }})
-              </span>
-              <span class="text-[11px] text-slate-400 font-medium hidden sm:inline">
-                {{ t('merge_selected_hint') }}
-              </span>
-            </div>
-
-            <!-- Quick Action Buttons -->
-            <div class="flex items-center space-x-1.5 sm:space-x-2">
-              <!-- Add from Computer -->
-              <button 
-                @click="fileInputRef.click()"
-                class="text-xs text-blue-600 hover:bg-blue-50 font-semibold px-2.5 py-1.5 rounded-xl border border-blue-200 transition flex items-center space-x-1 cursor-pointer"
-              >
-                <Plus class="w-3.5 h-3.5" />
-                <span>{{ t('merge_btn_from_local') }}</span>
-              </button>
-
-              <!-- Add from Vault -->
-              <button 
-                @click="isVaultPickerOpen = true"
-                class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
-              >
-                <FolderLock class="w-3.5 h-3.5 text-blue-600" />
-                <span>{{ t('merge_btn_from_vault') }}</span>
-              </button>
-
-              <!-- Reverse Order -->
-              <button 
-                @click="reverseFiles" 
-                class="text-xs text-slate-600 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
-                :title="t('merge_btn_reverse')"
-              >
-                <ArrowUpDown class="w-3.5 h-3.5" />
-                <span class="hidden sm:inline">{{ t('merge_btn_reverse') }}</span>
-              </button>
-
-              <!-- Clear All -->
-              <button 
-                @click="clearAll" 
-                class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
-              >
-                {{ t('btn_clear_all') }}
-              </button>
-            </div>
-          </div>
-
-          <input 
-            ref="fileInputRef" 
-            type="file" 
-            multiple 
-            accept="application/pdf,.pdf" 
-            class="hidden" 
-            @change="onFileSelected" 
-          >
-
           <!-- Sortable Assembly Cards Board -->
-          <div class="flex-1 my-3 overflow-y-auto min-h-[200px] max-h-[calc(100vh-350px)] pr-1 space-y-2">
+          <div class="flex-1 my-2 sm:my-2.5 overflow-y-auto min-h-[160px] max-h-[calc(100vh-320px)] pr-1 space-y-2">
             <div 
               v-for="(f, idx) in files" 
               :key="f.id || f.name + idx"
@@ -254,7 +242,7 @@
           </div>
 
           <!-- Bottom Execution & Output Settings Bar (Sticky Bottom on Mobile) -->
-          <div class="shrink-0 pt-2 sticky bottom-14 md:static z-20 bg-white/95 backdrop-blur-md -mx-3.5 sm:mx-0 px-3.5 sm:px-0 pb-2 sm:pb-0 border-t border-slate-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:shadow-none">
+          <div class="shrink-0 pt-2.5 sm:pt-3 sticky bottom-14 md:static z-20 bg-white/95 backdrop-blur-md -mx-3.5 sm:mx-0 px-3.5 sm:px-0 pb-1 sm:pb-0 border-t border-slate-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:shadow-none">
             <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
               <!-- Output Filename & Vault Auto-Save Setting (Desktop visible, phone hidden for thumb bar) -->
               <div class="hidden sm:flex flex-wrap items-center gap-3">

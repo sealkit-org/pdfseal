@@ -826,6 +826,7 @@
   "compress_scanned_warn_desc": "Este documento contiene principalmente imágenes. El modo \"Sin pérdidas\" NO comprimirá los píxeles de las imágenes. Para reducir significativamente el tamaño, elija \"Alta Calidad (200~300 DPI)\", ahorrando entre un 50% y un 75%.",
   "img2pdf_selected": "Seleccionado",
   "img2pdf_images": "imágenes",
+  "img2pdf_selected_hint": "Arrastre tarjetas para reordenar, o gire imágenes individuales",
   "img2pdf_add_more": "Añadir Más",
   "img2pdf_clear_all": "Borrar Todo",
   "action_delete": "Eliminar",

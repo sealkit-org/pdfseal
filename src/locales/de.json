@@ -826,6 +826,7 @@
   "compress_scanned_warn_desc": "Dieses Dokument besteht hauptsächlich aus Bildern. Der Modus \"Verlustfrei\" komprimiert keine Bildpixel. Um die Dateigröße deutlich zu reduzieren, wählen Sie \"Hohe Qualität (200~300 DPI)\", was 50%~75% spart!",
   "img2pdf_selected": "Ausgewählt",
   "img2pdf_images": "Bilder",
+  "img2pdf_selected_hint": "Karten ziehen, um die Bildreihenfolge anzupassen",
   "img2pdf_add_more": "Mehr hinzufügen",
   "img2pdf_clear_all": "Alles löschen",
   "action_delete": "Löschen",
