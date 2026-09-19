@@ -131,6 +131,19 @@
             <span>{{ t('result_btn_redownload', 'Download Again') }}</span>
           </button>
 
+          <!-- Mobile / Native Share Sheet Button (Web Share API) -->
+          <button 
+            v-if="canShareFile"
+            type="button"
+            @click="handleNativeShare"
+            data-testid="delivery-native-share"
+            class="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white font-bold text-xs sm:text-sm shadow-md hover:shadow-emerald-600/25 transition flex items-center justify-center space-x-2 cursor-pointer"
+            :title="t('result_btn_share_desc', 'Share via system sheet or save to Files')"
+          >
+            <Share2 class="w-4 h-4" />
+            <span>{{ t('result_btn_share', 'Share / Save to Files') }}</span>
+          </button>
+
           <!-- Secondary: Start New Task (Reset) -->
           <button 
             type="button"
@@ -174,7 +187,8 @@ import {
   Download, 
   RotateCcw, 
   Pencil,
-  Lock
+  Lock,
+  Share2
 } from 'lucide-vue-next';
 import { t } from '../i18n';
 import NextActionBanner from './NextActionBanner.vue';
@@ -269,4 +283,47 @@ const fileExtBadge = computed(() => {
   if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'JPG';
   return 'PDF';
 });
+
+// Native Web Share API detection & execution
+const canShareFile = computed(() => {
+  if (typeof navigator === 'undefined' || !navigator.share || !navigator.canShare) return false;
+  return Boolean(props.file);
+});
+
+async function handleNativeShare() {
+  if (!props.file) return;
+  try {
+    let fileObj;
+    const fileName = props.file.name || 'document.pdf';
+    const isZip = fileName.toLowerCase().endsWith('.zip') || props.file.isZip;
+    const mimeType = isZip ? 'application/zip' : 'application/pdf';
+
+    if (props.file.blob instanceof Blob) {
+      fileObj = new File([props.file.blob], fileName, { type: props.file.blob.type || mimeType });
+    } else if (props.file.arrayBuffer) {
+      fileObj = new File([props.file.arrayBuffer], fileName, { type: mimeType });
+    } else if (props.file.data) {
+      fileObj = new File([props.file.data], fileName, { type: mimeType });
+    } else {
+      emit('redownload');
+      return;
+    }
+
+    if (navigator.canShare({ files: [fileObj] })) {
+      await navigator.share({
+        files: [fileObj],
+        title: fileName,
+        text: fileName
+      });
+    } else {
+      emit('redownload');
+    }
+  } catch (err) {
+    if (err.name !== 'AbortError') {
+      console.warn('Native share failed or unhandled:', err);
+      // Fallback to normal download if share failed unexpectedly
+      emit('redownload');
+    }
+  }
+}
 </script>

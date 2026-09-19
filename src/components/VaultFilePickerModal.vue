@@ -5,7 +5,7 @@
     @click.self="$emit('close')"
     @keydown.esc="$emit('close')"
   >
-    <div class="bg-white rounded-3xl max-w-3xl w-full h-[650px] max-h-[90vh] p-5 sm:p-6 shadow-2xl border border-slate-100 flex flex-col relative animate-in zoom-in-95 duration-200">
+    <div class="bg-white rounded-2xl sm:rounded-3xl max-w-3xl w-full h-[580px] sm:h-[650px] max-h-[92vh] p-4 sm:p-6 shadow-2xl border border-slate-100 flex flex-col relative animate-in zoom-in-95 duration-200">
       <!-- Header -->
       <div class="flex items-center justify-between pb-3 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-2.5">
@@ -53,7 +53,7 @@
           <button 
             @click="toggleSelectCurrentPage" 
             :disabled="filteredFiles.length === 0"
-            class="text-xs font-semibold text-blue-600 hover:bg-blue-50 disabled:opacity-40 disabled:hover:bg-transparent px-3 py-1.5 rounded-xl border border-blue-200/60 transition cursor-pointer"
+            class="text-xs font-semibold text-blue-600 hover:bg-blue-50 disabled:opacity-40 disabled:hover:bg-transparent px-3 py-1.5 rounded-xl border border-blue-200/60 transition cursor-pointer whitespace-nowrap"
           >
             {{ isAllCurrentPageSelected ? (t('btn_deselect_all') || 'Deselect All') : (t('btn_select_all') || 'Select All') }}
           </button>
@@ -64,21 +64,21 @@
       </div>
 
       <!-- Main Layout: Folder Sidebar + File List -->
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 pt-3 flex-1 overflow-hidden">
-        <!-- Folder Sidebar -->
-        <div class="md:col-span-1 border-r border-slate-100 pr-2 overflow-y-auto space-y-1">
+      <div class="flex flex-col md:grid md:grid-cols-4 gap-2.5 md:gap-4 pt-2.5 sm:pt-3 flex-1 overflow-hidden min-h-0">
+        <!-- Folder Sidebar (Horizontal scrollable pills on mobile, vertical sidebar on desktop) -->
+        <div class="flex md:flex-col overflow-x-auto md:overflow-x-visible pb-1.5 md:pb-0 gap-1.5 md:gap-1 border-b md:border-b-0 md:border-r border-slate-100 shrink-0 custom-scrollbar">
           <button 
             @click="activeFolderId = 'all'" 
             :class="[
-              'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer',
-              activeFolderId === 'all' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'
+              'px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer shrink-0 md:shrink md:w-full space-x-1.5 md:space-x-0 whitespace-nowrap',
+              activeFolderId === 'all' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80 md:border-transparent' : 'text-slate-600 hover:bg-slate-50 border border-slate-200/60 md:border-transparent bg-white md:bg-transparent'
             ]"
           >
             <span class="flex items-center space-x-1.5 truncate">
               <Folder class="w-3.5 h-3.5 shrink-0" />
               <span class="truncate">{{ t('vault_all_files') }}</span>
             </span>
-            <span class="text-[10px] bg-white px-1.5 py-0.2 rounded-full border border-slate-200 text-slate-500 font-mono">
+            <span class="text-[10px] bg-white px-1.5 py-0.2 rounded-full border border-slate-200 text-slate-500 font-mono ml-1">
               {{ files.length }}
             </span>
           </button>
@@ -86,15 +86,15 @@
           <button 
             @click="activeFolderId = 'default'" 
             :class="[
-              'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer',
-              activeFolderId === 'default' ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'
+              'px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer shrink-0 md:shrink md:w-full space-x-1.5 md:space-x-0 whitespace-nowrap',
+              activeFolderId === 'default' ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80 md:border-transparent' : 'text-slate-600 hover:bg-slate-50 border border-slate-200/60 md:border-transparent bg-white md:bg-transparent'
             ]"
           >
             <span class="flex items-center space-x-1.5 truncate">
               <Inbox class="w-3.5 h-3.5 shrink-0" />
               <span class="truncate">{{ t('vault_default_folder') }}</span>
             </span>
-            <span class="text-[10px] bg-white px-1.5 py-0.2 rounded-full border border-slate-200 text-slate-500 font-mono">
+            <span class="text-[10px] bg-white px-1.5 py-0.2 rounded-full border border-slate-200 text-slate-500 font-mono ml-1">
               {{ files.filter(f => f.folderId === 'default').length }}
             </span>
           </button>
@@ -102,28 +102,28 @@
           <button 
             @click="activeFolderId = 'export'" 
             :class="[
-              'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer',
-              activeFolderId === 'export' ? 'bg-emerald-50 text-emerald-700 font-bold' : 'text-slate-600 hover:bg-slate-50'
+              'px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer shrink-0 md:shrink md:w-full space-x-1.5 md:space-x-0 whitespace-nowrap',
+              activeFolderId === 'export' ? 'bg-emerald-50 text-emerald-700 font-bold border border-emerald-200/80 md:border-transparent' : 'text-slate-600 hover:bg-slate-50 border border-slate-200/60 md:border-transparent bg-white md:bg-transparent'
             ]"
           >
             <span class="flex items-center space-x-1.5 truncate">
               <FileCheck class="w-3.5 h-3.5 text-emerald-600 shrink-0" />
               <span class="truncate">{{ t('vault_exports_folder') }}</span>
             </span>
-            <span class="text-[10px] bg-white px-1.5 py-0.2 rounded-full border border-emerald-200 text-emerald-700 font-mono">
+            <span class="text-[10px] bg-white px-1.5 py-0.2 rounded-full border border-emerald-200 text-emerald-700 font-mono ml-1">
               {{ files.filter(f => f.category === 'export').length }}
             </span>
           </button>
 
           <!-- Custom Folders -->
-          <div v-if="folders.length > 0" class="pt-2 mt-1 border-t border-slate-100 space-y-1">
+          <template v-if="folders.length > 0">
             <button 
               v-for="folder in folders" 
               :key="folder.id"
               @click="activeFolderId = folder.id"
               :class="[
-                'w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer truncate',
-                activeFolderId === folder.id ? 'bg-blue-50 text-blue-700 font-bold' : 'text-slate-600 hover:bg-slate-50'
+                'px-2.5 py-1.5 rounded-xl text-xs font-semibold flex items-center justify-between transition cursor-pointer shrink-0 md:shrink md:w-full space-x-1.5 md:space-x-0 truncate whitespace-nowrap',
+                activeFolderId === folder.id ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80 md:border-transparent' : 'text-slate-600 hover:bg-slate-50 border border-slate-200/60 md:border-transparent bg-white md:bg-transparent'
               ]"
             >
               <span class="flex items-center space-x-1.5 truncate">
@@ -132,11 +132,11 @@
                 <span class="truncate">{{ folder.name }}</span>
               </span>
             </button>
-          </div>
+          </template>
         </div>
 
         <!-- Files Selection List with Zero-Scroll Pagination -->
-        <div class="md:col-span-3 flex flex-col justify-between overflow-hidden">
+        <div class="flex-1 md:col-span-3 flex flex-col justify-between overflow-hidden min-h-0">
           <!-- Empty View -->
           <div v-if="filteredFiles.length === 0" class="flex-1 flex flex-col items-center justify-center text-center p-8">
             <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 flex items-center justify-center text-xl mb-2">
@@ -242,8 +242,8 @@
       </div>
 
       <!-- Bottom Confirm Footer -->
-      <div class="pt-3.5 border-t border-slate-100 flex items-center justify-between shrink-0 gap-3">
-        <span class="text-xs text-slate-500">
+      <div class="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between shrink-0 gap-2.5 sm:gap-3">
+        <div class="text-xs text-slate-500 text-center sm:text-left truncate">
           <template v-if="multiple">
             {{ t('picker_selected_count') || 'Selected' }} 
             <strong class="text-blue-600 font-mono font-bold">{{ selectedCount }}</strong> 
@@ -258,13 +258,13 @@
               {{ t('picker_please_select_one') || 'Please select a PDF file' }}
             </span>
           </template>
-        </span>
+        </div>
 
-        <div class="flex items-center space-x-2">
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
           <button 
             type="button" 
             @click="$emit('close')" 
-            class="text-xs text-slate-500 hover:text-slate-800 font-semibold px-4 py-2 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+            class="flex-1 sm:flex-initial text-center py-2 sm:py-2 px-4 rounded-xl border border-slate-200 sm:border-transparent text-xs font-semibold text-slate-600 hover:bg-slate-100 transition cursor-pointer whitespace-nowrap"
           >
             {{ t('btn_cancel') }}
           </button>
@@ -272,7 +272,7 @@
             type="button" 
             @click="confirmSelection" 
             :disabled="selectedCount === 0 || isImporting"
-            class="bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition flex items-center space-x-1.5 shadow-md hover:shadow-blue-600/25 disabled:opacity-50 cursor-pointer"
+            class="flex-2 sm:flex-initial justify-center py-2 sm:py-2.5 px-5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-98 text-white text-xs font-bold transition flex items-center space-x-1.5 shadow-md hover:shadow-blue-600/25 disabled:opacity-50 cursor-pointer whitespace-nowrap"
           >
             <span v-if="!isImporting">
               {{ multiple ? `${t('picker_btn_confirm') || 'Import Selected Files'} (${selectedCount})` : (t('picker_btn_confirm_single') || 'Import Selected File') }}

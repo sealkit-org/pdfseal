@@ -1,9 +1,9 @@
 <template>
   <section class="w-full flex-1 flex flex-col min-h-0">
     <!-- Main Card Container matching Merge, Organize, and Split tools -->
-    <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-xl border border-slate-100 flex flex-col flex-1 min-h-0">
+    <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-5 shadow-xl border border-slate-100 flex flex-col flex-1 min-h-0">
       <!-- Integrated Header with Badge -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
           <div class="w-9 h-9 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shadow-2xs">
             <Stamp class="w-4.5 h-4.5" />
@@ -12,7 +12,7 @@
             <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
               {{ t('watermark_title') }}
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">
+            <p class="text-xs text-slate-500 mt-0.5 hidden sm:block">
               {{ t('watermark_desc') }}
             </p>
           </div>
@@ -27,24 +27,24 @@
         @dragleave.prevent="isDragOver = false"
         @drop.prevent="onDrop"
         :class="[
-          'flex-1 border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center transition flex flex-col items-center justify-center my-4 relative select-none',
+          'flex-1 border-2 border-dashed rounded-2xl sm:rounded-3xl p-6 sm:p-14 text-center transition flex flex-col items-center justify-center my-3 sm:my-4 relative select-none',
           isDragOver ? 'border-amber-500 bg-amber-50/50' : 'border-slate-200/90 hover:border-amber-400 bg-slate-50/40 hover:bg-slate-50/80'
         ]"
       >
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           class="hidden" 
           @change="onFileSelected" 
         >
         
-        <div class="w-16 h-16 bg-amber-50 text-amber-600 rounded-3xl flex items-center justify-center mb-3 shadow-inner">
-          <Stamp class="w-8 h-8" />
+        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-amber-50 text-amber-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 shadow-inner">
+          <Stamp class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
         
         <h3 class="text-base sm:text-lg font-bold text-slate-800">{{ t('watermark_drop_title') }}</h3>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm">{{ t('watermark_drop_subtitle') }}</p>
+        <p class="text-xs text-slate-400 mt-1 max-w-sm hidden sm:block">{{ t('watermark_drop_subtitle') }}</p>
         
         <!-- Dual Source Selection Buttons -->
         <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -146,7 +146,7 @@
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           class="hidden" 
           @change="onFileSelected" 
         >
@@ -299,12 +299,12 @@
           </div>
         </div>
 
-        <!-- Bottom Cluster: Output Settings Bar -->
-        <div class="shrink-0 space-y-2.5 pt-2">
+        <!-- Bottom Cluster: Output Settings & Sticky Action Bar -->
+        <div class="shrink-0 pt-2 sticky bottom-14 md:static z-20 bg-white/95 backdrop-blur-md -mx-3.5 sm:mx-0 px-3.5 sm:px-0 pb-2 sm:pb-0 border-t border-slate-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:shadow-none space-y-2">
           <!-- Assembly Bottom Action & Export Configuration Bar -->
-          <div class="pt-2.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <!-- Left: Output Filename & Auto-save Checkbox -->
-            <div class="flex flex-wrap items-center gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+            <!-- Left: Output Filename & Auto-save Checkbox (Desktop visible, phone hidden) -->
+            <div class="hidden sm:flex flex-wrap items-center gap-3">
               <div class="flex items-center space-x-1.5">
                 <label class="text-xs text-slate-500 font-semibold shrink-0">
                   {{ t('vault_field_name') }}:
@@ -328,12 +328,12 @@
               </label>
             </div>
 
-            <!-- Right: Execution Button -->
+            <!-- Right: Execution Button (Sticky & Full-width on mobile) -->
             <button 
               :disabled="isProcessing || isLoading"
               @click="executeWatermark" 
               data-testid="wm-download-btn"
-              class="bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-amber-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+              class="w-full sm:w-auto sm:ml-auto bg-amber-600 hover:bg-amber-700 active:scale-98 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-amber-600/25 disabled:opacity-50 cursor-pointer"
             >
               <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
               <Stamp v-else class="w-4 h-4" />

@@ -55,7 +55,7 @@ async function runImageToPdfE2eTest() {
     await fileInput.uploadFile(...imgPaths);
 
     await page.waitForFunction(() => {
-      return document.querySelectorAll('.grid-cols-2.sm\\:grid-cols-3 > div').length >= 3;
+      return document.querySelectorAll('.grid > div').length >= 3;
     }, { timeout: 15000 });
     console.log('  ✓ Rendered 3 image cards in workspace');
 

@@ -1,11 +1,11 @@
 <template>
   <section class="w-full flex-1 flex flex-col relative">
     <!-- Main Assembly Container (Unified White Card) -->
-    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
             <LayoutGrid class="w-5 h-5" />
           </div>
           <div>
@@ -26,25 +26,25 @@
         @dragleave.prevent="isDragOver = false"
         @drop.prevent="onDrop"
         :class="[
-          'flex-1 border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center transition flex flex-col items-center justify-center my-4',
+          'flex-1 border-2 border-dashed rounded-2xl sm:rounded-3xl p-6 sm:p-14 text-center transition flex flex-col items-center justify-center my-3 sm:my-4',
           isDragOver ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]' : 'border-slate-200 hover:border-indigo-400 bg-slate-50/50'
         ]"
       >
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           class="hidden" 
           @change="onFileSelected" 
         >
 
-        <div class="w-16 h-16 bg-indigo-100/60 text-indigo-600 rounded-3xl flex items-center justify-center mb-4 shadow-sm">
-          <LayoutGrid class="w-8 h-8" />
+        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-indigo-100/60 text-indigo-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
+          <LayoutGrid class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
         <h3 class="text-base sm:text-lg font-bold text-slate-800">
           {{ t('organize_drop_title') }}
         </h3>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm">
+        <p class="text-xs text-slate-400 mt-1 max-w-sm hidden sm:block">
           {{ t('organize_drop_subtitle') }}
         </p>
 
@@ -234,14 +234,14 @@
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           class="hidden" 
           @change="onFileSelected" 
         >
         <input 
           ref="appendFileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           multiple
           class="hidden" 
           @change="onAppendFilesSelected" 
@@ -360,42 +360,44 @@
             @close="showNextActions = false"
           />
 
-          <!-- Assembly Bottom Action & Export Configuration Bar -->
-          <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-            <!-- Left: Output Filename & Auto-save Checkbox -->
-            <div class="flex flex-wrap items-center gap-3">
-              <div class="flex items-center space-x-1.5">
-                <label class="text-xs text-slate-500 font-semibold shrink-0">
-                  {{ t('vault_field_name') }}:
+          <!-- Assembly Bottom Action & Export Configuration Bar (Sticky Bottom on Mobile) -->
+          <div class="shrink-0 pt-2 sticky bottom-14 md:static z-20 bg-white/95 backdrop-blur-md -mx-3.5 sm:mx-0 px-3.5 sm:px-0 pb-2 sm:pb-0 border-t border-slate-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:shadow-none">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+              <!-- Left: Output Filename & Auto-save Checkbox (Desktop visible, phone hidden) -->
+              <div class="hidden sm:flex flex-wrap items-center gap-3">
+                <div class="flex items-center space-x-1.5">
+                  <label class="text-xs text-slate-500 font-semibold shrink-0">
+                    {{ t('vault_field_name') }}:
+                  </label>
+                  <input 
+                    v-model="customOutputBaseName"
+                    type="text" 
+                    :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
+                    class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
+                  >
+                </div>
+                
+                <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
+                  <input 
+                    v-model="autoSaveToVault" 
+                    type="checkbox" 
+                    class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  >
+                  <span>{{ t('vault_autosave_checkbox') }}</span>
                 </label>
-                <input 
-                  v-model="customOutputBaseName"
-                  type="text" 
-                  :placeholder="t('vault_filename_placeholder') || 'Custom output filename (optional)'"
-                  class="text-xs bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-1.5 focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-hidden font-medium text-slate-700 w-44 sm:w-64"
-                >
               </div>
-              
-              <label class="flex items-center space-x-1.5 text-xs text-slate-600 cursor-pointer select-none">
-                <input 
-                  v-model="autoSaveToVault" 
-                  type="checkbox" 
-                  class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
-                >
-                <span>{{ t('vault_autosave_checkbox') }}</span>
-              </label>
-            </div>
 
-            <!-- Right: Big Primary Export Button (All Pages) -->
-            <button 
-              :disabled="isProcessing || isLoading || pages.length === 0"
-              @click="executeExport" 
-              class="bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-indigo-600/25 disabled:opacity-50 cursor-pointer ml-auto"
-            >
-              <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
-              <LayoutGrid v-else class="w-4 h-4" />
-              <span>{{ isProcessing ? (t('sealing_state') || 'Sealing...') : t('org_btn_export_all', { count: pages.length }) }}</span>
-            </button>
+              <!-- Right: Big Primary Export Button (All Pages) -->
+              <button 
+                :disabled="isProcessing || isLoading || pages.length === 0"
+                @click="executeExport" 
+                class="w-full sm:w-auto sm:ml-auto bg-indigo-600 hover:bg-indigo-700 active:scale-98 text-white font-bold text-sm px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-indigo-600/25 disabled:opacity-50 cursor-pointer"
+              >
+                <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
+                <LayoutGrid v-else class="w-4 h-4" />
+                <span>{{ isProcessing ? (t('sealing_state') || 'Sealing...') : t('org_btn_export_all', { count: pages.length }) }}</span>
+              </button>
+            </div>
           </div>
         </div>
         </div>
@@ -414,7 +416,7 @@
     >
       <div 
         v-if="selectedPageIds.size > 0 && !isProcessing && !lastExportedFile"
-        class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/90 hover:bg-slate-900 backdrop-blur-md text-white px-4 sm:px-5 py-2.5 rounded-2xl shadow-2xl border border-slate-700/70 flex items-center space-x-2.5 sm:space-x-3 select-none"
+        class="fixed bottom-18 sm:bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/90 hover:bg-slate-900 backdrop-blur-md text-white px-4 sm:px-5 py-2.5 rounded-2xl shadow-2xl border border-slate-700/70 flex items-center space-x-2.5 sm:space-x-3 select-none"
       >
         <!-- Selection count pill -->
         <div class="flex items-center space-x-2 pr-2.5 border-r border-slate-700/80">

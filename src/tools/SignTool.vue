@@ -1,11 +1,11 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
-    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
             <PenTool class="w-5 h-5" />
           </div>
           <div>
@@ -27,25 +27,25 @@
         @dragleave.prevent="isDragOver = false"
         @drop.prevent="onDrop"
         :class="[
-          'flex-1 border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center transition flex flex-col items-center justify-center my-4',
+          'flex-1 border-2 border-dashed rounded-2xl sm:rounded-3xl p-6 sm:p-14 text-center transition flex flex-col items-center justify-center my-3 sm:my-4',
           isDragOver ? 'border-indigo-500 bg-indigo-50/50 scale-[0.99]' : 'border-slate-200 hover:border-indigo-400 bg-slate-50/50'
         ]"
       >
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           class="hidden" 
           @change="onFileSelected" 
         >
 
-        <div class="w-16 h-16 bg-indigo-100/60 text-indigo-600 rounded-3xl flex items-center justify-center mb-4 shadow-sm">
-          <PenTool class="w-8 h-8" />
+        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-indigo-100/60 text-indigo-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
+          <PenTool class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
         <h3 class="text-base sm:text-lg font-bold text-slate-800">
           {{ t('sign_drop_title') }}
         </h3>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm">
+        <p class="text-xs text-slate-400 mt-1 max-w-sm hidden sm:block">
           {{ t('sign_drop_subtitle') }}
         </p>
 
@@ -507,7 +507,7 @@
                   width: `${sig.width}px`,
                   height: `${sig.height}px`
                 }"
-                class="absolute cursor-move border-2 border-dashed border-indigo-500 bg-indigo-50/15 group hover:border-indigo-600 transition-colors select-none"
+                class="absolute cursor-move border-2 border-dashed border-indigo-500 bg-indigo-50/15 group hover:border-indigo-600 transition-colors select-none touch-none"
                 @pointerdown="startDragSig(sig, $event)"
               >
                 <!-- Render Stamp Image -->
@@ -517,7 +517,7 @@
                 <button 
                   v-if="totalPages > 1"
                   @click.stop="openBatchModal(sig)"
-                  class="absolute -top-3.5 -left-1 px-1.5 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white flex items-center space-x-1 shadow-md hover:shadow-indigo-600/30 transition-all cursor-pointer z-10 text-[10px] font-bold select-none leading-none"
+                  class="absolute -top-3.5 -left-1 px-1.5 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white flex items-center space-x-1 shadow-md hover:shadow-indigo-600/30 transition-all cursor-pointer z-10 text-[10px] font-bold select-none leading-none touch-none"
                   :title="t('sign_batch_modal_title')"
                 >
                   <Layers class="w-3 h-3 shrink-0" />
@@ -527,18 +527,20 @@
                 <!-- Delete Badge -->
                 <button 
                   @click.stop="removeSignature(sig.id)"
-                  class="absolute -top-3.5 -right-2 w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 transition cursor-pointer z-10"
+                  class="absolute -top-3.5 -right-2 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 transition cursor-pointer z-10 touch-none"
                   :title="t('sign_action_delete', 'Delete')"
                 >
-                  <X class="w-3 h-3" />
+                  <X class="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                 </button>
 
                 <!-- Resize Handle (Bottom Right) -->
                 <div 
                   @pointerdown.stop="startResizeSig(sig, $event)"
-                  class="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-indigo-600 border border-white rounded-full cursor-nwse-resize shadow-xs z-10"
+                  class="absolute -bottom-2.5 -right-2.5 sm:-bottom-1.5 sm:-right-1.5 w-6 h-6 sm:w-3.5 sm:h-3.5 bg-indigo-600 border-2 border-white rounded-full cursor-nwse-resize shadow-xs z-10 touch-none flex items-center justify-center"
                   :title="t('sign_action_resize', 'Resize')"
-                ></div>
+                >
+                  <div class="w-1.5 h-1.5 bg-white/70 rounded-full sm:hidden"></div>
+                </div>
               </div>
             </div>
           </div>
