@@ -9,7 +9,7 @@ import { matchRules } from '../../redaction/ruleMatcher';
  *
  * 报告（附加在产出 item.redactReport）：
  *  - ruleStats：每条规则命中数（0 命中显性标出，调用方用 node_redact_report_zero_hits 提示）
- *  - imagePages：规则路径无法安全覆盖的图像型页（需用内容涂黑工具手动框选）
+ *  - imagePages：规则路径无法安全覆盖的图像型页（需用敏感信息脱敏工具手动框选）
  *
  * @param {Array<Object>} items
  * @param {Object} params - { rules: [{type:'keyword'|'regex', value, caseSensitive?}], style: 'black'|'white'|'stamp' }
@@ -19,7 +19,9 @@ import { matchRules } from '../../redaction/ruleMatcher';
 export async function executeRedactNode(items, params = {}, onProgress = () => {}) {
   const result = [];
   const rules = Array.isArray(params.rules) ? params.rules : [];
-  const style = ['black', 'white', 'stamp'].includes(params.style) ? params.style : 'black';
+  const style = ['black', 'white', 'gray', 'custom', 'stamp'].includes(params.style) ? params.style : 'black';
+  const customColor = params.customColor || '#000000';
+  const stampText = params.stampText || '[REDACTED]';
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
@@ -58,7 +60,7 @@ export async function executeRedactNode(items, params = {}, onProgress = () => {
       // 4. True Stream Redaction
       const { bytes, report } = await redactPdf(
         item.data instanceof Uint8Array ? item.data.slice() : new Uint8Array(item.data).slice(0),
-        { pages: pagesSpec, style }
+        { pages: pagesSpec, style, customColor, stampText }
       );
 
       if (!report.ok) {

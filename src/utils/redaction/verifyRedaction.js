@@ -68,8 +68,10 @@ async function defaultLoader(bytes, password) {
   if (password) params.password = password;
   if (isNode) {
     // Node（Vitest）：标准字体从本地文件系统取（尾斜杠必需，path.resolve 会吞掉尾斜杠）
-    const { pathToFileURL } = await import('node:url');
-    const { resolve } = await import('node:path');
+    const modUrl = 'node:url';
+    const modPath = 'node:path';
+    const { pathToFileURL } = await import(/* @vite-ignore */ modUrl);
+    const { resolve } = await import(/* @vite-ignore */ modPath);
     let fontUrl = pathToFileURL(
       resolve(process.cwd(), 'node_modules/pdfjs-dist/standard_fonts')
     ).href;

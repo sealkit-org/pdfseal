@@ -17,6 +17,7 @@ import { simulateOps } from '../src/utils/redaction/textState.js';
 import { FontWidthResolver } from '../src/utils/redaction/fontWidths.js';
 import { verifyRedaction } from '../src/utils/redaction/verifyRedaction.js';
 import { textItemToUserBBox } from '../src/utils/redaction/coords.js';
+import { UNIVERSAL_DATE_REGEX, getLocalizedPiiPresets, PII_PRESETS, matchRules } from '../src/utils/redaction/ruleMatcher.js';
 
 // ---------- 工具 ----------
 
@@ -188,6 +189,50 @@ describe('redactEngine: True Stream Redaction', () => {
     }
   }, 60000);
 
+  it('②-b 扩展遮罩样式：gray/custom 颜色与自定义 stampText', async () => {
+    const bytes = await makeTextPdf();
+    const before = await extractText(bytes);
+    const rect = findBBox(before, 0, 'SECRET-CONTENT-42');
+
+    // 1. Gray style
+    const { bytes: outGray } = await redactPdf(bytes, { pages: { 0: { rects: [rect] } }, style: 'gray' });
+    const docGray = await PDFDocument.load(outGray);
+    const contentGray = new TextDecoder('latin1').decode(getPageContentBytes(docGray.getPage(0).node, docGray.context));
+    expect(contentGray).toContain('rg');
+    expect(contentGray).not.toContain('SECRET-CONTENT-42');
+
+    // 2. Custom color style
+    const { bytes: outCustom } = await redactPdf(bytes, {
+      pages: { 0: { rects: [rect] } },
+      style: 'custom',
+      customColor: '#1e3a8a'
+    });
+    const docCustom = await PDFDocument.load(outCustom);
+    const contentCustom = new TextDecoder('latin1').decode(getPageContentBytes(docCustom.getPage(0).node, docCustom.context));
+    expect(contentCustom).toContain('0.1176 0.2275 0.5412 rg');
+    expect(contentCustom).not.toContain('SECRET-CONTENT-42');
+
+    // 3. Custom stampText & customColor (Red Stamp)
+    const { bytes: outStamp } = await redactPdf(bytes, {
+      pages: { 0: { rects: [rect] } },
+      style: 'stamp',
+      customColor: '#b91c1c',
+      stampText: '[CONFIDENTIAL]'
+    });
+    const afterStamp = await extractText(outStamp);
+    expect(afterStamp[0].map((e) => e.str).join(' ')).toContain('[CONFIDENTIAL]');
+
+    // 4. Custom stamp with light background (#ffffff) -> black text contrast
+    const { bytes: outLightStamp } = await redactPdf(bytes, {
+      pages: { 0: { rects: [rect] } },
+      style: 'stamp',
+      customColor: '#ffffff',
+      stampText: '[LIGHT_STAMP]'
+    });
+    const afterLightStamp = await extractText(outLightStamp);
+    expect(afterLightStamp[0].map((e) => e.str).join(' ')).toContain('[LIGHT_STAMP]');
+  }, 60000);
+
   it('③ 十六进制字符串 <4849> 几何删除', async () => {
     const bytes = await makeManualStreamPdf('BT /F1 12 Tf 1 0 0 1 72 700 Tm <4849> Tj ET');
     const before = await extractText(bytes);
@@ -293,9 +338,26 @@ describe('redactEngine: True Stream Redaction', () => {
       const missing = redactKeys.filter((k) => !dict[k]);
       expect(missing).toEqual([]);
     }
-    // zh 术语改名断言：sanitize = 隐私清理，redact = 内容涂黑
-    expect(zh['tab_sanitize']).toBe('隐私清理');
-    expect(zh['tab_redact']).toBe('内容涂黑');
+    // zh / en 术语改名全面断言：sanitize = 元数据清理 (Scrub Metadata)，redact = 敏感信息脱敏 (Redact Content)
+    expect(zh['tab_sanitize']).toBe('元数据清理');
+    expect(zh['tab_redact']).toBe('敏感信息脱敏');
+    expect(zh['sanitize_title']).toBe('PDF 元数据清理');
+    expect(zh['redact_title']).toBe('PDF 敏感信息脱敏');
+    expect(zh['sanitize_and_download']).toBe('一键清理元数据并下载干净文件');
+    expect(zh['result_success_sanitize']).toBe('元数据清理完成！');
+    expect(zh['result_success_redact']).toBe('敏感信息脱敏完成 · 验证通过！');
+    expect(zh['next_action_sanitize']).toBe('清元数据');
+    expect(zh['next_action_redact']).toBe('去脱敏');
+
+    expect(en['tab_sanitize']).toBe('Scrub Metadata');
+    expect(en['tab_redact']).toBe('Redact Content');
+    expect(en['sanitize_title']).toBe('Scrub PDF Metadata');
+    expect(en['redact_title']).toBe('Redact Sensitive Content');
+    expect(en['sanitize_and_download']).toBe('Scrub & Download Clean PDF');
+    expect(en['result_success_sanitize']).toBe('PDF Metadata Scrubbed Successfully!');
+    expect(en['result_success_redact']).toBe('PDF Redacted Successfully - Verified!');
+    expect(en['next_action_sanitize']).toBe('Scrub');
+    expect(en['next_action_redact']).toBe('Redact');
   }, 30000);
 });
 
@@ -418,5 +480,123 @@ describe('fontWidths: FontWidthResolver', () => {
     expect(r.getWidth('F1', 11)).toBe(600);
     expect(r.getWidth('F1', 21)).toBe(900);
     expect(r.getWidth('F1', 99)).toBe(700); // DW
+  });
+});
+
+describe('ruleMatcher: Universal Date & Localized Presets', () => {
+  it('全能日期正则：命中 ISO、中文、美国、欧洲多国日期格式，不误报常规数字', () => {
+    const re = new RegExp(UNIVERSAL_DATE_REGEX, 'g');
+    const validCases = [
+      '2026-09-17',
+      '2026/09/17',
+      '2026.09.17',
+      '2026年9月17日',
+      '2026年09月17日',
+      '09/17/2026', // US
+      '17/09/2026', // UK/EU
+      '17.09.2026', // DE
+      '17-09-2026'
+    ];
+    for (const vc of validCases) {
+      const match = vc.match(re);
+      expect(match).not.toBeNull();
+      expect(match[0]).toBe(vc);
+    }
+
+    const invalidCases = [
+      'Total: 100/200 items',
+      '192.168.1.1',
+      'Version 1.2.3'
+    ];
+    for (const ic of invalidCases) {
+      const match = ic.match(re);
+      expect(match).toBeNull();
+    }
+  });
+
+  it('getLocalizedPiiPresets: 中文返回身份证与大陆手机号，英文返回 SSN 与国际电话', () => {
+    const zhPresets = getLocalizedPiiPresets('zh');
+    const enPresets = getLocalizedPiiPresets('en');
+
+    const zhId = zhPresets.find((p) => p.id === 'id');
+    const enId = enPresets.find((p) => p.id === 'id');
+    expect(zhId.labelKey).toBe('node_redact_preset_id');
+    expect(zhId.value).toContain('[1-9]');
+
+    expect(enId.labelKey).toBe('node_redact_preset_ssn');
+    expect(enId.value).toBe('\\b\\d{3}-\\d{2}-\\d{4}\\b');
+
+    const zhDate = zhPresets.find((p) => p.id === 'date');
+    const enDate = enPresets.find((p) => p.id === 'date');
+    expect(zhDate.value).toBe(UNIVERSAL_DATE_REGEX);
+    expect(enDate.value).toBe(UNIVERSAL_DATE_REGEX);
+  });
+
+  it('matchRules: 支持 item.bbox 输入并在单行相邻合并中完整保留 snapped 文本', () => {
+    const items = [
+      { str: 'Confidential', bbox: { x: 50, y: 700, w: 60, h: 12 } },
+      { str: 'Document', bbox: { x: 115, y: 700, w: 50, h: 12 } },
+      { str: 'PublicInfo', bbox: { x: 50, y: 600, w: 80, h: 12 } }
+    ];
+
+    const rule = { type: 'keyword', value: 'Confidential', caseSensitive: false };
+    const res = matchRules(items, [rule]);
+    expect(res.totalHits).toBe(1);
+    expect(res.rects.length).toBe(1);
+    expect(res.rects[0].snapped).toBe('Confidential');
+    expect(res.rects[0].x).toBe(50);
+    expect(res.rects[0].w).toBe(60);
+
+    // 正则多项匹配与同行合并
+    const ruleMulti = { type: 'regex', value: '(?:Confidential|Document)', caseSensitive: false };
+    const resMulti = matchRules(items, [ruleMulti]);
+    expect(resMulti.totalHits).toBe(2);
+    expect(resMulti.rects.length).toBe(1); // 间距 5pt <= 12pt 合并为单个矩形
+    expect(resMulti.rects[0].snapped).toContain('Confidential');
+    expect(resMulti.rects[0].snapped).toContain('Document');
+  });
+
+  it('Smart Search & Redact 集成模拟：模拟页面多项 PII 检索、去重与快照撤销', () => {
+    const pageItems = [
+      { str: 'Contact: alice@example.com', bbox: { x: 50, y: 720, w: 180, h: 12 } },
+      { str: 'Date: 2026-09-17', bbox: { x: 50, y: 700, w: 100, h: 12 } },
+      { str: 'ID: 110101199003072345', bbox: { x: 50, y: 680, w: 150, h: 12 } },
+      { str: 'Safe Normal Text', bbox: { x: 50, y: 660, w: 90, h: 12 } }
+    ];
+
+    const presets = getLocalizedPiiPresets('zh');
+    const emailPreset = presets.find((p) => p.id === 'email');
+    const datePreset = presets.find((p) => p.id === 'date');
+    const idPreset = presets.find((p) => p.id === 'id');
+
+    // 1. 匹配邮箱
+    const emailRes = matchRules(pageItems, [{ type: emailPreset.type, value: emailPreset.value, caseSensitive: false }]);
+    expect(emailRes.totalHits).toBe(1);
+    expect(emailRes.rects[0].snapped).toBe('Contact: alice@example.com');
+
+    // 2. 匹配日期
+    const dateRes = matchRules(pageItems, [{ type: datePreset.type, value: datePreset.value, caseSensitive: false }]);
+    expect(dateRes.totalHits).toBe(1);
+    expect(dateRes.rects[0].snapped).toBe('Date: 2026-09-17');
+
+    // 3. 匹配身份证
+    const idRes = matchRules(pageItems, [{ type: idPreset.type, value: idPreset.value, caseSensitive: false }]);
+    expect(idRes.totalHits).toBe(1);
+    expect(idRes.rects[0].snapped).toBe('ID: 110101199003072345');
+
+    // 4. 重复搜索去重逻辑验证
+    const existingList = [
+      { id: 'r1', x: 50, y: 720, w: 180, h: 12, snapped: 'Contact: alice@example.com' }
+    ];
+    const newRect = emailRes.rects[0];
+    const isDuplicate = existingList.some((ex) => {
+      const interW = Math.min(ex.x + ex.w, newRect.x + newRect.w) - Math.max(ex.x, newRect.x);
+      const interH = Math.min(ex.y + ex.h, newRect.y + newRect.h) - Math.max(ex.y, newRect.y);
+      if (interW <= 0 || interH <= 0) return false;
+      const interArea = interW * interH;
+      const minArea = Math.min(ex.w * ex.h, newRect.w * newRect.h);
+      return minArea > 0 && (interArea / minArea) > 0.7;
+    });
+    expect(isDuplicate).toBe(true);
   });
 });

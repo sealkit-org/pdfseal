@@ -24,6 +24,12 @@ export const LINE_TOLERANCE = 3;
 export const MERGE_GAP = 12;
 
 /**
+ * 全能通用日期正则：
+ * 兼容 ISO/中文 (2026-09-17 / 2026年9月17日) 以及欧美主流 (09/17/2026, 17/09/2026, 17.09.2026, 17-09-2026)
+ */
+export const UNIVERSAL_DATE_REGEX = '(?:\\b\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}\\b|\\b\\d{4}年\\d{1,2}月\\d{1,2}日?|\\b\\d{1,2}[-/.]\\d{1,2}[-/.]\\d{4}\\b)';
+
+/**
  * 内置 PII 预设（批量脱敏模板，PipelineTool 配置面板以 chips 呈现）。
  * pattern 均为 regex 类型；label 由 i18n key node_redact_preset_* 提供。
  */
@@ -64,10 +70,58 @@ export const PII_PRESETS = [
     labelKey: 'node_redact_preset_date',
     type: 'regex',
     caseSensitive: false,
-    // 2026-09-17 / 2026/9/17 / 2026年9月17日
-    value: '\\b\\d{4}[-/年.]\\d{1,2}[-/月.]\\d{1,2}日?\\b'
+    value: UNIVERSAL_DATE_REGEX
   }
 ];
+
+/**
+ * 根据语言环境动态返回适配的 PII 预设（中文身份证/手机 vs 国际 SSN/国际电话，日期为全能通用）
+ * @param {string} [lang='zh']
+ */
+export function getLocalizedPiiPresets(lang = 'zh') {
+  const isZh = String(lang || '').toLowerCase().startsWith('zh');
+  return [
+    {
+      id: 'id',
+      labelKey: isZh ? 'node_redact_preset_id' : 'node_redact_preset_ssn',
+      type: 'regex',
+      caseSensitive: false,
+      value: isZh
+        ? '\\b[1-9]\\d{5}(?:19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]\\b'
+        : '\\b\\d{3}-\\d{2}-\\d{4}\\b'
+    },
+    {
+      id: 'phone',
+      labelKey: 'node_redact_preset_phone',
+      type: 'regex',
+      caseSensitive: false,
+      value: isZh
+        ? '\\b1[3-9]\\d{9}\\b'
+        : '\\b(?:\\+?\\d{1,3}[- ]?)?\\(?\\d{2,4}\\)?[- ]?\\d{3,4}[- ]?\\d{4}\\b'
+    },
+    {
+      id: 'bank',
+      labelKey: 'node_redact_preset_bank',
+      type: 'regex',
+      caseSensitive: false,
+      value: '\\b\\d{16,19}\\b'
+    },
+    {
+      id: 'email',
+      labelKey: 'node_redact_preset_email',
+      type: 'regex',
+      caseSensitive: false,
+      value: '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}'
+    },
+    {
+      id: 'date',
+      labelKey: 'node_redact_preset_date',
+      type: 'regex',
+      caseSensitive: false,
+      value: UNIVERSAL_DATE_REGEX
+    }
+  ];
+}
 
 /** 正则元字符转义（keyword 模式构造安全正则用） */
 function escapeRegExp(s) {
@@ -126,7 +180,9 @@ export function matchRules(textItems, rules) {
       if (!c.valid) continue;
       c.re.lastIndex = 0;
       if (c.re.test(str)) {
-        hitBoxes.push(textItemToUserBBox(item));
+        const box = item.bbox ? { ...item.bbox } : textItemToUserBBox(item);
+        if (str) box.snapped = str;
+        hitBoxes.push(box);
         perRuleHits.set(c.ruleIndex, (perRuleHits.get(c.ruleIndex) || 0) + 1);
         totalHits += 1;
         if (totalHits >= MAX_HITS_PER_PAGE) {
@@ -186,7 +242,13 @@ export function mergeSameLine(boxes) {
         const right = Math.max(cur.x + cur.w, n.x + n.w);
         const bottom = Math.min(cur.y, n.y);
         const top = Math.max(cur.y + cur.h, n.y + n.h);
-        cur = { x: cur.x, y: bottom, w: right - cur.x, h: top - bottom };
+        cur = {
+          x: cur.x,
+          y: bottom,
+          w: right - cur.x,
+          h: top - bottom,
+          ...(cur.snapped || n.snapped ? { snapped: [cur.snapped, n.snapped].filter(Boolean).join(' ') } : {})
+        };
       } else {
         rects.push(cur);
         cur = { ...n };

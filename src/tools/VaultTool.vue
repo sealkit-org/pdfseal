@@ -471,7 +471,6 @@
                         >
                           <EyeOff class="w-4 h-4 text-slate-600 shrink-0" />
                           <span class="truncate">{{ t('tab_redact') }}</span>
-                          <span class="ml-auto text-[9px] font-bold text-blue-700 bg-blue-100 rounded-full px-1.5 py-px shrink-0">NEW</span>
                         </button>
 
                         <div class="col-span-2 px-1.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_automate') }}</div>
@@ -739,7 +738,6 @@
                                 >
                                   <EyeOff class="w-4 h-4 text-slate-600 shrink-0" />
                                   <span class="truncate">{{ t('tab_redact') }}</span>
-                                  <span class="ml-auto text-[9px] font-bold text-blue-700 bg-blue-100 rounded-full px-1.5 py-px shrink-0">NEW</span>
                                 </button>
 
                                 <div class="col-span-2 px-1.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_automate') }}</div>

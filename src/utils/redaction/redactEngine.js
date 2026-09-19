@@ -319,7 +319,7 @@ export async function redactPdf(bytes, spec, opts = {}) {
   // ---------- 遮罩外观（矢量页）：直接追加进新内容流，杜绝伪脱敏嫌疑 ----
   for (const pageIndex of pageIndexes) {
     if (rasterSet.has(pageIndex)) continue;
-    await drawMasks(pdfDoc, pageIndex, spec.pages[pageIndex].rects, style);
+    await drawMasks(pdfDoc, pageIndex, spec.pages[pageIndex].rects, style, spec);
   }
 
   // ---------- 第二遍：栅格化替换 ----------
@@ -331,6 +331,8 @@ export async function redactPdf(bytes, spec, opts = {}) {
         password,
         dpi: spec.dpi || 192,
         jpegQuality: spec.jpegQuality || 0.85,
+        customColor: spec.customColor,
+        stampText: spec.stampText,
         renderPage: opts.renderPage // Node 单测注入
       });
       await replacePageWithImage(pdfDoc, pageIndex, rendered);
@@ -353,8 +355,10 @@ export async function redactPdf(bytes, spec, opts = {}) {
     const v = await verifyRedaction(outBytes, spec, {
       password,
       verifyLoader: opts.verifyLoader,
-      // stamp 样式的 [REDACTED] 是有意保留的可见文字，不算残留
-      ignoreTexts: style === 'stamp' ? [STAMP_TEXT] : undefined
+      // stamp 样式的印章文字是保留的可见文字，不算残留
+      ignoreTexts: style === 'stamp'
+        ? (spec.stampText?.trim() ? [spec.stampText.trim(), STAMP_TEXT] : [STAMP_TEXT])
+        : undefined
     });
     report.verify = v;
 
@@ -557,29 +561,132 @@ function removeIntersectingAnnots(context, pdfDoc, pageIndex, pageNode, rects) {
   return removed;
 }
 
+function hexToRgb01(hex) {
+  if (!hex || typeof hex !== 'string') return { r: 0, g: 0, b: 0 };
+  let clean = hex.replace('#', '').trim();
+  if (clean.length === 3) {
+    clean = clean.split('').map((c) => c + c).join('');
+  }
+  if (clean.length !== 6) return { r: 0, g: 0, b: 0 };
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  return {
+    r: isNaN(r) ? 0 : r,
+    g: isNaN(g) ? 0 : g,
+    b: isNaN(b) ? 0 : b
+  };
+}
+
+function resolveFillColor(style, customColor) {
+  if (style === 'white') return { r: 1, g: 1, b: 1 };
+  if (style === 'gray') return hexToRgb01('#334155');
+  if (style === 'custom') return hexToRgb01(customColor || '#000000');
+  return { r: 0, g: 0, b: 0 }; // black & default
+}
+
+function canWinAnsi(str) {
+  if (typeof str !== 'string') return true;
+  for (let i = 0; i < str.length; i++) {
+    if (str.charCodeAt(i) > 255) return false;
+  }
+  return true;
+}
+
+function isLightRgb(r, g, b) {
+  return (r * 0.299 + g * 0.587 + b * 0.114) > 0.65;
+}
+
+async function renderStampPng(text, bgColor = '#000000', textColor = '#ffffff') {
+  if (typeof document === 'undefined' || typeof document.createElement !== 'function') return null;
+  const canvas = document.createElement('canvas');
+  const dpr = 2;
+  const h = 48 * dpr;
+  const ctx = canvas.getContext('2d');
+  ctx.font = `bold ${22 * dpr}px sans-serif`;
+  const metrics = ctx.measureText(text);
+  const w = Math.max(120 * dpr, Math.ceil(metrics.width + 32 * dpr));
+  canvas.width = w;
+  canvas.height = h;
+
+  // Background
+  ctx.fillStyle = bgColor;
+  ctx.fillRect(0, 0, w, h);
+
+  // Text
+  ctx.fillStyle = textColor;
+  ctx.font = `bold ${22 * dpr}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, w / 2, h / 2);
+
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
+  canvas.width = 0;
+  canvas.height = 0;
+  return new Uint8Array(await blob.arrayBuffer());
+}
+
 /**
- * 矢量页遮罩外观（blackout/whiteout 追加 re f；stamp 用 pdf-lib 文本 API）。
+ * 矢量页遮罩外观（blackout/whiteout/gray/custom 追加 re f；stamp 用 pdf-lib 文本/PNG 徽章 API）。
  * 注意：遮罩是"有意的可见标记"，其下文本已被物理删除——不构成伪脱敏。
  */
-async function drawMasks(pdfDoc, pageIndex, rects, style) {
+async function drawMasks(pdfDoc, pageIndex, rects, style, spec = {}) {
   const page = pdfDoc.getPage(pageIndex);
   if (style === 'stamp') {
-    const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-    for (const r of rects) {
-      page.drawRectangle({ x: r.x, y: r.y, width: r.w, height: r.h, color: rgb(0, 0, 0) });
-      const size = Math.max(4, Math.min(r.h * 0.6, (r.w * 0.85) / (STAMP_TEXT.length * 0.6)));
-      page.drawText(STAMP_TEXT, {
-        x: r.x + (r.w - STAMP_TEXT.length * size * 0.6) / 2,
-        y: r.y + (r.h - size * 0.72) / 2,
-        size,
-        font,
-        color: rgb(1, 1, 1)
-      });
+    const text = (spec.stampText && typeof spec.stampText === 'string' && spec.stampText.trim())
+      ? spec.stampText.trim()
+      : STAMP_TEXT;
+    const bg = hexToRgb01(spec.customColor || '#000000');
+    const pdfBgColor = rgb(bg.r, bg.g, bg.b);
+    const isLight = isLightRgb(bg.r, bg.g, bg.b);
+    const textColor = isLight ? rgb(0, 0, 0) : rgb(1, 1, 1);
+
+    if (canWinAnsi(text)) {
+      const font = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+      for (const r of rects) {
+        page.drawRectangle({ x: r.x, y: r.y, width: r.w, height: r.h, color: pdfBgColor });
+        const charLen = Math.max(text.length, 6);
+        const size = Math.max(4, Math.min(r.h * 0.6, (r.w * 0.85) / (charLen * 0.6)));
+        page.drawText(text, {
+          x: r.x + (r.w - text.length * size * 0.6) / 2,
+          y: r.y + (r.h - size * 0.72) / 2,
+          size,
+          font,
+          color: textColor
+        });
+      }
+    } else {
+      let pngBytes = null;
+      try {
+        pngBytes = await renderStampPng(text, spec.customColor || '#000000', isLight ? '#000000' : '#ffffff');
+      } catch {
+        pngBytes = null;
+      }
+      if (pngBytes) {
+        const embeddedImg = await pdfDoc.embedPng(pngBytes);
+        for (const r of rects) {
+          page.drawImage(embeddedImg, { x: r.x, y: r.y, width: r.w, height: r.h });
+        }
+      } else {
+        for (const r of rects) {
+          page.drawRectangle({ x: r.x, y: r.y, width: r.w, height: r.h, color: pdfBgColor });
+        }
+      }
     }
     return;
   }
-  // black / white：追加路径填充（无字体资源依赖，直接拼内容流尾部）
-  const fill = style === 'white' ? '1 1 1 rg' : '0 0 0 rg';
+
+  // black / white / gray / custom：追加路径填充
+  const color = resolveFillColor(style, spec.customColor);
+  let fill;
+  if (style === 'white') {
+    fill = '1 1 1 rg';
+  } else if (style === 'black') {
+    fill = '0 0 0 rg';
+  } else {
+    fill = `${fmt(color.r)} ${fmt(color.g)} ${fmt(color.b)} rg`;
+  }
+
   const parts = [];
   for (const r of rects) {
     parts.push(`q ${fill} ${fmt(r.x)} ${fmt(r.y)} ${fmt(r.w)} ${fmt(r.h)} re f Q`);

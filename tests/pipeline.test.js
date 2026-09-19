@@ -588,6 +588,23 @@ describe('Pipeline Automation & Policy Engine', () => {
       expect(text).toContain('Safe public line stays');
     }, 60000);
 
+    it('should support custom stampText and custom style in executeRedactNode', async () => {
+      const pdf = await createTextPdf();
+      const items = [{ id: '1', name: 'contacts.pdf', data: pdf, mimeType: 'application/pdf' }];
+
+      const out = await executeRedactNode(items, {
+        rules: [{ type: 'keyword', value: 'john.doe@example.com' }],
+        style: 'stamp',
+        stampText: '[CLASSIFIED]'
+      });
+
+      expect(out).toHaveLength(1);
+      expect(out[0].redactReport.ok).toBe(true);
+      const text = await extractText(out[0].data);
+      expect(text).not.toContain('john.doe@example.com');
+      expect(text).toContain('[CLASSIFIED]');
+    }, 60000);
+
     it('should pass items through unchanged with zeroHits report when no rule matches', async () => {
       const pdf = await createTextPdf();
       const items = [{ id: '1', name: 'plain.pdf', data: pdf, mimeType: 'application/pdf' }];

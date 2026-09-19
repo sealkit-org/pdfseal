@@ -27,6 +27,24 @@ export async function rasterBurnPage(originalBytes, pageIndex, rects, style, opt
   return browserRender(originalBytes, pageIndex, rects, style, opts);
 }
 
+function resolveFillColor(style, customColor) {
+  if (style === 'white') return '#ffffff';
+  if (style === 'gray') return '#334155';
+  if (style === 'custom') return customColor || '#000000';
+  return '#000000';
+}
+
+function isLightHex(hex) {
+  if (!hex || typeof hex !== 'string') return false;
+  let clean = hex.replace('#', '').trim();
+  if (clean.length === 3) clean = clean.split('').map((c) => c + c).join('');
+  if (clean.length !== 6) return false;
+  const r = parseInt(clean.slice(0, 2), 16) / 255;
+  const g = parseInt(clean.slice(2, 4), 16) / 255;
+  const b = parseInt(clean.slice(4, 6), 16) / 255;
+  return (r * 0.299 + g * 0.587 + b * 0.114) > 0.65;
+}
+
 async function browserRender(originalBytes, pageIndex, rects, style, opts) {
   const pdfjs = await import('pdfjs-dist');
   const loadingTask = pdfjs.getDocument({
@@ -54,19 +72,25 @@ async function browserRender(originalBytes, pageIndex, rects, style, opts) {
     await page.render({ canvasContext: ctx, viewport, intent: 'display' }).promise;
 
     // 烧录遮罩（用户空间 → canvas 空间，viewport 已含 /Rotate）
+    const fillColor = resolveFillColor(style, opts.customColor);
     for (const r of rects) {
       const c = userRectToCanvas(r, viewport);
       if (style === 'stamp') {
-        ctx.fillStyle = '#000000';
+        const text = (opts.stampText && typeof opts.stampText === 'string' && opts.stampText.trim())
+          ? opts.stampText.trim()
+          : '[REDACTED]';
+        const stampBg = opts.customColor || '#000000';
+        ctx.fillStyle = stampBg;
         ctx.fillRect(c.x, c.y, c.w, c.h);
-        const size = Math.max(6, Math.min(c.h * 0.5, (c.w * 0.85) / 9));
-        ctx.fillStyle = '#ffffff';
+        const charLen = Math.max(text.length, 6);
+        const size = Math.max(6, Math.min(c.h * 0.5, (c.w * 0.85) / charLen));
+        ctx.fillStyle = isLightHex(stampBg) ? '#000000' : '#ffffff';
         ctx.font = `bold ${size}px sans-serif`;
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        ctx.fillText('[REDACTED]', c.x + c.w / 2, c.y + c.h / 2);
+        ctx.fillText(text, c.x + c.w / 2, c.y + c.h / 2);
       } else {
-        ctx.fillStyle = style === 'white' ? '#ffffff' : '#000000';
+        ctx.fillStyle = fillColor;
         ctx.fillRect(c.x, c.y, c.w, c.h);
       }
     }

@@ -1,5 +1,5 @@
 /**
- * E2E Business Test: PDF Redact (内容涂黑)
+ * E2E Business Test: PDF Redact (敏感信息脱敏)
  *
  * Part 1 — Tool flow: upload fixture → drag a mask over the target line
  *          (snap-to-text) → burn → download → re-extract text in Node and
