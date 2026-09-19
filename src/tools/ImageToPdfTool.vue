@@ -142,10 +142,10 @@
                 <!-- Delete Button -->
                 <button 
                   @click.stop="removeImage(idx)"
-                  class="absolute top-2 right-2 z-10 w-5 h-5 rounded-full bg-rose-500/90 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition cursor-pointer hover:bg-rose-600"
+                  class="absolute top-2 right-2 z-10 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-rose-500/90 text-white flex items-center justify-center opacity-90 sm:opacity-0 sm:group-hover:opacity-100 transition cursor-pointer hover:bg-rose-600 shadow-xs"
                   :title="t('action_delete', 'Delete')"
                 >
-                  <X class="w-3 h-3" />
+                  <X class="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                 </button>
 
                 <!-- Thumbnail -->

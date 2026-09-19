@@ -29,7 +29,31 @@
         </span>
       </button>
 
-      <!-- 2. Compress -->
+      <!-- 2. Image to PDF -->
+      <button
+        type="button"
+        @click="selectTool('image_to_pdf')"
+        :class="[
+          'flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-150 cursor-pointer',
+          activeTab === 'image_to_pdf' 
+            ? 'text-violet-600 font-bold' 
+            : 'text-slate-500 hover:text-slate-800'
+        ]"
+      >
+        <div 
+          :class="[
+            'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
+            activeTab === 'image_to_pdf' ? 'bg-violet-50 text-violet-600 scale-105 shadow-2xs' : ''
+          ]"
+        >
+          <Images class="w-5 h-5" />
+        </div>
+        <span class="text-[10px] mt-0.5 tracking-tight truncate max-w-full">
+          {{ t('tab_image_to_pdf') }}
+        </span>
+      </button>
+
+      <!-- 3. Compress -->
       <button
         type="button"
         @click="selectTool('compress')"
@@ -50,30 +74,6 @@
         </div>
         <span class="text-[10px] mt-0.5 tracking-tight truncate max-w-full">
           {{ t('tab_compress') }}
-        </span>
-      </button>
-
-      <!-- 3. Organize -->
-      <button
-        type="button"
-        @click="selectTool('organize')"
-        :class="[
-          'flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-150 cursor-pointer',
-          activeTab === 'organize' 
-            ? 'text-blue-600 font-bold' 
-            : 'text-slate-500 hover:text-slate-800'
-        ]"
-      >
-        <div 
-          :class="[
-            'w-8 h-8 rounded-xl flex items-center justify-center transition-all',
-            activeTab === 'organize' ? 'bg-blue-50 text-blue-600 scale-105 shadow-2xs' : ''
-          ]"
-        >
-          <LayoutGrid class="w-5 h-5" />
-        </div>
-        <span class="text-[10px] mt-0.5 tracking-tight truncate max-w-full">
-          {{ t('tab_organize') }}
         </span>
       </button>
 
@@ -130,7 +130,7 @@
 
 <script setup>
 import { computed } from 'vue';
-import { Layers, Minimize2, LayoutGrid, PenTool, Sparkles } from 'lucide-vue-next';
+import { Layers, Minimize2, Images, PenTool, Sparkles } from 'lucide-vue-next';
 import { t } from '../i18n';
 import { recordToolUsage } from '../utils/usageTracker';
 import { useDevice } from '../utils/useDevice';
@@ -149,7 +149,7 @@ const props = defineProps({
 const emit = defineEmits(['switch-tab', 'open-drawer']);
 const { isLandscape } = useDevice();
 
-const primaryIds = ['merge', 'compress', 'organize', 'sign'];
+const primaryIds = ['merge', 'image_to_pdf', 'compress', 'sign'];
 const isDrawerActive = computed(() => {
   return props.isDrawerOpen || !primaryIds.includes(props.activeTab);
 });
