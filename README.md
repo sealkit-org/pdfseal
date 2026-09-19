@@ -65,6 +65,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 
 - **Battle-Tested Presets**:
   - 📁 **Tender & Sensitive Document Sanitizer**: Metadata scrubbing $\rightarrow$ Balanced compression $\rightarrow$ Anti-leak watermark stamping.
+  - 🛡️ **Privacy & Content Redaction**: Metadata scrubbing $\rightarrow$ Keyword/regex PII redaction $\rightarrow$ AES permission encryption.
   - 🧾 **Expense Receipts Auto-Packer**: Multi-image to A4 PDF conversion $\rightarrow$ Compression sized for reimbursement portals.
   - 📑 **Contract Batch Stamping & Archive**: Permission unlock $\rightarrow$ Last page signature stamping $\rightarrow$ Security watermark.
 - **Visual Drag & Drop Pipeline Builder**:
@@ -77,14 +78,18 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 ### 📲 Progressive Web App (PWA) & True Offline Guarantee
 
 - **No-Admin Desktop & Mobile Installation**: Install PDFSeal as a standalone, windowed application directly from Chrome, Edge, or Safari without requiring IT administrator privileges. On mobile, add it to your home screen for full-screen offline execution.
-- **100% Airplane Mode Reliability**: Powered by `vite-plugin-pwa` and Workbox, 400+ core dependencies (including CJK font maps and standard font binaries) are automatically pre-cached.
+- **100% Airplane Mode Reliability**: Powered by `vite-plugin-pwa` and Workbox, 400+ core dependencies (including CJK font maps, WASM binaries, and standard font binaries) are automatically pre-cached.
 - **F5 Refresh Proof**: Press `F5` while completely disconnected from the internet, and PDFSeal reloads and operates at 100% capacity without a single network request.
+- **Secure Context Requirement**: Modern browsers (iOS Safari, Android Chrome) strictly enforce PWA Service Worker caching on **Secure Contexts** (`https://` or `http://localhost`). For local area network (LAN) mobile testing, use HTTPS or an SSL reverse proxy to enable full offline installation.
 
 ---
 
 ### 📱 Mobile-First Responsive Experience & Native Sharing
 
-- **Thumb-Friendly Dual-Mode Layout**: Clean separation between desktop and mobile. Mobile phones feature a distraction-free minimal header, a thumb-reachable bottom navigation bar for top workflows (Merge, Image-to-PDF, Compress, Sign), and an intuitive sliding bottom sheet for all 12+ utilities. Desktop view remains 100% untouched.
+- **Thumb-Friendly Dual-Mode Layout**: Clean separation between desktop and mobile. Mobile devices feature a minimal header, a thumb-reachable bottom navigation bar for top workflows (Merge, Image-to-PDF, Compress, Sign), and an intuitive sliding bottom sheet for all 14 core utilities. Desktop view remains 100% untouched.
+- **Thumb-Zone Sticky Action Bars**: Heavy multi-file tools (Image-to-PDF, Smart Compress) feature a persistent bottom execution bar, keeping primary triggers (e.g., "Export PDF", "Compress") always within single-handed thumb reach without scrolling past dozens of uploaded items.
+- **Compact 3-Column Responsive Grid**: Dense, thumb-friendly thumbnail layout with sliding parameter sheets for rapid mobile collation.
+- **Responsive Modals & Vault Picker**: Re-architected dialogs and Vault document pickers with horizontal category scroll tabs and full-width touch buttons, eliminating text squishing on narrow viewports.
 - **Web Share API Integration**: Share processed PDFs directly via native OS sheets (AirDrop to Mac, save to Apple Files / Google Drive, or send via WhatsApp/WeChat) with automatic direct-download fallback.
 - **Touch-Optimized Signing**: Draw signatures effortlessly with finger or stylus with zero scroll interference (`touch-none`) and enlarged touch resize handles.
 - **Mobile Camera & Memory Guard**: Instant multi-photo document collation with automatic resolution scaling protection (prevents mobile Safari canvas OOM crashes on 48MP+ camera photos).
