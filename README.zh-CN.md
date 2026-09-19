@@ -122,7 +122,7 @@
 - **国际化**：Vue I18n（完整支持 🇺🇸 英语、🇩🇪 德语、🇪🇸 西班牙语、🇫🇷 法语、🇨🇳 简体中文）
 - **本地存储**：IndexedDB 结构化事务存储（海豹收纳箱）
 - **调度性能**：Event Loop 宏任务平滑分片（Active Event Loop Yielding，防长耗时计算卡顿）
-- **测试体系**：[Vitest](https://vitest.dev/) + [Puppeteer](https://pptr.dev/)（**31 个算法与单元测试套件，193 项用例 100% 通过**，配合无头浏览器端到端 E2E 回归套件）
+- **测试体系**：[Vitest](https://vitest.dev/) + [Puppeteer](https://pptr.dev/)（**32 个算法与单元测试套件，198 项用例 100% 通过**，配合无头浏览器端到端 E2E 回归套件）
 
 ---
 
