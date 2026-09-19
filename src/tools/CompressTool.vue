@@ -1,11 +1,11 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Assembly Container -->
-    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Top Title Header -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-amber-50 text-amber-600 flex items-center justify-center font-bold shrink-0 shadow-2xs">
             <Minimize2 class="w-5 h-5" />
           </div>
           <div>
@@ -27,25 +27,25 @@
         @dragleave.prevent="isDragOver = false"
         @drop.prevent="onDrop"
         :class="[
-          'flex-1 border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center transition flex flex-col items-center justify-center my-4',
+          'flex-1 border-2 border-dashed rounded-2xl sm:rounded-3xl p-6 sm:p-14 text-center transition flex flex-col items-center justify-center my-3 sm:my-4',
           isDragOver ? 'border-amber-500 bg-amber-50/50 scale-[0.99]' : 'border-slate-200 hover:border-amber-400 bg-slate-50/50'
         ]"
       >
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           class="hidden" 
           @change="onFileSelected" 
         >
 
-        <div class="w-16 h-16 bg-amber-100/60 text-amber-600 rounded-3xl flex items-center justify-center mb-4 shadow-sm">
-          <Minimize2 class="w-8 h-8" />
+        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-amber-100/60 text-amber-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 sm:mb-4 shadow-sm">
+          <Minimize2 class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
         <h3 class="text-base sm:text-lg font-bold text-slate-800">
           {{ t('compress_drop_title') }}
         </h3>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm">
+        <p class="text-xs text-slate-400 mt-1 max-w-sm hidden sm:block">
           {{ t('compress_drop_subtitle') }}
         </p>
 

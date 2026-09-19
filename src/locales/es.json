@@ -312,7 +312,7 @@
   "page_of": "de",
   "page_items": "archivos",
   "vault_action_print": "Imprimir documento",
-  "merge_btn_from_local": "Agregar desde la computadora",
+  "merge_btn_from_local": "Agregar archivos locales",
   "merge_btn_from_vault": "Elegir del Baúl",
   "merge_btn_reverse": "Invertir orden",
   "merge_output_filename": "Nombre del archivo resultante",
@@ -736,7 +736,7 @@
   "pipeline_new_blank_flow": "➕ Nuevo flujo en blanco",
   "pipeline_btn_run_main": "Iniciar pipeline de procesamiento por lotes",
   "pipeline_flow_modified": "Modificado",
-  "btn_add_from_pc": "Desde la PC local",
+  "btn_add_from_pc": "Agregar archivos locales",
   "btn_choose_from_vault": "Desde el baúl",
   "pipeline_drop_box_title": "Arrastre varios archivos aquí para procesar",
   "pipeline_drop_box_subtitle": "Admite archivos PDF o imágenes por lotes, o haga clic en los botones de arriba",
@@ -1364,5 +1364,12 @@
   "vault_sort_desc": "Orden descendente",
   "vault_sort_asc": "Orden ascendente",
   "org_btn_a4_tip": "Escalar y centrar a página A4 estándar",
-  "btn_clear": "Limpiar"
+  "btn_clear": "Limpiar",
+  "nav_all_tools": "Todas las herramientas",
+  "result_btn_share": "Compartir / Guardar en archivos",
+  "result_btn_share_desc": "Compartir mediante el menú del sistema o guardar en Archivos",
+  "drawer_cat_assembly": "Páginas y Documentos",
+  "drawer_cat_security": "Seguridad y Firmas",
+  "drawer_cat_edit": "Optimizar y Editar",
+  "drawer_cat_advanced": "Utilidades Avanzadas"
 }

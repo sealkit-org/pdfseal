@@ -312,7 +312,7 @@
   "page_of": "von",
   "page_items": "Dateien",
   "vault_action_print": "Dokument drucken",
-  "merge_btn_from_local": "Vom Computer hinzufügen",
+  "merge_btn_from_local": "Lokale Dateien hinzufügen",
   "merge_btn_from_vault": "Aus Vault auswählen",
   "merge_btn_reverse": "Reihenfolge umkehren",
   "merge_output_filename": "Ausgabedateiname",
@@ -736,7 +736,7 @@
   "pipeline_new_blank_flow": "➕ Neuer leerer Workflow",
   "pipeline_btn_run_main": "Automatisierte Batch-Pipeline starten",
   "pipeline_flow_modified": "Geändert",
-  "btn_add_from_pc": "Vom lokalen PC",
+  "btn_add_from_pc": "Lokale Dateien hinzufügen",
   "btn_choose_from_vault": "Aus dem Tresor",
   "pipeline_drop_box_title": "Mehrere Dateien hier ablegen",
   "pipeline_drop_box_subtitle": "Unterstützt Batch-PDFs oder Bilder, oder nutzen Sie die oberen Schaltflächen",
@@ -1364,5 +1364,12 @@
   "vault_sort_desc": "Absteigend sortieren",
   "vault_sort_asc": "Aufsteigend sortieren",
   "org_btn_a4_tip": "Auf Standard-A4 skalieren und zentrieren",
-  "btn_clear": "Löschen"
+  "btn_clear": "Löschen",
+  "nav_all_tools": "Alle Werkzeuge",
+  "result_btn_share": "Teilen / In Dateien sichern",
+  "result_btn_share_desc": "Über das Systemmenü teilen oder auf dem Gerät sichern",
+  "drawer_cat_assembly": "Seiten & Dokumente",
+  "drawer_cat_security": "Sicherheit & Signaturen",
+  "drawer_cat_edit": "Optimieren & Bearbeiten",
+  "drawer_cat_advanced": "Erweiterte Werkzeuge"
 }

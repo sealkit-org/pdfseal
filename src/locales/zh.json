@@ -312,7 +312,7 @@
   "page_of": "共",
   "page_items": "个文件",
   "vault_action_print": "打印文档",
-  "merge_btn_from_local": "从电脑本地添加",
+  "merge_btn_from_local": "选择本地文件",
   "merge_btn_from_vault": "从海豹收纳箱挑选",
   "merge_btn_reverse": "一键倒序",
   "merge_output_filename": "合并后文件名",
@@ -736,7 +736,7 @@
   "pipeline_new_blank_flow": "➕ 新建空白流程",
   "pipeline_btn_run_main": "开始自动化流水线批处理",
   "pipeline_flow_modified": "已微调",
-  "btn_add_from_pc": "从电脑本地添加",
+  "btn_add_from_pc": "选择本地文件",
   "btn_choose_from_vault": "从海豹收纳箱挑选",
   "pipeline_drop_box_title": "拖拽多份待处理文件到此处",
   "pipeline_drop_box_subtitle": "支持批量导入 PDF 或图片，亦可点击右上角按钮添加",
@@ -1364,5 +1364,12 @@
   "vault_sort_desc": "降序排列",
   "vault_sort_asc": "升序排列",
   "org_btn_a4_tip": "等比缩放并居中至标准 A4 页面",
-  "btn_clear": "清空"
+  "btn_clear": "清空",
+  "nav_all_tools": "全部工具",
+  "result_btn_share": "分享 / 存储到系统",
+  "result_btn_share_desc": "通过系统原生面板直接分享或存入手机文件/云盘",
+  "drawer_cat_assembly": "页面与组织",
+  "drawer_cat_security": "安全与签名",
+  "drawer_cat_edit": "优化与标记",
+  "drawer_cat_advanced": "高级工作流与存储"
 }

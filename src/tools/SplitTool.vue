@@ -1,18 +1,18 @@
 <template>
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Card Container matching Merge & Organize tools -->
-    <div class="bg-white rounded-3xl p-5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
+    <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
       <!-- Integrated Header with Badge -->
-      <div class="flex items-center justify-between pb-4 border-b border-slate-100 shrink-0">
+      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
         <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shadow-2xs">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shadow-2xs">
             <Scissors class="w-5 h-5" />
           </div>
           <div>
             <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
               {{ t('split_title') }}
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5">
+            <p class="text-xs text-slate-500 mt-0.5 hidden sm:block">
               {{ t('split_desc') }}
             </p>
           </div>
@@ -26,24 +26,24 @@
         @dragleave.prevent="isDragOver = false"
         @drop.prevent="onDrop"
         :class="[
-          'flex-1 border-2 border-dashed rounded-3xl p-8 sm:p-14 text-center transition flex flex-col items-center justify-center my-4 relative select-none',
+          'flex-1 border-2 border-dashed rounded-2xl sm:rounded-3xl p-6 sm:p-14 text-center transition flex flex-col items-center justify-center my-3 sm:my-4 relative select-none',
           isDragOver ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200/90 hover:border-emerald-400 bg-slate-50/40 hover:bg-slate-50/80'
         ]"
       >
         <input 
           ref="fileInputRef" 
           type="file" 
-          accept="application/pdf" 
+          accept="application/pdf,.pdf" 
           class="hidden" 
           @change="onFileSelected" 
         >
         
-        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mb-3 shadow-inner">
-          <Scissors class="w-8 h-8" />
+        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-50 text-emerald-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 shadow-inner">
+          <Scissors class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
         
         <h3 class="text-base sm:text-lg font-bold text-slate-800">{{ t('split_drop_title') }}</h3>
-        <p class="text-xs text-slate-400 mt-1 max-w-sm">{{ t('split_drop_subtitle') }}</p>
+        <p class="text-xs text-slate-400 mt-1 max-w-sm hidden sm:block">{{ t('split_drop_subtitle') }}</p>
         
         <!-- Dual Source Selection Buttons -->
         <div class="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -384,7 +384,7 @@
           <input 
             ref="fileInputRef" 
             type="file" 
-            accept="application/pdf" 
+            accept="application/pdf,.pdf" 
             class="hidden" 
             @change="onFileSelected" 
           >
