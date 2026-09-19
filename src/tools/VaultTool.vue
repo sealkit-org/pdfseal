@@ -369,16 +369,9 @@
                       v-if="activeToolMenuId === file.id" 
                       class="absolute right-0 bottom-8 z-50 w-72 sm:w-80 bg-white rounded-2xl shadow-2xl border border-slate-200/90 p-2 text-xs font-semibold text-slate-700 animate-in fade-in zoom-in-95 duration-150 text-left select-none"
                     >
-                      <!-- 2-Column Grid of Tools -->
+                      <!-- 2-Column Grid of Tools, Grouped by Function -->
                       <div class="grid grid-cols-2 gap-1">
-                        <button 
-                          @click="sendToTool('compress', file)"
-                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
-                          :title="t('tab_compress')"
-                        >
-                          <Minimize2 class="w-4 h-4 text-amber-600 shrink-0" />
-                          <span class="truncate">{{ t('tab_compress') }}</span>
-                        </button>
+                        <div class="col-span-2 px-1.5 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_edit') }}</div>
                         <button 
                           @click="sendToTool('organize', file)"
                           class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
@@ -404,6 +397,14 @@
                           <span class="truncate">{{ t('tab_merge') }}</span>
                         </button>
                         <button 
+                          @click="sendToTool('page_number', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_page_number')"
+                        >
+                          <ListOrdered class="w-4 h-4 text-violet-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_page_number') }}</span>
+                        </button>
+                        <button 
                           @click="sendToTool('sign', file)"
                           class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
                           :title="t('tab_sign')"
@@ -419,14 +420,26 @@
                           <Stamp class="w-4 h-4 text-amber-600 shrink-0" />
                           <span class="truncate">{{ t('tab_watermark') }}</span>
                         </button>
+
+                        <div class="col-span-2 px-1.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_convert') }}</div>
                         <button 
-                          @click="sendToTool('page_number', file)"
+                          @click="sendToTool('compress', file)"
                           class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
-                          :title="t('tab_page_number')"
+                          :title="t('tab_compress')"
                         >
-                          <ListOrdered class="w-4 h-4 text-violet-600 shrink-0" />
-                          <span class="truncate">{{ t('tab_page_number') }}</span>
+                          <Minimize2 class="w-4 h-4 text-amber-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_compress') }}</span>
                         </button>
+                        <button 
+                          @click="sendToTool('pdf_to_image', file)"
+                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          :title="t('tab_pdf_to_image')"
+                        >
+                          <ImageDown class="w-4 h-4 text-teal-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_pdf_to_image') }}</span>
+                        </button>
+
+                        <div class="col-span-2 px-1.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_privacy') }}</div>
                         <button 
                           @click="sendToTool('protect', file)"
                           class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
@@ -452,16 +465,18 @@
                           <span class="truncate">{{ t('tab_sanitize') }}</span>
                         </button>
                         <button 
-                          @click="sendToTool('pdf_to_image', file)"
+                          @click="sendToTool('redact', file)"
                           class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
-                          :title="t('tab_pdf_to_image')"
+                          :title="t('tab_redact')"
                         >
-                          <ImageDown class="w-4 h-4 text-teal-600 shrink-0" />
-                          <span class="truncate">{{ t('tab_pdf_to_image') }}</span>
+                          <EyeOff class="w-4 h-4 text-slate-600 shrink-0" />
+                          <span class="truncate">{{ t('tab_redact') }}</span>
                         </button>
+
+                        <div class="col-span-2 px-1.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_automate') }}</div>
                         <button 
                           @click="sendToTool('pipeline', file)"
-                          class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                          class="w-full col-span-2 text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
                           :title="t('tab_pipeline')"
                         >
                           <Zap class="w-4 h-4 text-indigo-600 shrink-0" />
@@ -621,16 +636,9 @@
                                 fileIndex >= Math.max(1, paginatedFiles.length - 3) ? 'bottom-full mb-1.5' : 'top-full mt-1.5'
                               ]"
                             >
-                              <!-- 2-Column Grid of Tools -->
+                              <!-- 2-Column Grid of Tools, Grouped by Function -->
                               <div class="grid grid-cols-2 gap-1">
-                                <button 
-                                  @click="sendToTool('compress', file)"
-                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
-                                  :title="t('tab_compress')"
-                                >
-                                  <Minimize2 class="w-4 h-4 text-amber-600 shrink-0" />
-                                  <span class="truncate">{{ t('tab_compress') }}</span>
-                                </button>
+                                <div class="col-span-2 px-1.5 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_edit') }}</div>
                                 <button 
                                   @click="sendToTool('organize', file)"
                                   class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
@@ -656,6 +664,14 @@
                                   <span class="truncate">{{ t('tab_merge') }}</span>
                                 </button>
                                 <button 
+                                  @click="sendToTool('page_number', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_page_number')"
+                                >
+                                  <ListOrdered class="w-4 h-4 text-violet-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_page_number') }}</span>
+                                </button>
+                                <button 
                                   @click="sendToTool('sign', file)"
                                   class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
                                   :title="t('tab_sign')"
@@ -671,14 +687,26 @@
                                   <Stamp class="w-4 h-4 text-amber-600 shrink-0" />
                                   <span class="truncate">{{ t('tab_watermark') }}</span>
                                 </button>
+
+                                <div class="col-span-2 px-1.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_convert') }}</div>
                                 <button 
-                                  @click="sendToTool('page_number', file)"
+                                  @click="sendToTool('compress', file)"
                                   class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
-                                  :title="t('tab_page_number')"
+                                  :title="t('tab_compress')"
                                 >
-                                  <ListOrdered class="w-4 h-4 text-violet-600 shrink-0" />
-                                  <span class="truncate">{{ t('tab_page_number') }}</span>
+                                  <Minimize2 class="w-4 h-4 text-amber-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_compress') }}</span>
                                 </button>
+                                <button 
+                                  @click="sendToTool('pdf_to_image', file)"
+                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  :title="t('tab_pdf_to_image')"
+                                >
+                                  <ImageDown class="w-4 h-4 text-teal-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_pdf_to_image') }}</span>
+                                </button>
+
+                                <div class="col-span-2 px-1.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_privacy') }}</div>
                                 <button 
                                   @click="sendToTool('protect', file)"
                                   class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
@@ -704,16 +732,18 @@
                                   <span class="truncate">{{ t('tab_sanitize') }}</span>
                                 </button>
                                 <button 
-                                  @click="sendToTool('pdf_to_image', file)"
+                                  @click="sendToTool('redact', file)"
                                   class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
-                                  :title="t('tab_pdf_to_image')"
+                                  :title="t('tab_redact')"
                                 >
-                                  <ImageDown class="w-4 h-4 text-teal-600 shrink-0" />
-                                  <span class="truncate">{{ t('tab_pdf_to_image') }}</span>
+                                  <EyeOff class="w-4 h-4 text-slate-600 shrink-0" />
+                                  <span class="truncate">{{ t('tab_redact') }}</span>
                                 </button>
+
+                                <div class="col-span-2 px-1.5 pt-1.5 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">{{ t('vault_group_automate') }}</div>
                                 <button 
                                   @click="sendToTool('pipeline', file)"
-                                  class="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
+                                  class="w-full col-span-2 text-left px-2.5 py-1.5 rounded-xl hover:bg-blue-50 hover:text-blue-700 transition flex items-center space-x-2 cursor-pointer truncate"
                                   :title="t('tab_pipeline')"
                                 >
                                   <Zap class="w-4 h-4 text-indigo-600 shrink-0" />
@@ -832,7 +862,7 @@ import {
   FolderLock, Search, Plus, Folder, FolderOpen, Inbox, FileCheck, 
   ChevronDown, ArrowDownNarrowWide, ArrowUpNarrowWide, Eye, Download, 
   Trash2, Pencil, Lock, Unlock, Key, X, Layers, Scissors, Stamp, ShieldCheck, Files,
-  LayoutGrid, List, Send, Minimize2, PenTool, ListOrdered, ImageDown, Zap
+  LayoutGrid, List, Send, Minimize2, PenTool, ListOrdered, ImageDown, Zap, EyeOff
 } from 'lucide-vue-next';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';

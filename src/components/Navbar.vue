@@ -317,9 +317,10 @@ import {
   Layers, 
   Minimize2,
   LayoutGrid, 
-  Scissors, 
-  Stamp, 
+  Scissors,
+  Stamp,
   ShieldCheck,
+  EyeOff,
   FolderLock,
   Zap,
   Lock,
@@ -372,7 +373,8 @@ const moreTools = [
   { id: 'pdf_to_image', labelKey: 'tab_pdf_to_image', icon: ImageDown, color: 'text-cyan-600' },
   { id: 'watermark', labelKey: 'tab_watermark', icon: Stamp, color: 'text-amber-600' },
   { id: 'page_number', labelKey: 'tab_page_number', icon: ListOrdered, color: 'text-violet-600' },
-  { id: 'sanitize', labelKey: 'tab_sanitize', icon: ShieldCheck, color: 'text-blue-600' }
+  { id: 'sanitize', labelKey: 'tab_sanitize', icon: ShieldCheck, color: 'text-blue-600' },
+  { id: 'redact', labelKey: 'tab_redact', icon: EyeOff, color: 'text-slate-700' }
 ];
 
 const isMoreOpen = ref(false);

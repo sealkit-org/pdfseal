@@ -96,6 +96,12 @@ const routes = [
     meta: { toolId: 'sanitize' }
   },
   {
+    path: '/redact-pdf',
+    name: 'redact',
+    component: () => import('../tools/RedactTool.vue'),
+    meta: { toolId: 'redact' }
+  },
+  {
     path: '/pipeline',
     name: 'pipeline',
     component: () => import('../tools/PipelineTool.vue'),

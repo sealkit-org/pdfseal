@@ -283,6 +283,22 @@ export function validateStepParameters(steps) {
         }
       }
     }
+
+    if (step.nodeId === 'node_redact') {
+      const rules = Array.isArray(step.params?.rules) ? step.params.rules : [];
+      const hasValidRule = rules.some((r) => r && typeof r.value === 'string' && r.value.trim());
+      if (!hasValidRule) {
+        return {
+          valid: false,
+          stepIndex: i,
+          stepId: step.id,
+          nodeId: step.nodeId,
+          code: 'ERR_MISSING_REDACT_RULES',
+          reasonKey: 'pipeline_param_err_redact',
+          reason: `Step ${i + 1} [${nodeName}]: At least one keyword or pattern rule is required. Please add a redaction rule first.`
+        };
+      }
+    }
   }
 
   return { valid: true };

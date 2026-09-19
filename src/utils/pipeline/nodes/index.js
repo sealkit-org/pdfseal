@@ -4,6 +4,7 @@ import { executeSplitNode } from './splitNode';
 import { executeCompressNode } from './compressNode';
 import { executeWatermarkNode } from './watermarkNode';
 import { executeSanitizeNode } from './sanitizeNode';
+import { executeRedactNode } from './redactNode';
 import { executeSignNode } from './signNode';
 import { executeImg2PdfNode } from './img2pdfNode';
 import { executePdf2ImgNode } from './pdf2imgNode';
@@ -19,6 +20,7 @@ export const NODE_EXECUTORS = {
   node_watermark: executeWatermarkNode,
   node_page_number: executePageNumberNode,
   node_sanitize: executeSanitizeNode,
+  node_redact: executeRedactNode,
   node_sign: executeSignNode,
   node_img2pdf: executeImg2PdfNode,
   node_pdf2img: executePdf2ImgNode,

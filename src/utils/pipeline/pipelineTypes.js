@@ -178,9 +178,9 @@ export const AVAILABLE_NODES = {
   node_sanitize: {
     id: 'node_sanitize',
     nameKey: 'tab_sanitize',
-    defaultName: 'Sanitize Metadata',
+    defaultName: 'Scrub Metadata',
     descKey: 'node_sanitize_desc',
-    defaultDesc: 'Physically erase author, editing history, creation software, GPS and metadata',
+    defaultDesc: 'Physically scrub author, editing history, creation software, GPS and metadata',
     category: 'security',
     inputs: [DATA_TYPES.PDF_DOCS],
     outputs: [DATA_TYPES.PDF_DOCS],
@@ -190,6 +190,22 @@ export const AVAILABLE_NODES = {
       stripGpsAndThumb: true,
       stripPieceInfo: true,
       stripAnnots: true
+    }
+  },
+
+  node_redact: {
+    id: 'node_redact',
+    nameKey: 'tab_redact',
+    defaultName: 'Redact Content',
+    descKey: 'node_redact_desc',
+    defaultDesc: 'Batch redact keywords or PII patterns (ID, phone, bank card, email) at stream level',
+    category: 'security',
+    inputs: [DATA_TYPES.PDF_DOCS],
+    outputs: [DATA_TYPES.PDF_DOCS],
+    topology: TOPOLOGY_MODES.MAP,
+    defaultParams: {
+      rules: [],
+      style: 'black'
     }
   },
 
