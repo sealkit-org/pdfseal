@@ -1076,6 +1076,10 @@ async function loadFile(file, password = '') {
 
   // Read page count via pdf.js
   try {
+    if (currentPdfDoc) {
+      try { await currentPdfDoc.destroy(); } catch (e) {}
+      currentPdfDoc = null;
+    }
     const loadingTask = pdfjsLib.getDocument({
       data: new Uint8Array(rawBuffer.slice(0)),
       password: password || undefined,
@@ -1684,6 +1688,9 @@ function reset() {
   progressMessage.value = '';
   cachedSignedBytes = null;
   cachedSignedName = '';
+  if (currentPdfDoc) {
+    try { currentPdfDoc.destroy(); } catch (e) {}
+  }
   currentPdfDoc = null;
   currentPdfPageObj = null;
   if (currentRenderTask) {
@@ -1713,6 +1720,7 @@ onMounted(() => {
 });
 onUnmounted(() => {
   window.removeEventListener('resize', handleWindowResize);
+  reset();
 });
 onActivated(checkIncomingFile);
 </script>

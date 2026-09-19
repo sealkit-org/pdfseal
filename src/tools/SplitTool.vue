@@ -809,6 +809,7 @@ async function loadFile(file, password = '') {
       // By default select all pages on load (compatible with E2E tests)
       selectedIndices.value.add(i - 1);
     }
+    try { await pdf.destroy(); } catch (e) {}
   } catch (err) {
     if (err.name === 'PasswordException' || err.message?.toLowerCase().includes('password')) {
       docBytes.value = null;

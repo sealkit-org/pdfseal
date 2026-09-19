@@ -384,6 +384,7 @@ async function loadFile(file, password = '') {
     });
     const pdf = await loadingTask.promise;
     totalPages.value = pdf.numPages;
+    try { await pdf.destroy(); } catch (e) {}
   } catch (e) {
     totalPages.value = 1;
   }

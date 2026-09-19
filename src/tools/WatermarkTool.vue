@@ -425,6 +425,7 @@ async function ensurePage1Rendered() {
     page1Canvas.width = viewport.width;
     page1Canvas.height = viewport.height;
     await page1.render({ canvasContext: ctx, viewport }).promise;
+    try { await pdf.destroy(); } catch (e) {}
   } catch (err) {
     logger.warn('WATERMARK', `Failed to ensure page 1 rendered: ${err.message}`);
   }
