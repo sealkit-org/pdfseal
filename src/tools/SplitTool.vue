@@ -2,20 +2,78 @@
   <section class="w-full flex-1 flex flex-col">
     <!-- Main Card Container matching Merge & Organize tools -->
     <div class="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-7 shadow-xl border border-slate-100 flex flex-col flex-1">
-      <!-- Integrated Header with Badge -->
-      <div class="flex items-center justify-between pb-3 sm:pb-4 border-b border-slate-100 shrink-0">
-        <div class="flex items-center space-x-3">
+      <!-- Universal File Input -->
+      <input 
+        ref="fileInputRef" 
+        type="file" 
+        accept="application/pdf,.pdf" 
+        class="hidden" 
+        @change="onFileSelected" 
+      >
+
+      <!-- Integrated Header with Dynamic Subtitle & Action Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2.5 sm:pb-3 border-b border-slate-100 shrink-0">
+        <div class="flex items-center space-x-3 min-w-0">
           <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold shadow-2xs">
-            <Scissors class="w-5 h-5" />
+            <Scissors class="w-4.5 h-4.5 sm:w-5 sm:h-5" />
           </div>
-          <div>
+          <div class="min-w-0">
             <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-tight">
               {{ t('split_title') }}
             </h2>
-            <p class="text-xs text-slate-500 mt-0.5 hidden sm:block">
+            <!-- Dynamic Subtitle: File selection info when active, otherwise tool description -->
+            <div v-if="docBytes && !isProcessing && !isDelivering && !lastExportedFile" class="flex items-center space-x-2 mt-0.5 min-w-0">
+              <span class="text-xs sm:text-sm font-extrabold text-slate-800 shrink-0">
+                {{ totalPages }} {{ t('pages_label') || 'pages' }}
+              </span>
+              <span v-if="activeMode === 'extract'" class="text-xs bg-blue-50 text-blue-700 font-extrabold px-2 py-0.5 rounded-md border border-blue-200 shrink-0">
+                {{ selectedIndices.size }} {{ t('selected_label') || 'selected' }}
+              </span>
+              <span class="text-xs font-bold text-slate-700 truncate max-w-[140px] sm:max-w-xs" :title="filename">
+                {{ filename }}
+              </span>
+              <span 
+                v-if="unlockedPassword" 
+                class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-md font-bold flex items-center shrink-0"
+              >
+                <Unlock class="w-3 h-3 mr-0.5" />
+                {{ t('badge_unlocked') || 'Unlocked' }}
+              </span>
+            </div>
+            <p v-else class="text-xs text-slate-500 mt-0.5 hidden sm:block">
               {{ t('split_desc') }}
             </p>
           </div>
+        </div>
+
+        <!-- Quick Action Buttons (Fused into Top Header when file is active) -->
+        <div v-if="docBytes && !isProcessing && !isDelivering && !lastExportedFile" class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+          <!-- Choose Another Local File -->
+          <button 
+            @click="fileInputRef.click()"
+            class="text-xs text-emerald-600 hover:bg-emerald-50 font-semibold px-2.5 py-1.5 rounded-xl border border-emerald-200 transition flex items-center space-x-1 cursor-pointer"
+          >
+            <RefreshCw class="w-3.5 h-3.5" />
+            <span class="hidden sm:inline">{{ t('btn_choose_another') || 'Choose Another' }}</span>
+          </button>
+
+          <!-- Choose From Vault -->
+          <button 
+            @click="isVaultPickerOpen = true"
+            class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
+          >
+            <FolderLock class="w-3.5 h-3.5 text-emerald-600" />
+            <span class="hidden sm:inline">{{ t('merge_btn_from_vault') || 'Vault' }}</span>
+          </button>
+
+          <!-- Clear / Reset -->
+          <button 
+            @click="reset" 
+            data-testid="split-reset-btn"
+            class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
+          >
+            {{ t('btn_clear_all') || 'Clear' }}
+          </button>
         </div>
       </div>
 
@@ -30,14 +88,6 @@
           isDragOver ? 'border-emerald-500 bg-emerald-50/50' : 'border-slate-200/90 hover:border-emerald-400 bg-slate-50/40 hover:bg-slate-50/80'
         ]"
       >
-        <input 
-          ref="fileInputRef" 
-          type="file" 
-          accept="application/pdf,.pdf" 
-          class="hidden" 
-          @change="onFileSelected" 
-        >
-        
         <div class="w-14 h-14 sm:w-16 sm:h-16 bg-emerald-50 text-emerald-600 rounded-2xl sm:rounded-3xl flex items-center justify-center mb-3 shadow-inner">
           <Scissors class="w-7 h-7 sm:w-8 sm:h-8" />
         </div>
@@ -68,7 +118,7 @@
       </div>
 
       <!-- State B: Active Document Workspace OR Unified Result Delivery -->
-      <div v-else class="flex-1 flex flex-col justify-between pt-3 sm:pt-3.5 overflow-hidden">
+      <div v-else :class="['flex-1 flex flex-col justify-between min-h-0 overflow-hidden', isProcessing || isDelivering || lastExportedFile ? 'pt-4' : 'pt-2.5 sm:pt-3']">
         <!-- 2A. Unified Processing & Result Delivery View upon Completion -->
         <ResultDeliveryView 
           v-if="isProcessing || isDelivering || lastExportedFile"
@@ -107,91 +157,6 @@
 
         <!-- 2B. Interactive Split Settings Workspace & Thumbnail Grid -->
         <div v-else class="flex-1 flex flex-col justify-between overflow-hidden min-h-0">
-          <!-- 1. Top Toolbar & Status Bar -->
-          <div class="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-100 shrink-0">
-            <div class="flex items-center space-x-2 min-w-0 flex-1">
-              <span class="text-xs bg-emerald-50 text-emerald-700 font-extrabold px-2.5 py-1 rounded-lg border border-emerald-200 shrink-0">
-                {{ totalPages }} {{ t('pages_label') || 'pages' }}
-              </span>
-              <span class="text-xs bg-blue-50 text-blue-700 font-extrabold px-2.5 py-1 rounded-lg border border-blue-200 shrink-0">
-                {{ selectedIndices.size }} {{ t('pages_label') }} {{ t('selected_label') }}
-              </span>
-              <span class="text-xs font-bold text-slate-700 truncate max-w-xs" :title="filename">
-                {{ filename }}
-              </span>
-              <span 
-                v-if="unlockedPassword" 
-                class="text-[10px] bg-amber-100 text-amber-800 px-2 py-0.5 rounded-md font-bold flex items-center shrink-0"
-              >
-                <Unlock class="w-3 h-3 mr-0.5" />
-                {{ t('badge_unlocked') || 'Unlocked' }}
-              </span>
-            </div>
-
-            <!-- Quick Action Buttons -->
-            <div class="flex items-center space-x-1.5 sm:space-x-2">
-              <!-- Mode 1 Quick Buttons -->
-              <template v-if="activeMode === 'extract'">
-                <button 
-                  @click="selectAll" 
-                  class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer"
-                  :title="t('btn_select_all')"
-                >
-                  <CheckSquare class="w-3.5 h-3.5 text-slate-600" />
-                  <span>{{ t('btn_select_all') || 'Select All' }}</span>
-                </button>
-
-                <button 
-                  @click="clearAll" 
-                  class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200/80 transition flex items-center space-x-1 cursor-pointer"
-                  :title="t('btn_deselect_all')"
-                >
-                  <Square class="w-3.5 h-3.5 text-slate-600" />
-                  <span>{{ t('btn_deselect_all') || 'Deselect All' }}</span>
-                </button>
-
-                <button 
-                  @click="selectOdds" 
-                  class="text-xs bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium px-2.5 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer"
-                >
-                  {{ t('split_btn_select_odds') || 'Odd' }}
-                </button>
-
-                <button 
-                  @click="selectEvens" 
-                  class="text-xs bg-slate-50 hover:bg-slate-100 text-slate-600 font-medium px-2.5 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer"
-                >
-                  {{ t('split_btn_select_evens') || 'Even' }}
-                </button>
-              </template>
-
-              <!-- Choose Another Local File -->
-              <button 
-                @click="fileInputRef.click()"
-                class="text-xs text-emerald-600 hover:bg-emerald-50 font-semibold px-2.5 py-1.5 rounded-xl border border-emerald-200 transition flex items-center space-x-1 cursor-pointer"
-              >
-                <RefreshCw class="w-3.5 h-3.5" />
-                <span class="hidden sm:inline">{{ t('btn_choose_another') || 'Choose Another' }}</span>
-              </button>
-
-              <!-- Choose From Vault -->
-              <button 
-                @click="isVaultPickerOpen = true"
-                class="text-xs text-slate-700 hover:bg-slate-100 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
-              >
-                <FolderLock class="w-3.5 h-3.5 text-emerald-600" />
-                <span class="hidden sm:inline">{{ t('merge_btn_from_vault') || 'Vault' }}</span>
-              </button>
-
-              <!-- Clear / Reset -->
-              <button 
-                @click="reset" 
-                class="text-xs text-rose-600 hover:bg-rose-50 font-semibold px-2.5 py-1.5 rounded-xl transition cursor-pointer"
-              >
-                {{ t('btn_clear_all') || 'Clear' }}
-              </button>
-            </div>
-          </div>
 
           <!-- 2. Four Split Modes Tab Switcher -->
           <div class="my-2.5 bg-slate-100/80 p-1 rounded-2xl flex items-center space-x-1 shrink-0 overflow-x-auto">
@@ -253,10 +218,45 @@
           </div>
 
           <!-- 3. Dynamic Mode Parameter Controls Panel -->
-          <!-- Mode 1: Custom Range + Merge/Separate Format -->
-          <div v-if="activeMode === 'extract'" class="bg-slate-50/90 rounded-2xl p-3 mb-2 border border-slate-200/80 flex flex-wrap items-center justify-between gap-3 text-xs shrink-0">
-            <div class="flex items-center space-x-2 flex-1 min-w-[280px]">
-              <span class="font-bold text-slate-700 shrink-0">{{ t('custom_page_range') || 'Custom Page Range:' }}</span>
+          <!-- Mode 1: Custom Range + Merge/Separate Format + Batch Selection -->
+          <div v-if="activeMode === 'extract'" class="bg-slate-50/90 rounded-2xl p-2.5 sm:p-3 mb-2 border border-slate-200/80 flex flex-wrap items-center justify-between gap-2.5 text-xs shrink-0">
+            <!-- Quick Page Selection Helpers -->
+            <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+              <button 
+                @click="selectAll" 
+                class="text-xs bg-white hover:bg-slate-100 text-slate-700 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
+                :title="t('btn_select_all')"
+              >
+                <CheckSquare class="w-3.5 h-3.5 text-slate-600" />
+                <span>{{ t('btn_select_all') || 'Select All' }}</span>
+              </button>
+
+              <button 
+                @click="clearAll" 
+                class="text-xs bg-white hover:bg-slate-100 text-slate-700 font-semibold px-2.5 py-1.5 rounded-xl border border-slate-200 transition flex items-center space-x-1 cursor-pointer"
+                :title="t('btn_deselect_all')"
+              >
+                <Square class="w-3.5 h-3.5 text-slate-600" />
+                <span>{{ t('btn_deselect_all') || 'Deselect All' }}</span>
+              </button>
+
+              <button 
+                @click="selectOdds" 
+                class="text-xs bg-white hover:bg-slate-100 text-slate-600 font-medium px-2 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer"
+              >
+                {{ t('split_btn_select_odds') || 'Odd' }}
+              </button>
+
+              <button 
+                @click="selectEvens" 
+                class="text-xs bg-white hover:bg-slate-100 text-slate-600 font-medium px-2 py-1.5 rounded-xl border border-slate-200 transition cursor-pointer"
+              >
+                {{ t('split_btn_select_evens') || 'Even' }}
+              </button>
+            </div>
+
+            <!-- Custom Page Range Input -->
+            <div class="flex items-center space-x-2 flex-1 min-w-[240px] max-w-sm">
               <input 
                 v-model="rangeInput" 
                 @keyup.enter="applyRange"
@@ -273,7 +273,7 @@
             </div>
 
             <!-- Format Choice: Merge into 1 vs Separate -->
-            <div class="flex items-center space-x-3 text-xs text-slate-700 font-medium pl-1 border-l border-slate-200">
+            <div class="flex items-center space-x-3 text-xs text-slate-700 font-medium pl-1 sm:border-l sm:border-slate-200">
               <span class="text-slate-500 font-semibold">{{ t('split_extract_output_label') || 'Export Output:' }}</span>
               <label class="flex items-center space-x-1.5 cursor-pointer">
                 <input type="radio" value="merge" v-model="extractFormat" class="text-emerald-600 focus:ring-emerald-500 cursor-pointer">
@@ -380,14 +380,6 @@
               </button>
             </div>
           </div>
-
-          <input 
-            ref="fileInputRef" 
-            type="file" 
-            accept="application/pdf,.pdf" 
-            class="hidden" 
-            @change="onFileSelected" 
-          >
 
           <!-- Loading State -->
           <div v-if="isLoading" class="flex-1 flex flex-col items-center justify-center py-20 text-center text-xs text-slate-500 font-medium">
