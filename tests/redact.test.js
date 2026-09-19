@@ -1,9 +1,10 @@
 /**
- * RedactTool 引擎单测（True Stream Redaction 防伪标准验证）。
+ * RedactTool Engine Unit Tests (True Stream Redaction Anti-Leak Standards).
  *
- * 策略：fixture 全部 pdf-lib 程序化生成；脱敏矩形从 pdf.js 文本提取的
- * 精确 bbox 派生（与 UI 吸附同源），从而验证"自有模拟器几何 vs pdf.js 几何"一致性。
- * 删除后重新提取断言：目标行消失、兄弟行保留、验证器通过。
+ * Strategy: fixtures programmatically created with pdf-lib; redaction rectangles
+ * derived from exact bounding boxes extracted via pdf.js (same source of truth as UI snapping),
+ * validating geometric consistency between custom text simulation and pdf.js extraction.
+ * Re-extraction asserts: target lines disappear, sibling lines survive, and verifier passes.
  */
 import { describe, it, expect } from 'vitest';
 import {
@@ -19,9 +20,9 @@ import { verifyRedaction } from '../src/utils/redaction/verifyRedaction.js';
 import { textItemToUserBBox } from '../src/utils/redaction/coords.js';
 import { UNIVERSAL_DATE_REGEX, getLocalizedPiiPresets, PII_PRESETS, matchRules } from '../src/utils/redaction/ruleMatcher.js';
 
-// ---------- 工具 ----------
+// ---------- Utilities ----------
 
-/** 经典 1x1 JPEG（base64），用于图像 fixture 与栅格注入 */
+/** Standard 1x1 JPEG (base64), used for image fixtures and raster mock injection */
 const TINY_JPEG = Uint8Array.from(
   atob(
     '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwcJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPDs0NDT/wAALCAABAAEBAREA/8QAFAABAQAAAAAAAAAAAAAAAAAAAAv/2gAIAQEAAD8A0s8g/9k='
@@ -58,7 +59,7 @@ async function extractText(bytes) {
   return pages;
 }
 
-/** 从提取结果中按子串找文本项，返回用户空间 bbox（±0.5pt 容差外扩） */
+/** Finds text items by substring from extraction results, returning user-space bbox (+/- 0.5pt tolerance margin) */
 function findBBox(pages, pageIndex, needle) {
   const items = pages[pageIndex];
   const hit = items.find((e) => e.str.includes(needle));
@@ -67,7 +68,7 @@ function findBBox(pages, pageIndex, needle) {
   return { x: b.x - 0.5, y: b.y - 0.5, w: b.w + 1, h: b.h + 1 };
 }
 
-// ---------- Fixture ----------
+// ---------- Fixtures ----------
 
 async function makeTextPdf() {
   const doc = await PDFDocument.create();
@@ -76,7 +77,7 @@ async function makeTextPdf() {
   page.drawText('Line One Alpha', { x: 72, y: 720, size: 12, font });
   page.drawText('SECRET-CONTENT-42', { x: 72, y: 690, size: 12, font });
   page.drawText('Line Three Gamma', { x: 72, y: 660, size: 12, font });
-  // 一条覆盖第 2 行区域的注释（验证 Annots 清理）
+  // An annotation covering Line 2 area (validates Annots removal)
   const ctx = doc.context;
   const annotRef = ctx.register(ctx.obj({
     Type: 'Annot', Subtype: 'Text',
@@ -94,7 +95,7 @@ async function makeManualStreamPdf(contentOps) {
   const ctx = doc.context;
   const streamRef = ctx.register(ctx.flateStream(new TextEncoder().encode(contentOps)));
   page.node.set(PDFName.of('Contents'), streamRef);
-  // 非嵌入字体带 /Widths：pdf.js 与 FontWidthResolver 均尊重该表，宽度口径一致
+  // Non-embedded font with /Widths: both pdf.js and FontWidthResolver respect this table for consistent widths
   const widths = PDFArray.withContext(ctx);
   for (let i = 0; i < 100; i++) widths.push(PDFNumber.of(600));
   const fontRef = ctx.register(ctx.obj({
@@ -120,12 +121,12 @@ async function makeImagePdf() {
 }
 
 async function makeFormPdf() {
-  // doc A：被嵌入的源页（含敏感词）
+  // doc A: embedded source page (containing sensitive text)
   const docA = await PDFDocument.create();
   const fontA = await docA.embedFont(StandardFonts.Helvetica);
   const pA = docA.addPage([300, 300]);
   pA.drawText('FORMSECRET-99', { x: 10, y: 150, size: 12, font: fontA });
-  // doc B：以 Form XObject 形式绘制 A 页
+  // doc B: draws Page A as a Form XObject
   const docB = await PDFDocument.create();
   const fontB = await docB.embedFont(StandardFonts.Helvetica);
   const page = docB.addPage([595.28, 841.89]);
@@ -135,10 +136,10 @@ async function makeFormPdf() {
   return docB.save();
 }
 
-// ---------- 用例 ----------
+// ---------- Test Cases ----------
 
 describe('redactEngine: True Stream Redaction', () => {
-  it('① 矢量删除：目标行物理消失，兄弟行保留，注释清理，验证通过', async () => {
+  it('1. Vector removal: target line physically excised, sibling lines preserved, annots purged, verified', async () => {
     const bytes = await makeTextPdf();
     const before = await extractText(bytes);
     const rect = findBBox(before, 0, 'SECRET-CONTENT-42');
@@ -153,20 +154,20 @@ describe('redactEngine: True Stream Redaction', () => {
     expect(pageText).toContain('Line One Alpha');
     expect(pageText).toContain('Line Three Gamma');
     expect(pageText).not.toContain('SECRET-CONTENT-42');
-    expect(pageText).not.toContain('42'); // 零残留
+    expect(pageText).not.toContain('42'); // Zero residual
 
     expect(report.pages[0].removedOps).toBeGreaterThanOrEqual(1);
     expect(report.pages[0].removedAnnots).toBe(1);
     expect(report.verify.ok).toBe(true);
     expect(report.ok).toBe(true);
 
-    // 产物里注释对象已删
+    // Annotation object physically deleted in output
     const outDoc = await PDFDocument.load(out);
     const annots = outDoc.getPage(0).node.Annots();
     expect(annots).toBeUndefined();
   }, 60000);
 
-  it('② 三种遮罩样式：black/white 填充色、stamp 含 [REDACTED]', async () => {
+  it('2. Three mask styles: black/white fill colors, stamp with [REDACTED]', async () => {
     const bytes = await makeTextPdf();
     const before = await extractText(bytes);
     const rect = findBBox(before, 0, 'SECRET-CONTENT-42');
@@ -181,7 +182,7 @@ describe('redactEngine: True Stream Redaction', () => {
       } else if (style === 'white') {
         expect(content).toContain('1 1 1 rg');
       } else {
-        // pdf-lib drawText 输出十六进制编码文本，内容流搜不到明文 → 从文本层断言戳记
+        // pdf-lib drawText outputs hex-encoded text; assert stamp text from text extraction layer
         const after = await extractText(out);
         expect(after[0].map((e) => e.str).join(' ')).toContain('[REDACTED]');
       }
@@ -189,7 +190,7 @@ describe('redactEngine: True Stream Redaction', () => {
     }
   }, 60000);
 
-  it('②-b 扩展遮罩样式：gray/custom 颜色与自定义 stampText', async () => {
+  it('2-b. Extended mask styles: gray/custom colors and customized stampText', async () => {
     const bytes = await makeTextPdf();
     const before = await extractText(bytes);
     const rect = findBBox(before, 0, 'SECRET-CONTENT-42');
@@ -233,7 +234,7 @@ describe('redactEngine: True Stream Redaction', () => {
     expect(afterLightStamp[0].map((e) => e.str).join(' ')).toContain('[LIGHT_STAMP]');
   }, 60000);
 
-  it('③ 十六进制字符串 <4849> 几何删除', async () => {
+  it('3. Hexadecimal string <4849> geometric excision', async () => {
     const bytes = await makeManualStreamPdf('BT /F1 12 Tf 1 0 0 1 72 700 Tm <4849> Tj ET');
     const before = await extractText(bytes);
     expect(before[0].map((e) => e.str).join('')).toContain('HI');
@@ -245,7 +246,7 @@ describe('redactEngine: True Stream Redaction', () => {
     expect(report.verify.ok).toBe(true);
   }, 60000);
 
-  it('④ 旋转文本（Tm 0 1 -1 0）几何删除', async () => {
+  it('4. Rotated text (Tm 0 1 -1 0) geometric excision', async () => {
     const bytes = await makeManualStreamPdf('BT /F1 12 Tf 0 1 -1 0 72 500 Tm (ROTATED-TARGET) Tj ET');
     const before = await extractText(bytes);
     expect(before[0].map((e) => e.str).join('')).toContain('ROTATED-TARGET');
@@ -257,37 +258,37 @@ describe('redactEngine: True Stream Redaction', () => {
     expect(report.verify.ok).toBe(true);
   }, 60000);
 
-  it('⑤ 图像命中：整页栅格化替换，文本层物理清除', async () => {
+  it('5. Image intersection: full-page rasterization fallback, text layer physically cleared', async () => {
     const bytes = await makeImagePdf();
     const before = await extractText(bytes);
     expect(before[0].map((e) => e.str).join(' ')).toContain('Text Near Image 777');
 
-    // 脱敏框盖住图像区域 → 页面必须走栅格路径
+    // Redaction box covers image area -> page must take raster path
     const rect = { x: 72, y: 400, w: 200, h: 150 };
     const { bytes: out, report } = await redactPdf(bytes, {
       pages: { 0: { rects: [rect] } },
       style: 'black'
     }, {
-      // Node 环境注入假渲染器：返回 1x1 JPEG + 页面原始尺寸
+      // Injected mock renderer in Node test: returns 1x1 JPEG + original page dimensions
       renderPage: async () => ({ jpegBytes: TINY_JPEG, widthPt: 595.28, heightPt: 841.89 })
     });
 
     expect(report.pages[0].path).toBe('raster');
     expect(report.rasterPages).toContain(0);
     const after = await extractText(out);
-    expect(after[0].length).toBe(0); // 栅格页无任何文本层
+    expect(after[0].length).toBe(0); // Rasterized page has zero extractable text layer
     expect(report.verify.ok).toBe(true);
 
-    // 产物：单图像内容流 + 新 Resources
+    // Output: single image content stream + fresh Resources
     const doc = await PDFDocument.load(out);
     const content = new TextDecoder('latin1').decode(getPageContentBytes(doc.getPage(0).node, doc.context));
     expect(content).toContain('/X0 Do');
   }, 60000);
 
-  it('⑥ 输出验证器：干净产物 ok，手工构造残留则报 leftover', async () => {
+  it('6. Output verifier: clean output passes, synthetic leftover reported as leftover', async () => {
     const bytes = await makeTextPdf();
     const v = await verifyRedaction(bytes, {
-      pages: { 0: { rects: [{ x: 60, y: 680, w: 240, h: 20 }] } } // 盖住第 2 行但未脱敏
+      pages: { 0: { rects: [{ x: 60, y: 680, w: 240, h: 20 }] } } // Covers Line 2 but unredacted
     });
     expect(v.ok).toBe(false);
     expect(v.leftoverPages).toContain(0);
@@ -299,7 +300,7 @@ describe('redactEngine: True Stream Redaction', () => {
     expect(v2.ok).toBe(true);
   }, 60000);
 
-  it('⑦ Form XObject 内文本递归删除', async () => {
+  it('7. Recursive text removal inside Form XObject', async () => {
     const bytes = await makeFormPdf();
     const before = await extractText(bytes);
     const allText = before[0].map((e) => e.str).join(' ');
@@ -317,7 +318,7 @@ describe('redactEngine: True Stream Redaction', () => {
     expect(report.verify.ok).toBe(true);
   }, 60000);
 
-  it('⑧ 工具注册：路由与 5 语 i18n key 完整', async () => {
+  it('8. Tool registration: routing and 5-language i18n keys complete', async () => {
     const { TOOL_ROUTES } = await import('../src/router/toolRoutes.js');
     expect(TOOL_ROUTES['redact']).toBe('/redact-pdf');
 
@@ -327,7 +328,7 @@ describe('redactEngine: True Stream Redaction', () => {
     const es = (await import('../src/locales/es.json')).default;
     const fr = (await import('../src/locales/fr.json')).default;
 
-    // en（master）里所有 redact_ / seo_*_redact / result_*_redact / next_action_redact / tab_redact keys
+    // All redact_ / seo_*_redact / result_*_redact / next_action_redact / tab_redact keys in en (master)
     const redactKeys = Object.keys(en).filter((k) =>
       k === 'tab_redact' || k === 'next_action_redact' ||
       k.endsWith('_redact') || k.startsWith('redact_')
@@ -338,7 +339,7 @@ describe('redactEngine: True Stream Redaction', () => {
       const missing = redactKeys.filter((k) => !dict[k]);
       expect(missing).toEqual([]);
     }
-    // zh / en 术语改名全面断言：sanitize = 元数据清理 (Scrub Metadata)，redact = 敏感信息脱敏 (Redact Content)
+    // Terminology renaming assertions: sanitize = Scrub Metadata, redact = Redact Content
     expect(zh['tab_sanitize']).toBe('元数据清理');
     expect(zh['tab_redact']).toBe('敏感信息脱敏');
     expect(zh['sanitize_title']).toBe('PDF 元数据清理');
@@ -362,7 +363,7 @@ describe('redactEngine: True Stream Redaction', () => {
 });
 
 describe('contentStreamParser: lexer', () => {
-  it('解析基础操作符与字节范围', () => {
+  it('parses basic operators and byte ranges', () => {
     const src = 'BT /F1 12 Tf 1 0 0 1 72 700 Tm (Hello) Tj ET';
     const bytes = new TextEncoder().encode(src);
     const { ops, parseError } = parseContentStream(bytes);
@@ -371,18 +372,18 @@ describe('contentStreamParser: lexer', () => {
     expect(names).toEqual(['BT', 'Tf', 'Tm', 'Tj', 'ET']);
     const tj = ops[3];
     expect(tj.args[0]).toBe('Hello');
-    // span 完整性：切片还原 == 原文对应段
+    // span integrity: sliced slice == original segment
     const slice = new TextDecoder().decode(bytes.subarray(tj.start, tj.end));
     expect(slice.replace(/\s+/g, '')).toBe('(Hello)Tj');
   });
 
-  it('字符串转义与嵌套括号', () => {
+  it('string escapes and nested parentheses', () => {
     const src = '(a\\(b\\)c\\065) Tj';
     const { ops } = parseContentStream(new TextEncoder().encode(src));
-    expect(ops[0].args[0]).toBe('a(b)c5'); // \\065 八进制 = '5'
+    expect(ops[0].args[0]).toBe('a(b)c5'); // \\065 octal = '5'
   });
 
-  it('TJ 数组与负数字距', () => {
+  it('TJ arrays and negative kerning displacement', () => {
     const src = '[(A) -120 (BC)] TJ';
     const { ops } = parseContentStream(new TextEncoder().encode(src));
     expect(ops[0].op).toBe('TJ');
@@ -390,16 +391,16 @@ describe('contentStreamParser: lexer', () => {
     expect(ops[0].args[0][1]).toBe(-120);
   });
 
-  it('内联图 BI/ID/EI 整段跳过且重建保留', () => {
+  it('inline image BI/ID/EI skipped as single span and preserved on rebuild', () => {
     const src = 'q BI /W 2 /H 2 /BPC 8 /CS /G ID ' + 'AAAA' + ' EI Q 1 0 0 1 5 5 cm';
     const bytes = new TextEncoder().encode(src);
     const { ops, inlineImageSpans, parseError } = parseContentStream(bytes);
     expect(parseError).toBeNull();
     expect(inlineImageSpans.length).toBe(1);
-    expect(ops.map((o) => o.op)).toEqual(['q', 'Q', 'cm']); // BI..EI 不产生 op
+    expect(ops.map((o) => o.op)).toEqual(['q', 'Q', 'cm']); // BI..EI produces no ops
   });
 
-  it('未知操作符（BDC/EMC）与 dict 操作数安全通过', () => {
+  it('unknown operators (BDC/EMC) and dict operands pass safely', () => {
     const src = '/OC << /Type /OCG /Name (Layer1) >> BDC (Visible) Tj EMC';
     const { ops, parseError } = parseContentStream(new TextEncoder().encode(src));
     expect(parseError).toBeNull();
@@ -408,7 +409,7 @@ describe('contentStreamParser: lexer', () => {
 });
 
 describe('textState: simulateOps', () => {
-  it('Tm + Tj 的 bbox 与 pdf.js 提取一致（x ≤2pt，y ≤5pt 因模拟器含下降部，宽 ≤3pt）', async () => {
+  it('Tm + Tj bbox matches pdf.js extraction (x <= 2pt, y <= 5pt with descent, w <= 3pt)', async () => {
     const bytes = await makeManualStreamPdf('BT /F1 12 Tf 1 0 0 1 72 700 Tm (XYPOSITION) Tj ET');
     const pages = await extractText(bytes);
     const pdfjsBBox = textItemToUserBBox(pages[0][0].item);
@@ -423,7 +424,7 @@ describe('textState: simulateOps', () => {
     expect(sim.showText.length).toBe(1);
     const b = sim.showText[0].bbox;
     expect(Math.abs(b.x - pdfjsBBox.x)).toBeLessThanOrEqual(2);
-    // 模拟器 bbox 有意包含下降部（基线 - 0.25×字号），pdf.js item.height 仅字体竖直尺寸
+    // Simulator bbox intentionally includes descent (baseline - 0.25 * fs); pdf.js item.height is vertical size only
     expect(Math.abs(b.y - pdfjsBBox.y)).toBeLessThanOrEqual(5);
     expect(Math.abs((b.x + b.w) - (pdfjsBBox.x + pdfjsBBox.w))).toBeLessThanOrEqual(3);
   }, 30000);
@@ -448,16 +449,16 @@ describe('fontWidths: FontWidthResolver', () => {
     expect(r.getWidth('F1', 65)).toBe(600); // 'A'
     expect(r.getWidth('F1', 66)).toBe(700);
     expect(r.getWidth('F1', 67)).toBe(800);
-    expect(r.getWidth('F1', 200)).toBe(500); // 越界 → 0.5em fallback
+    expect(r.getWidth('F1', 200)).toBe(500); // Out of range -> 0.5em fallback
     expect(r.hasFont('F1')).toBe(true);
     expect(r.hasFont('F9')).toBe(false);
   });
 
-  it('Type0 /W 与 /DW', async () => {
+  it('Type0 /W and /DW parsing', async () => {
     const doc = await PDFDocument.create();
     const ctx = doc.context;
     const wArr = PDFArray.withContext(ctx);
-    wArr.push(PDFNumber.of(10)); // cid 10 起
+    wArr.push(PDFNumber.of(10)); // From cid 10
     const inner = PDFArray.withContext(ctx);
     [500, 600].forEach((w) => inner.push(PDFNumber.of(w)));
     wArr.push(inner); // cid10=500, cid11=600
@@ -484,7 +485,7 @@ describe('fontWidths: FontWidthResolver', () => {
 });
 
 describe('ruleMatcher: Universal Date & Localized Presets', () => {
-  it('全能日期正则：命中 ISO、中文、美国、欧洲多国日期格式，不误报常规数字', () => {
+  it('Universal date regex: matches ISO, Chinese, US, and European formats without false positives on regular numbers', () => {
     const re = new RegExp(UNIVERSAL_DATE_REGEX, 'g');
     const validCases = [
       '2026-09-17',
@@ -514,7 +515,7 @@ describe('ruleMatcher: Universal Date & Localized Presets', () => {
     }
   });
 
-  it('getLocalizedPiiPresets: 中文返回身份证与大陆手机号，英文返回 SSN 与国际电话', () => {
+  it('getLocalizedPiiPresets: returns ID and mobile phone for zh, SSN and phone for en', () => {
     const zhPresets = getLocalizedPiiPresets('zh');
     const enPresets = getLocalizedPiiPresets('en');
 
@@ -532,7 +533,7 @@ describe('ruleMatcher: Universal Date & Localized Presets', () => {
     expect(enDate.value).toBe(UNIVERSAL_DATE_REGEX);
   });
 
-  it('matchRules: 支持 item.bbox 输入并在单行相邻合并中完整保留 snapped 文本', () => {
+  it('matchRules: supports item.bbox input and retains snapped text across same-line merge', () => {
     const items = [
       { str: 'Confidential', bbox: { x: 50, y: 700, w: 60, h: 12 } },
       { str: 'Document', bbox: { x: 115, y: 700, w: 50, h: 12 } },
@@ -547,16 +548,16 @@ describe('ruleMatcher: Universal Date & Localized Presets', () => {
     expect(res.rects[0].x).toBe(50);
     expect(res.rects[0].w).toBe(60);
 
-    // 正则多项匹配与同行合并
+    // Multi-item regex matching and same-line merging
     const ruleMulti = { type: 'regex', value: '(?:Confidential|Document)', caseSensitive: false };
     const resMulti = matchRules(items, [ruleMulti]);
     expect(resMulti.totalHits).toBe(2);
-    expect(resMulti.rects.length).toBe(1); // 间距 5pt <= 12pt 合并为单个矩形
+    expect(resMulti.rects.length).toBe(1); // Gap 5pt <= 12pt merged into single rectangle
     expect(resMulti.rects[0].snapped).toContain('Confidential');
     expect(resMulti.rects[0].snapped).toContain('Document');
   });
 
-  it('Smart Search & Redact 集成模拟：模拟页面多项 PII 检索、去重与快照撤销', () => {
+  it('Smart Search & Redact integration simulation: multi-PII retrieval, de-duplication and undo', () => {
     const pageItems = [
       { str: 'Contact: alice@example.com', bbox: { x: 50, y: 720, w: 180, h: 12 } },
       { str: 'Date: 2026-09-17', bbox: { x: 50, y: 700, w: 100, h: 12 } },
@@ -569,22 +570,22 @@ describe('ruleMatcher: Universal Date & Localized Presets', () => {
     const datePreset = presets.find((p) => p.id === 'date');
     const idPreset = presets.find((p) => p.id === 'id');
 
-    // 1. 匹配邮箱
+    // 1. Match Email
     const emailRes = matchRules(pageItems, [{ type: emailPreset.type, value: emailPreset.value, caseSensitive: false }]);
     expect(emailRes.totalHits).toBe(1);
     expect(emailRes.rects[0].snapped).toBe('Contact: alice@example.com');
 
-    // 2. 匹配日期
+    // 2. Match Date
     const dateRes = matchRules(pageItems, [{ type: datePreset.type, value: datePreset.value, caseSensitive: false }]);
     expect(dateRes.totalHits).toBe(1);
     expect(dateRes.rects[0].snapped).toBe('Date: 2026-09-17');
 
-    // 3. 匹配身份证
+    // 3. Match ID
     const idRes = matchRules(pageItems, [{ type: idPreset.type, value: idPreset.value, caseSensitive: false }]);
     expect(idRes.totalHits).toBe(1);
     expect(idRes.rects[0].snapped).toBe('ID: 110101199003072345');
 
-    // 4. 重复搜索去重逻辑验证
+    // 4. Duplicate search avoidance logic verification
     const existingList = [
       { id: 'r1', x: 50, y: 720, w: 180, h: 12, snapped: 'Contact: alice@example.com' }
     ];

@@ -1,12 +1,12 @@
 /**
- * Redaction 引擎编排入口。
+ * Redaction Engine Orchestration Entry.
  *
- * 防伪标准（True Stream Redaction）：
- *  - 矢量文字：从内容流字节层面删除 show-text 操作符（黑块下面是真空）
- *  - 命中图像的页面：整页栅格化替换（原文字层/图像对象物理清除）
+ * Anti-leak / True Stream Redaction Standards:
+ *  - Vector text: physically strips show-text operators at the byte level of content streams (underneath the blackout box is pure void).
+ *  - Pages intersecting with images: full-page rasterization fallback (original text layers and image objects are physically removed).
  *
- * 坐标约定：spec.rects 一律为 PDF 用户空间（pdf.js convertToPdfRectangle 输出口径，
- * 与内容流坐标一致；/Rotate 由 pdf.js viewport 在 UI 侧处理）。
+ * Coordinate convention: spec.rects are strictly in PDF user space (matching pdf.js convertToPdfRectangle output
+ * and content stream coordinates; /Rotate is handled by pdf.js viewport on the UI side).
  *
  * @example
  * const { bytes, report } = await redactPdf(fileBytes, {
@@ -30,7 +30,7 @@ import { rasterBurnPage } from './rasterBurnIn.js';
 
 const STAMP_TEXT = '[REDACTED]';
 
-/** PDF 数值格式化（避免 JS 浮点尾差进入内容流） */
+/** Formats PDF numbers (avoids JS floating point drift entering content stream) */
 function fmt(n) {
   const r = Math.round(n * 10000) / 10000;
   return String(r);
@@ -45,10 +45,10 @@ function concatBytes(chunks) {
   return out;
 }
 
-/** 解码单条内容流（PDFRawStream 走 filter 解码；PDFContentStream 直接取字节） */
+/** Decodes a single content stream (PDFRawStream decodes via filter; PDFContentStream gets raw bytes) */
 function decodeStream(stream) {
   if (stream instanceof PDFRawStream) {
-    return decodePDFRawStream(stream).decode(); // 不支持的 filter 会 throw → 上层转栅格
+    return decodePDFRawStream(stream).decode(); // Unsupported filter throws -> page upgrades to rasterization
   }
   if (stream && typeof stream.getContents === 'function') {
     return stream.getContents();
@@ -56,7 +56,7 @@ function decodeStream(stream) {
   throw new Error('unsupported content stream type');
 }
 
-/** 取页面全部内容流字节（多条流按 PDF 语义拼接为一条）；导出供测试断言 */
+/** Retrieves all content stream bytes for a page (concatenated per PDF semantics); exported for test assertions */
 export function getPageContentBytes(pageNode, context) {
   let contents = pageNode.get(PDFName.of('Contents'));
   if (contents instanceof PDFRef) contents = context.lookup(contents);
@@ -73,7 +73,7 @@ export function getPageContentBytes(pageNode, context) {
   return decodeStream(contents);
 }
 
-/** 按删除区间重建字节流（保留切片拼接） */
+/** Reconstructs byte stream according to removed byte ranges (concatenates preserved slices) */
 export function rebuildBytes(bytes, spansToRemove) {
   if (!spansToRemove.length) return bytes;
   const sorted = [...spansToRemove].sort((a, b) => a.start - b.start);
@@ -88,8 +88,9 @@ export function rebuildBytes(bytes, spansToRemove) {
 }
 
 /**
- * 流对象的字典：pdf-lib 的 PDFStream 不继承 PDFDict（dict 存于 .dict 属性），
- * `stream instanceof PDFDict` 恒为 false——所有流字典访问必须经此帮助函数。
+ * Stream object dictionary helper:
+ * In pdf-lib, PDFStream does not inherit PDFDict (dictionary is stored in .dict property),
+ * so `stream instanceof PDFDict` is always false. All stream dictionary lookups must use this helper.
  */
 function asStreamDict(obj) {
   if (obj instanceof PDFRawStream) return obj.dict;
@@ -97,7 +98,7 @@ function asStreamDict(obj) {
   return null;
 }
 
-/** 页面 Contents 的全部间接引用 */
+/** Collects all indirect references for page Contents */
 function contentRefsOf(pageNode) {
   const out = [];
   const contents = pageNode.get(PDFName.of('Contents'));
@@ -112,7 +113,7 @@ function contentRefsOf(pageNode) {
   return out;
 }
 
-/** 页面 Annots 数组中的全部间接引用 */
+/** Collects all indirect references in page Annots array */
 function annotRefsOf(pageNode) {
   const out = [];
   const arr = pageNode.get(PDFName.of('Annots'));
@@ -126,8 +127,8 @@ function annotRefsOf(pageNode) {
 }
 
 /**
- * 物理删除已不再被本页引用的旧对象（防孤儿流在文件字节中残留被删文本）。
- * 仅当没有其他页面引用同一 ref 时才删（Contents/Annots 跨页共享极罕见，保守判定）。
+ * Physically deletes old objects that are no longer referenced by this page (prevents orphan streams from leaking redacted text).
+ * Only deleted if no other pages reference the same ref (cross-page sharing of Contents/Annots is extremely rare; conservative check).
  */
 function deleteOrphanedRefs(context, pdfDoc, exceptPageIndex, refs, refsOf) {
   for (const ref of refs) {
@@ -139,12 +140,12 @@ function deleteOrphanedRefs(context, pdfDoc, exceptPageIndex, refs, refsOf) {
       if (refsOf(pdfDoc.getPage(i).node).some((r) => r.toString() === key)) usedElsewhere = true;
     }
     if (!usedElsewhere) {
-      try { context.delete(ref); } catch { /* 忽略 */ }
+      try { context.delete(ref); } catch { /* ignore */ }
     }
   }
 }
 
-/** 某 Form ref 在全部页面 XObject 资源字典中的出现次数（>1 = 跨页/跨名共享） */
+/** Counts occurrences of a Form ref across all page XObject resource dictionaries (>1 = shared across pages/names) */
 function countFormRefUsage(pdfDoc, ref) {
   let count = 0;
   const key = ref.toString();
@@ -159,7 +160,7 @@ function countFormRefUsage(pdfDoc, ref) {
   return count;
 }
 
-/** 页面 MediaBox（number[4]） */
+/** Page MediaBox (number[4]) */
 function getMediaBox(pageNode) {
   const mb = pageNode.lookupMaybe(PDFName.of('MediaBox'), PDFArray);
   if (mb && mb.size() === 4) {
@@ -169,8 +170,8 @@ function getMediaBox(pageNode) {
 }
 
 /**
- * 处理一条内容流（页面主内容或 Form XObject）：
- * 解析 → 模拟 → 删除选中 show-text；返回 { newBytes|null, imageHits, parseError }
+ * Processes a content stream (page main contents or Form XObject):
+ * Parse -> Simulate -> Delete targeted show-text operators; returns { newBytes|null, imageHits, parseError }
  * @param {Uint8Array} bytes
  * @param {{rects:Array, fonts:FontWidthResolver, initialCtm?:number[]}} opts
  */
@@ -185,7 +186,7 @@ function processStream(bytes, { rects, fonts, initialCtm }) {
     : [];
 
   return {
-    newBytes: spans.length ? rebuildBytes(bytes, spans) : null, // null = 无需重写
+    newBytes: spans.length ? rebuildBytes(bytes, spans) : null, // null = no rewrite needed
     removedOps: removed.size,
     showTextCount: sim.showText.length,
     xobjectPlacements: sim.xobjects,
@@ -195,11 +196,11 @@ function processStream(bytes, { rects, fonts, initialCtm }) {
 }
 
 /**
- * 主入口。
- * @param {ArrayBuffer|Uint8Array} bytes 原始 PDF
+ * Main redaction entry.
+ * @param {ArrayBuffer|Uint8Array} bytes Original PDF bytes
  * @param {{pages: Record<number, {rects: Array<{x,y,w,h}>}>, style: 'black'|'white'|'stamp', dpi?: number, jpegQuality?: number}} spec
  * @param {{password?: string, onProgress?: Function, renderPage?: Function, verifyLoader?: Function, verify?: boolean}} [opts]
- *        renderPage 可注入（Node 单测用假渲染器）；默认走 rasterBurnIn 浏览器渲染
+ *        renderPage can be injected (mock renderer for Node unit tests); defaults to browser rasterBurnIn
  * @returns {Promise<{bytes: Uint8Array, report: Object}>}
  */
 export async function redactPdf(bytes, spec, opts = {}) {
@@ -223,16 +224,16 @@ export async function redactPdf(bytes, spec, opts = {}) {
 
   onProgress(0.05, 'analyzing');
 
-  // Mode 1 矢量加载（默认 Clean Mode 会整页栅格化摧毁文本层，绝不可用默认值）
+  // Mode 1 Vector loading (default Clean Mode rasterizes the entire page destroying text layer; must not use default)
   const pdfDoc = await loadCleanPdfDocument(bytes, { password, preserveWatermarks: true });
   const context = pdfDoc.context;
 
-  /** 需要栅格化的页面（图像命中/解析失败/验证残留重试） */
+  /** Pages requiring rasterization (image intersection / parse failure / verify leftover retry) */
   const rasterSet = new Set();
-  /** 页面级处理记录 */
+  /** Page-level processing reports */
   const pageReports = new Map();
 
-  // ---------- 第一遍：矢量路径分析 + 重写 ----------
+  // ---------- Pass 1: Vector path analysis + rewriting ----------
   for (let n = 0; n < pageIndexes.length; n++) {
     const pageIndex = pageIndexes[n];
     const rects = spec.pages[pageIndex].rects;
@@ -240,7 +241,7 @@ export async function redactPdf(bytes, spec, opts = {}) {
     const pageNode = page.node;
     const pr = { index: pageIndex, path: 'vector', removedOps: 0, removedAnnots: 0, reason: '' };
 
-    // 验证重试：矢量已证明删不干净的页强制栅格
+    // Verification retry: pages that failed complete vector text removal are forced to rasterize
     if (Array.isArray(opts.forceRaster) && opts.forceRaster.includes(pageIndex)) {
       pr.reason = 'verify-retry-force-raster';
       rasterSet.add(pageIndex);
@@ -260,7 +261,7 @@ export async function redactPdf(bytes, spec, opts = {}) {
     }
 
     if (analysis.parseError) {
-      // 解析失败：该页降级栅格化，绝不静默
+      // Parsing failure: fallback to page rasterization, never fail silently
       pr.reason = `parse-error: ${analysis.parseError}`;
       rasterSet.add(pageIndex);
       pageReports.set(pageIndex, pr);
@@ -268,9 +269,9 @@ export async function redactPdf(bytes, spec, opts = {}) {
       continue;
     }
 
-    // 图像命中：Do 引用的 XObject 若为 Image 且放置与矩形相交 → 栅格化
+    // Image intersection: if an XObject referenced by Do is an Image and its placement intersects with redaction rect -> rasterize
     const imageHit = detectImageHits(context, pageNode, analysis.xobjectPlacements, rects);
-    // 内联图（BI...EI）几何未知：保守视为命中（脱敏页宁可栅格，不可漏）
+    // Inline images (BI...EI) have unknown geometry: conservatively treat as hit (favor security over vector purity)
     const inlineHit = analysis.inlineImageSpans.length > 0;
     if (imageHit || inlineHit) {
       pr.reason = imageHit ? 'image-under-redaction' : 'inline-image-on-page';
@@ -280,18 +281,18 @@ export async function redactPdf(bytes, spec, opts = {}) {
       continue;
     }
 
-    // ---- Form XObject 递归分析（只分析不改写；危险信号 → 整页栅格兜底） ----
+    // ---- Form XObject recursive analysis (analysis-only without mutation; hazards trigger full page rasterization) ----
     const pageRes = pageNode.Resources();
     const formResult = redactFormXObjects(context, pdfDoc, pageRes, analysis.xobjectPlacements, rects);
     if (formResult.needRaster) {
-      pr.reason = 'form-xobject-hazard'; // 共享 Form/异种 filter/解析失败
+      pr.reason = 'form-xobject-hazard'; // Shared Form / unsupported filter / parsing error
       rasterSet.add(pageIndex);
       pageReports.set(pageIndex, pr);
       onProgress(0.05 + (0.45 * (n + 1)) / pageIndexes.length, 'analyzing');
       continue;
     }
 
-    // ---- 矢量重写：主内容流 ----
+    // ---- Vector rewrite: main content stream ----
     if (analysis.newBytes) {
       const oldRefs = contentRefsOf(pageNode);
       const newStream = context.flateStream(analysis.newBytes);
@@ -299,30 +300,30 @@ export async function redactPdf(bytes, spec, opts = {}) {
       deleteOrphanedRefs(context, pdfDoc, pageIndex, oldRefs, contentRefsOf);
     }
 
-    // ---- 应用 Form 原地改写（所有引用处一致生效，无孤儿对象） ----
+    // ---- Apply in-place Form rewrites (takes effect consistently across references, no orphan objects) ----
     for (const p of formResult.pending) {
       if (p.dict.get(PDFName.of('Filter')) === PDFName.of('FlateDecode')) {
         p.stream.contents = context.flateStream(p.newBytes).contents;
       } else {
-        p.stream.contents = p.newBytes; // 无 filter 的裸流
+        p.stream.contents = p.newBytes; // Raw uncompressed stream
       }
     }
     pr.removedOps = analysis.removedOps + formResult.removed;
 
-    // ---- 注释清理（/Rect 与脱敏区相交的 Annot 删除） ----
+    // ---- Annotation cleanup (delete Annots whose /Rect intersects with redaction rects) ----
     pr.removedAnnots = removeIntersectingAnnots(context, pdfDoc, pageIndex, pageNode, rects);
 
     pageReports.set(pageIndex, pr);
     onProgress(0.05 + (0.45 * (n + 1)) / pageIndexes.length, 'vector');
   }
 
-  // ---------- 遮罩外观（矢量页）：直接追加进新内容流，杜绝伪脱敏嫌疑 ----
+  // ---------- Mask appearance (vector pages): appended directly into new content stream ----
   for (const pageIndex of pageIndexes) {
     if (rasterSet.has(pageIndex)) continue;
     await drawMasks(pdfDoc, pageIndex, spec.pages[pageIndex].rects, style, spec);
   }
 
-  // ---------- 第二遍：栅格化替换 ----------
+  // ---------- Pass 2: Rasterization replacement ----------
   if (rasterSet.size) {
     let done = 0;
     for (const pageIndex of rasterSet) {
@@ -333,7 +334,7 @@ export async function redactPdf(bytes, spec, opts = {}) {
         jpegQuality: spec.jpegQuality || 0.85,
         customColor: spec.customColor,
         stampText: spec.stampText,
-        renderPage: opts.renderPage // Node 单测注入
+        renderPage: opts.renderPage // Injected in Node tests
       });
       await replacePageWithImage(pdfDoc, pageIndex, rendered);
       const pr = pageReports.get(pageIndex) || { index: pageIndex };
@@ -349,27 +350,27 @@ export async function redactPdf(bytes, spec, opts = {}) {
 
   const outBytes = await pdfDoc.save({ useObjectStreams: false });
 
-  // ---------- 输出验证：脱敏区不得残留可提取文本 ----------
+  // ---------- Output verification: assert zero extractable text remains in redaction zones ----------
   if (verify) {
     onProgress(0.95, 'verify');
     const v = await verifyRedaction(outBytes, spec, {
       password,
       verifyLoader: opts.verifyLoader,
-      // stamp 样式的印章文字是保留的可见文字，不算残留
+      // Stamp text is an intentional visible marker, not considered a residual leak
       ignoreTexts: style === 'stamp'
         ? (spec.stampText?.trim() ? [spec.stampText.trim(), STAMP_TEXT] : [STAMP_TEXT])
         : undefined
     });
     report.verify = v;
 
-    // 残留页自动栅格化重试一次
+    // Automatic rasterization retry for pages with residual text
     if (!v.ok && v.leftoverPages?.length) {
       const retrySpec = { ...spec, pages: {} };
       for (const p of v.leftoverPages) retrySpec.pages[p] = spec.pages[p];
       const retry = await redactPdf(outBytes, retrySpec, {
         ...opts,
         verify: false,
-        // 强制残留页全走栅格（矢量已证明删不干净）
+        // Force leftover pages to rasterize (vector removal proven incomplete)
         forceRaster: v.leftoverPages
       });
       if (retry.report.verify.ok !== false) {
@@ -391,9 +392,9 @@ export async function redactPdf(bytes, spec, opts = {}) {
   return { bytes: outBytes, report };
 }
 
-/** forceRaster 支持（验证重试用）：跳过矢量路径直接栅格 */
+/** forceRaster support (used for verification retry): skips vector analysis and forces rasterization */
 
-/** Do 放置 → Resources/XObject 查 /Subtype /Image → 与矩形相交判定 */
+/** detectImageHits: Do placement -> Resources/XObject lookup /Subtype /Image -> rect intersection test */
 function detectImageHits(context, pageNode, placements, rects) {
   if (!placements?.length) return false;
   const xobjs = pageNode.lookupMaybe(PDFName.of('Resources'), PDFDict)
@@ -402,7 +403,7 @@ function detectImageHits(context, pageNode, placements, rects) {
   for (const p of placements) {
     let obj = xobjs.get(PDFName.of(p.name));
     if (obj instanceof PDFRef) obj = context.lookup(obj);
-    const dict = asStreamDict(obj); // 流对象不继承 PDFDict，dict 在 .dict
+    const dict = asStreamDict(obj); // Stream object does not inherit PDFDict; dictionary is in .dict
     if (!dict) continue;
     if (dict.get(PDFName.of('Subtype')) !== PDFName.of('Image')) continue;
     if (rects.some((r) => rectsIntersect(p.bbox, r))) return true;
@@ -411,17 +412,16 @@ function detectImageHits(context, pageNode, placements, rects) {
 }
 
 /**
- * Form XObject 递归脱敏（BFS，按 ref 去重防环）。
- * Form 有效 CTM = form /Matrix × Do 时刻 CTM。
+ * Form XObject recursive redaction (BFS traversal with ref de-duplication to prevent cycles).
+ * Effective Form CTM = Form /Matrix * CTM at Do invocation.
  *
- * 两阶段：先全量分析（不改写），无危险信号后再原地改写流内容——
- *  - 原地改写：所有引用处（含未遍历的嵌套引用）一致生效，不产生含密孤儿对象
- *  - 危险信号（needRaster → 调用方整页栅格）：
- *      a) 顶层 Form 被多页/多名共享（改写会让其他页无遮罩静默丢字）
- *      b) 异种 filter / DecodeParms（LZW、多级过滤、Predictor——无法安全重编码）
- *      c) Form 流解析失败
- *  - 已知局限：嵌套 Form 的共享（引用藏在另一 Form 的资源里）无法免解码检测，
- *    由原地改写的"全引用一致生效"特性兜底（不会产生 dangling ref）。
+ * Two phases: full analysis first (no mutations), and in-place rewriting only when no hazards are found:
+ *  - In-place mutation: takes effect across all referencing sites consistently, preventing orphan leaks.
+ *  - Hazard signals (needRaster -> triggers full-page rasterization fallback):
+ *      a) Top-level Form shared across multiple pages/names (mutating would silently delete text on other pages without masks).
+ *      b) Unsupported filter / DecodeParms (LZW, multi-stage filters, Predictors).
+ *      c) Form stream parse failure.
+ *  - Known boundary: nested Form sharing is protected by in-place mutation consistency without dangling refs.
  *
  * @returns {{removed: number, needRaster: boolean, pending: Array<{stream: PDFRawStream, dict: PDFDict, newBytes: Uint8Array}>}}
  */
@@ -437,28 +437,28 @@ function redactFormXObjects(context, pdfDoc, pageResources, placements, rects) {
   const visited = new Set();
   /** @type {Array<{stream: PDFRawStream, dict: PDFDict, ctm: number[], resources: PDFDict}>} */
   const queue = [];
-  /** 分析完成待改写：{ stream, dict, newBytes } */
+  /** Completed analyses pending in-place rewrite: { stream, dict, newBytes } */
   const pending = [];
 
-  /** 把 XObject 资源字典中名为 name 的 Form 入队（顶层做共享检测） */
+  /** Enqueues Form named `name` from parent XObject dictionary (top-level checks sharing) */
   const tryEnqueue = (parentXobjs, name, doCtm, isTopLevel) => {
     const maybe = parentXobjs.get(PDFName.of(name));
     let ref = maybe instanceof PDFRef ? maybe : null;
     let stream = maybe instanceof PDFRef ? context.lookup(maybe) : maybe;
-    if (!(stream instanceof PDFRawStream)) return; // 非 Form 流（或直接 dict，罕见）
+    if (!(stream instanceof PDFRawStream)) return; // Not a Form stream (or bare dictionary)
     const dict = stream.dict;
     if (dict.get(PDFName.of('Subtype')) !== PDFName.of('Form')) return;
     if (isTopLevel && ref && countFormRefUsage(pdfDoc, ref) > 1) {
-      needRaster = true; // 共享 Form：改写会波及其他页 → 整页栅格
+      needRaster = true; // Shared Form: mutation would affect other pages -> full page rasterization
       return;
     }
     const filter = dict.get(PDFName.of('Filter'));
     if (filter !== undefined && filter !== PDFName.of('FlateDecode')) {
-      needRaster = true; // 异种/多级 filter：无法安全重编码
+      needRaster = true; // Unsupported/multi-stage filter: cannot re-encode safely
       return;
     }
     if (dict.get(PDFName.of('DecodeParms')) !== undefined) {
-      needRaster = true; // Predictor 等参数与重编码不兼容
+      needRaster = true; // Incompatible parameters such as Predictor
       return;
     }
     if (ref) {
@@ -483,14 +483,14 @@ function redactFormXObjects(context, pdfDoc, pageResources, placements, rects) {
       const fonts = new FontWidthResolver(context, item.resources);
       const res = processStream(bytes, { rects, fonts, initialCtm: item.ctm });
       if (res.parseError) {
-        needRaster = true; // Form 解析失败 → 页面栅格兜底（绝不静默）
+        needRaster = true; // Form parsing failed -> page rasterization fallback (never fail silently)
         break;
       }
       if (res.newBytes) {
         pending.push({ stream: item.stream, dict: item.dict, newBytes: res.newBytes });
         removedTotal += res.removedOps;
       }
-      // Form 内嵌套 Do → 继续递归
+      // Nested Do inside Form -> continue recursion
       if (res.xobjectPlacements?.length) {
         const innerXobjs = item.resources.lookupMaybe(PDFName.of('XObject'), PDFDict);
         if (innerXobjs) {
@@ -498,12 +498,12 @@ function redactFormXObjects(context, pdfDoc, pageResources, placements, rects) {
         }
       }
     } catch {
-      needRaster = true; // 单个 Form 处理异常 → 页面栅格兜底
+      needRaster = true; // Exception processing Form -> page rasterization fallback
       break;
     }
   }
 
-  // 危险信号：不做任何改写（保持原件语义），由调用方栅格化该页
+  // Hazard signal: perform zero mutations (preserve original semantics), caller will rasterize the page
   if (needRaster) return { removed: 0, needRaster: true, pending: [] };
   return { removed: removedTotal, needRaster: false, pending };
 }
@@ -519,7 +519,7 @@ function mulMatrix(m1, m2) {
   ];
 }
 
-/** 删除 /Rect 与脱敏区相交的注释（含注释对象本体的物理删除）；返回删除数 */
+/** Deletes annotations whose /Rect intersects with redaction rects (physically deleting annot objects); returns count */
 function removeIntersectingAnnots(context, pdfDoc, pageIndex, pageNode, rects) {
   const annotsArr = pageNode.lookupMaybe(PDFName.of('Annots'), PDFArray);
   if (!annotsArr) return 0;
@@ -555,7 +555,7 @@ function removeIntersectingAnnots(context, pdfDoc, pageIndex, pageNode, rects) {
       keep.forEach((r) => arr.push(r));
       pageNode.set(PDFName.of('Annots'), arr);
     }
-    // 注释对象本体也删（/Contents 里的隐私文本不得以孤儿对象留在文件字节中）
+    // Physically delete annotation object itself (sensitive text in /Contents must not remain as orphan in file)
     deleteOrphanedRefs(context, pdfDoc, pageIndex, removedRefs, annotRefsOf);
   }
   return removed;
@@ -627,8 +627,8 @@ async function renderStampPng(text, bgColor = '#000000', textColor = '#ffffff') 
 }
 
 /**
- * 矢量页遮罩外观（blackout/whiteout/gray/custom 追加 re f；stamp 用 pdf-lib 文本/PNG 徽章 API）。
- * 注意：遮罩是"有意的可见标记"，其下文本已被物理删除——不构成伪脱敏。
+ * Vector page mask appearance (blackout/whiteout/gray/custom appends 're f'; stamp uses pdf-lib text/PNG badge API).
+ * Note: The mask is an intentional visible indicator; underlying text has already been physically excised.
  */
 async function drawMasks(pdfDoc, pageIndex, rects, style, spec = {}) {
   const page = pdfDoc.getPage(pageIndex);
@@ -676,7 +676,7 @@ async function drawMasks(pdfDoc, pageIndex, rects, style, spec = {}) {
     return;
   }
 
-  // black / white / gray / custom：追加路径填充
+  // black / white / gray / custom: append path fills
   const color = resolveFillColor(style, spec.customColor);
   let fill;
   if (style === 'white') {
@@ -697,12 +697,12 @@ async function drawMasks(pdfDoc, pageIndex, rects, style, spec = {}) {
   const tail = contextAppend(pdfDoc, page, parts.join('\n'));
   if (tail) {
     node.set(PDFName.of('Contents'), tail);
-    // 被合并的旧内容流若已无引用（含本轮中间产物）→ 物理删除
+    // Physically delete merged old content streams if no longer referenced
     deleteOrphanedRefs(pdfDoc.context, pdfDoc, pageIndex, oldRefs, contentRefsOf);
   }
 }
 
-/** 将追加操作并入现有 Contents（多流拼接为单一新流，避免依赖 pdf-lib 页面 API 状态） */
+/** Merges extra operators into existing Contents (concatenates into a single fresh stream) */
 function contextAppend(pdfDoc, page, extraOps) {
   const context = pdfDoc.context;
   try {
@@ -715,8 +715,8 @@ function contextAppend(pdfDoc, page, extraOps) {
 }
 
 /**
- * 栅格页替换：整页图像化 + 原 Resources/Annots/图像对象清除。
- * rendered = { jpegBytes, widthPt, heightPt }（viewport 旋转已烘焙进图像）
+ * Rasterized page replacement: replaces page with image + purges original Resources/Annots/Image objects.
+ * rendered = { jpegBytes, widthPt, heightPt } (viewport rotation baked into image)
  */
 async function replacePageWithImage(pdfDoc, pageIndex, rendered) {
   const page = pdfDoc.getPage(pageIndex);
@@ -724,17 +724,17 @@ async function replacePageWithImage(pdfDoc, pageIndex, rendered) {
   const context = pdfDoc.context;
   const img = await pdfDoc.embedJpg(rendered.jpegBytes);
 
-  // 记录旧 Resources 里的图像 XObject 引用（稍后未被其他页引用时删除）
+  // Track image XObject references in old Resources (deleted later if unreferenced elsewhere)
   const oldRefs = collectXObjectRefs(context, node);
-  // 旧内容流 / 注释引用（替换后成为孤儿，同样物理删除防字节残留）
+  // Old content streams / annotation references (orphaned after replacement, physically deleted)
   const oldContentRefs = contentRefsOf(node);
   const oldAnnotRefs = annotRefsOf(node);
 
-  // 新内容流：q W 0 0 H 0 0 cm /X0 Do Q
+  // New content stream: q W 0 0 H 0 0 cm /X0 Do Q
   const ops = `q ${fmt(rendered.widthPt)} 0 0 ${fmt(rendered.heightPt)} 0 0 cm /X0 Do Q`;
   const streamRef = context.register(context.flateStream(new TextEncoder().encode(ops)));
 
-  // 全新 Resources：只含新图像（显式构建，避免 obj 映射歧义）
+  // Fresh Resources: contains only the new image (explicitly constructed)
   const xobjDict = PDFDict.withContext(context);
   xobjDict.set(PDFName.of('X0'), img.ref);
   const newResources = PDFDict.withContext(context);
@@ -743,12 +743,12 @@ async function replacePageWithImage(pdfDoc, pageIndex, rendered) {
   node.set(PDFName.of('Contents'), streamRef);
   node.set(PDFName.of('Resources'), newResources);
   node.delete(PDFName.of('Annots'));
-  node.delete(PDFName.of('Rotate')); // 旋转已烘焙，防止二次旋转
+  node.delete(PDFName.of('Rotate')); // Rotation is already baked in; prevent double rotation
   const [x0, y0] = getMediaBox(node);
   const mediaBox = context.obj([x0, y0, x0 + rendered.widthPt, y0 + rendered.heightPt]);
   node.set(PDFName.of('MediaBox'), mediaBox);
 
-  // 清理仅被本页引用的旧图像对象（防体积膨胀）
+  // Clean up old image objects referenced only by this page (prevents file bloat)
   const others = new Set();
   for (let i = 0; i < pdfDoc.getPageCount(); i++) {
     if (i === pageIndex) continue;
@@ -756,10 +756,10 @@ async function replacePageWithImage(pdfDoc, pageIndex, rendered) {
   }
   for (const ref of oldRefs) {
     if (!others.has(ref.toString())) {
-      try { context.delete(ref); } catch { /* 忽略 */ }
+      try { context.delete(ref); } catch { /* ignore */ }
     }
   }
-  // 旧内容流与注释对象的本体清理
+  // Physical cleanup of old content streams and annotation objects
   deleteOrphanedRefs(context, pdfDoc, pageIndex, oldContentRefs, contentRefsOf);
   deleteOrphanedRefs(context, pdfDoc, pageIndex, oldAnnotRefs, annotRefsOf);
 }

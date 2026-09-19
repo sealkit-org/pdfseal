@@ -1,15 +1,17 @@
 /**
- * PDF 内容流词法解析器（Redaction 核心）。
+ * PDF Content Stream Lexical Parser (Redaction Core).
  *
- * 输出每个操作符的字节范围（start/end），供矢量重写时按切片重建流；
- * 模拟层（textState.js）基于 ops 做文本几何推演。
+ * Outputs byte ranges (start/end) for each operator, allowing sliced reconstruction
+ * of the stream during vector rewriting.
+ * Simulation layer (textState.js) computes text geometry based on parsed operators.
  *
- * 识别的操作符子集（状态模拟所需）：
+ * Recognized operator subset (required for state simulation):
  *   q Q cm BT ET Tf Td TD Tm T* TL Tz Ts Tr Tj TJ ' " Do re W W* n
- * 其余操作符（含 BDC/BMC/EMC/gs 等）原样保留，不影响字节重建。
- * BI/ID/EI 内联图整段记录为 inlineImageSpans（重建时原样保留；与脱敏区相交 → 页面栅格化）。
+ * Remaining operators (including BDC/BMC/EMC/gs, etc.) are preserved verbatim to maintain byte fidelity.
+ * BI/ID/EI inline images are recorded as inlineImageSpans (preserved verbatim during reconstruction;
+ * rasterization is triggered if intersecting with redaction rects).
  *
- * 解析失败（越界/畸形）时返回 parseError，调用方必须让该页降级栅格化——绝不静默。
+ * On parsing error (out-of-bounds/malformed), returns parseError, signaling callers to safely fall back to page rasterization.
  */
 
 const WHITESPACE = new Set([0x00, 0x09, 0x0a, 0x0c, 0x0d, 0x20]);
@@ -19,19 +21,19 @@ const DELIMS = new Set(['(', ')', '<', '>', '[', ']', '{', '}', '/', '%']);
  * @typedef {Object} PdfToken
  * @property {'num'|'name'|'string'|'hexstring'|'array'|'dict'|'keyword'} type
  * @property {*} value
- * @property {number} start 字节起点
- * @property {number} end 字节终点（不含）
+ * @property {number} start Start byte offset
+ * @property {number} end End byte offset (exclusive)
  */
 
 /**
  * @typedef {Object} PdfOp
- * @property {string} op 操作符名（如 'Tj'）
- * @property {Array} args 操作数（token.value 列表）
- * @property {number} start 整个操作（含操作数）的字节起点
- * @property {number} end 字节终点（不含）
+ * @property {string} op Operator name (e.g., 'Tj')
+ * @property {Array} args Operands (list of token.value)
+ * @property {number} start Start byte offset of entire operator expression
+ * @property {number} end End byte offset (exclusive)
  */
 
-/** 字符串字面量解码：(…) 含嵌套括号与八进制/反斜杠转义 */
+/** Decodes string literal: (...) with nested parentheses and octal/backslash escape sequences */
 function readStringToken(bytes, i) {
   // bytes[i] === 0x28 '('
   let depth = 1;
@@ -40,11 +42,11 @@ function readStringToken(bytes, i) {
   while (j < bytes.length) {
     const b = bytes[j];
     if (b === 0x5c) {
-      // 反斜杠转义
+      // Backslash escape
       const nb = bytes[j + 1];
       if (nb === undefined) break;
       if (nb >= 0x30 && nb <= 0x37) {
-        // 八进制，最多 3 位
+        // Octal, up to 3 digits
         let oct = '';
         let k = j + 1;
         while (k < bytes.length && oct.length < 3 && bytes[k] >= 0x30 && bytes[k] <= 0x37) {
@@ -57,7 +59,7 @@ function readStringToken(bytes, i) {
       }
       const escMap = { 0x6e: '\n', 0x72: '\r', 0x74: '\t', 0x62: '\b', 0x66: '\f' };
       if (escMap[nb] !== undefined) out += escMap[nb];
-      else out += String.fromCharCode(nb); // \\ \( \) 或其他原样
+      else out += String.fromCharCode(nb); // \\ \( \) or literal character
       j += 2;
       continue;
     }
@@ -69,10 +71,10 @@ function readStringToken(bytes, i) {
     out += String.fromCharCode(b);
     j++;
   }
-  return null; // 未闭合
+  return null; // Unclosed string literal
 }
 
-/** 十六进制串 <...> 解码（含奇数位补零） */
+/** Decodes hexadecimal string <...> (with odd-length zero padding) */
 function readHexStringToken(bytes, i) {
   let j = i + 1;
   let hex = '';
@@ -90,7 +92,7 @@ function readHexStringToken(bytes, i) {
   return { token: { type: 'hexstring', value, start: i, end: j + 1 }, next: j + 1 };
 }
 
-/** 名称 /Name（含 #xx 十六进制转义） */
+/** Decodes PDF Name /Name (with #xx hex escape sequences) */
 function readNameToken(bytes, i) {
   let j = i + 1;
   let name = '';
@@ -112,7 +114,7 @@ function readNameToken(bytes, i) {
   return { token: { type: 'name', value: name, start: i, end: j }, next: j };
 }
 
-/** 数字（整数/实数/正负号） */
+/** Parses number (integer / real / signs) */
 function readNumberToken(bytes, i) {
   let j = i;
   let s = '';
@@ -127,7 +129,7 @@ function readNumberToken(bytes, i) {
   return { token: { type: 'num', value: v, start: i, end: j }, next: j };
 }
 
-/** 数组 [...]（TJ 操作数）：元素递归 tokenize */
+/** Parses array [...] (TJ operands): elements tokenized recursively */
 function readArrayToken(bytes, i) {
   // bytes[i] === '['
   const items = [];
@@ -143,15 +145,15 @@ function readArrayToken(bytes, i) {
     else if (/[0-9\-+.]/.test(String.fromCharCode(b))) r = readNumberToken(bytes, j);
     else if (b === 0x3c && bytes[j + 1] === 0x3c) r = readDictToken(bytes, j);
     else if (b === 0x5b) r = readArrayToken(bytes, j);
-    else return null; // 数组内未知结构 → 解析失败
+    else return null; // Unknown structure inside array -> parsing failed
     if (!r) return null;
     items.push(r.token.value);
     j = r.next;
   }
-  return null; // 未闭合
+  return null; // Unclosed array
 }
 
-/** 字典 <<...>>（BDC 等操作数；原样吞下，值不解释 */
+/** Parses dictionary <<...>> (BDC operands, etc.; consumed verbatim without deep interpretation) */
 function readDictToken(bytes, i) {
   // bytes[i..i+1] === '<<'
   let depth = 1;
@@ -169,13 +171,13 @@ function readDictToken(bytes, i) {
   return null;
 }
 
-/** 读一个 token；空白/注释跳过。返回 null 表示需要终止 */
+/** Reads a single token, skipping whitespace and comments. Returns EOF or null on failure. */
 function readToken(bytes, i) {
   let j = i;
   while (j < bytes.length) {
     const b = bytes[j];
     if (WHITESPACE.has(b)) { j++; continue; }
-    if (b === 0x25) { // % 注释到行尾
+    if (b === 0x25) { // % Comment until newline
       while (j < bytes.length && bytes[j] !== 0x0a && bytes[j] !== 0x0d) j++;
       continue;
     }
@@ -192,7 +194,7 @@ function readToken(bytes, i) {
   if (b === 0x2f) return readNameToken(bytes, j);
   if (b === 0x5b) return readArrayToken(bytes, j);
   if (/[0-9\-+.]/.test(c)) return readNumberToken(bytes, j);
-  // 关键字（操作符）
+  // Keyword (operator)
   let k = j;
   let kw = '';
   while (k < bytes.length) {
@@ -214,8 +216,8 @@ const KNOWN_OPS = new Set([
 ]);
 
 /**
- * 解析内容流。
- * @param {Uint8Array} bytes 已解码（解压后）的内容流字节
+ * Parses PDF content stream.
+ * @param {Uint8Array} bytes Decoded (decompressed) content stream bytes
  * @returns {{ops: PdfOp[], inlineImageSpans: Array<{start:number,end:number}>, parseError: string|null}}
  */
 export function parseContentStream(bytes) {
@@ -238,8 +240,8 @@ export function parseContentStream(bytes) {
     if (t.type === 'keyword') {
       const kw = t.value;
       if (kw === 'BI') {
-        // 内联图：BI <dict tokens> ID <binary> EI
-        const span = readInlineImage(bytes, i); // i 指向 BI 之后
+        // Inline image: BI <dict tokens> ID <binary> EI
+        const span = readInlineImage(bytes, i); // i points right after BI
         if (!span) {
           return { ops, inlineImageSpans, parseError: `inline image parse failed at byte ${opStart}` };
         }
@@ -248,26 +250,26 @@ export function parseContentStream(bytes) {
         pendingArgs = [];
         continue;
       }
-      // 常规操作符
+      // Regular operator
       ops.push({ op: kw, args: pendingArgs.map((a) => a.value), start: opStart, end: i });
       pendingArgs = [];
       opStart = i;
       continue;
     }
-    // 操作数
+    // Operand
     if (pendingArgs.length === 0) opStart = t.start;
     pendingArgs.push(t);
   }
-  // 尾部未知操作数（无操作符收尾）：视为注释忽略
+  // Trailing unknown operand without trailing operator: ignored as comments
   return { ops, inlineImageSpans, parseError: null };
 }
 
 /**
- * 读取内联图 BI...ID...EI。
- * 进入时 i 已越过 BI。数据长度优先按 W*H*组件位深估算，否则扫描 EI。
+ * Reads inline image BI...ID...EI.
+ * When invoked, i is immediately after BI. Data length is estimated via W*H*depth or scans for EI.
  */
 function readInlineImage(bytes, i) {
-  // 1. 收集 dict tokens 直到 ID
+  // 1. Collect dict tokens until ID
   let dictTokens = [];
   let j = i;
   let idPos = -1;
@@ -280,7 +282,7 @@ function readInlineImage(bytes, i) {
   }
   if (idPos < 0) return null;
 
-  // 2. 估算像素数据长度：W H BPC CS(DeviceRGB=3/DeviceGray=1)
+  // 2. Estimate pixel data length: W H BPC CS (DeviceRGB=3 / DeviceGray=1)
   let w = null;
   let h = null;
   let bpc = 8;
@@ -299,20 +301,20 @@ function readInlineImage(bytes, i) {
     }
   }
 
-  // ID 后紧跟一个空白字节，然后是数据
+  // A single whitespace character follows ID, then binary data begins
   let dataStart = idPos + 2;
   if (dataStart < bytes.length && WHITESPACE.has(bytes[idPos + 1])) dataStart = idPos + 2;
   else dataStart = idPos + 1;
 
-  // 3. 优先按估算长度定位 EI
+  // 3. Attempt to locate EI at estimated offset
   if (w && h && w > 0 && h > 0) {
     const est = Math.ceil((w * h * ncomp * bpc) / 8);
     const eiPos = dataStart + est;
-    // EI 前有一个空白分隔
+    // EI is preceded by whitespace
     if (eiPos + 1 < bytes.length && bytes[eiPos] === 0x45 && bytes[eiPos + 1] === 0x49) {
       return { end: eiPos + 2 };
     }
-    // 估算失败（可能数据流不对称）：宽限扫描附近
+    // Search small neighborhood around estimate in case of padding
     for (let d = -2; d <= 4; d++) {
       const p = eiPos + d;
       if (p > dataStart && p + 1 < bytes.length && bytes[p] === 0x45 && bytes[p + 1] === 0x49) {
@@ -320,7 +322,7 @@ function readInlineImage(bytes, i) {
       }
     }
   }
-  // 4. fallback：从 dataStart 起扫描 "EI"（带前一空白更可信）
+  // 4. Fallback: linear scan for "EI" from dataStart
   for (let p = dataStart; p + 1 < bytes.length; p++) {
     if (bytes[p] === 0x45 && bytes[p + 1] === 0x49) {
       return { end: p + 2 };

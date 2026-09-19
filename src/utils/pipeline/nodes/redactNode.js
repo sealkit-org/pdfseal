@@ -5,11 +5,11 @@ import { matchRules } from '../../redaction/ruleMatcher';
 
 /**
  * Headless Redact Node (Map: N -> N)
- * 批量规则脱敏：pdf.js 提取文本 → 规则匹配为矩形 → True Stream Redaction 烧录。
+ * Batch rule-based redaction: extracts text via pdf.js -> matches rules into bounding rects -> True Stream Redaction burn-in.
  *
- * 报告（附加在产出 item.redactReport）：
- *  - ruleStats：每条规则命中数（0 命中显性标出，调用方用 node_redact_report_zero_hits 提示）
- *  - imagePages：规则路径无法安全覆盖的图像型页（需用敏感信息脱敏工具手动框选）
+ * Report (attached on output item.redactReport):
+ *  - ruleStats: hit count per rule (zero hits clearly marked for caller to notify user via node_redact_report_zero_hits)
+ *  - imagePages: image-based pages that rule-based vector matching cannot safely cover (manual box selection advised)
  *
  * @param {Array<Object>} items
  * @param {Object} params - { rules: [{type:'keyword'|'regex', value, caseSensitive?}], style: 'black'|'white'|'stamp' }
@@ -27,17 +27,17 @@ export async function executeRedactNode(items, params = {}, onProgress = () => {
     const item = items[i];
     onProgress(Math.round((i / items.length) * 100), `Redacting [${i + 1}/${items.length}]: ${item.name}`);
 
-    // 规则为空：validateStepParameters 上游已拦截；headless 直调兜底原样透传
+    // Empty rules: intercepted upstream by validateStepParameters; passthrough as fallback for headless callers
     if (!rules.length) {
       result.push(item);
       continue;
     }
 
     try {
-      // 1. pdf.js 逐页提取文本（与 UI 吸附同源的 bbox 口径）
+      // 1. Extract text page by page via pdf.js (same bbox metrics as UI snapping)
       const pagesText = await extractPagesText(item.data);
 
-      // 2. 规则 → 矩形（逐页）
+      // 2. Rules -> bounding rects (per page)
       const pagesSpec = {};
       const pageMatches = [];
       for (let p = 0; p < pagesText.length; p++) {
@@ -48,7 +48,7 @@ export async function executeRedactNode(items, params = {}, onProgress = () => {
         pageMatches.push(m);
       }
 
-      // 3. 无任何命中：原样透传（不产出空壳），报告标注
+      // 3. Zero hits across all pages: pass through unmodified (avoid empty shell), report marked
       if (!Object.keys(pagesSpec).length) {
         result.push({
           ...item,
@@ -72,7 +72,7 @@ export async function executeRedactNode(items, params = {}, onProgress = () => {
         continue;
       }
 
-      // 5. 图像型页标注：栅格化页中因图像/表单/解析降级的页，规则无法精准覆盖
+      // 5. Image page annotation: pages downgraded to rasterization due to image/form/parse hazards
       const imagePages = report.pages
         .filter((pr) => pr.path === 'raster')
         .map((pr) => ({ index: pr.index, reason: pr.reason }));
@@ -99,7 +99,7 @@ export async function executeRedactNode(items, params = {}, onProgress = () => {
   return result;
 }
 
-/** 逐页匹配结果的规则命中数聚合 */
+/** Aggregates rule hit counts across all page match results */
 function aggregateRuleStats(pageMatches) {
   if (!pageMatches.length) return [];
   const total = pageMatches[0].ruleStats.map((s) => ({ ...s, hits: 0 }));
@@ -111,7 +111,7 @@ function aggregateRuleStats(pageMatches) {
   return total;
 }
 
-/** pdf.js 提取全部页文本项（Node 环境 standard_fonts 警告无害，回退内置 metrics） */
+/** Extracts text items for all pages via pdf.js */
 async function extractPagesText(bytes) {
   const pdfjs = await import('pdfjs-dist');
   const task = pdfjs.getDocument({

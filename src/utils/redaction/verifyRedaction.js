@@ -1,16 +1,18 @@
 /**
- * 输出验证（防伪脱敏的最后一道防线）：
- * 用 pdf.js 重新打开产物，断言脱敏矩形区域内不存在任何可提取文本。
+ * Output verification (the final defense line against fake/incomplete redaction):
+ * Re-opens the generated PDF using pdf.js and asserts that zero extractable text exists
+ * within any specified redaction rectangles.
  *
- * 判定与删除同规则（shouldRemoveOp）：文本 bbox 与脱敏区重叠 ≥50% 或中心点在内。
+ * Evaluation shares the exact same rule as text removal (shouldRemoveOp): text bbox overlap >= 50%
+ * or center point falls inside redaction rectangle.
  */
 import { textItemToUserBBox, shouldRemoveOp } from './coords.js';
 
 /**
- * @param {Uint8Array} outputBytes redactPdf 产物
- * @param {Object} spec 同 redactPdf 的 spec
+ * @param {Uint8Array} outputBytes Resulting bytes from redactPdf
+ * @param {Object} spec Same specification structure as passed to redactPdf
  * @param {{password?: string, verifyLoader?: Function, ignoreTexts?: string[]}} [opts]
- *        ignoreTexts：有意保留的可见文字（如 stamp 样式的 [REDACTED]），不计入残留
+ *        ignoreTexts: intentionally kept text (e.g. stamp overlay '[REDACTED]'), excluded from residual check
  * @returns {Promise<{ok: boolean, leftovers: Array<{pageIndex:number, text:string}>, leftoverPages: number[]}>}
  */
 export async function verifyRedaction(outputBytes, spec, opts = {}) {
@@ -38,7 +40,7 @@ export async function verifyRedaction(outputBytes, spec, opts = {}) {
       const tc = await page.getTextContent();
       for (const item of tc.items) {
         if (!item.str || !item.str.trim()) continue;
-        if (ignore.has(item.str.trim())) continue; // 遮罩戳记等有意文字
+        if (ignore.has(item.str.trim())) continue; // Intentionally placed overlay / stamp text
         const bbox = textItemToUserBBox(item);
         if (bbox.w <= 0 && bbox.h <= 0) continue;
         if (shouldRemoveOp(bbox, spec.pages[pageIndex].rects)) {
@@ -67,7 +69,7 @@ async function defaultLoader(bytes, password) {
   };
   if (password) params.password = password;
   if (isNode) {
-    // Node（Vitest）：标准字体从本地文件系统取（尾斜杠必需，path.resolve 会吞掉尾斜杠）
+    // Node environment (Vitest): load standard fonts from local filesystem (trailing slash required)
     const modUrl = 'node:url';
     const modPath = 'node:path';
     const { pathToFileURL } = await import(/* @vite-ignore */ modUrl);

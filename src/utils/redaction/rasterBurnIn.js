@@ -1,27 +1,27 @@
 /**
- * 栅格化烧录（扫描件/图像命中页的回退路径）。
+ * Rasterization burn-in fallback path (for scanned documents and image intersections).
  *
- * 浏览器：pdf.js 高 DPI 渲染（最长边 ≤4000px）→ 画布上烧录遮罩 → JPEG 重编码。
- * Node 单测：注入 renderPage 假渲染器（返回固定 JPEG 字节），
- *            引擎侧逻辑（Contents/Resources/Annots 替换）与浏览器完全一致。
+ * Browser: high-DPI rendering via pdf.js (max edge <= 4000px) -> burns masks on canvas -> re-encodes to JPEG.
+ * Node unit tests: mocks renderPage (returns deterministic JPEG bytes);
+ *                  the engine-side replacement (Contents / Resources / Annots) remains completely identical.
  */
 import { userRectToCanvas } from './coords.js';
 
 const MAX_EDGE_PX = 4000;
 
 /**
- * @param {ArrayBuffer|Uint8Array} originalBytes 原始文件字节（栅格化基于原件渲染，
- *        不依赖已删改的 pdf-lib doc——所见即所得）
- * @param {number} pageIndex 0 基页码
- * @param {Array<{x,y,w,h}>} rects 用户空间脱敏矩形
+ * @param {ArrayBuffer|Uint8Array} originalBytes Original document bytes (rasterization renders directly
+ *        from original file to guarantee what-you-see-is-what-you-get)
+ * @param {number} pageIndex Zero-based page index
+ * @param {Array<{x,y,w,h}>} rects User-space redaction rectangles
  * @param {'black'|'white'|'stamp'} style
  * @param {{password?: string, dpi?: number, jpegQuality?: number, renderPage?: Function}} opts
  * @returns {Promise<{jpegBytes: Uint8Array, widthPt: number, heightPt: number}>}
- *          widthPt/heightPt = viewport(scale=1) 尺寸（旋转已烘焙）
+ *          widthPt/heightPt = viewport(scale=1) dimensions (rotation baked in)
  */
 export async function rasterBurnPage(originalBytes, pageIndex, rects, style, opts = {}) {
   if (typeof opts.renderPage === 'function') {
-    // 注入渲染器（单测/无 DOM 环境）
+    // Injected renderer (for unit tests / headless environments)
     return opts.renderPage(originalBytes, pageIndex, rects, style, opts);
   }
   return browserRender(originalBytes, pageIndex, rects, style, opts);
@@ -60,7 +60,7 @@ async function browserRender(originalBytes, pageIndex, rects, style, opts) {
     const base = page.getViewport({ scale: 1 });
     let scale = (opts.dpi || 192) / 72;
     const longest = Math.max(base.width, base.height) * scale;
-    if (longest > MAX_EDGE_PX) scale *= MAX_EDGE_PX / longest; // 大页内存上限
+    if (longest > MAX_EDGE_PX) scale *= MAX_EDGE_PX / longest; // Memory safeguard for large pages
 
     const viewport = page.getViewport({ scale });
     const canvas = document.createElement('canvas');
@@ -71,7 +71,7 @@ async function browserRender(originalBytes, pageIndex, rects, style, opts) {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     await page.render({ canvasContext: ctx, viewport, intent: 'display' }).promise;
 
-    // 烧录遮罩（用户空间 → canvas 空间，viewport 已含 /Rotate）
+    // Burn redaction masks (user space -> canvas space; viewport handles /Rotate)
     const fillColor = resolveFillColor(style, opts.customColor);
     for (const r of rects) {
       const c = userRectToCanvas(r, viewport);
@@ -97,7 +97,7 @@ async function browserRender(originalBytes, pageIndex, rects, style, opts) {
 
     const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', opts.jpegQuality || 0.85));
     const jpegBytes = new Uint8Array(await blob.arrayBuffer());
-    canvas.width = 0; // 立即释放
+    canvas.width = 0; // Release canvas memory immediately
     canvas.height = 0;
     return { jpegBytes, widthPt: base.width, heightPt: base.height };
   } finally {

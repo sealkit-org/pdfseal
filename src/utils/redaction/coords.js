@@ -1,29 +1,28 @@
 /**
- * Redaction 坐标系转换（唯一转换源）
+ * Redaction coordinate system conversions (single source of truth).
  *
- * 三个空间：
- *  - 用户空间（PDF 默认坐标，y 向上）：引擎 redactPdf 的 rect 全部使用该空间
- *  - canvas 显示空间（y 向下，含 /Rotate）：RedactTool 拖框的 rect
- *  - pdf.js textItem.transform：用户空间矩阵（不含 viewport）
+ * Three coordinate spaces:
+ *  - User space (default PDF coordinates, y pointing upwards): rects for redactPdf engine.
+ *  - Canvas display space (y pointing downwards, includes /Rotate): rects drawn in RedactTool.
+ *  - pdf.js textItem.transform: user-space matrix (without viewport scale/rotation).
  *
- * 转换一律经由 pdf.js viewport（已处理 /Rotate 与 CropBox），
- * 任何组件不得自行拼偏移，避免多处转换口径漂移。
+ * All conversions must go through pdf.js viewport (which already handles /Rotate and CropBox)
+ * to avoid coordinate drift across components.
  */
 
 /**
- * pdf.js 文本项 → 用户空间 bbox（y 向上）。
- * textItem.transform = [a,b,c,d,e,f]（Trm，含字号与 CTM），e,f = 基线起点；
- * width/height 已是用户空间尺寸（width 沿基线方向、height 沿字体竖直方向），
- * 不得再乘 transform（曾因此把 bbox 放大了字号倍数）。
- * 盒体从基线起点沿字体向上方向展开 height（pdf.js 口径：不含下降部）。
+ * Converts pdf.js textItem into a user-space axis-aligned bounding box (y pointing upwards).
+ * textItem.transform = [a, b, c, d, e, f] (Trm, including font size and CTM), with e, f as baseline origin.
+ * width / height are already user-space dimensions (width along baseline, height along font vertical vector),
+ * and must not be multiplied by transform scale again.
  * @param {{str:string,transform:number[],width:number,height:number}} item
- * @returns {{x:number,y:number,w:number,h:number}} 用户空间轴对齐包围盒
+ * @returns {{x:number,y:number,w:number,h:number}} User-space axis-aligned bounding box
  */
 export function textItemToUserBBox(item) {
   const t = item.transform;
   const w = item.width || 0;
   const h = item.height || 0;
-  // 基线方向 / 字体竖直方向的单位向量（去掉字号缩放）
+  // Unit vectors along baseline and font vertical direction (normalized font scale)
   const bl = Math.hypot(t[0], t[1]) || 1;
   const vd = Math.hypot(t[2], t[3]) || 1;
   const ux = t[0] / bl, uy = t[1] / bl;
@@ -43,12 +42,12 @@ export function textItemToUserBBox(item) {
 }
 
 /**
- * 用户空间 rect → canvas 显示 rect（用于高亮已有标记）。
+ * Converts user-space rect to canvas display rect (used to highlight existing marks).
  * @param {{x:number,y:number,w:number,h:number}} rect
  * @param {import('pdfjs-dist').PageViewport} viewport
  */
 export function userRectToCanvas(rect, viewport) {
-  // viewport.convertToViewportRectangle 输入 [x1,y1,x2,y2]（用户空间）
+  // viewport.convertToViewportRectangle takes [x1, y1, x2, y2] in user space
   const [x1, y1, x2, y2] = viewport.convertToViewportRectangle([
     rect.x, rect.y, rect.x + rect.w, rect.y + rect.h
   ]);
@@ -61,12 +60,12 @@ export function userRectToCanvas(rect, viewport) {
 }
 
 /**
- * canvas 显示 rect → 用户空间 rect（拖框结果交给引擎烧录）。
+ * Converts canvas display rect to user-space rect (sent to engine for redaction burn-in).
  * @param {{x:number,y:number,w:number,h:number}} rect
  * @param {import('pdfjs-dist').PageViewport} viewport
  */
 export function canvasRectToUser(rect, viewport) {
-  // pdf.js viewport 只提供 convertToPdfPoint（无 Rectangle 版本），两角转换后归一化
+  // pdf.js viewport provides convertToPdfPoint for single points; normalize after conversion
   const [x1, y1] = viewport.convertToPdfPoint(rect.x, rect.y);
   const [x2, y2] = viewport.convertToPdfPoint(rect.x + rect.w, rect.y + rect.h);
   return {
@@ -78,7 +77,7 @@ export function canvasRectToUser(rect, viewport) {
 }
 
 /**
- * 两个轴对齐矩形是否相交（含边界接触）。
+ * Checks whether two axis-aligned rectangles intersect (inclusive of touching boundaries).
  * @param {{x:number,y:number,w:number,h:number}} a
  * @param {{x:number,y:number,w:number,h:number}} b
  */
@@ -92,7 +91,7 @@ export function rectsIntersect(a, b) {
 }
 
 /**
- * bbox 中心点是否落在 rect 内。
+ * Checks whether the center point of bbox falls inside rect.
  */
 export function centerInside(bbox, rect) {
   const cx = bbox.x + bbox.w / 2;
@@ -101,15 +100,17 @@ export function centerInside(bbox, rect) {
 }
 
 /**
- * 删除判定：bbox 与任一脱敏 rect 的重叠面积占比 ≥ 阈值，或中心点在 rect 内。
- * @param {object} bbox 文本算子 bbox（用户空间）
+ * Determines whether a text operator should be removed:
+ * returns true if the bbox overlap area ratio with any redaction rect exceeds threshold,
+ * or if its center point falls inside the rect.
+ * @param {object} bbox Text operator bbox (user space)
  * @param {Array<{x,y,w,h}>} rects
  * @param {number} [threshold=0.5]
  */
 export function shouldRemoveOp(bbox, rects, threshold = 0.5) {
   const area = bbox.w * bbox.h;
   if (area <= 0) {
-    // 零面积（空串/纯空格）也按中心点规则处理
+    // Treat zero-area text (empty string or space) using center-point rule
     return rects.some((r) => centerInside(bbox, r));
   }
   for (const r of rects) {

@@ -1,20 +1,20 @@
 /**
- * 字体宽度提取：用于内容流文本算子的几何模拟。
+ * Font width extraction: used for geometric simulation of content stream text operators.
  *
- * 优先级：真实 /Widths（simple font）或 /W（Type0/CID）→ fallback 0.5em。
- * 所有结果按 glyph code 缓存在 FontWidthResolver 实例内。
+ * Priority: actual /Widths (simple font) or /W (Type0/CID) -> fallback to 0.5em.
+ * All results are cached per font resource name inside FontWidthResolver instances.
  */
 import { PDFDict, PDFArray, PDFNumber, PDFName, PDFRef } from 'pdf-lib';
 
-/** pdf-lib 对象安全取 number */
+/** Safely extract numeric value from pdf-lib object */
 function asNumber(obj) {
   return obj instanceof PDFNumber ? obj.asNumber() : null;
 }
 
 /**
- * 解析 Type0 字体的 /W 数组（CID 宽度）。
- * 格式：c [w1 w2 ...] | c1 c2 w
- * @returns {Map<number, number>} cid → width
+ * Parses /W array of Type0 fonts (CID widths).
+ * Format: c [w1 w2 ...] | c1 c2 w
+ * @returns {Map<number, number>} cid -> width
  */
 function parseCIDWidths(arr) {
   const map = new Map();
@@ -48,21 +48,21 @@ function parseCIDWidths(arr) {
 
 export class FontWidthResolver {
   /**
-   * @param {import('pdf-lib').PDFContext} context pdf-lib context（用于解引用）
-   * @param {import('pdf-lib').PDFDict} pageResources 页面 /Resources
+   * @param {import('pdf-lib').PDFContext} context pdf-lib context (for dereferencing)
+   * @param {import('pdf-lib').PDFDict} pageResources Page /Resources dictionary
    */
   constructor(context, pageResources) {
     this.context = context;
     this.pageResources = pageResources;
-    /** @type {Map<string, {widths:Map<number,number>|null, defaultWidth:number}>} 按资源名（/F1）缓存 */
+    /** @type {Map<string, {widths:Map<number,number>|null, defaultWidth:number}>} Cache by font resource name (/F1) */
     this.cache = new Map();
   }
 
   /**
-   * 取资源名（如 'F1'）对应字体的指定 glyph code 宽度。
-   * @param {string} fontKey Tf 操作符的字体资源名
-   * @param {number} code 字符码（simple font）或 CID（Type0）
-   * @returns {number} 字体设计空间宽度（glyph units = 1000 制）；未知字体返回 NaN
+   * Returns glyph width for given font resource name (e.g. 'F1') and glyph code.
+   * @param {string} fontKey Font resource name in Tf operator
+   * @param {number} code Character code (simple font) or CID (Type0)
+   * @returns {number} Font design space width (glyph units = 1000 base); returns NaN if font unknown
    */
   getWidth(fontKey, code) {
     const entry = this.resolve(fontKey);
@@ -71,7 +71,7 @@ export class FontWidthResolver {
     return entry.defaultWidth;
   }
 
-  /** 判断字体是否存在（宽度可不可用单独看返回值） */
+  /** Checks whether font exists in resources (width availability handled separately) */
   hasFont(fontKey) {
     return this.resolve(fontKey) !== null;
   }
@@ -102,7 +102,7 @@ export class FontWidthResolver {
     if (isType0) {
       // DescendantFonts[0].W + DW
       let wMap = null;
-      let defaultWidth = 1000; // DW 缺省即 1000
+      let defaultWidth = 1000; // Default DW is 1000 per PDF specification
       try {
         const dfArr = fontDict.lookupMaybe(PDFName.of('DescendantFonts'), PDFArray);
         if (dfArr && dfArr.size() > 0) {
@@ -116,12 +116,12 @@ export class FontWidthResolver {
           }
         }
       } catch {
-        /* 部分畸形字体字典：使用 DW 缺省 */
+        /* Malformed font dictionary fallback: use DW default */
       }
       return { widths: wMap, defaultWidth };
     }
 
-    // Simple font：/Widths + /FirstChar（glyph index = code - FirstChar）
+    // Simple font: /Widths + /FirstChar (glyph index = code - FirstChar)
     let widths = null;
     const firstChar = fontDict.lookupMaybe(PDFName.of('FirstChar'), PDFNumber);
     const wArr = fontDict.lookupMaybe(PDFName.of('Widths'), PDFArray);

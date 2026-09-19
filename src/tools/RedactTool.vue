@@ -1284,7 +1284,7 @@ const totalRects = computed(() =>
   Object.values(rectsByPage.value).reduce((n, list) => n + (list?.length || 0), 0)
 );
 
-/** 选中标记四角 resize 手柄的定位 class */
+/** Positioning classes for the four corner resize handles of a selected mark */
 const handlePos = {
   nw: '-top-1 -left-1',
   ne: '-top-1 -right-1',
@@ -1292,7 +1292,7 @@ const handlePos = {
   se: '-bottom-1 -right-1'
 };
 
-/** 选中标记四角 resize 手柄的 cursor class */
+/** Cursor classes for the four corner resize handles of a selected mark */
 const handleCursors = {
   nw: 'cursor-nwse-resize',
   ne: 'cursor-nesw-resize',
@@ -1300,10 +1300,10 @@ const handleCursors = {
   se: 'cursor-nwse-resize'
 };
 
-/** canvas 像素 rect → overlay 内的绝对定位百分比样式（canvas 与 overlay 同区域） */
+/** Converts canvas pixel rect to percentage-based absolute positioning styles within the overlay (canvas and overlay share the same bounding box) */
 function rectStyle(c) {
   if (!currentViewport || !c) return {};
-  void viewportTick.value; // viewport 变更时重算
+  void viewportTick.value; // Recompute when viewport updates
   return {
     left: `${(c.x / currentViewport.width) * 100}%`,
     top: `${(c.y / currentViewport.height) * 100}%`,
@@ -1631,7 +1631,7 @@ async function onPointerUp() {
   if (!drag) return;
   const d = drag;
   drag = null;
-  // pointer capture 由浏览器在 pointerup 隐式释放，无需显式 release
+  // Pointer capture is implicitly released by the browser on pointerup; no explicit release needed
 
   if (d.mode === 'new') {
     const dr = draftRect.value;

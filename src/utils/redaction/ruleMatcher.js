@@ -1,37 +1,38 @@
 /**
- * 规则匹配器：Pipeline 节点 node_redact 的"规则 → 脱敏矩形"转换层。
+ * Rule Matcher: rule-to-redaction-rectangles translation layer for Pipeline node `node_redact`.
  *
- * 输入为 pdf.js getTextContent 的文本项（用户空间），输出为 redactPdf 可直接
- * 消费的 rects。匹配在单个 textItem.str 上进行（与 UI 手动框选同源的 bbox 口径）。
+ * Input consists of pdf.js getTextContent text items (in user space), outputting
+ * user-space rects ready to be consumed by redactPdf. Matching runs against individual
+ * textItem.str (aligning with manual UI box selection bounding metrics).
  *
- * 安全防护（防灾难性回溯冻结 UI / 防意外全文档摧毁）：
- *  - 无效正则 try/catch 跳过并记录 warning
- *  - pattern 长度上限 MAX_PATTERN_LENGTH
- *  - 单页命中数上限 MAX_HITS_PER_PAGE（触顶即停止匹配）
+ * Safeguards (prevents ReDoS hanging the UI and accidental full-document destruction):
+ *  - Malformed regex patterns are safely skipped via try/catch with warnings logged.
+ *  - Pattern length capped at MAX_PATTERN_LENGTH.
+ *  - Hit count per page capped at MAX_HITS_PER_PAGE (stops matching when reached).
  *
- * 已知边界：文本行可能被拆成多个 textItem，跨 item 拆分的敏感串无法命中
- * （UI 手动框选可覆盖该场景，节点边界备注已声明）。
+ * Known boundary: text lines split across multiple textItems cannot be matched if sensitive
+ * strings span items (manual box selection covers this case, stated in node documentation).
  */
 import { textItemToUserBBox } from './coords.js';
 
-/** 正则/关键词模式长度上限（字符） */
+/** Maximum pattern length for regex / keyword (characters) */
 export const MAX_PATTERN_LENGTH = 256;
-/** 单页命中数上限（textItem 级），触顶停止匹配 */
+/** Maximum match hits per page (item level); stops matching when reached */
 export const MAX_HITS_PER_PAGE = 500;
-/** 同行合并：两命中 bbox 的行基线 y 差容差（pt） */
+/** Same-line merge: baseline y difference tolerance (pt) */
 export const LINE_TOLERANCE = 3;
-/** 同行合并：相邻 bbox 间最大空隙（pt），超过则不合并 */
+/** Same-line merge: maximum horizontal gap between adjacent boxes (pt) to allow merging */
 export const MERGE_GAP = 12;
 
 /**
- * 全能通用日期正则：
- * 兼容 ISO/中文 (2026-09-17 / 2026年9月17日) 以及欧美主流 (09/17/2026, 17/09/2026, 17.09.2026, 17-09-2026)
+ * Universal date regex:
+ * Supports ISO / Chinese date formatting (e.g. 2026-09-17, 2026年9月17日) as well as common international formats (09/17/2026, 17/09/2026, 17.09.2026, 17-09-2026).
  */
 export const UNIVERSAL_DATE_REGEX = '(?:\\b\\d{4}[-/.]\\d{1,2}[-/.]\\d{1,2}\\b|\\b\\d{4}年\\d{1,2}月\\d{1,2}日?|\\b\\d{1,2}[-/.]\\d{1,2}[-/.]\\d{4}\\b)';
 
 /**
- * 内置 PII 预设（批量脱敏模板，PipelineTool 配置面板以 chips 呈现）。
- * pattern 均为 regex 类型；label 由 i18n key node_redact_preset_* 提供。
+ * Built-in PII presets (templates for batch redaction, displayed as chips in PipelineTool).
+ * Patterns are regex strings; label keys are mapped by i18n key node_redact_preset_*.
  */
 export const PII_PRESETS = [
   {
@@ -39,7 +40,7 @@ export const PII_PRESETS = [
     labelKey: 'node_redact_preset_id',
     type: 'regex',
     caseSensitive: false,
-    // 18 位居民身份证（含末位 X）
+    // 18-digit resident ID (including trailing X)
     value: '\\b[1-9]\\d{5}(?:19|20)\\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\\d|3[01])\\d{3}[\\dXx]\\b'
   },
   {
@@ -47,7 +48,7 @@ export const PII_PRESETS = [
     labelKey: 'node_redact_preset_phone',
     type: 'regex',
     caseSensitive: false,
-    // 中国大陆手机号
+    // Mainland China mobile phone
     value: '\\b1[3-9]\\d{9}\\b'
   },
   {
@@ -55,7 +56,7 @@ export const PII_PRESETS = [
     labelKey: 'node_redact_preset_bank',
     type: 'regex',
     caseSensitive: false,
-    // 16-19 位连续数字（银行卡常见长度）
+    // 16-19 consecutive digits (common credit / debit card format)
     value: '\\b\\d{16,19}\\b'
   },
   {
@@ -75,7 +76,7 @@ export const PII_PRESETS = [
 ];
 
 /**
- * 根据语言环境动态返回适配的 PII 预设（中文身份证/手机 vs 国际 SSN/国际电话，日期为全能通用）
+ * Dynamically returns localized PII presets based on current language environment.
  * @param {string} [lang='zh']
  */
 export function getLocalizedPiiPresets(lang = 'zh') {
@@ -123,13 +124,13 @@ export function getLocalizedPiiPresets(lang = 'zh') {
   ];
 }
 
-/** 正则元字符转义（keyword 模式构造安全正则用） */
+/** Escapes special regex characters (used when constructing regex from keyword mode) */
 function escapeRegExp(s) {
   return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
- * 编译单条规则为可复用的正则。无效/超长规则返回 { valid: false }。
+ * Compiles a single rule into a reusable RegExp object. Returns { valid: false } on invalid / overlength pattern.
  * @param {{type:'keyword'|'regex', value:string, caseSensitive?:boolean}} rule
  */
 export function compileRule(rule) {
@@ -147,9 +148,9 @@ export function compileRule(rule) {
 }
 
 /**
- * 规则批量匹配：textItems → 脱敏 rects。
+ * Batch rule matching: textItems -> redaction rects.
  * @param {Array<{str:string, transform:number[], width:number, height:number}>} textItems
- *        单页 pdf.js getTextContent().items
+ *        Single page items from pdf.js getTextContent().items
  * @param {Array<{type,value,caseSensitive?}>} rules
  * @returns {{
  *   rects: Array<{x,y,w,h}>,
@@ -167,9 +168,9 @@ export function matchRules(textItems, rules) {
     .filter((c) => !c.valid && c.error !== 'empty-pattern')
     .map((c) => `rule#${c.ruleIndex}: ${c.error}`);
 
-  /** 命中的用户空间 bbox（合并前） */
+  /** Matched user-space bboxes (before same-line merging) */
   const hitBoxes = [];
-  const perRuleHits = new Map(); // ruleIndex → 命中数
+  const perRuleHits = new Map(); // ruleIndex -> hit count
   let totalHits = 0;
   let hitLimitReached = false;
 
@@ -210,13 +211,13 @@ export function matchRules(textItems, rules) {
 }
 
 /**
- * 同行相邻命中合并：y 基线相近（±LINE_TOLERANCE）的 bbox 按行聚类，
- * 行内按 x 排序，空隙 ≤ MERGE_GAP 的相邻框合并为一个矩形。
+ * Same-line adjacent hit merging: clusters boxes with similar y baselines (within +/- LINE_TOLERANCE),
+ * sorts them by x horizontally, and merges adjacent boxes whose gap is <= MERGE_GAP into a unified rect.
  * @param {Array<{x,y,w,h}>} boxes
  */
 export function mergeSameLine(boxes) {
   if (!boxes.length) return [];
-  // 按 y 中心聚类成行
+  // Cluster into lines by y center
   const sorted = [...boxes].sort((a, b) => a.y - b.y);
   const lines = [];
   for (const b of sorted) {

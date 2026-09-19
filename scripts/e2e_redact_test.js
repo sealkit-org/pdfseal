@@ -1,5 +1,5 @@
 /**
- * E2E Business Test: PDF Redact (敏感信息脱敏)
+ * E2E Business Test: PDF Redact (Client-side Stream Redaction)
  *
  * Part 1 — Tool flow: upload fixture → drag a mask over the target line
  *          (snap-to-text) → burn → download → re-extract text in Node and
@@ -37,7 +37,7 @@ fs.readdirSync(DOWNLOAD_DIR).forEach(f => {
   try { fs.unlinkSync(path.join(DOWNLOAD_DIR, f)); } catch (e) {}
 });
 
-/** 经典 1x1 JPEG（base64），与 tests/redact.test.js 相同，用于图像页 fixture */
+/** Standard 1x1 JPEG (base64), same as in tests/redact.test.js, used for image page fixture */
 const TINY_JPEG_BASE64 =
   '/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwcJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPDs0NDT/wAALCAABAAEBAREA/8QAFAABAQAAAAAAAAAAAAAAAAAAAAv/2gAIAQEAAD8A0s8g/9k=';
 
@@ -94,7 +94,7 @@ async function extractTextPages(bytes) {
   ).href;
   if (!fontUrl.endsWith('/')) fontUrl += '/';
   const task = pdfjs.getDocument({
-    // pdf.js 4.x 拒绝 Buffer：统一复制为 plain Uint8Array
+    // pdf.js 4.x rejects Node Buffer; copy into plain Uint8Array
     data: new Uint8Array(bytes).slice(),
     isEvalSupported: false,
     disableFontFace: true,
@@ -137,7 +137,7 @@ async function captureDownload(page, patterns, timeoutMs = 20000) {
   throw new Error(`Timeout: no download matching ${patterns.join('/')} within ${timeoutMs}ms`);
 }
 
-/** Zip 产物时用 PowerShell Expand-Archive 解出首个 PDF */
+/** Extracts first PDF using PowerShell Expand-Archive when download is a zip */
 function extractPdfFromZip(zipPath) {
   const dest = path.join(TEMP_DIR, 'zip_out_' + Date.now());
   execSync(`powershell -NoProfile -Command "Expand-Archive -LiteralPath '${zipPath}' -DestinationPath '${dest}' -Force"`);
@@ -303,7 +303,7 @@ async function runPipelineFlow(pipelineFixturePath, browser) {
   });
 
   try {
-    // Part 1 的下载残留会污染捕获，先清空
+    // Clean up residual downloads from Part 1 to prevent contamination
     fs.readdirSync(DOWNLOAD_DIR).forEach((f) => {
       try { fs.unlinkSync(path.join(DOWNLOAD_DIR, f)); } catch (e) {}
     });

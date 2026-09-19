@@ -1,17 +1,18 @@
 /**
- * 文本状态机：对解析后的内容流操作做几何推演，
- * 输出每个 show-text 操作符在用户空间的 bbox，以及图像/Form 的放置信息。
+ * Text State Machine: performs geometric simulation on parsed content stream operations,
+ * calculating user-space bounding boxes for each show-text operator, as well as image / Form XObject placements.
  *
- * 状态：CTM 栈（q/Q）、文本矩阵 Tm、行距 TL、水平缩放 Tz、字距 Ts、当前字体 Tf。
+ * Managed state: CTM stack (q/Q), text matrix Tm, line leading TL, horizontal scaling Tz,
+ * character rise Ts, and current font Tf.
  *
- * 文本空间 → 用户空间：Trm = Tfs×Tz  0  0  Tfs  0  Ts  ×  Tm × CTM
- *   （PDF 32000-1:2008 9.4.2 Text space details；Tfs = 字号）
+ * Text space -> User space: Trm = [Tfs*Tz, 0, 0, Tfs, 0, Ts] * Tm * CTM
+ *   (PDF 32000-1:2008 section 9.4.2 Text space details; Tfs = font size)
  */
 import { shouldRemoveOp } from './coords.js';
 
-/** 3×2 矩阵乘法（[a b c d e f] 表示 [[a b 0][c d 0][e f 1]]） */
+/** 3x2 matrix multiplication ([a, b, c, d, e, f] represents [[a, b, 0], [c, d, 0], [e, f, 1]]) */
 export function mul(m1, m2) {
-  // m1 × m2（先应用 m2 再 m1）
+  // m1 x m2 (applies m2 transformation followed by m1)
   return [
     m1[0] * m2[0] + m1[1] * m2[2],
     m1[0] * m2[1] + m1[1] * m2[3],
@@ -26,40 +27,40 @@ const IDENT = [1, 0, 0, 1, 0, 0];
 
 /**
  * @typedef {Object} ShowTextOp
- * @property {number} opIndex 在 parseContentStream().ops 中的下标
- * @property {{x:number,y:number,w:number,h:number}} bbox 用户空间
- * @property {boolean} invisible Tr 3 隐形文字
+ * @property {number} opIndex Index inside parseContentStream().ops
+ * @property {{x:number,y:number,w:number,h:number}} bbox User-space bounding box
+ * @property {boolean} invisible Tr 3 invisible text mode
  */
 
 /**
  * @typedef {Object} XObjectPlacement
- * @property {number} opIndex Do 操作符下标
- * @property {string} name 资源名（如 'X1'）
- * @property {{x:number,y:number,w:number,h:number}} bbox 放置四边形（用户空间）
- * @property {number[]} ctm Do 时刻的 CTM（Form 递归的初始矩阵）
+ * @property {number} opIndex Do operator index
+ * @property {string} name Resource name (e.g. 'X1')
+ * @property {{x:number,y:number,w:number,h:number}} bbox Placement rect in user space
+ * @property {number[]} ctm CTM at the moment Do was called (initial matrix for nested Forms)
  */
 
 /**
- * 模拟内容流。
- * @param {Array} ops parseContentStream 输出的操作符列表
+ * Simulates content stream operators.
+ * @param {Array} ops Operator list produced by parseContentStream
  * @param {Object} opts
- * @param {import('./fontWidths.js').FontWidthResolver} opts.fonts 字体宽度解析器
+ * @param {import('./fontWidths.js').FontWidthResolver} opts.fonts Font width resolver
  * @returns {{showText: ShowTextOp[], xobjects: XObjectPlacement[], rects: Array<{opIndex,bbox}>}}
- *          rects 为路径绘制（re）产生的矩形（供 stamp 定位参考，v1 未用）
+ *          rects are path rectangles produced by 're' (used for reference)
  */
 export function simulateOps(ops, { fonts, initialCtm }) {
   const ctmStack = [];
   let ctm = initialCtm ? initialCtm.slice() : IDENT.slice();
 
   let inText = false;
-  let tm = IDENT.slice(); // 文本矩阵
-  let lineMatrix = IDENT.slice(); // 行起点矩阵
+  let tm = IDENT.slice(); // Text matrix
+  let lineMatrix = IDENT.slice(); // Line start matrix
   let fontSize = 0;
   let fontKey = null;
   let leading = 0; // TL
-  let tz = 1; // Tz 水平缩放
-  let ts = 0; // Ts 字距 rise
-  let tr = 0; // Tr 渲染模式
+  let tz = 1; // Tz horizontal scaling
+  let ts = 0; // Ts text rise
+  let tr = 0; // Tr text rendering mode
 
   /** @type {ShowTextOp[]} */
   const showText = [];
@@ -67,9 +68,9 @@ export function simulateOps(ops, { fonts, initialCtm }) {
   const xobjects = [];
   const rects = [];
 
-  /** Tj/TJ 的字符串展宽（设计空间 units） */
+  /** Measures string width in design space glyph units */
   const measureString = (s) => {
-    if (!fontKey) return s.length * 500; // 无字体：0.5em 兜底
+    if (!fontKey) return s.length * 500; // Fallback: 0.5em per character if font unknown
     let total = 0;
     for (let i = 0; i < s.length; i++) {
       const code = s.charCodeAt(i);
@@ -79,21 +80,21 @@ export function simulateOps(ops, { fonts, initialCtm }) {
     return total;
   };
 
-  /** 计算 show-text 的用户空间 bbox（含全部字符串宽度） */
+  /** Computes user-space bbox for show-text operator (including full string width) */
   const emitShowText = (opIndex, widthUnits) => {
-    // 文本空间变换（含字号/缩放/字距）
+    // Text space transformation (font size / scaling / text rise)
     const tfs = fontSize;
     const tsm = [tfs * tz, 0, 0, tfs, 0, ts];
     const trm = mul(tsm, mul(tm, ctm));
-    // bbox：基线方向 widthUnits/1000 × 字号，垂直方向近似字号（ ascent/descent 简化为 [0, -0.25fs, 1.2fs]）
+    // Bbox: baseline direction widthUnits/1000 * fontSize, vertical height approx fontSize (ascent/descent simplified to [0, -0.25fs, 1.2fs])
     const w = (widthUnits / 1000) * tfs;
     const h = tfs * 1.25;
     const x0 = trm[4];
     const y0 = trm[5] - tfs * 0.25;
-    // 旋转时用基线向量展开
-    const ux = trm[0] / tfs; // 单位基线方向 x
+    // Expand along rotated baseline unit vectors
+    const ux = trm[0] / tfs; // Unit baseline direction x
     const uy = trm[1] / tfs;
-    const vx = trm[2] / tfs; // 单位垂直方向 x
+    const vx = trm[2] / tfs; // Unit vertical direction x
     const vy = trm[3] / tfs;
     const pts = [
       [x0, y0],
@@ -174,7 +175,7 @@ export function simulateOps(ops, { fonts, initialCtm }) {
         }
         break;
       case "'":
-        // 换行 + show
+        // Move to next line and show text
         if (inText) {
           lineMatrix = mul([1, 0, 0, 1, 0, -leading], lineMatrix);
           tm = lineMatrix.slice();
@@ -183,7 +184,7 @@ export function simulateOps(ops, { fonts, initialCtm }) {
         break;
       case '"':
         if (inText) {
-          // aw ac ' → 设置字距 + 换行 + show
+          // Set spacing, move to next line, and show text
           lineMatrix = mul([1, 0, 0, 1, 0, -leading], lineMatrix);
           tm = lineMatrix.slice();
           if (typeof args[2] === 'string') emitShowText(idx, measureString(args[2]));
@@ -194,7 +195,7 @@ export function simulateOps(ops, { fonts, initialCtm }) {
           let units = 0;
           for (const el of args[0]) {
             if (typeof el === 'string') units += measureString(el);
-            else if (typeof el === 'number') units += -Number(el); // 平移量单位是千分之em的负数
+            else if (typeof el === 'number') units += -Number(el); // Negative number indicates forward displacement in 1/1000 em
           }
           emitShowText(idx, units);
         }
@@ -202,7 +203,7 @@ export function simulateOps(ops, { fonts, initialCtm }) {
       }
       case 're':
         if (args.length >= 4) {
-          // 当前路径矩形（用户空间）：x y w h 经 CTM
+          // Path rectangle (user space): x y w h transformed via CTM
           const [x, y, w, h] = args.map(Number);
           const p1 = applyCtm(ctm, x, y);
           const p2 = applyCtm(ctm, x + w, y + h);
@@ -219,7 +220,7 @@ export function simulateOps(ops, { fonts, initialCtm }) {
         break;
       case 'Do': {
         if (args[0] && typeof args[0] === 'string') {
-          // XObject 放置：单位方形 [0,0,1,1] 经 CTM
+          // XObject placement: unit square [0,0,1,1] transformed via CTM
           const p0 = applyCtm(ctm, 0, 0);
           const p1 = applyCtm(ctm, 1, 1);
           xobjects.push({
@@ -237,7 +238,7 @@ export function simulateOps(ops, { fonts, initialCtm }) {
         break;
       }
       default:
-        break; // 其余操作符不影响状态
+        break; // Other operators do not affect text matrix state
     }
   }
 
@@ -249,15 +250,15 @@ function applyCtm(m, x, y) {
 }
 
 /**
- * 根据脱敏矩形过滤出需要删除的 show-text 操作符。
+ * Filters show-text operators that must be removed based on redaction rects.
  * @param {ShowTextOp[]} showText
  * @param {Array<{x,y,w,h}>} redactRects
- * @returns {Set<number>} 需要删除的 opIndex 集合
+ * @returns {Set<number>} Set of opIndex integers to remove
  */
 export function selectRemovedOps(showText, redactRects) {
   const removed = new Set();
   for (const st of showText) {
-    if (st.bbox.w <= 0 && st.bbox.h <= 0) continue; // 空操作
+    if (st.bbox.w <= 0 && st.bbox.h <= 0) continue; // Skip zero-sized ops
     if (shouldRemoveOp(st.bbox, redactRects)) removed.add(st.opIndex);
   }
   return removed;
