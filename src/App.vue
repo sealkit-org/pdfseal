@@ -24,6 +24,7 @@
     <main 
       :class="[
         'flex-1 w-full mx-auto px-3 sm:px-5 lg:px-6 py-2 sm:py-2.5 flex flex-col transition-all duration-300 min-h-0 pb-16 md:pb-2.5',
+
         hasActiveFile ? 'max-w-screen-2xl' : 'max-w-7xl'
       ]"
     >
