@@ -122,7 +122,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **Internationalization**: Vue I18n (Full support for 🇺🇸 English, 🇩🇪 German, 🇪🇸 Spanish, 🇫🇷 French, 🇨🇳 Simplified Chinese)
 - **Local Storage**: IndexedDB with structured transactional stores (Privacy Vault)
 - **Performance & Scheduling**: Active Event Loop Yielding to prevent UI freezing during intensive WASM/canvas computations
-- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**31 unit test suites, 193 unit tests 100% passing**, plus headless browser E2E regression suites)
+- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**32 unit test suites, 198 unit tests 100% passing**, plus headless browser E2E regression suites)
 
 ---
 

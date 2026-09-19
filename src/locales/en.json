@@ -826,6 +826,7 @@
   "compress_scanned_warn_desc": "This document consists mostly of images. \"Lossless\" mode will NOT compress image pixels. To significantly reduce size, please switch to \"High Quality (200~300 DPI)\", which preserves print quality while shrinking the file by 50%~75%!",
   "img2pdf_selected": "Selected",
   "img2pdf_images": "images",
+  "img2pdf_selected_hint": "Drag cards to reorder, or rotate individual images",
   "img2pdf_add_more": "Add More",
   "img2pdf_clear_all": "Clear All",
   "action_delete": "Delete",

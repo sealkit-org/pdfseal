@@ -272,7 +272,7 @@
             @click="showIosGuide = false" 
             class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer"
           >
-            {{ t('confirm') || 'OK' }}
+            {{ t('btn_confirm', 'OK') }}
           </button>
         </div>
       </div>

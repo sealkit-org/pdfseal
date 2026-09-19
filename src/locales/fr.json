@@ -826,6 +826,7 @@
   "compress_scanned_warn_desc": "Ce document est principalement composé d'images. Le mode \"Sans perte\" ne compressera PAS les pixels des images. Pour réduire significativement la taille, choisissez \"Haute Qualité (200~300 DPI)\", qui réduit de 50% à 75% !",
   "img2pdf_selected": "Sélectionné",
   "img2pdf_images": "images",
+  "img2pdf_selected_hint": "Faites glisser les cartes pour réorganiser les images",
   "img2pdf_add_more": "Ajouter Plus",
   "img2pdf_clear_all": "Tout Effacer",
   "action_delete": "Supprimer",
