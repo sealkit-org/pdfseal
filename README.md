@@ -76,9 +76,19 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 
 ### 📲 Progressive Web App (PWA) & True Offline Guarantee
 
-- **No-Admin Desktop Installation**: Install PDFSeal as a standalone, windowed application directly from Chrome, Edge, or Safari without requiring IT administrator privileges.
-- **100% Airplane Mode Reliability**: Powered by `vite-plugin-pwa` and Workbox, 350+ core dependencies (including CJK font maps and standard font binaries) are automatically pre-cached.
+- **No-Admin Desktop & Mobile Installation**: Install PDFSeal as a standalone, windowed application directly from Chrome, Edge, or Safari without requiring IT administrator privileges. On mobile, add it to your home screen for full-screen offline execution.
+- **100% Airplane Mode Reliability**: Powered by `vite-plugin-pwa` and Workbox, 400+ core dependencies (including CJK font maps and standard font binaries) are automatically pre-cached.
 - **F5 Refresh Proof**: Press `F5` while completely disconnected from the internet, and PDFSeal reloads and operates at 100% capacity without a single network request.
+
+---
+
+### 📱 Mobile-First Responsive Experience & Native Sharing
+
+- **Thumb-Friendly Dual-Mode Layout**: Clean separation between desktop and mobile. Mobile phones feature a distraction-free minimal header, a thumb-reachable bottom navigation bar for top workflows (Merge, Image-to-PDF, Compress, Sign), and an intuitive sliding bottom sheet for all 12+ utilities. Desktop view remains 100% untouched.
+- **Web Share API Integration**: Share processed PDFs directly via native OS sheets (AirDrop to Mac, save to Apple Files / Google Drive, or send via WhatsApp/WeChat) with automatic direct-download fallback.
+- **Touch-Optimized Signing**: Draw signatures effortlessly with finger or stylus with zero scroll interference (`touch-none`) and enlarged touch resize handles.
+- **Mobile Camera & Memory Guard**: Instant multi-photo document collation with automatic resolution scaling protection (prevents mobile Safari canvas OOM crashes on 48MP+ camera photos).
+- **Add to Home Screen Guidance**: In-drawer guidance for Android one-click installation and step-by-step iOS Safari guidance to launch as a standalone, zero-address-bar native app.
 
 ---
 
@@ -107,7 +117,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **Internationalization**: Vue I18n (Full support for 🇺🇸 English, 🇩🇪 German, 🇪🇸 Spanish, 🇫🇷 French, 🇨🇳 Simplified Chinese)
 - **Local Storage**: IndexedDB with structured transactional stores (Privacy Vault)
 - **Performance & Scheduling**: Active Event Loop Yielding to prevent UI freezing during intensive WASM/canvas computations
-- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**30 unit test suites, 186 unit tests 100% passing**, plus headless browser E2E regression suites)
+- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**31 unit test suites, 191 unit tests 100% passing**, plus headless browser E2E regression suites)
 
 ---
 
