@@ -1371,5 +1371,13 @@
   "drawer_cat_assembly": "页面与组织",
   "drawer_cat_security": "安全与签名",
   "drawer_cat_edit": "优化与标记",
-  "drawer_cat_advanced": "高级工作流与存储"
+  "drawer_cat_advanced": "高级扩展",
+  "pwa_install_title": "安装为离线 App",
+  "pwa_install_desc": "桌面全屏运行、零广告、支持离线使用",
+  "pwa_install_btn": "立即安装",
+  "pwa_add_home_btn": "添加到主屏幕",
+  "pwa_ios_guide_title": "添加到手机主屏幕",
+  "pwa_ios_step1": "点击 Safari 浏览器底部的【分享】按钮",
+  "pwa_ios_step2": "在菜单中找到并点击【添加到主屏幕】",
+  "pwa_ios_step3": "即可从桌面全屏启动，享受原生 App 般体验"
 }

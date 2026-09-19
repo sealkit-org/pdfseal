@@ -1371,5 +1371,13 @@
   "drawer_cat_assembly": "Pages & Documents",
   "drawer_cat_security": "Security & Signatures",
   "drawer_cat_edit": "Optimize & Edit",
-  "drawer_cat_advanced": "Advanced Utilities"
+  "drawer_cat_advanced": "Advanced Utilities",
+  "pwa_install_title": "Install Offline App",
+  "pwa_install_desc": "Full-screen, zero tracking, offline ready",
+  "pwa_install_btn": "Install",
+  "pwa_add_home_btn": "Add to Home",
+  "pwa_ios_guide_title": "Add to Home Screen",
+  "pwa_ios_step1": "Tap the Share button at the bottom of Safari",
+  "pwa_ios_step2": "Scroll down and tap 'Add to Home Screen'",
+  "pwa_ios_step3": "Launch from home screen as a full-screen offline app"
 }

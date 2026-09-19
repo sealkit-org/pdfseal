@@ -408,6 +408,7 @@ import { currentLang, setLanguage, t } from '../i18n';
 import { recordToolUsage } from '../utils/usageTracker';
 import { siteConfig } from '../config/siteConfig';
 import { isProSupporter, activeTierLabel } from '../utils/security/certificateStore';
+import { usePwaInstall } from '../utils/usePwaInstall';
 
 const props = defineProps({
   activeTab: {
@@ -482,36 +483,13 @@ function handleOutsideClick(e) {
 }
 
 // PWA Install State & Logic
-const deferredInstallPrompt = ref(null);
-const canInstallPwa = computed(() => !!deferredInstallPrompt.value);
-
-function handleBeforeInstallPrompt(e) {
-  e.preventDefault();
-  deferredInstallPrompt.value = e;
-}
-
-function handleAppInstalled() {
-  deferredInstallPrompt.value = null;
-}
-
-async function installPwa() {
-  if (!deferredInstallPrompt.value) return;
-  deferredInstallPrompt.value.prompt();
-  const { outcome } = await deferredInstallPrompt.value.userChoice;
-  if (outcome === 'accepted') {
-    deferredInstallPrompt.value = null;
-  }
-}
+const { canInstallPwa, installPwa } = usePwaInstall();
 
 onMounted(() => {
   document.addEventListener('click', handleOutsideClick);
-  window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  window.addEventListener('appinstalled', handleAppInstalled);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', handleOutsideClick);
-  window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
-  window.removeEventListener('appinstalled', handleAppInstalled);
 });
 </script>

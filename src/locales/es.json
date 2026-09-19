@@ -1371,5 +1371,13 @@
   "drawer_cat_assembly": "Páginas y Documentos",
   "drawer_cat_security": "Seguridad y Firmas",
   "drawer_cat_edit": "Optimizar y Editar",
-  "drawer_cat_advanced": "Utilidades Avanzadas"
+  "drawer_cat_advanced": "Utilidades Avanzadas",
+  "pwa_install_title": "Instalar app sin conexión",
+  "pwa_install_desc": "Pantalla completa, sin anuncios, sin conexión",
+  "pwa_install_btn": "Instalar",
+  "pwa_add_home_btn": "Añadir a inicio",
+  "pwa_ios_guide_title": "Añadir a pantalla de inicio",
+  "pwa_ios_step1": "Toca el botón Compartir en la parte inferior de Safari",
+  "pwa_ios_step2": "Desplázate hacia abajo y pulsa 'Añadir a pantalla de inicio'",
+  "pwa_ios_step3": "Inicia desde la pantalla de inicio como una app a pantalla completa"
 }

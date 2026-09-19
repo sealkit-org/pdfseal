@@ -1371,5 +1371,13 @@
   "drawer_cat_assembly": "Pages et Documents",
   "drawer_cat_security": "Sécurité et Signatures",
   "drawer_cat_edit": "Optimiser et Éditer",
-  "drawer_cat_advanced": "Utilitaires Avancés"
+  "drawer_cat_advanced": "Utilitaires Avancés",
+  "pwa_install_title": "Installer l'app hors ligne",
+  "pwa_install_desc": "Plein écran, sans publicité, fonctionne hors-ligne",
+  "pwa_install_btn": "Installer",
+  "pwa_add_home_btn": "Sur l'écran d'accueil",
+  "pwa_ios_guide_title": "Ajouter à l'écran d'accueil",
+  "pwa_ios_step1": "Appuyez sur le bouton Partager en bas de Safari",
+  "pwa_ios_step2": "Faites défiler et appuyez sur 'Sur l'écran d'accueil'",
+  "pwa_ios_step3": "Lancez depuis l'écran d'accueil comme une application native plein écran"
 }

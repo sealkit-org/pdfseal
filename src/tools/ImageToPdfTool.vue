@@ -528,8 +528,22 @@ async function executeExport() {
       });
 
       const isSideways = item.rotation === 90 || item.rotation === 270;
-      const drawW = isSideways ? img.naturalHeight : img.naturalWidth;
-      const drawH = isSideways ? img.naturalWidth : img.naturalHeight;
+      const naturalW = isSideways ? img.naturalHeight : img.naturalWidth;
+      const naturalH = isSideways ? img.naturalWidth : img.naturalHeight;
+
+      // Smart downscaling protection:
+      // For ultra-high-resolution mobile camera photos (e.g. 48MP/108MP, 8000x6000),
+      // downscale to max 2400px (standard A4 at ~290 DPI is ultra-sharp print quality).
+      // This saves ~85% canvas memory, prevents mobile Safari OOM crashes,
+      // and keeps PDF export fast and lightweight.
+      const MAX_DIMENSION = 2400;
+      let scaleFactor = 1;
+      if (Math.max(naturalW, naturalH) > MAX_DIMENSION) {
+        scaleFactor = MAX_DIMENSION / Math.max(naturalW, naturalH);
+      }
+
+      const drawW = Math.round(naturalW * scaleFactor);
+      const drawH = Math.round(naturalH * scaleFactor);
 
       canvas.width = drawW;
       canvas.height = drawH;
@@ -537,9 +551,11 @@ async function executeExport() {
 
       ctx.translate(canvas.width / 2, canvas.height / 2);
       ctx.rotate((item.rotation * Math.PI) / 180);
-      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+      const renderW = Math.round(img.naturalWidth * scaleFactor);
+      const renderH = Math.round(img.naturalHeight * scaleFactor);
+      ctx.drawImage(img, -renderW / 2, -renderH / 2, renderW, renderH);
 
-      const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.90);
       const binary = atob(jpegDataUrl.split(',')[1]);
       const imgBytes = new Uint8Array(binary.length);
       for (let k = 0; k < binary.length; k++) {

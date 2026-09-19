@@ -39,6 +39,37 @@
 
         <!-- Scrollable Tools Grid Body -->
         <div class="overflow-y-auto px-4 py-3 space-y-4 flex-1">
+          <!-- PWA Offline App Card (Visible if not running standalone) -->
+          <div 
+            v-if="!isInstalled" 
+            class="p-2.5 rounded-2xl bg-gradient-to-r from-blue-50/90 via-indigo-50/70 to-violet-50/80 border border-indigo-100 flex items-center justify-between shadow-2xs"
+          >
+            <div class="flex items-center space-x-2.5 min-w-0 pr-2">
+              <div class="w-8 h-8 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs font-bold text-sm">
+                🦭
+              </div>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-800 leading-tight truncate">
+                  {{ t('pwa_install_title') }}
+                </div>
+                <div class="text-[10px] text-slate-500 truncate mt-0.5">
+                  {{ t('pwa_install_desc') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Button -->
+            <button 
+              type="button" 
+              @click="handleInstallClick"
+              class="shrink-0 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-[11px] font-bold px-2.5 py-1.5 rounded-xl shadow-2xs transition cursor-pointer flex items-center space-x-1"
+            >
+              <DownloadCloud v-if="canInstallPwa" class="w-3.5 h-3.5" />
+              <Share2 v-else class="w-3.5 h-3.5" />
+              <span>{{ canInstallPwa ? t('pwa_install_btn') : t('pwa_add_home_btn') }}</span>
+            </button>
+          </div>
+
           <!-- Category 1: Assembly & Pages -->
           <div>
             <h4 class="text-[11px] font-extrabold text-slate-400 uppercase tracking-wider mb-2 px-1">
@@ -203,11 +234,54 @@
           </div>
         </div>
       </div>
+
+      <!-- iOS Add to Home Screen Guide Modal -->
+      <div 
+        v-if="showIosGuide" 
+        class="fixed inset-0 z-60 flex items-end sm:items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs"
+        @click.self="showIosGuide = false"
+      >
+        <div class="bg-white rounded-3xl max-w-sm w-full p-5 shadow-2xl border border-slate-100 flex flex-col space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-100">
+            <div class="flex items-center space-x-2">
+              <span class="text-xl">🦭</span>
+              <h3 class="text-sm font-extrabold text-slate-800">{{ t('pwa_ios_guide_title') }}</h3>
+            </div>
+            <button @click="showIosGuide = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 cursor-pointer">
+              <X class="w-4 h-4" />
+            </button>
+          </div>
+
+          <div class="space-y-2.5 text-xs text-slate-600">
+            <div class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+              <div class="w-5 h-5 rounded-md bg-blue-100 text-blue-700 font-bold flex items-center justify-center shrink-0 text-xs mt-0.5">1</div>
+              <p class="leading-relaxed">{{ t('pwa_ios_step1') }}</p>
+            </div>
+            <div class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200/70">
+              <div class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 font-bold flex items-center justify-center shrink-0 text-xs mt-0.5">2</div>
+              <p class="leading-relaxed">{{ t('pwa_ios_step2') }}</p>
+            </div>
+            <div class="flex items-start space-x-2.5 p-2.5 rounded-xl bg-emerald-50 border border-emerald-200/70">
+              <div class="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 font-bold flex items-center justify-center shrink-0 text-xs mt-0.5">3</div>
+              <p class="leading-relaxed font-semibold text-emerald-900">{{ t('pwa_ios_step3') }}</p>
+            </div>
+          </div>
+
+          <button 
+            type="button"
+            @click="showIosGuide = false" 
+            class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition cursor-pointer"
+          >
+            {{ t('confirm') || 'OK' }}
+          </button>
+        </div>
+      </div>
     </div>
   </Teleport>
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { 
   X, 
   Layers, 
@@ -227,10 +301,25 @@ import {
   FolderLock,
   ChevronDown,
   Settings,
-  Terminal
+  Terminal,
+  DownloadCloud,
+  Share2
 } from 'lucide-vue-next';
 import { currentLang, setLanguage, t } from '../i18n';
 import { recordToolUsage } from '../utils/usageTracker';
+import { usePwaInstall } from '../utils/usePwaInstall';
+
+const { canInstallPwa, isInstalled, installPwa } = usePwaInstall();
+const showIosGuide = ref(false);
+
+async function handleInstallClick() {
+  if (canInstallPwa.value) {
+    const success = await installPwa();
+    if (success) close();
+  } else {
+    showIosGuide.value = true;
+  }
+}
 
 const props = defineProps({
   isOpen: {

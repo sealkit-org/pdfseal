@@ -507,7 +507,7 @@
                   width: `${sig.width}px`,
                   height: `${sig.height}px`
                 }"
-                class="absolute cursor-move border-2 border-dashed border-indigo-500 bg-indigo-50/15 group hover:border-indigo-600 transition-colors select-none"
+                class="absolute cursor-move border-2 border-dashed border-indigo-500 bg-indigo-50/15 group hover:border-indigo-600 transition-colors select-none touch-none"
                 @pointerdown="startDragSig(sig, $event)"
               >
                 <!-- Render Stamp Image -->
@@ -517,7 +517,7 @@
                 <button 
                   v-if="totalPages > 1"
                   @click.stop="openBatchModal(sig)"
-                  class="absolute -top-3.5 -left-1 px-1.5 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white flex items-center space-x-1 shadow-md hover:shadow-indigo-600/30 transition-all cursor-pointer z-10 text-[10px] font-bold select-none leading-none"
+                  class="absolute -top-3.5 -left-1 px-1.5 py-0.5 rounded-md bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white flex items-center space-x-1 shadow-md hover:shadow-indigo-600/30 transition-all cursor-pointer z-10 text-[10px] font-bold select-none leading-none touch-none"
                   :title="t('sign_batch_modal_title')"
                 >
                   <Layers class="w-3 h-3 shrink-0" />
@@ -527,18 +527,20 @@
                 <!-- Delete Badge -->
                 <button 
                   @click.stop="removeSignature(sig.id)"
-                  class="absolute -top-3.5 -right-2 w-5 h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 transition cursor-pointer z-10"
+                  class="absolute -top-3.5 -right-2 w-6 h-6 sm:w-5 sm:h-5 rounded-full bg-rose-500 text-white flex items-center justify-center shadow-md hover:bg-rose-600 transition cursor-pointer z-10 touch-none"
                   :title="t('sign_action_delete', 'Delete')"
                 >
-                  <X class="w-3 h-3" />
+                  <X class="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                 </button>
 
                 <!-- Resize Handle (Bottom Right) -->
                 <div 
                   @pointerdown.stop="startResizeSig(sig, $event)"
-                  class="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-indigo-600 border border-white rounded-full cursor-nwse-resize shadow-xs z-10"
+                  class="absolute -bottom-2.5 -right-2.5 sm:-bottom-1.5 sm:-right-1.5 w-6 h-6 sm:w-3.5 sm:h-3.5 bg-indigo-600 border-2 border-white rounded-full cursor-nwse-resize shadow-xs z-10 touch-none flex items-center justify-center"
                   :title="t('sign_action_resize', 'Resize')"
-                ></div>
+                >
+                  <div class="w-1.5 h-1.5 bg-white/70 rounded-full sm:hidden"></div>
+                </div>
               </div>
             </div>
           </div>

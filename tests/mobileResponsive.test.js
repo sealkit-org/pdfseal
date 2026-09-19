@@ -94,7 +94,15 @@ describe('Mobile Responsive & Device Detection Engine', () => {
       'drawer_cat_edit',
       'drawer_cat_advanced',
       'merge_btn_from_local',
-      'btn_add_from_pc'
+      'btn_add_from_pc',
+      'pwa_install_title',
+      'pwa_install_desc',
+      'pwa_install_btn',
+      'pwa_add_home_btn',
+      'pwa_ios_guide_title',
+      'pwa_ios_step1',
+      'pwa_ios_step2',
+      'pwa_ios_step3'
     ];
 
     for (const key of requiredKeys) {
@@ -105,5 +113,14 @@ describe('Mobile Responsive & Device Detection Engine', () => {
     // Verify user-friendly non-desktop text
     expect(en.merge_btn_from_local).toBe('Add Local Files');
     expect(zh.merge_btn_from_local).toBe('选择本地文件');
+  });
+
+  it('should test PWA installation composable', async () => {
+    const { usePwaInstall } = await import('../src/utils/usePwaInstall.js');
+    const { canInstallPwa, isInstalled, isIos, installPwa } = usePwaInstall();
+    expect(isInstalled.value).toBe(false);
+    expect(canInstallPwa.value).toBe(false);
+    expect(isIos.value).toBe(false);
+    expect(await installPwa()).toBe(false);
   });
 });

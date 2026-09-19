@@ -1371,5 +1371,13 @@
   "drawer_cat_assembly": "Seiten & Dokumente",
   "drawer_cat_security": "Sicherheit & Signaturen",
   "drawer_cat_edit": "Optimieren & Bearbeiten",
-  "drawer_cat_advanced": "Erweiterte Werkzeuge"
+  "drawer_cat_advanced": "Erweiterte Werkzeuge",
+  "pwa_install_title": "Als Offline-App installieren",
+  "pwa_install_desc": "Vollbild, werbefrei, offline verfügbar",
+  "pwa_install_btn": "Installieren",
+  "pwa_add_home_btn": "Zum Home-Bildschirm",
+  "pwa_ios_guide_title": "Zum Home-Bildschirm hinzufügen",
+  "pwa_ios_step1": "Tippen Sie unten in Safari auf die Teilen-Taste",
+  "pwa_ios_step2": "Nach unten scrollen und 'Zum Home-Bildschirm' wählen",
+  "pwa_ios_step3": "Als Vollbild-App direkt vom Home-Bildschirm starten"
 }
