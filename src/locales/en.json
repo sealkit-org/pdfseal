@@ -1379,5 +1379,7 @@
   "pwa_ios_guide_title": "Add to Home Screen",
   "pwa_ios_step1": "Tap the Share button at the bottom of Safari",
   "pwa_ios_step2": "Scroll down and tap 'Add to Home Screen'",
-  "pwa_ios_step3": "Launch from home screen as a full-screen offline app"
+  "pwa_ios_step3": "Launch from home screen as a full-screen offline app",
+  "action_done": "Done",
+  "btn_confirm": "Confirm"
 }

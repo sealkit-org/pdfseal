@@ -123,4 +123,46 @@ describe('Mobile Responsive & Device Detection Engine', () => {
     expect(isIos.value).toBe(false);
     expect(await installPwa()).toBe(false);
   });
+
+  it('should verify mobile thumb zone sticky bottom execution bar in all core tools', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+
+    const tools = [
+      'ImageToPdfTool.vue',
+      'MergeTool.vue',
+      'CompressTool.vue',
+      'SplitTool.vue',
+      'WatermarkTool.vue',
+      'OrganizeTool.vue'
+    ];
+
+    for (const tool of tools) {
+      const filePath = path.resolve(__dirname, '../src/tools', tool);
+      const content = fs.readFileSync(filePath, 'utf-8');
+
+      // Every core tool must have sticky bottom-14 md:static z-20 to clear mobile bottom navigation
+      expect(content).toContain('sticky bottom-14 md:static z-20');
+      expect(content).toContain('bg-white/95 backdrop-blur-md');
+    }
+  });
+
+  it('should verify mobile compact layouts and drawers', async () => {
+    const fs = await import('fs');
+    const path = await import('path');
+
+    // Image to PDF: 3-column compact gallery & mobile settings bottom sheet
+    const img2pdf = fs.readFileSync(path.resolve(__dirname, '../src/tools/ImageToPdfTool.vue'), 'utf-8');
+    expect(img2pdf).toContain('grid-cols-3');
+    expect(img2pdf).toContain('isMobileSettingsOpen');
+    expect(img2pdf).toContain('currentSettingsSummary');
+
+    // Compress: 2x2 grid on mobile
+    const compress = fs.readFileSync(path.resolve(__dirname, '../src/tools/CompressTool.vue'), 'utf-8');
+    expect(compress).toContain('grid-cols-2 lg:grid-cols-4');
+
+    // Organize: floating batch bar docked above mobile bottom nav
+    const organize = fs.readFileSync(path.resolve(__dirname, '../src/tools/OrganizeTool.vue'), 'utf-8');
+    expect(organize).toContain('bottom-18 sm:bottom-6');
+  });
 });

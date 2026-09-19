@@ -1379,5 +1379,7 @@
   "pwa_ios_guide_title": "Ajouter à l'écran d'accueil",
   "pwa_ios_step1": "Appuyez sur le bouton Partager en bas de Safari",
   "pwa_ios_step2": "Faites défiler et appuyez sur 'Sur l'écran d'accueil'",
-  "pwa_ios_step3": "Lancez depuis l'écran d'accueil comme une application native plein écran"
+  "pwa_ios_step3": "Lancez depuis l'écran d'accueil comme une application native plein écran",
+  "action_done": "Terminé",
+  "btn_confirm": "Confirmer"
 }

@@ -1379,5 +1379,7 @@
   "pwa_ios_guide_title": "Añadir a pantalla de inicio",
   "pwa_ios_step1": "Toca el botón Compartir en la parte inferior de Safari",
   "pwa_ios_step2": "Desplázate hacia abajo y pulsa 'Añadir a pantalla de inicio'",
-  "pwa_ios_step3": "Inicia desde la pantalla de inicio como una app a pantalla completa"
+  "pwa_ios_step3": "Inicia desde la pantalla de inicio como una app a pantalla completa",
+  "action_done": "Listo",
+  "btn_confirm": "Confirmar"
 }

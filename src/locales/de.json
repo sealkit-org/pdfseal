@@ -1379,5 +1379,7 @@
   "pwa_ios_guide_title": "Zum Home-Bildschirm hinzufügen",
   "pwa_ios_step1": "Tippen Sie unten in Safari auf die Teilen-Taste",
   "pwa_ios_step2": "Nach unten scrollen und 'Zum Home-Bildschirm' wählen",
-  "pwa_ios_step3": "Als Vollbild-App direkt vom Home-Bildschirm starten"
+  "pwa_ios_step3": "Als Vollbild-App direkt vom Home-Bildschirm starten",
+  "action_done": "Fertig",
+  "btn_confirm": "Bestätigen"
 }

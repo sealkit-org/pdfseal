@@ -458,12 +458,12 @@
             </div>
           </div>
 
-          <!-- Bottom Cluster: Output Settings Bar -->
-          <div class="shrink-0 space-y-2.5 pt-2">
+          <!-- Bottom Cluster: Output Settings & Sticky Action Bar -->
+          <div class="shrink-0 pt-2 sticky bottom-14 md:static z-20 bg-white/95 backdrop-blur-md -mx-3.5 sm:mx-0 px-3.5 sm:px-0 pb-2 sm:pb-0 border-t border-slate-100 shadow-[0_-4px_16px_rgba(0,0,0,0.06)] md:shadow-none space-y-2">
             <!-- 5. Bottom Action & Export Configuration Bar -->
-            <div class="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
-              <!-- Left: Output Filename & Auto-save Checkbox -->
-              <div class="flex flex-wrap items-center gap-3">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
+              <!-- Left: Output Filename, Delivery Format & Auto-save Checkbox (Desktop visible, phone hidden) -->
+              <div class="hidden sm:flex flex-wrap items-center gap-3">
                 <div class="flex items-center space-x-1.5">
                   <label class="text-xs text-slate-500 font-semibold shrink-0">
                     {{ t('vault_field_name') }}:
@@ -519,11 +519,11 @@
                 </label>
               </div>
 
-              <!-- Right: Execution Button -->
+              <!-- Right: Execution Button (Sticky & Full-width on mobile) -->
               <button 
                 :disabled="isProcessing || isLoading || isExecutionDisabled"
                 @click="handlePrimarySplitClick" 
-                class="bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-xs sm:text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-md hover:shadow-emerald-600/25 disabled:opacity-50 cursor-pointer ml-auto"
+                class="w-full sm:w-auto sm:ml-auto bg-emerald-600 hover:bg-emerald-700 active:scale-98 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition flex items-center justify-center space-x-2 shadow-lg hover:shadow-emerald-600/25 disabled:opacity-50 cursor-pointer"
               >
                 <Loader2 v-if="isProcessing" class="w-4 h-4 animate-spin" />
                 <Scissors v-else class="w-4 h-4" />

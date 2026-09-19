@@ -1379,5 +1379,7 @@
   "pwa_ios_guide_title": "添加到手机主屏幕",
   "pwa_ios_step1": "点击 Safari 浏览器底部的【分享】按钮",
   "pwa_ios_step2": "在菜单中找到并点击【添加到主屏幕】",
-  "pwa_ios_step3": "即可从桌面全屏启动，享受原生 App 般体验"
+  "pwa_ios_step3": "即可从桌面全屏启动，享受原生 App 般体验",
+  "action_done": "完成",
+  "btn_confirm": "确定"
 }
