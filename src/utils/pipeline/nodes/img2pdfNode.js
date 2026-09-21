@@ -1,18 +1,20 @@
 import { PDFDocument } from 'pdf-lib';
 import { logger } from '../../logger';
+import { applyDocumentEnhancement } from '../../imageProcess';
 
 /**
  * Headless Image to PDF Node (Reduce or Map)
  * Converts image items into PDF documents.
  * 
  * @param {Array<Object>} items 
- * @param {Object} params - { mergeIntoOne: true, pageSize: 'fit_image'|'a4' }
+ * @param {Object} params - { mergeIntoOne: true, pageSize: 'fit_image'|'a4', enhanceScanner: false, enhanceFilter: 'color'|'bw'|'grayscale' }
  * @param {Function} [onProgress]
  * @returns {Promise<Array<Object>>}
  */
 export async function executeImg2PdfNode(items, params = {}, onProgress = () => {}) {
   const mergeIntoOne = params.mergeIntoOne !== false;
   const pageSize = params.pageSize || 'fit_image';
+  const enhanceScanner = Boolean(params.enhanceScanner);
 
   if (mergeIntoOne) {
     onProgress(10, 'Initializing images to PDF...');

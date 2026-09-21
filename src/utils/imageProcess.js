@@ -240,6 +240,188 @@ export function processImageToTransparentDataUrl(imgElement, options = {}) {
 }
 
 /**
+ * Pure algorithm function for document photo enhancement:
+ * Flattens non-uniform shadows, whitens paper background, and sharpens text clarity.
+ * (CamScanner-style 100% in-browser illumination normalization)
+ * 
+ * @param {Object} imageData - { width, height, data: Uint8ClampedArray }
+ * @param {Object} [options={}]
+ * @param {'color'|'bw'|'grayscale'|'original'} [options.mode='color']
+ * @param {'none'|'low'|'medium'|'high'} [options.shadowSuppression='medium']
+ * @param {number} [options.whitenStrength=0.92] - Paper whitening sensitivity (0.7 ~ 1.0)
+ * @returns {Object} Processed imageData
+ */
+export function applyDocumentEnhancement(imageData, options = {}) {
+  if (!imageData || !imageData.data) return imageData;
+  const { width, height, data } = imageData;
+  const mode = options.mode ?? 'color';
+  if (mode === 'original') return imageData;
+
+  const shadowMode = options.shadowSuppression ?? 'medium';
+  const whitenStrength = options.whitenStrength ?? 0.92;
+  const totalPixels = width * height;
+  const gray = new Uint8Array(totalPixels);
+
+  // 1. Compute perceptual luminance
+  for (let i = 0; i < totalPixels; i++) {
+    const idx = i * 4;
+    gray[i] = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
+  }
+
+  // 2. Estimate background illumination map (low-frequency shadow gradient)
+  let bgMap = null;
+  if (shadowMode !== 'none') {
+    let radiusRatio = 0.08; // medium default
+    if (shadowMode === 'low') radiusRatio = 0.04;
+    if (shadowMode === 'high') radiusRatio = 0.14;
+
+    const minDim = Math.min(width, height);
+    const maxAllowedRadius = Math.max(1, Math.floor(minDim / 3));
+    const blurRadius = Math.max(1, Math.min(maxAllowedRadius, Math.round(minDim * radiusRatio)));
+    bgMap = computeBoxBlurGrayscale(gray, width, height, blurRadius);
+  }
+
+  const paperThreshold = Math.round(255 - (whitenStrength * 55)); // ~204 by default
+  const bwThresholdRatio = 0.77 + ((1.0 - whitenStrength) * 0.1); // ~0.78 by default
+
+  // 3. Pixel-wise illumination normalization & tone mapping
+  for (let i = 0; i < totalPixels; i++) {
+    const idx = i * 4;
+    const gVal = gray[i];
+    const r = data[idx];
+    const g = data[idx + 1];
+    const b = data[idx + 2];
+
+    const localBg = bgMap ? Math.max(20, bgMap[i]) : 240;
+    const ratio = gVal / localBg;
+    const normLuma = Math.min(255, Math.round(ratio * 255));
+
+    if (mode === 'bw') {
+      // High-contrast clean black & white binary photocopy style
+      const isInk = (gVal < localBg * bwThresholdRatio) && (normLuma < 195);
+      const val = isInk ? 0 : 255;
+      data[idx] = val;
+      data[idx + 1] = val;
+      data[idx + 2] = val;
+    } else if (mode === 'grayscale') {
+      // Clean normalized grayscale with whitened paper
+      let val = normLuma;
+      if (normLuma >= paperThreshold) {
+        val = 255;
+      } else if (normLuma >= 175) {
+        const factor = (normLuma - 175) / (paperThreshold - 175);
+        val = Math.min(255, Math.round(175 + factor * (255 - 175)));
+      } else if (normLuma < 130) {
+        // Deepen dark text strokes
+        val = Math.max(0, Math.round(normLuma * 0.85 - 10));
+      }
+      data[idx] = val;
+      data[idx + 1] = val;
+      data[idx + 2] = val;
+    } else {
+      // mode === 'color': Preserve colored seals, stamps and colored ink while whitening paper
+      const maxC = Math.max(r, g, b);
+      const minC = Math.min(r, g, b);
+      const isChromatic = (maxC - minC) > 26; // Noticeable chromatic color (red stamp, blue pen, logo)
+
+      if (!isChromatic && (normLuma >= paperThreshold || normLuma >= 235)) {
+        // Paper background: Force to clean 255 pure white
+        data[idx] = 255;
+        data[idx + 1] = 255;
+        data[idx + 2] = 255;
+      } else if (!isChromatic && normLuma >= 180) {
+        // Smooth transition zone to pure white paper
+        const factor = (normLuma - 180) / (paperThreshold - 180);
+        const gain = 1.0 + factor * ((255 / Math.max(1, gVal)) - 1.0);
+        data[idx] = Math.min(255, Math.round(r * gain));
+        data[idx + 1] = Math.min(255, Math.round(g * gain));
+        data[idx + 2] = Math.min(255, Math.round(b * gain));
+      } else if (isChromatic) {
+        // Colorful stamp/ink: Whiten ambient paper background behind ink without dulling color
+        const gain = Math.min(2.2, Math.max(1.0, 255 / localBg));
+        data[idx] = Math.min(255, Math.round(r * gain));
+        data[idx + 1] = Math.min(255, Math.round(g * gain));
+        data[idx + 2] = Math.min(255, Math.round(b * gain));
+      } else {
+        // Dark text strokes: Contrast boost to make printed/handwritten text punchy
+        if (normLuma < 130) {
+          const darken = Math.max(0.65, normLuma / 140);
+          data[idx] = Math.round(r * darken);
+          data[idx + 1] = Math.round(g * darken);
+          data[idx + 2] = Math.round(b * darken);
+        } else {
+          const gain = Math.min(1.4, 255 / localBg);
+          data[idx] = Math.min(255, Math.round(r * gain));
+          data[idx + 1] = Math.min(255, Math.round(g * gain));
+          data[idx + 2] = Math.min(255, Math.round(b * gain));
+        }
+      }
+    }
+
+    // Ensure fully opaque document sheet
+    data[idx + 3] = 255;
+  }
+
+  return imageData;
+}
+
+/**
+ * Creates an enhanced document Canvas from an Image or Canvas element
+ * 
+ * @param {HTMLImageElement|HTMLCanvasElement} imgElement 
+ * @param {Object} [options={}] 
+ * @param {number} [options.maxDimension=2400]
+ * @returns {HTMLCanvasElement|null}
+ */
+export function enhanceDocumentCanvas(imgElement, options = {}) {
+  if (typeof document === 'undefined') return null;
+
+  const canvas = document.createElement('canvas');
+  const w = imgElement.naturalWidth || imgElement.width;
+  const h = imgElement.naturalHeight || imgElement.height;
+  if (!w || !h) return null;
+
+  const maxDim = options.maxDimension || 2400;
+  let targetW = w;
+  let targetH = h;
+  if (w > maxDim || h > maxDim) {
+    if (w > h) {
+      targetW = maxDim;
+      targetH = Math.round((h * maxDim) / w);
+    } else {
+      targetH = maxDim;
+      targetW = Math.round((w * maxDim) / h);
+    }
+  }
+
+  canvas.width = targetW;
+  canvas.height = targetH;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(imgElement, 0, 0, targetW, targetH);
+
+  const imageData = ctx.getImageData(0, 0, targetW, targetH);
+  applyDocumentEnhancement(imageData, options);
+  ctx.putImageData(imageData, 0, 0);
+
+  return canvas;
+}
+
+/**
+ * Generates an enhanced thumbnail DataURL for instant card preview
+ * 
+ * @param {HTMLImageElement|HTMLCanvasElement} imgElement 
+ * @param {Object} [options={}] 
+ * @returns {string} JPEG DataURL
+ */
+export function generateEnhancedThumbnail(imgElement, options = {}) {
+  const canvas = enhanceDocumentCanvas(imgElement, {
+    ...options,
+    maxDimension: 360
+  });
+  return canvas ? canvas.toDataURL('image/jpeg', 0.85) : '';
+}
+
+/**
  * Saved Stamps LocalStorage Manager
  */
 const SAVED_STAMPS_KEY = 'pdfseal_saved_stamps_v1';

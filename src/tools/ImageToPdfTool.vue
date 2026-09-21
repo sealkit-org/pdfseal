@@ -160,9 +160,15 @@
                 @drop="onDropReorder(idx)"
                 class="bg-white rounded-xl sm:rounded-2xl p-1.5 sm:p-2.5 border border-slate-200/80 shadow-2xs hover:border-violet-400 hover:shadow-md transition flex flex-col justify-between group relative select-none"
               >
-                <!-- Page Number Tag -->
-                <div class="absolute top-1.5 left-1.5 z-10 bg-slate-900/75 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md">
-                  P{{ idx + 1 }}
+                <!-- Page Number Tag & Status Badge -->
+                <div class="absolute top-1.5 left-1.5 z-10 flex items-center space-x-1">
+                  <span class="bg-slate-900/75 backdrop-blur-xs text-white text-[9px] sm:text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md">
+                    P{{ idx + 1 }}
+                  </span>
+                  <span v-if="enhanceScanner" class="bg-violet-600/90 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md flex items-center space-x-0.5 shadow-2xs">
+                    <Sparkles class="w-2.5 h-2.5" />
+                    <span class="hidden sm:inline">{{ t('img2pdf_badge_enhanced', 'Enhanced') }}</span>
+                  </span>
                 </div>
 
                 <!-- Delete Button -->
@@ -174,13 +180,29 @@
                   <X class="w-3.5 h-3.5 sm:w-3 sm:h-3" />
                 </button>
 
-                <!-- Thumbnail -->
-                <div class="h-24 sm:h-32 rounded-lg sm:rounded-xl bg-slate-100 overflow-hidden flex items-center justify-center relative mb-1.5">
+                <!-- Thumbnail with Instant Compare Capability -->
+                <div class="h-24 sm:h-32 rounded-lg sm:rounded-xl bg-slate-100 overflow-hidden flex items-center justify-center relative mb-1.5 group/thumb">
                   <img 
-                    :src="img.previewUrl" 
+                    :src="(enhanceScanner && img.enhancedPreviewUrl && !img.showOriginal) ? img.enhancedPreviewUrl : img.previewUrl" 
                     :style="{ transform: `rotate(${img.rotation}deg)` }"
                     class="max-h-full max-w-full object-contain transition-transform duration-200 pointer-events-none"
                   >
+
+                  <!-- Hold to Compare Overlay (Desktop hover + Mobile touch) -->
+                  <button
+                    v-if="enhanceScanner && img.enhancedPreviewUrl"
+                    type="button"
+                    @mousedown.stop="img.showOriginal = true"
+                    @mouseup.stop="img.showOriginal = false"
+                    @mouseleave="img.showOriginal = false"
+                    @touchstart.stop="img.showOriginal = true"
+                    @touchend.stop="img.showOriginal = false"
+                    class="absolute bottom-1.5 right-1.5 bg-slate-900/85 hover:bg-slate-900 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-md opacity-90 sm:opacity-0 sm:group-hover/thumb:opacity-100 transition cursor-pointer flex items-center space-x-1 shadow-xs select-none"
+                    :title="t('img2pdf_hold_compare', 'Hold to see original')"
+                  >
+                    <Eye class="w-2.5 h-2.5" />
+                    <span>{{ img.showOriginal ? t('img2pdf_original', 'Original') : t('img2pdf_compare', 'Compare') }}</span>
+                  </button>
                 </div>
 
                 <!-- Info & Actions -->
@@ -229,8 +251,88 @@
           </div>
 
           <!-- Right: Page & Layout Settings (4 cols, desktop wide screen only) -->
-          <div class="hidden lg:flex lg:col-span-4 bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 flex-col justify-between space-y-4">
+          <div class="hidden lg:flex lg:col-span-4 bg-slate-50/80 rounded-2xl p-4 border border-slate-200/80 flex-col justify-between space-y-4 overflow-y-auto max-h-[calc(100vh-280px)]">
             <div class="space-y-4">
+              <!-- Document Scanner & Shadow Removal Enhancement -->
+              <div class="p-3 rounded-2xl bg-gradient-to-br from-violet-50/80 to-indigo-50/50 border border-violet-200/80 shadow-2xs space-y-2.5">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <div class="w-7 h-7 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-2xs shrink-0">
+                      <Sparkles class="w-3.5 h-3.5" />
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-extrabold text-slate-900 flex items-center space-x-1.5 leading-tight">
+                        <span>{{ t('img2pdf_enhance_title', 'Scanner Enhancement') }}</span>
+                      </h4>
+                      <p class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                        {{ t('img2pdf_enhance_desc', 'Flatten phone shadows & whiten paper') }}
+                      </p>
+                    </div>
+                  </div>
+                  <!-- Switch button -->
+                  <button 
+                    type="button" 
+                    @click="enhanceScanner = !enhanceScanner"
+                    :class="[
+                      'w-10 h-5.5 rounded-full transition-colors relative cursor-pointer focus:outline-none shrink-0',
+                      enhanceScanner ? 'bg-violet-600' : 'bg-slate-300'
+                    ]"
+                  >
+                    <span 
+                      :class="[
+                        'w-4.5 h-4.5 bg-white rounded-full transition-transform transform shadow-sm absolute top-0.5 left-0.5',
+                        enhanceScanner ? 'translate-x-4.5' : 'translate-x-0'
+                      ]" 
+                    />
+                  </button>
+                </div>
+
+                <!-- Filter & Shadow Options (Shown when active) -->
+                <div v-if="enhanceScanner" class="pt-2 border-t border-violet-200/60 space-y-2.5">
+                  <!-- Mode presets -->
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                      {{ t('img2pdf_filter_label', 'Enhance Filter') }}
+                    </label>
+                    <div class="grid grid-cols-3 gap-1">
+                      <button 
+                        v-for="flt in filterOptions" 
+                        :key="flt.id"
+                        type="button"
+                        @click="enhanceFilter = flt.id"
+                        :class="[
+                          'py-1.5 px-1 rounded-xl text-[10px] font-semibold text-center border transition cursor-pointer',
+                          enhanceFilter === flt.id ? 'bg-white border-violet-500 text-violet-900 font-bold shadow-xs' : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
+                        ]"
+                      >
+                        {{ flt.label }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Shadow Suppression -->
+                  <div>
+                    <div class="flex items-center justify-between text-[11px] font-bold text-slate-700 mb-1">
+                      <span>{{ t('img2pdf_shadow_label', 'Shadow Removal') }}</span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1">
+                      <button 
+                        v-for="sh in shadowOptions" 
+                        :key="sh.id"
+                        type="button"
+                        @click="shadowSuppression = sh.id"
+                        :class="[
+                          'py-1 rounded-lg text-[10px] font-semibold text-center border transition cursor-pointer',
+                          shadowSuppression === sh.id ? 'bg-white border-violet-500 text-violet-900 font-bold shadow-xs' : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
+                        ]"
+                      >
+                        {{ sh.label }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <!-- Page Size -->
               <div>
                 <label class="block text-xs font-bold text-slate-700 mb-2">
@@ -366,6 +468,86 @@
           </button>
         </div>
 
+        <!-- Document Scanner & Shadow Removal Enhancement -->
+        <div class="p-3 rounded-2xl bg-gradient-to-br from-violet-50/80 to-indigo-50/50 border border-violet-200/80 shadow-2xs space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <div class="w-7 h-7 rounded-xl bg-violet-600 text-white flex items-center justify-center shadow-2xs shrink-0">
+                <Sparkles class="w-3.5 h-3.5" />
+              </div>
+              <div>
+                <h4 class="text-xs font-extrabold text-slate-900 flex items-center space-x-1.5 leading-tight">
+                  <span>{{ t('img2pdf_enhance_title', 'Scanner Enhancement') }}</span>
+                </h4>
+                <p class="text-[10px] text-slate-500 font-medium leading-tight mt-0.5">
+                  {{ t('img2pdf_enhance_desc', 'Flatten phone shadows & whiten paper') }}
+                </p>
+              </div>
+            </div>
+            <!-- Switch button -->
+            <button 
+              type="button" 
+              @click="enhanceScanner = !enhanceScanner"
+              :class="[
+                'w-10 h-5.5 rounded-full transition-colors relative cursor-pointer focus:outline-none shrink-0',
+                enhanceScanner ? 'bg-violet-600' : 'bg-slate-300'
+              ]"
+            >
+              <span 
+                :class="[
+                  'w-4.5 h-4.5 bg-white rounded-full transition-transform transform shadow-sm absolute top-0.5 left-0.5',
+                  enhanceScanner ? 'translate-x-4.5' : 'translate-x-0'
+                ]" 
+              />
+            </button>
+          </div>
+
+          <!-- Filter & Shadow Options (Shown when active) -->
+          <div v-if="enhanceScanner" class="pt-2 border-t border-violet-200/60 space-y-2.5">
+            <!-- Mode presets -->
+            <div>
+              <label class="block text-[11px] font-bold text-slate-700 mb-1">
+                {{ t('img2pdf_filter_label', 'Enhance Filter') }}
+              </label>
+              <div class="grid grid-cols-3 gap-1">
+                <button 
+                  v-for="flt in filterOptions" 
+                  :key="flt.id"
+                  type="button"
+                  @click="enhanceFilter = flt.id"
+                  :class="[
+                    'py-1.5 px-1 rounded-xl text-[10px] font-semibold text-center border transition cursor-pointer',
+                    enhanceFilter === flt.id ? 'bg-white border-violet-500 text-violet-900 font-bold shadow-xs' : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
+                  ]"
+                >
+                  {{ flt.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Shadow Suppression -->
+            <div>
+              <div class="flex items-center justify-between text-[11px] font-bold text-slate-700 mb-1">
+                <span>{{ t('img2pdf_shadow_label', 'Shadow Removal') }}</span>
+              </div>
+              <div class="grid grid-cols-3 gap-1">
+                <button 
+                  v-for="sh in shadowOptions" 
+                  :key="sh.id"
+                  type="button"
+                  @click="shadowSuppression = sh.id"
+                  :class="[
+                    'py-1 rounded-lg text-[10px] font-semibold text-center border transition cursor-pointer',
+                    shadowSuppression === sh.id ? 'bg-white border-violet-500 text-violet-900 font-bold shadow-xs' : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
+                  ]"
+                >
+                  {{ sh.label }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Page Size -->
         <div>
           <label class="block text-xs font-bold text-slate-700 mb-1.5">
@@ -460,7 +642,9 @@ import {
   FileDown, 
   Loader2,
   SlidersHorizontal,
-  ArrowUpDown
+  ArrowUpDown,
+  Sparkles,
+  Eye
 } from 'lucide-vue-next';
 import { PDFDocument } from 'pdf-lib';
 import { t } from '../i18n';
@@ -468,6 +652,7 @@ import { triggerDownload } from '../utils/download';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
+import { applyDocumentEnhancement, generateEnhancedThumbnail } from '../utils/imageProcess';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 
 const emit = defineEmits(['send-to-tool']);
@@ -500,6 +685,23 @@ onActivated(() => {
 const pageSize = ref('a4'); // 'a4' | 'letter' | 'fit'
 const orientation = ref('auto'); // 'auto' | 'portrait' | 'landscape'
 const margin = ref('standard'); // 'none' | 'small' | 'standard'
+
+// Document Scanner Enhancement Mode
+const enhanceScanner = ref(false);
+const enhanceFilter = ref('color'); // 'color' | 'bw' | 'grayscale'
+const shadowSuppression = ref('medium'); // 'low' | 'medium' | 'high'
+
+const filterOptions = computed(() => [
+  { id: 'color', label: t('img2pdf_filter_color') || 'Auto Color' },
+  { id: 'bw', label: t('img2pdf_filter_bw') || 'Crisp B&W' },
+  { id: 'grayscale', label: t('img2pdf_filter_grayscale') || 'Grayscale' }
+]);
+
+const shadowOptions = computed(() => [
+  { id: 'low', label: t('img2pdf_shadow_low') || 'Subtle' },
+  { id: 'medium', label: t('img2pdf_shadow_medium') || 'Balanced' },
+  { id: 'high', label: t('img2pdf_shadow_high') || 'Strong' }
+]);
 
 const pageSizeOptions = computed(() => [
   { id: 'a4', label: t('img2pdf_size_a4') || 'A4 (Global / Europe)', desc: '210 × 297 mm' },
@@ -537,7 +739,9 @@ const currentSettingsSummary = computed(() => {
     marginName = mObj ? ` · ${mObj.label}` : '';
   }
 
-  return `${sizeName}${orientName}${marginName}`;
+  const enhanceName = enhanceScanner.value ? ` · ✨ ${t('img2pdf_badge_enhanced') || 'Enhanced'}` : '';
+
+  return `${sizeName}${orientName}${marginName}${enhanceName}`;
 });
 
 // Export Settings
@@ -551,6 +755,37 @@ watch(() => userSettings.autoSaveToVault, (newVal) => {
 const defaultFileNamePlaceholder = computed(() => {
   const prefix = userSettings.defaultExportPrefix || 'PDFSeal';
   return `${prefix}_Images_${Date.now()}`;
+});
+
+async function updateEnhancedPreview(item) {
+  if (!enhanceScanner.value) return;
+  try {
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = item.previewUrl;
+    });
+    item.enhancedPreviewUrl = generateEnhancedThumbnail(img, {
+      mode: enhanceFilter.value,
+      shadowSuppression: shadowSuppression.value
+    });
+  } catch (e) {
+    item.enhancedPreviewUrl = '';
+  }
+}
+
+async function refreshAllEnhancedPreviews() {
+  if (!enhanceScanner.value) return;
+  for (const item of imageList.value) {
+    await updateEnhancedPreview(item);
+  }
+}
+
+watch([enhanceScanner, enhanceFilter, shadowSuppression], () => {
+  if (enhanceScanner.value) {
+    refreshAllEnhancedPreviews();
+  }
 });
 
 async function onFilesSelected(e) {
@@ -574,15 +809,21 @@ async function processAddedFiles(files) {
   for (const f of files) {
     const previewUrl = URL.createObjectURL(f);
     const { width, height } = await getImageDimensions(previewUrl);
-    imageList.value.push({
+    const item = {
       id: `img_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
       file: f,
       name: f.name,
       previewUrl,
+      enhancedPreviewUrl: '',
+      showOriginal: false,
       width,
       height,
       rotation: 0
-    });
+    };
+    imageList.value.push(item);
+    if (enhanceScanner.value) {
+      updateEnhancedPreview(item);
+    }
   }
 
   if (!customOutputBaseName.value) {
@@ -706,6 +947,16 @@ async function executeExport() {
       const renderW = Math.round(img.naturalWidth * scaleFactor);
       const renderH = Math.round(img.naturalHeight * scaleFactor);
       ctx.drawImage(img, -renderW / 2, -renderH / 2, renderW, renderH);
+
+      // Apply document scanner enhancement (shadow removal & paper whitening)
+      if (enhanceScanner.value) {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        applyDocumentEnhancement(imgData, {
+          mode: enhanceFilter.value,
+          shadowSuppression: shadowSuppression.value
+        });
+        ctx.putImageData(imgData, 0, 0);
+      }
 
       const jpegDataUrl = canvas.toDataURL('image/jpeg', 0.90);
       const binary = atob(jpegDataUrl.split(',')[1]);
