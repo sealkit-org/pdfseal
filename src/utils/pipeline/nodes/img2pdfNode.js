@@ -7,14 +7,14 @@ import { applyDocumentEnhancement } from '../../imageProcess';
  * Converts image items into PDF documents.
  * 
  * @param {Array<Object>} items 
- * @param {Object} params - { mergeIntoOne: true, pageSize: 'fit_image'|'a4', enhanceScanner: false, enhanceFilter: 'color'|'bw'|'grayscale' }
+ * @param {Object} params - { mergeIntoOne: true, pageSize: 'fit_image'|'a4', scannerMode: 'none'|'color'|'bw'|'grayscale' }
  * @param {Function} [onProgress]
  * @returns {Promise<Array<Object>>}
  */
 export async function executeImg2PdfNode(items, params = {}, onProgress = () => {}) {
   const mergeIntoOne = params.mergeIntoOne !== false;
   const pageSize = params.pageSize || 'fit_image';
-  const enhanceScanner = Boolean(params.enhanceScanner);
+  const scannerMode = params.scannerMode || (params.enhanceScanner ? (params.enhanceFilter || 'color') : 'none');
 
   if (mergeIntoOne) {
     onProgress(10, 'Initializing images to PDF...');

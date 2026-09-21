@@ -797,6 +797,7 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import { 
   processImageToTransparentDataUrl,
+  trimTransparentCanvas,
   loadSavedStamps,
   saveStampToLibrary,
   deleteSavedStamp,
@@ -1220,14 +1221,19 @@ function clearDrawCanvas() {
 function addDrawnSignature() {
   const canvas = drawCanvasRef.value;
   if (!canvas || !hasDrawn.value) return;
-  const dataUrl = canvas.toDataURL('image/png');
-  placeNewSignature(dataUrl, 140, 60);
+  const trimmed = trimTransparentCanvas(canvas, 6);
+  const dataUrl = trimmed.toDataURL('image/png');
+  const aspect = trimmed.width / (trimmed.height || 1);
+  const targetH = 50;
+  const targetW = Math.round(Math.min(220, Math.max(70, targetH * aspect)));
+  placeNewSignature(dataUrl, targetW, targetH);
 }
 
 function saveDrawnToLibrary() {
   const canvas = drawCanvasRef.value;
   if (!canvas || !hasDrawn.value) return;
-  const dataUrl = canvas.toDataURL('image/png');
+  const trimmed = trimTransparentCanvas(canvas, 6);
+  const dataUrl = trimmed.toDataURL('image/png');
   saveCurrentStamp(dataUrl, 'Handwritten Signature', 'draw');
 }
 
@@ -1255,8 +1261,12 @@ function addTypedSignature() {
 
   ctx.fillText(typedName.value.trim(), 250, 90);
 
-  const dataUrl = canvas.toDataURL('image/png');
-  placeNewSignature(dataUrl, 160, 60);
+  const trimmed = trimTransparentCanvas(canvas, 6);
+  const dataUrl = trimmed.toDataURL('image/png');
+  const aspect = trimmed.width / (trimmed.height || 1);
+  const targetH = 45;
+  const targetW = Math.round(Math.min(240, Math.max(80, targetH * aspect)));
+  placeNewSignature(dataUrl, targetW, targetH);
 }
 
 function saveTypedToLibrary() {
@@ -1280,7 +1290,8 @@ function saveTypedToLibrary() {
 
   ctx.fillText(typedName.value.trim(), 250, 90);
 
-  const dataUrl = canvas.toDataURL('image/png');
+  const trimmed = trimTransparentCanvas(canvas, 6);
+  const dataUrl = trimmed.toDataURL('image/png');
   saveCurrentStamp(dataUrl, typedName.value.trim(), 'type');
 }
 
@@ -1326,12 +1337,48 @@ function onStampFileSelected(e) {
 
 function addUploadedSignature() {
   if (!uploadedStampDataUrl.value) return;
-  placeNewSignature(uploadedStampDataUrl.value, 140, 65);
+  const img = new Image();
+  img.onload = () => {
+    const aspect = img.naturalWidth / (img.naturalHeight || 1);
+    let targetW = 130;
+    let targetH = Math.round(targetW / aspect);
+    if (targetH > 110) {
+      targetH = 100;
+      targetW = Math.round(targetH * aspect);
+    }
+    placeNewSignature(uploadedStampDataUrl.value, Math.max(40, targetW), Math.max(30, targetH));
+  };
+  img.onerror = () => {
+    placeNewSignature(uploadedStampDataUrl.value, 140, 65);
+  };
+  img.src = uploadedStampDataUrl.value;
 }
 
 function saveUploadedToLibrary() {
   if (!uploadedStampDataUrl.value) return;
-  saveCurrentStamp(uploadedStampDataUrl.value, 'Uploaded Stamp', 'upload');
+  const img = new Image();
+  img.onload = () => {
+    const aspect = img.naturalWidth / (img.naturalHeight || 1);
+    let targetW = 130;
+    let targetH = Math.round(targetW / aspect);
+    if (targetH > 110) {
+      targetH = 100;
+      targetW = Math.round(targetH * aspect);
+    }
+    saveStampToLibrary({
+      title: 'Uploaded Stamp',
+      type: 'upload',
+      dataUrl: uploadedStampDataUrl.value,
+      defaultWidth: Math.max(40, targetW),
+      defaultHeight: Math.max(30, targetH)
+    });
+    refreshSavedStamps();
+    showToast(t('sign_library_saved_toast'));
+  };
+  img.onerror = () => {
+    saveCurrentStamp(uploadedStampDataUrl.value, 'Uploaded Stamp', 'upload');
+  };
+  img.src = uploadedStampDataUrl.value;
 }
 
 // ----------------- STAMP LIBRARY ENGINE -----------------

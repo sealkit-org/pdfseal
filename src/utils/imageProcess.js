@@ -114,9 +114,13 @@ export const INK_COLORS = {
  */
 export function applyBackgroundFlattening(imageData, options = {}) {
   const { width, height, data } = imageData;
-  const threshold = options.threshold ?? 220;
+  let threshold = options.threshold ?? 220;
+  // If threshold is passed as a percentage (e.g. 50..100 from UI slider)
+  if (threshold <= 100) {
+    threshold = Math.round((threshold / 100) * 255);
+  }
   const softness = options.softness ?? 25;
-  const shadowMode = options.shadowSuppression ?? 'medium';
+  const shadowMode = options.shadowSuppression ?? options.shadowRemoval ?? 'medium';
   const inkColorKey = options.inkColor ?? 'original';
   const enhanceContrast = options.enhanceContrast ?? true;
 
@@ -199,19 +203,37 @@ export function applyBackgroundFlattening(imageData, options = {}) {
 }
 
 /**
- * Processes an Image (HTMLImageElement, HTMLCanvasElement, or dataURL) in browser
+ * Processes an Image (HTMLImageElement, HTMLCanvasElement, or dataURL string) in browser
  * and produces a clean transparent PNG dataURL.
  * 
- * @param {HTMLImageElement|HTMLCanvasElement} imgElement 
- * @param {Object} options 
- * @returns {string} Processed transparent PNG dataURL
+ * @param {HTMLImageElement|HTMLCanvasElement|string} imgElementOrUrl 
+ * @param {Object} [options={}] 
+ * @returns {Promise<string>} Processed transparent PNG dataURL
  */
-export function processImageToTransparentDataUrl(imgElement, options = {}) {
+export async function processImageToTransparentDataUrl(imgElementOrUrl, options = {}) {
   if (typeof document === 'undefined') return '';
 
-  const canvas = document.createElement('canvas');
+  let imgElement = imgElementOrUrl;
+  if (typeof imgElementOrUrl === 'string') {
+    try {
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = imgElementOrUrl;
+      });
+      imgElement = img;
+    } catch (e) {
+      return '';
+    }
+  }
+
+  if (!imgElement) return '';
   const w = imgElement.naturalWidth || imgElement.width;
   const h = imgElement.naturalHeight || imgElement.height;
+  if (!w || !h) return '';
+
+  const canvas = document.createElement('canvas');
 
   // Scale down huge mobile camera photos (e.g. 4000x3000 -> max 1000px) for speed and PDF compactness
   const maxDim = 1000;
@@ -236,7 +258,69 @@ export function processImageToTransparentDataUrl(imgElement, options = {}) {
   applyBackgroundFlattening(imageData, options);
   ctx.putImageData(imageData, 0, 0);
 
-  return canvas.toDataURL('image/png');
+  const shouldTrim = options.trim !== false;
+  const outputCanvas = shouldTrim ? trimTransparentCanvas(canvas) : canvas;
+
+  return outputCanvas.toDataURL('image/png');
+}
+
+/**
+ * Trims transparent border pixels from a canvas, returning a tight-fitting canvas.
+ * 
+ * @param {HTMLCanvasElement} canvas 
+ * @param {number} [padding=6] 
+ * @returns {HTMLCanvasElement}
+ */
+export function trimTransparentCanvas(canvas, padding = 6) {
+  if (typeof document === 'undefined' || !canvas || !canvas.width || !canvas.height) return canvas;
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return canvas;
+
+  const w = canvas.width;
+  const h = canvas.height;
+  let imgData;
+  try {
+    imgData = ctx.getImageData(0, 0, w, h);
+  } catch (e) {
+    return canvas;
+  }
+  const data = imgData.data;
+
+  let minX = w;
+  let minY = h;
+  let maxX = -1;
+  let maxY = -1;
+
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const alpha = data[(y * w + x) * 4 + 3];
+      if (alpha > 15) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+    }
+  }
+
+  // If completely transparent or nothing detected, return original canvas
+  if (maxX < minX || maxY < minY) {
+    return canvas;
+  }
+
+  const cropX = Math.max(0, minX - padding);
+  const cropY = Math.max(0, minY - padding);
+  const cropW = Math.min(w - cropX, (maxX - minX + 1) + padding * 2);
+  const cropH = Math.min(h - cropY, (maxY - minY + 1) + padding * 2);
+
+  const trimmedCanvas = document.createElement('canvas');
+  trimmedCanvas.width = cropW;
+  trimmedCanvas.height = cropH;
+  const tCtx = trimmedCanvas.getContext('2d');
+  if (!tCtx) return canvas;
+
+  tCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+  return trimmedCanvas;
 }
 
 /**
