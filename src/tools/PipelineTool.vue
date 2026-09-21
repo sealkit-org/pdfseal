@@ -1446,6 +1446,72 @@
                 </label>
               </div>
             </div>
+
+            <!-- Document Scanner Enhancement Section -->
+            <div class="p-4 rounded-xl border border-violet-200/80 bg-violet-50/20 space-y-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                  <Sparkles class="w-4 h-4 text-violet-600" />
+                  <span class="font-bold text-slate-800 text-sm">{{ t('img2pdf_scanner_title') }}</span>
+                </div>
+                <span v-if="editingStepDraft.scannerMode && editingStepDraft.scannerMode !== 'none'" class="text-[10px] font-bold px-2 py-0.5 bg-violet-100 text-violet-700 rounded-full border border-violet-200">
+                  ✨ {{ t('img2pdf_badge_enhanced') }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 leading-relaxed">
+                {{ t('img2pdf_scanner_desc') }}
+              </p>
+
+              <!-- Segmented 4-Pill Mode Selector -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-slate-200/60 rounded-xl text-xs font-semibold">
+                <button
+                  type="button"
+                  v-for="mode in [
+                    { id: 'none', label: t('img2pdf_original') || 'Original' },
+                    { id: 'color', label: t('img2pdf_filter_color') || 'Auto Color' },
+                    { id: 'bw', label: t('img2pdf_filter_bw') || 'Crisp B&W' },
+                    { id: 'grayscale', label: t('img2pdf_filter_grayscale') || 'Grayscale' }
+                  ]"
+                  :key="mode.id"
+                  @click="editingStepDraft.scannerMode = mode.id"
+                  :class="[
+                    'py-1.5 px-2 rounded-lg transition text-center cursor-pointer',
+                    (editingStepDraft.scannerMode || 'none') === mode.id
+                      ? 'bg-white text-violet-900 font-bold shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+                  ]"
+                >
+                  {{ mode.label }}
+                </button>
+              </div>
+
+              <!-- Shadow Suppression (Shown when an enhance mode is active) -->
+              <div v-if="editingStepDraft.scannerMode && editingStepDraft.scannerMode !== 'none'" class="pt-2.5 border-t border-violet-200/60 space-y-1.5">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+                  <span>{{ t('img2pdf_shadow_label') }}</span>
+                </div>
+                <div class="grid grid-cols-3 gap-1.5">
+                  <button
+                    v-for="sh in [
+                      { id: 'low', label: t('img2pdf_shadow_low') || 'Low' },
+                      { id: 'medium', label: t('img2pdf_shadow_medium') || 'Medium' },
+                      { id: 'high', label: t('img2pdf_shadow_high') || 'High' }
+                    ]"
+                    :key="sh.id"
+                    type="button"
+                    @click="editingStepDraft.shadowSuppression = sh.id"
+                    :class="[
+                      'py-1.5 rounded-lg text-xs font-semibold text-center border transition cursor-pointer',
+                      (editingStepDraft.shadowSuppression || 'medium') === sh.id
+                        ? 'bg-white border-violet-500 text-violet-900 font-bold shadow-xs'
+                        : 'bg-white/60 border-slate-200 text-slate-600 hover:bg-white'
+                    ]"
+                  >
+                    {{ sh.label }}
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- 5. Pdf2Img Parameters -->
@@ -3026,6 +3092,17 @@ function openStepConfigModal(idx) {
     }
   }
 
+  if (step.nodeId === 'node_img2pdf') {
+    if (!editingStepDraft.value.scannerMode) {
+      editingStepDraft.value.scannerMode = editingStepDraft.value.enhanceScanner
+        ? (editingStepDraft.value.enhanceFilter || 'color')
+        : 'none';
+    }
+    if (!editingStepDraft.value.shadowSuppression) {
+      editingStepDraft.value.shadowSuppression = 'medium';
+    }
+  }
+
   if (step.nodeId === 'node_protect') {
     showProtectUserPwd.value = false;
     showProtectOwnerPwd.value = false;
@@ -3182,7 +3259,11 @@ function getStepSummary(step) {
     case 'node_img2pdf': {
       const merge = step.params.mergeIntoOne ? t('pipe_merge_one', 'Merged') : t('pipe_merge_split', '1 Page/Img');
       const sz = step.params.pageSize === 'a4' ? 'A4' : t('pipe_sz_fit', 'Original');
-      return `${merge} · ${sz}`;
+      const scannerMode = step.params.scannerMode || (step.params.enhanceScanner ? (step.params.enhanceFilter || 'color') : 'none');
+      const enhance = scannerMode !== 'none'
+        ? ` · ✨ ${t('img2pdf_badge_enhanced') || 'Enhanced'}`
+        : '';
+      return `${merge} · ${sz}${enhance}`;
     }
     case 'node_pdf2img': {
       const fmt = (step.params.format || 'png').toUpperCase();

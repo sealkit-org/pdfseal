@@ -162,4 +162,28 @@ describe('Document Scanner Enhancement Engine (applyDocumentEnhancement)', () =>
     expect(result[0].mimeType).toBe('application/pdf');
     expect(result[0].data.length).toBeGreaterThan(0);
   });
+
+  it('should support executeImg2PdfNode with consolidated scannerMode in pipeline', async () => {
+    const { executeImg2PdfNode } = await import('../src/utils/pipeline/nodes/img2pdfNode.js');
+    const base64Png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const binary = atob(base64Png);
+    const pngBytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) {
+      pngBytes[i] = binary.charCodeAt(i);
+    }
+
+    const items = [
+      { id: 'img_2', name: 'contract_photo.jpg', data: pngBytes, mimeType: 'image/jpeg' }
+    ];
+
+    const result = await executeImg2PdfNode(items, {
+      mergeIntoOne: false,
+      scannerMode: 'bw',
+      shadowSuppression: 'high'
+    });
+
+    expect(result).toHaveLength(1);
+    expect(result[0].name).toBe('contract_photo.pdf');
+    expect(result[0].data.length).toBeGreaterThan(0);
+  });
 });

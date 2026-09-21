@@ -28,6 +28,8 @@ export const AVAILABLE_NODES = {
     defaultParams: {
       mergeIntoOne: true,
       pageSize: 'fit_image', // 'fit_image' | 'a4'
+      scannerMode: 'none', // 'none' | 'color' | 'bw' | 'grayscale'
+      shadowSuppression: 'medium', // 'low' | 'medium' | 'high'
       quality: 0.85
     }
   },

@@ -79,6 +79,8 @@ export const PRESET_PIPELINES = [
         params: {
           mergeIntoOne: true,
           pageSize: 'a4',
+          scannerMode: 'color',
+          shadowSuppression: 'medium',
           quality: 0.85
         }
       },
