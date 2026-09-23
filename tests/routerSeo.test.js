@@ -135,4 +135,32 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
     expect(canonical).not.toBeNull();
     expect(canonical.getAttribute('href')).toBe('https://pdfseal.com/split-pdf');
   });
+
+  it('should support dedicated 14-tool matrix homepage route and SEO metadata', () => {
+    expect(TOOL_ROUTES.home).toBe('/');
+    expect(ROUTE_TO_TOOL['/']).toBe('home');
+
+    // English Home SEO
+    setLanguage('en');
+    updateSeoMeta('home');
+    expect(getCurrentToolId()).toBe('home');
+    expect(document.title).toContain('PDFSeal');
+    const enMetaDesc = document.querySelector('meta[name="description"]');
+    expect(enMetaDesc).not.toBeNull();
+    expect(enMetaDesc.getAttribute('content')).toContain('14-in-1');
+
+    // Canonical link for home
+    const canonical = document.querySelector('link[rel="canonical"]');
+    expect(canonical).not.toBeNull();
+    expect(canonical.getAttribute('href')).toBe('https://pdfseal.com/');
+
+    // Chinese Home SEO
+    setLanguage('zh');
+    updateSeoMeta('home');
+    expect(document.title).toContain('PDFSeal');
+    expect(document.title).toContain('纯本地');
+    const zhMetaDesc = document.querySelector('meta[name="description"]');
+    expect(zhMetaDesc).not.toBeNull();
+    expect(zhMetaDesc.getAttribute('content')).toContain('14 合 1');
+  });
 });

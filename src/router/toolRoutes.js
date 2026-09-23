@@ -3,6 +3,7 @@
  * 独立成模块，供 router 与 seo 工具共用，避免循环依赖
  */
 export const TOOL_ROUTES = {
+  home: '/',
   merge: '/merge-pdf',
   compress: '/compress-pdf',
   organize: '/organize-pdf',

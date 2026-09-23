@@ -36,6 +36,15 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 
 ## ✨ Features & Architecture
 
+### 🦭 Dedicated 14-in-1 Tools Discovery Hub
+
+Visiting the root route ([`pdf.sealkit.org`](https://pdf.sealkit.org)) opens a dedicated, high-density 14-tool matrix organized into 3 functional suites:
+- 🔥 **Popular Essentials**: Merge, Compress, Sign & Stamp, Organize, Split, and PDF to Image.
+- 🛡️ **Privacy & Security Suite**: Content Redaction, Metadata Scrubbing, Protect & Encrypt (AES-256), and Password Unlock.
+- ⚡ **Conversion & Automation**: Image to PDF (with Scanner Enhancer), Watermark, Dynamic Page Numbering, and Batch Pipelines.
+
+Quickly return to the 14-in-1 hub anytime by clicking the brand mascot logo 🦭 on desktop or mobile, keeping the main toolbar minimal and distraction-free.
+
 ### 🛠️ 14 Core Local PDF Utilities (100% Free & Unlimited)
 
 *All atomic utilities execute entirely client-side in browser RAM with zero arbitrary limits, no watermark penalties, and zero data leakage:*
@@ -55,7 +64,7 @@ Why **PDFSeal**? In English, **"Seal"** has a charming double meaning:
 - **Redact Content**: High-assurance physical byte-level redaction for sensitive text and images in document content streams. Draw visual boxes with automatic snap-to-text boundary precision, or batch-mark via smart search (keywords or localized regex presets for ID/SSN, phone, bank cards, emails, and universal dates). Supports per-mark and whole-page replication, blackout, whiteout, dark gray, custom color blocks, and [REDACTED] stamps. Re-parses output to verify zero extractable text residue before export; target text is permanently destroyed and cannot be recovered.
 - **Local Privacy Vault**: Secure in-browser document staging and archive powered by IndexedDB with zero network telemetry. Leverages native Web Crypto SHA-256 content hashing for automatic deduplication, toggleable grid/list views, automatic or one-click post-processing storage, and instant reloading into downstream editing tools.
 
-> 💡 **Unified Three-Stage Delivery Architecture**: All 13 core interactive processing tools feature a standardized three-step workflow (« ① Upload File → ② Configure & Process → ③ Delivery & Next Relays »), complete with before/after size & ratio metric badges, seamless full-screen preview, one-click re-download, « Return to Edit » state preservation, and next-action relays (e.g., compress immediately after merging, or add watermarks right after signing).
+> 💡 **Unified Delivery & Context-Aware Next-Action Workflow Engine**: All core interactive processing tools feature a standardized three-step workflow (« ① Upload File → ② Configure & Process → ③ Delivery & Next Relays »). Features before/after size & ratio metrics, full-screen preview, one-click re-download, « Return to Edit » state preservation, and an intelligent **Next-Action Workflow Engine** that infers the most relevant downstream operation (e.g., auto-recommending compression for files > 10MB, sequential re-pagination after merging, and tamper-proof AES encryption after contract signing) with zero-copy in-memory relay and clean silence on ZIP archives.
 
 ---
 

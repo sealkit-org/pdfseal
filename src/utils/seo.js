@@ -52,7 +52,7 @@ export function updateSeoMeta(routeOrToolId) {
 
   // 始终用主路由生成 canonical/og:url：别名路由（如 /jpg-to-pdf）与
   // 语言切换（字符串入参）都会归一到 /image-to-pdf 等规范路径，避免重复页面
-  const path = TOOL_ROUTES[toolId] || '/merge-pdf';
+  const path = TOOL_ROUTES[toolId] || (toolId === 'home' ? '/' : '/merge-pdf');
 
   const titleKey = `seo_title_${toolId}`;
   const descKey = `seo_desc_${toolId}`;

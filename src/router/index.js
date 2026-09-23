@@ -9,16 +9,9 @@ export { TOOL_ROUTES, ROUTE_TO_TOOL };
 const routes = [
   {
     path: '/',
-    name: 'root',
-    redirect: () => {
-      try {
-        const last = localStorage.getItem('pdfseal_last_tab');
-        if (last && TOOL_ROUTES[last] && last !== 'receive') {
-          return TOOL_ROUTES[last];
-        }
-      } catch (e) {}
-      return '/merge-pdf';
-    }
+    name: 'home',
+    component: () => import('../views/HomeView.vue'),
+    meta: { toolId: 'home' }
   },
   {
     path: '/merge-pdf',
@@ -121,7 +114,7 @@ const routes = [
   },
   {
     path: '/:pathMatch(.*)*',
-    redirect: '/merge-pdf'
+    redirect: '/'
   }
 ];
 
@@ -171,7 +164,7 @@ router.afterEach((to) => {
   updateSeoMeta(to);
   recordToolUsage(toolId);
 
-  if (toolId !== 'receive' && typeof localStorage !== 'undefined') {
+  if (toolId !== 'receive' && toolId !== 'home' && typeof localStorage !== 'undefined') {
     try {
       localStorage.setItem('pdfseal_last_tab', toolId);
     } catch (e) {}

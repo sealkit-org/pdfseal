@@ -4,7 +4,7 @@
     <div class="flex md:hidden max-w-screen-2xl mx-auto px-3 h-14 items-center justify-between gap-2 w-full">
       <!-- Mobile Left: Brand & Local Trust Mini Badge -->
       <div class="flex items-center space-x-2 shrink-0">
-        <div class="flex items-center space-x-1.5 cursor-pointer active:opacity-80 transition" @click="$emit('switch-tab', 'merge')">
+        <div class="flex items-center space-x-1.5 cursor-pointer active:opacity-80 transition" @click="$emit('switch-tab', 'home')">
           <span class="text-2xl select-none">🦭</span>
           <span class="font-extrabold text-base text-slate-900 tracking-tight">PDFSeal</span>
         </div>
@@ -66,7 +66,7 @@
       
       <!-- 1. Left: Brand & Local Trust Mini Badge -->
       <div class="flex items-center space-x-2 sm:space-x-3 shrink-0">
-        <div class="flex items-center space-x-2 cursor-pointer group" @click="$emit('switch-tab', 'merge')">
+        <div class="flex items-center space-x-2 cursor-pointer group" @click="$emit('switch-tab', 'home')">
           <span class="text-2xl group-hover:rotate-12 transition-transform duration-300 select-none">🦭</span>
           <span class="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">PDFSeal</span>
         </div>

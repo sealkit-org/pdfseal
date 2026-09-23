@@ -28,7 +28,7 @@ function seoStaticFilesPlugin(siteUrl) {
   const sitemapXml =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
     `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    ['/', ...Object.values(TOOL_ROUTES)]
+    Array.from(new Set(['/', ...Object.values(TOOL_ROUTES)]))
       .map((p) => `  <url>\n    <loc>${siteUrl}${p}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`)
       .join('\n') +
     `\n</urlset>\n`;
