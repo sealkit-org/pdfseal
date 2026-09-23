@@ -1,18 +1,67 @@
 import { PDFDocument } from 'pdf-lib';
 import { logger } from '../../logger';
+import { enhanceDocumentCanvas } from '../../imageProcess';
+
+function isJpegBuffer(data, mimeType, name) {
+  if (data && data.length >= 4) {
+    if (data[0] === 0xFF && data[1] === 0xD8 && data[2] === 0xFF) return true;
+    if (data[0] === 0x89 && data[1] === 0x50 && data[2] === 0x4E && data[3] === 0x47) return false;
+  }
+  return mimeType === 'image/jpeg' || mimeType === 'image/jpg' || /\.jpe?g$/i.test(name || '');
+}
+
+async function prepareImageBytes(item, scannerMode, shadowSuppression) {
+  const isJpg = isJpegBuffer(item.data, item.mimeType, item.name);
+  if (!scannerMode || scannerMode === 'none' || typeof document === 'undefined') {
+    return { data: item.data, isJpg };
+  }
+
+  try {
+    const blob = new Blob([item.data], { type: item.mimeType || (isJpg ? 'image/jpeg' : 'image/png') });
+    const blobUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = blobUrl;
+    });
+    URL.revokeObjectURL(blobUrl);
+
+    const canvas = enhanceDocumentCanvas(img, {
+      mode: scannerMode,
+      shadowSuppression: shadowSuppression || 'medium'
+    });
+    if (!canvas) {
+      return { data: item.data, isJpg };
+    }
+
+    const enhancedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    const binary = atob(enhancedDataUrl.split(',')[1]);
+    const enhancedBytes = new Uint8Array(binary.length);
+    for (let k = 0; k < binary.length; k++) {
+      enhancedBytes[k] = binary.charCodeAt(k);
+    }
+    return { data: enhancedBytes, isJpg: true };
+  } catch (err) {
+    logger.warn('PIPELINE_IMG2PDF', `Document enhancement failed for ${item.name}: ${err.message}`);
+    return { data: item.data, isJpg };
+  }
+}
 
 /**
  * Headless Image to PDF Node (Reduce or Map)
  * Converts image items into PDF documents.
  * 
  * @param {Array<Object>} items 
- * @param {Object} params - { mergeIntoOne: true, pageSize: 'fit_image'|'a4' }
+ * @param {Object} params - { mergeIntoOne: true, pageSize: 'fit_image'|'a4', scannerMode: 'none'|'color'|'bw'|'grayscale', shadowSuppression: 'low'|'medium'|'high' }
  * @param {Function} [onProgress]
  * @returns {Promise<Array<Object>>}
  */
 export async function executeImg2PdfNode(items, params = {}, onProgress = () => {}) {
   const mergeIntoOne = params.mergeIntoOne !== false;
   const pageSize = params.pageSize || 'fit_image';
+  const scannerMode = params.scannerMode || (params.enhanceScanner ? (params.enhanceFilter || 'color') : 'none');
+  const shadowSuppression = params.shadowSuppression || 'medium';
 
   if (mergeIntoOne) {
     onProgress(10, 'Initializing images to PDF...');
@@ -23,8 +72,8 @@ export async function executeImg2PdfNode(items, params = {}, onProgress = () => 
       onProgress(10 + Math.round((i / items.length) * 80), `Assembling image [${i + 1}/${items.length}]: ${item.name}`);
 
       try {
-        const isJpg = item.mimeType === 'image/jpeg' || /\.jpe?g$/i.test(item.name);
-        const embeddedImg = isJpg ? await mergedDoc.embedJpg(item.data) : await mergedDoc.embedPng(item.data);
+        const { data: imgBytes, isJpg } = await prepareImageBytes(item, scannerMode, shadowSuppression);
+        const embeddedImg = isJpg ? await mergedDoc.embedJpg(imgBytes) : await mergedDoc.embedPng(imgBytes);
         const { width: imgW, height: imgH } = embeddedImg;
 
         if (pageSize === 'a4') {
@@ -69,8 +118,8 @@ export async function executeImg2PdfNode(items, params = {}, onProgress = () => 
 
       try {
         const doc = await PDFDocument.create();
-        const isJpg = item.mimeType === 'image/jpeg' || /\.jpe?g$/i.test(item.name);
-        const embeddedImg = isJpg ? await doc.embedJpg(item.data) : await doc.embedPng(item.data);
+        const { data: imgBytes, isJpg } = await prepareImageBytes(item, scannerMode, shadowSuppression);
+        const embeddedImg = isJpg ? await doc.embedJpg(imgBytes) : await doc.embedPng(imgBytes);
         const { width: imgW, height: imgH } = embeddedImg;
         const page = doc.addPage([imgW, imgH]);
         page.drawImage(embeddedImg, { x: 0, y: 0, width: imgW, height: imgH });

@@ -3,6 +3,7 @@ import { PDFDocument } from 'pdf-lib';
 import { 
   applyBackgroundFlattening, 
   computeBoxBlurGrayscale,
+  trimTransparentCanvas,
   calculateBatchTargetPages,
   loadSavedStamps,
   saveStampToLibrary,
@@ -106,11 +107,37 @@ describe('Image Processing & White Background Removal Engine', () => {
     expect(data[3]).toBe(255);
   });
 
+  it('should treat percentage thresholds (e.g. 80%) correctly without erasing dark ink', () => {
+    // 2x1: pixel 0 is paper (230), pixel 1 is ink stroke (70)
+    const data = new Uint8ClampedArray([
+      230, 230, 230, 255,
+      70, 70, 70, 255
+    ]);
+    const imgData = { width: 2, height: 1, data };
+
+    // Passing threshold as 80 (e.g. from UI percentage slider 80%)
+    applyBackgroundFlattening(imgData, {
+      threshold: 80,
+      shadowSuppression: 'none'
+    });
+
+    // 80% maps to 204.
+    // Pixel 0 (230 >= 204) -> transparent (0)
+    expect(data[3]).toBe(0);
+    // Pixel 1 (70 <= 204 - 25) -> fully opaque (255)
+    expect(data[7]).toBe(255);
+  });
+
   it('should compute box blur on 1D grayscale buffer correctly', () => {
     const gray = new Uint8Array([10, 20, 30, 40, 50]);
     const blurred = computeBoxBlurGrayscale(gray, 5, 1, 1);
     expect(blurred.length).toBe(5);
     expect(blurred[2]).toBeCloseTo(30, 0); // Center pixel average of 20, 30, 40
+  });
+
+  it('should safely return original canvas if trimTransparentCanvas receives null or empty canvas', () => {
+    expect(trimTransparentCanvas(null)).toBeNull();
+    expect(trimTransparentCanvas({})).toEqual({});
   });
 });
 
