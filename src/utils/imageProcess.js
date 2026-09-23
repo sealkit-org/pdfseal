@@ -324,6 +324,112 @@ export function trimTransparentCanvas(canvas, padding = 6) {
 }
 
 /**
+ * Linear-Time O(W*H) Guided Filter for Edge-Preserving Illumination Estimation
+ * 
+ * @param {Float32Array} guideAndSrc 
+ * @param {number} width 
+ * @param {number} height 
+ * @param {number} radius 
+ * @param {number} [eps=150]
+ * @returns {Float32Array}
+ */
+export function computeGuidedIlluminationMap(guideAndSrc, width, height, radius, eps = 150) {
+  const total = width * height;
+  const mean_p = computeBoxBlurGrayscale(guideAndSrc, width, height, radius);
+
+  const guideSq = new Float32Array(total);
+  for (let i = 0; i < total; i++) {
+    guideSq[i] = guideAndSrc[i] * guideAndSrc[i];
+  }
+  const mean_II = computeBoxBlurGrayscale(guideSq, width, height, radius);
+
+  const a = new Float32Array(total);
+  const b = new Float32Array(total);
+
+  for (let i = 0; i < total; i++) {
+    const mean_i = mean_p[i];
+    const variance = Math.max(0, mean_II[i] - mean_i * mean_i);
+    const aVal = variance / (variance + eps);
+    a[i] = aVal;
+    b[i] = (1 - aVal) * mean_i;
+  }
+
+  const mean_a = computeBoxBlurGrayscale(a, width, height, radius);
+  const mean_b = computeBoxBlurGrayscale(b, width, height, radius);
+
+  const out = new Float32Array(total);
+  for (let i = 0; i < total; i++) {
+    out[i] = Math.max(1, mean_a[i] * guideAndSrc[i] + mean_b[i]);
+  }
+
+  return out;
+}
+
+/**
+ * Fast Anisotropic Horizontal & Vertical Line Detector (O(W*H))
+ * Detects continuous thin lines (e.g. 1px invoice grid lines) to protect from whitening erosion.
+ */
+export function detectThinGridLines(gray, width, height, strokeDelta = 18) {
+  const total = width * height;
+  const isLine = new Uint8Array(total);
+  if (width < 6 || height < 6) return isLine;
+  const minRunLength = 6;
+
+  // Horizontal runs
+  for (let y = 1; y < height - 1; y++) {
+    const rowOffset = y * width;
+    let runStart = -1;
+
+    for (let x = 0; x < width; x++) {
+      const idx = rowOffset + x;
+      const val = gray[idx];
+      const topVal = gray[(y - 1) * width + x];
+      const botVal = gray[(y + 1) * width + x];
+      const isDarker = (topVal - val > strokeDelta) && (botVal - val > strokeDelta);
+
+      if (isDarker) {
+        if (runStart === -1) runStart = x;
+      } else {
+        if (runStart !== -1 && (x - runStart) >= minRunLength) {
+          for (let rx = runStart; rx < x; rx++) isLine[rowOffset + rx] = 1;
+        }
+        runStart = -1;
+      }
+    }
+    if (runStart !== -1 && (width - runStart) >= minRunLength) {
+      for (let rx = runStart; rx < width; rx++) isLine[rowOffset + rx] = 1;
+    }
+  }
+
+  // Vertical runs
+  for (let x = 1; x < width - 1; x++) {
+    let runStart = -1;
+
+    for (let y = 0; y < height; y++) {
+      const idx = y * width + x;
+      const val = gray[idx];
+      const leftVal = gray[y * width + (x - 1)];
+      const rightVal = gray[y * width + (x + 1)];
+      const isDarker = (leftVal - val > strokeDelta) && (rightVal - val > strokeDelta);
+
+      if (isDarker) {
+        if (runStart === -1) runStart = y;
+      } else {
+        if (runStart !== -1 && (y - runStart) >= minRunLength) {
+          for (let ry = runStart; ry < y; ry++) isLine[ry * width + x] = 1;
+        }
+        runStart = -1;
+      }
+    }
+    if (runStart !== -1 && (height - runStart) >= minRunLength) {
+      for (let ry = runStart; ry < height; ry++) isLine[ry * width + x] = 1;
+    }
+  }
+
+  return isLine;
+}
+
+/**
  * Pure algorithm function for document photo enhancement:
  * Flattens non-uniform shadows, whitens paper background, and sharpens text clarity.
  * (CamScanner-style 100% in-browser illumination normalization)
@@ -344,16 +450,18 @@ export function applyDocumentEnhancement(imageData, options = {}) {
   const shadowMode = options.shadowSuppression ?? 'medium';
   const whitenStrength = options.whitenStrength ?? 0.92;
   const totalPixels = width * height;
-  const gray = new Uint8Array(totalPixels);
+  const gray = new Float32Array(totalPixels);
 
   // 1. Compute perceptual luminance
   for (let i = 0; i < totalPixels; i++) {
     const idx = i * 4;
-    gray[i] = Math.round(0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2]);
+    gray[i] = 0.299 * data[idx] + 0.587 * data[idx + 1] + 0.114 * data[idx + 2];
   }
 
-  // 2. Estimate background illumination map (low-frequency shadow gradient)
+  // 2. Estimate background illumination map (guided edge-preserving filter)
   let bgMap = null;
+  let gridLineMap = null;
+
   if (shadowMode !== 'none') {
     let radiusRatio = 0.08; // medium default
     if (shadowMode === 'low') radiusRatio = 0.04;
@@ -362,11 +470,29 @@ export function applyDocumentEnhancement(imageData, options = {}) {
     const minDim = Math.min(width, height);
     const maxAllowedRadius = Math.max(1, Math.floor(minDim / 3));
     const blurRadius = Math.max(1, Math.min(maxAllowedRadius, Math.round(minDim * radiusRatio)));
-    bgMap = computeBoxBlurGrayscale(gray, width, height, blurRadius);
+
+    // Tier 1: Text-Stroke Decoupling to avoid halo artifacts around text
+    const coarseBg = computeBoxBlurGrayscale(gray, width, height, blurRadius);
+    const guideBuffer = new Float32Array(totalPixels);
+    const inkDelta = 18;
+    for (let i = 0; i < totalPixels; i++) {
+      if (gray[i] < coarseBg[i] - inkDelta) {
+        guideBuffer[i] = coarseBg[i];
+      } else {
+        guideBuffer[i] = gray[i];
+      }
+    }
+
+    // Tier 2: Guided Illumination Filter for sharp boundary tracking
+    bgMap = computeGuidedIlluminationMap(guideBuffer, width, height, blurRadius, 150);
+
+    // Tier 3: Thin 1px grid line detection
+    gridLineMap = detectThinGridLines(gray, width, height, 16);
   }
 
-  const paperThreshold = Math.round(255 - (whitenStrength * 55)); // ~204 by default
+  const basePaperThreshold = Math.round(255 - (whitenStrength * 55)); // ~204 by default
   const bwThresholdRatio = 0.77 + ((1.0 - whitenStrength) * 0.1); // ~0.78 by default
+  const tSafe = 75;
 
   // 3. Pixel-wise illumination normalization & tone mapping
   for (let i = 0; i < totalPixels; i++) {
@@ -376,13 +502,19 @@ export function applyDocumentEnhancement(imageData, options = {}) {
     const g = data[idx + 1];
     const b = data[idx + 2];
 
-    const localBg = bgMap ? Math.max(20, bgMap[i]) : 240;
-    const ratio = gVal / localBg;
-    const normLuma = Math.min(255, Math.round(ratio * 255));
+    const localBg = bgMap ? Math.max(15, bgMap[i]) : 240;
+
+    // Noise-Regulated Soft Division in deep shadow to prevent shot noise amplification
+    const lambdaL = localBg < tSafe ? Math.pow((tSafe - localBg) / tSafe, 2) : 0;
+    const effectiveBg = localBg + lambdaL * 18.0 + 1.0;
+    const normLuma = Math.min(255, Math.round(((gVal + 1.0) / effectiveBg) * 255));
+
+    const isThinGrid = gridLineMap && gridLineMap[i] === 1;
+    const activePaperThreshold = isThinGrid ? Math.min(250, basePaperThreshold + 32) : basePaperThreshold;
 
     if (mode === 'bw') {
       // High-contrast clean black & white binary photocopy style
-      const isInk = (gVal < localBg * bwThresholdRatio) && (normLuma < 195);
+      const isInk = isThinGrid || ((gVal < localBg * bwThresholdRatio) && (normLuma < 195));
       const val = isInk ? 0 : 255;
       data[idx] = val;
       data[idx + 1] = val;
@@ -390,14 +522,14 @@ export function applyDocumentEnhancement(imageData, options = {}) {
     } else if (mode === 'grayscale') {
       // Clean normalized grayscale with whitened paper
       let val = normLuma;
-      if (normLuma >= paperThreshold) {
+      if (normLuma >= activePaperThreshold && !isThinGrid) {
         val = 255;
-      } else if (normLuma >= 175) {
-        const factor = (normLuma - 175) / (paperThreshold - 175);
+      } else if (normLuma >= 175 && !isThinGrid) {
+        const factor = (normLuma - 175) / (activePaperThreshold - 175);
         val = Math.min(255, Math.round(175 + factor * (255 - 175)));
-      } else if (normLuma < 130) {
-        // Deepen dark text strokes
-        val = Math.max(0, Math.round(normLuma * 0.85 - 10));
+      } else if (normLuma < 130 || isThinGrid) {
+        // Deepen dark text strokes and preserve thin grid lines
+        val = isThinGrid ? Math.round(normLuma * 0.75) : Math.max(0, Math.round(normLuma * 0.85 - 10));
       }
       data[idx] = val;
       data[idx + 1] = val;
@@ -406,35 +538,49 @@ export function applyDocumentEnhancement(imageData, options = {}) {
       // mode === 'color': Preserve colored seals, stamps and colored ink while whitening paper
       const maxC = Math.max(r, g, b);
       const minC = Math.min(r, g, b);
-      const isChromatic = (maxC - minC) > 26; // Noticeable chromatic color (red stamp, blue pen, logo)
+      const chromaDelta = maxC - minC;
+      const isWarmPaper = (r >= g && g >= b) && (chromaDelta < 22) && (normLuma >= 175);
+      const isChromatic = (chromaDelta > 24) && !isWarmPaper;
 
-      if (!isChromatic && (normLuma >= paperThreshold || normLuma >= 235)) {
+      if (!isChromatic && (normLuma >= activePaperThreshold || (normLuma >= 238 && !isThinGrid && chromaDelta < 18 && gVal >= 150))) {
         // Paper background: Force to clean 255 pure white
         data[idx] = 255;
         data[idx + 1] = 255;
         data[idx + 2] = 255;
-      } else if (!isChromatic && normLuma >= 180) {
+      } else if (!isChromatic && normLuma >= 180 && !isThinGrid) {
         // Smooth transition zone to pure white paper
-        const factor = (normLuma - 180) / (paperThreshold - 180);
+        const factor = (normLuma - 180) / (activePaperThreshold - 180);
         const gain = 1.0 + factor * ((255 / Math.max(1, gVal)) - 1.0);
         data[idx] = Math.min(255, Math.round(r * gain));
         data[idx + 1] = Math.min(255, Math.round(g * gain));
         data[idx + 2] = Math.min(255, Math.round(b * gain));
       } else if (isChromatic) {
-        // Colorful stamp/ink: Whiten ambient paper background behind ink without dulling color
-        const gain = Math.min(2.2, Math.max(1.0, 255 / localBg));
-        data[idx] = Math.min(255, Math.round(r * gain));
-        data[idx + 1] = Math.min(255, Math.round(g * gain));
-        data[idx + 2] = Math.min(255, Math.round(b * gain));
+        // Uniform Hue-Locked Gamut-Preserving Scaling
+        const gain = Math.min(2.2, Math.max(1.0, Math.pow(255 / effectiveBg, 0.85)));
+        let rCand = r * gain;
+        let gCand = g * gain;
+        let bCand = b * gain;
+
+        const maxCand = Math.max(rCand, gCand, bCand);
+        if (maxCand > 255) {
+          const compress = 255 / maxCand;
+          rCand *= compress;
+          gCand *= compress;
+          bCand *= compress;
+        }
+
+        data[idx] = Math.round(rCand);
+        data[idx + 1] = Math.round(gCand);
+        data[idx + 2] = Math.round(bCand);
       } else {
-        // Dark text strokes: Contrast boost to make printed/handwritten text punchy
-        if (normLuma < 130) {
-          const darken = Math.max(0.65, normLuma / 140);
+        // Dark text strokes, ink strokes, or thin grid lines
+        if (normLuma < 130 || isThinGrid) {
+          const darken = isThinGrid ? 0.75 : Math.max(0.65, normLuma / 140);
           data[idx] = Math.round(r * darken);
           data[idx + 1] = Math.round(g * darken);
           data[idx + 2] = Math.round(b * darken);
         } else {
-          const gain = Math.min(1.4, 255 / localBg);
+          const gain = Math.min(1.4, 255 / effectiveBg);
           data[idx] = Math.min(255, Math.round(r * gain));
           data[idx + 1] = Math.min(255, Math.round(g * gain));
           data[idx + 2] = Math.min(255, Math.round(b * gain));
