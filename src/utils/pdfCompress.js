@@ -334,9 +334,9 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   // we do NOT downsample raster images! We perform lossless optimization to preserve 100% vector fidelity.
   if (origBytes.byteLength <= targetBytes) {
     logger.info('COMPRESS_TARGET', `Original size (${origBytes.byteLength} B) <= target (${targetBytes} B). Applying lossless optimization without lossy downsampling.`);
-    if (onProgress) onProgress(50, 'Original size already meets target limit. Running lossless optimization...');
+    if (onProgress) onProgress(50, t('compress_target_already_fits', 'Original size already meets target limit. Running lossless optimization...'));
     const losslessBytes = await compressPdfLossless(arrayBuffer, password);
-    if (onProgress) onProgress(100, 'Optimization complete');
+    if (onProgress) onProgress(100, t('compress_progress_done', 'Optimization complete'));
     return losslessBytes;
   }
 
@@ -422,7 +422,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   } else {
     for (let iter = 0; iter < maxIterations; iter++) {
       const pct = Math.round(10 + (iter / maxIterations) * 20);
-      if (onProgress) onProgress(pct, `Bisection search in progress [iteration ${iter + 1}/${maxIterations}]...`);
+      if (onProgress) onProgress(pct, t('compress_target_bisection', { current: iter + 1, total: maxIterations }, `Bisection search in progress [iteration ${iter + 1}/${maxIterations}]...`));
 
       const tMid = (tLow + tHigh) / 2;
       const estBytes = await probeSampleBytes(tMid);
@@ -456,7 +456,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
     for (let i = 1; i <= numPages; i++) {
       if (onProgress) {
         const stepPct = Math.round(progressOffset + ((i - 1) / numPages) * progressSpan);
-        onProgress(stepPct, `Resampling pages at optimal resolution (${i}/${numPages})...`);
+        onProgress(stepPct, t('compress_target_resampling', { current: i, total: numPages }, `Resampling pages at optimal resolution (${i}/${numPages})...`));
       }
 
       const page = await pdf.getPage(i);
@@ -497,7 +497,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   // Case A: Actual full document exceeded targetBytes due to complex non-sample pages -> Downward tuning
   if (outBytes.byteLength > targetBytes) {
     logger.info('COMPRESS_TARGET', `Actual output (${(outBytes.byteLength / 1048576).toFixed(2)} MB) exceeded target (${targetSizeMb} MB). Executing downward fine-tuning.`);
-    if (onProgress) onProgress(88, 'Fine-tuning scale parameters to strictly meet target limit...');
+    if (onProgress) onProgress(88, t('compress_target_finetune', 'Fine-tuning scale parameters to strictly meet target limit...'));
 
     const shrinkRatio = Math.min(0.94, Math.sqrt((effectiveTargetBytes * 0.96) / outBytes.byteLength));
     const tunedScale = Math.max(0.60, Number((currentParams.scale * shrinkRatio).toFixed(2)));
@@ -509,7 +509,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   // Case B: Space is under-utilized by > 15% (e.g. < 1.70 MB for 2.0 MB target) -> Upward Clarity Booster
   else if (outBytes.byteLength < targetBytes * 0.85 && currentParams.scale < 2.50) {
     logger.info('COMPRESS_TARGET', `Actual output (${(outBytes.byteLength / 1048576).toFixed(2)} MB) is below 85% of target (${targetSizeMb} MB). Boosting clarity to maximize sharpness.`);
-    if (onProgress) onProgress(88, 'Boosting clarity parameters to maximize visual sharpness...');
+    if (onProgress) onProgress(88, t('compress_target_boost', 'Boosting clarity parameters to maximize visual sharpness...'));
 
     const boostRatio = Math.min(1.25, Math.sqrt((effectiveTargetBytes * 0.97) / outBytes.byteLength));
     const boostedScale = Math.min(2.50, Number((currentParams.scale * boostRatio).toFixed(2)));
@@ -533,7 +533,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   }
 
   try { await pdf.destroy(); } catch (e) {}
-  if (onProgress) onProgress(100, 'Target size compression complete');
+  if (onProgress) onProgress(100, t('compress_target_done', 'Target size compression complete'));
   return outBytes;
 }
 

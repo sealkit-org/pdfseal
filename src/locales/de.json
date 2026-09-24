@@ -1488,5 +1488,20 @@
   "next_action_cta_image_to_pdf": "Zu PDF konvertieren ➔",
   "next_action_badge_general": "Nahtlose Weiterleitung",
   "next_action_desc_general": "Datei im Browserspeicher gehalten. Nahtlose Weiterleitung ohne erneuten Upload.",
-  "next_action_desc_merge_paginated": "Zusammengefügte Dokumente haben oft lückenhafte Seitenzahlen. Paginieren Sie das Gesamtdokument fortlaufend neu."
+  "next_action_desc_merge_paginated": "Zusammengefügte Dokumente haben oft lückenhafte Seitenzahlen. Paginieren Sie das Gesamtdokument fortlaufend neu.",
+  "loading_file": "Loading file...",
+  "loading_default": "Processing...",
+  "preview_title": "Seiten-HD-Vorschau",
+  "zoom_in": "Vergrößern",
+  "zoom_out": "Verkleinern",
+  "zoom_reset": "Zurücksetzen",
+  "fit_screen": "An Bildschirm anpassen",
+  "preview_rendering": "Hochauflösende Vorschau wird gerendert...",
+  "close": "Schließen (Esc)",
+  "compress_target_already_fits": "Originalgröße entspricht bereits dem Ziel. Führe verlustfreie Optimierung durch...",
+  "compress_target_bisection": "Bisektionssuche läuft [Iteration {current}/{total}]...",
+  "compress_target_resampling": "Seiten werden mit optimaler Auflösung neu gerendert ({current}/{total})...",
+  "compress_target_finetune": "Feinabstimmung der Skalierungsparameter...",
+  "compress_target_boost": "Schärfeparameter werden optimiert...",
+  "compress_target_done": "Zielgrößen-Komprimierung abgeschlossen"
 }

@@ -274,7 +274,7 @@
                 : 'bg-slate-50/90 hover:bg-white border-slate-200/80 hover:border-indigo-300'
             ]"
           >
-            <!-- Card Header: Selection Checkbox + Page Index Badge + Rotate/Blank/Delete Controls -->
+            <!-- Card Header: Selection Checkbox + Page Index Badge + Rotate & Delete Controls -->
             <div class="w-full flex items-center justify-between mb-1.5">
               <div class="flex items-center space-x-1.5 min-w-0">
                 <!-- Checkbox (no-drag) -->
@@ -295,36 +295,20 @@
                 </span>
               </div>
 
-              <!-- Header Action Buttons (no-drag) -->
-              <div class="flex items-center space-x-0.5 no-drag shrink-0">
+              <!-- Header Action Buttons: Rotate & Delete (High-frequency actions) -->
+              <div class="flex items-center space-x-1 no-drag shrink-0">
                 <!-- Rotate 90° -->
                 <button
+                  type="button"
                   @click.stop="rotatePage(idx, 90)"
                   :title="t('org_btn_batch_rotate')"
-                  class="p-1 hover:bg-slate-200/80 rounded-md text-slate-600 transition cursor-pointer"
+                  class="p-1 hover:bg-indigo-100 text-slate-500 hover:text-indigo-600 rounded-md transition cursor-pointer"
                 >
                   <RotateCw class="w-3.5 h-3.5" />
                 </button>
-                <!-- Insert blank page after this page -->
-                <button
-                  @click.stop="insertBlankPageAt(idx + 1)"
-                  :title="t('org_insert_blank_here')"
-                  class="p-1 hover:bg-amber-100 text-slate-400 hover:text-amber-700 rounded-md transition cursor-pointer"
-                >
-                  <FilePlus class="w-3.5 h-3.5" />
-                </button>
-                <!-- Download this page as image -->
-                <button
-                  @click.stop="downloadPageAsImage(idx)"
-                  :disabled="downloadingPageIdx !== null"
-                  :title="t('p2i_download_page')"
-                  class="p-1 hover:bg-cyan-100 text-slate-400 hover:text-cyan-600 rounded-md transition cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                >
-                  <Loader2 v-if="downloadingPageIdx === idx" class="w-3.5 h-3.5 animate-spin text-cyan-600" />
-                  <ImageDown v-else class="w-3.5 h-3.5" />
-                </button>
                 <!-- Delete Page -->
                 <button
+                  type="button"
                   @click.stop="deletePage(idx)"
                   :title="t('action_delete', 'Delete')"
                   class="p-1 hover:bg-rose-100 text-slate-400 hover:text-rose-600 rounded-md transition cursor-pointer"
@@ -334,17 +318,52 @@
               </div>
             </div>
 
-            <!-- Page Canvas Preview -->
-            <div class="overflow-hidden rounded-xl border border-slate-200/60 flex items-center justify-center bg-white w-full h-40 relative pointer-events-none">
+            <!-- Page Canvas Preview with Hover Quick Actions -->
+            <div class="overflow-hidden rounded-xl border border-slate-200/60 flex items-center justify-center bg-white w-full h-40 relative group/thumb">
               <img 
                 :src="p.dataUrl" 
                 :style="{ transform: `rotate(${p.rotation}deg)` }" 
-                class="max-h-full max-w-full object-contain transition-transform duration-200"
+                class="max-h-full max-w-full object-contain transition-transform duration-200 pointer-events-none"
               >
+
+              <!-- Floating Zoom Button (Always visible on mobile touch, hover on desktop) -->
+              <button
+                type="button"
+                @click.stop="openPreview(idx)"
+                :title="t('action_preview', 'Preview Full Size')"
+                class="no-drag absolute top-1.5 right-1.5 p-1.5 bg-slate-900/75 hover:bg-slate-900 text-white rounded-md opacity-85 md:opacity-0 md:group-hover:opacity-100 transition-all duration-150 shadow-sm cursor-pointer z-10"
+              >
+                <ZoomIn class="w-3.5 h-3.5" />
+              </button>
+
+              <!-- Floating Secondary Actions (Always visible on mobile touch, hover on desktop) -->
+              <div class="no-drag absolute bottom-1.5 right-1.5 flex items-center space-x-1 opacity-85 md:opacity-0 md:group-hover:opacity-100 transition-all duration-150 z-10">
+                <!-- Insert blank page after this page -->
+                <button
+                  type="button"
+                  @click.stop="insertBlankPageAt(idx + 1)"
+                  :title="t('org_insert_blank_here')"
+                  class="p-1.5 bg-slate-900/75 hover:bg-amber-600 text-slate-200 hover:text-white rounded-md backdrop-blur-xs transition shadow-xs cursor-pointer"
+                >
+                  <FilePlus class="w-3 h-3" />
+                </button>
+                <!-- Download this page as image -->
+                <button
+                  type="button"
+                  @click.stop="downloadPageAsImage(idx)"
+                  :disabled="downloadingPageIdx !== null"
+                  :title="t('p2i_download_page')"
+                  class="p-1.5 bg-slate-900/75 hover:bg-cyan-600 text-slate-200 hover:text-white rounded-md backdrop-blur-xs transition shadow-xs cursor-pointer disabled:opacity-40"
+                >
+                  <Loader2 v-if="downloadingPageIdx === idx" class="w-3 h-3 animate-spin text-cyan-400" />
+                  <ImageDown v-else class="w-3 h-3" />
+                </button>
+              </div>
+
               <!-- External Document Badge (Bottom-left pill) -->
               <span 
                 v-if="p.type === 'external'"
-                class="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-slate-900/75 text-slate-100 px-1.5 py-0.5 rounded-md backdrop-blur-xs max-w-[85%] truncate shadow-xs"
+                class="absolute bottom-1.5 left-1.5 text-[9px] font-bold bg-slate-900/75 text-slate-100 px-1.5 py-0.5 rounded-md backdrop-blur-xs max-w-[50%] truncate shadow-xs pointer-events-none"
                 :title="p.sourceName || t('org_source_external_badge')"
               >
                 {{ p.sourceName || t('org_source_external_badge') }}
@@ -506,6 +525,15 @@
       @submit="handlePasswordSubmit"
       @cancel="handlePasswordCancel"
     />
+
+    <!-- Page Preview Modal -->
+    <PagePreviewModal
+      :is-open="isPreviewOpen"
+      :is-loading="isPreviewLoading"
+      :img-src="previewImgSrc"
+      :rotation="previewRotation"
+      @close="closePreview"
+    />
   </section>
 </template>
 
@@ -530,7 +558,8 @@ import {
   Check, 
   X, 
   FilePlus, 
-  FileUp 
+  FileUp,
+  ZoomIn
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, PageSizes, degrees } from 'pdf-lib';
@@ -547,6 +576,7 @@ import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import NextActionBanner from '../components/NextActionBanner.vue';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
+import PagePreviewModal from '../components/PagePreviewModal.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
@@ -557,6 +587,79 @@ const lastExportedPageCount = ref(0);
 const showNextActions = ref(false);
 const progressPercent = ref(0);
 const progressMessage = ref('');
+
+// Page Preview Modal State
+const isPreviewOpen = ref(false);
+const isPreviewLoading = ref(false);
+const previewImgSrc = ref('');
+const previewRotation = ref(0);
+
+async function openPreview(idx) {
+  const p = pages.value[idx];
+  if (!p) return;
+  
+  isPreviewOpen.value = true;
+  previewRotation.value = p.rotation || 0;
+  
+  if (p.type === 'blank') {
+    previewImgSrc.value = p.dataUrl;
+    return;
+  }
+  
+  isPreviewLoading.value = true;
+  try {
+    let targetPdf = pdfDoc;
+    let needDestroy = false;
+    
+    if (p.type === 'external' && p.sourceBytes) {
+      const loadingTask = pdfjsLib.getDocument({
+        data: new Uint8Array(p.sourceBytes.slice(0)),
+        cMapUrl: typeof window !== 'undefined' ? (window.location.origin + '/cmaps/') : '/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: typeof window !== 'undefined' ? (window.location.origin + '/standard_fonts/') : '/standard_fonts/'
+      });
+      targetPdf = await loadingTask.promise;
+      needDestroy = true;
+    }
+    
+    if (!targetPdf) return;
+    
+    const page = await targetPdf.getPage(p.pageIndex + 1);
+    const rotation = ((page.rotate || 0) + (p.rotation || 0)) % 360;
+    const viewport = page.getViewport({ scale: 2.5, rotation }); // Ultra high-res scale (2.5x)
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    await page.render({
+      canvasContext: ctx,
+      viewport,
+      intent: 'display'
+    }).promise;
+    
+    previewImgSrc.value = canvas.toDataURL('image/png');
+    
+    if (needDestroy) {
+      try { await targetPdf.destroy(); } catch (e) {}
+    }
+  } catch (err) {
+    logger.error('PREVIEW', 'Failed to generate high-res preview: ' + err.message);
+    previewImgSrc.value = p.dataUrl; // fallback to low-res
+  } finally {
+    isPreviewLoading.value = false;
+  }
+}
+
+function closePreview() {
+  isPreviewOpen.value = false;
+  setTimeout(() => {
+    previewImgSrc.value = '';
+    previewRotation.value = 0;
+  }, 200);
+}
 
 function handleReDownload() {
   if (!lastExportedFile.value?.arrayBuffer) return;

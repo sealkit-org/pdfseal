@@ -1488,5 +1488,20 @@
   "next_action_cta_image_to_pdf": "一键拼成 PDF ➔",
   "next_action_badge_general": "无缝接力",
   "next_action_desc_general": "文件已保留在浏览器内存中，零等待直接流转至下一步处理环节。",
-  "next_action_desc_merge_paginated": "多个原文件拼接后各章节页码已割裂，建议为新文档一键重新编排连续页码。"
+  "next_action_desc_merge_paginated": "多个原文件拼接后各章节页码已割裂，建议为新文档一键重新编排连续页码。",
+  "loading_file": "正在加载文件...",
+  "loading_default": "处理中...",
+  "preview_title": "页面高清预览",
+  "zoom_in": "放大",
+  "zoom_out": "缩小",
+  "zoom_reset": "适应屏幕",
+  "fit_screen": "适应屏幕",
+  "preview_rendering": "正在生成高清预览...",
+  "close": "关闭 (Esc)",
+  "compress_target_already_fits": "原文件已符合目标大小，正在执行无损优化...",
+  "compress_target_bisection": "正在智能推演最佳压缩率 (轮次 {current}/{total})...",
+  "compress_target_resampling": "正在以最优分辨率重采样页面 ({current}/{total})...",
+  "compress_target_finetune": "正在微调尺寸参数以严格符合目标大小...",
+  "compress_target_boost": "正在智能提升清晰度参数以最大化画质...",
+  "compress_target_done": "目标大小压缩完成！"
 }

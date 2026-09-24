@@ -1488,5 +1488,20 @@
   "next_action_cta_image_to_pdf": "Convertir a PDF ➔",
   "next_action_badge_general": "Relevo continuo",
   "next_action_desc_general": "Archivo retenido en memoria. Continúe con la siguiente tarea sin volver a subir.",
-  "next_action_desc_merge_paginated": "Los documentos combinados a menudo tienen numeración fragmentada. Vuelva a numerar el documento completo de forma secuencial."
+  "next_action_desc_merge_paginated": "Los documentos combinados a menudo tienen numeración fragmentada. Vuelva a numerar el documento completo de forma secuencial.",
+  "loading_file": "Loading file...",
+  "loading_default": "Processing...",
+  "preview_title": "Vista previa HD",
+  "zoom_in": "Acercar",
+  "zoom_out": "Alejar",
+  "zoom_reset": "Restablecer zoom",
+  "fit_screen": "Ajustar a la pantalla",
+  "preview_rendering": "Generando vista previa en alta resolución...",
+  "close": "Cerrar (Esc)",
+  "compress_target_already_fits": "El tamaño original ya cumple con el objetivo. Ejecutando optimización sin pérdidas...",
+  "compress_target_bisection": "Búsqueda por bisección en progreso [iteración {current}/{total}]...",
+  "compress_target_resampling": "Remuestreando páginas con resolución óptima ({current}/{total})...",
+  "compress_target_finetune": "Ajustando parámetros para cumplir con el límite objetivo...",
+  "compress_target_boost": "Optimizando parámetros para maximizar la nitidez...",
+  "compress_target_done": "Compresión a tamaño objetivo completada"
 }

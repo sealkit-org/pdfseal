@@ -485,10 +485,12 @@ import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import NextActionBanner from '../components/NextActionBanner.vue';
 import DiffPreviewModal from '../components/DiffPreviewModal.vue';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
+import { useGlobalLoading } from '../utils/useGlobalLoading';
 
 const emit = defineEmits(['send-to-tool']);
 
 const workspaceState = inject('workspaceActiveState', null);
+const { showLoading, hideLoading } = useGlobalLoading();
 
 const fileInputRef = ref(null);
 const docBytes = ref(null);
@@ -567,12 +569,14 @@ function handleVaultFilesSelected(selectedFiles) {
 }
 
 async function loadFile(file, password = '') {
-  showNextActions.value = false;
-  lastExportedFile.value = null;
-  pendingFileName.value = file.name;
-  pendingFileObj = file;
+  showLoading(t('loading_file', 'Loading file...'));
+  try {
+    showNextActions.value = false;
+    lastExportedFile.value = null;
+    pendingFileName.value = file.name;
+    pendingFileObj = file;
 
-  const rawBuffer = await file.arrayBuffer();
+    const rawBuffer = await file.arrayBuffer();
 
   // Security check
   const security = await verifyPdfSecurity(rawBuffer, password);
@@ -632,6 +636,9 @@ async function loadFile(file, password = '') {
     originalThumbnailUrl.value = await renderPdfPagePreview(rawBuffer, 1, 1.5, password);
   } catch (e) {
     originalThumbnailUrl.value = '';
+  }
+  } finally {
+    hideLoading();
   }
 }
 

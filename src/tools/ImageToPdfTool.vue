@@ -188,6 +188,16 @@
                     class="max-h-full max-w-full object-contain transition-transform duration-200 pointer-events-none"
                   >
 
+                  <!-- Floating Zoom Button (Always visible on mobile touch, hover on desktop) -->
+                  <button
+                    type="button"
+                    @click.stop="openPreview(idx)"
+                    :title="t('action_preview', 'Preview Full Size')"
+                    class="no-drag absolute top-1.5 right-1.5 p-1 bg-slate-900/75 hover:bg-slate-900 text-white rounded-md opacity-85 sm:opacity-0 sm:group-hover/thumb:opacity-100 transition-all duration-150 shadow-sm cursor-pointer z-10"
+                  >
+                    <ZoomIn class="w-3.5 h-3.5" />
+                  </button>
+
                   <!-- Hold to Compare Overlay (Desktop hover + Mobile touch) -->
                   <button
                     v-if="scannerMode !== 'none' && img.enhancedPreviewUrl"
@@ -577,6 +587,14 @@
       </div>
     </div>
   </Teleport>
+
+  <!-- Page Preview Modal -->
+  <PagePreviewModal
+    :is-open="isPreviewOpen"
+    :img-src="previewImgSrc"
+    :rotation="previewRotation"
+    @close="closePreview"
+  />
 </section>
 </template>
 
@@ -596,7 +614,8 @@ import {
   SlidersHorizontal,
   ArrowUpDown,
   Sparkles,
-  Eye
+  Eye,
+  ZoomIn
 } from 'lucide-vue-next';
 import { PDFDocument } from 'pdf-lib';
 import { t } from '../i18n';
@@ -606,6 +625,7 @@ import { userSettings } from '../utils/userSettings';
 import { logger } from '../utils/logger';
 import { applyDocumentEnhancement, generateEnhancedThumbnail } from '../utils/imageProcess';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
+import PagePreviewModal from '../components/PagePreviewModal.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
@@ -624,6 +644,27 @@ const isProcessing = ref(false);
 
 // Image item: { id, file, name, previewUrl, width, height, rotation }
 const imageList = ref([]);
+
+// Page Preview Modal State
+const isPreviewOpen = ref(false);
+const previewImgSrc = ref('');
+const previewRotation = ref(0);
+
+function openPreview(idx) {
+  const img = imageList.value[idx];
+  if (!img) return;
+  previewImgSrc.value = (scannerMode.value !== 'none' && img.enhancedPreviewUrl) ? img.enhancedPreviewUrl : img.previewUrl;
+  previewRotation.value = img.rotation || 0;
+  isPreviewOpen.value = true;
+}
+
+function closePreview() {
+  isPreviewOpen.value = false;
+  setTimeout(() => {
+    previewImgSrc.value = '';
+    previewRotation.value = 0;
+  }, 200);
+}
 
 watch(() => imageList.value.length > 0, (active) => {
   workspaceState?.setActiveFile(active);

@@ -29,16 +29,14 @@
       ]"
     >
       <router-view v-slot="{ Component }">
-        <KeepAlive :max="3">
-          <component 
-            :is="Component" 
-            :share-id="activeShareId" 
-            :key-url-safe="activeShareKey"
-            @send-to-tool="switchTool" 
-            @exit-receive="switchTool('merge')"
-            @open-enterprise="isEnterpriseOpen = true"
-          />
-        </KeepAlive>
+        <component 
+          :is="Component" 
+          :share-id="activeShareId" 
+          :key-url-safe="activeShareKey"
+          @send-to-tool="switchTool" 
+          @exit-receive="switchTool('merge')"
+          @open-enterprise="isEnterpriseOpen = true"
+        />
       </router-view>
     </main>
 
@@ -99,6 +97,9 @@
       :is-open="isPrivacyOpen" 
       @close="isPrivacyOpen = false" 
     />
+
+    <!-- Global Loading Mask for async heavy operations -->
+    <GlobalLoadingMask />
   </div>
 </template>
 
@@ -109,6 +110,7 @@ import Navbar from './components/Navbar.vue';
 import Footer from './components/Footer.vue';
 import MobileBottomNav from './components/MobileBottomNav.vue';
 import MobileToolsDrawer from './components/MobileToolsDrawer.vue';
+import GlobalLoadingMask from './components/GlobalLoadingMask.vue';
 const FeedbackModal = defineAsyncComponent(() => import('./components/FeedbackModal.vue'));
 const PrivacyModal = defineAsyncComponent(() => import('./components/PrivacyModal.vue'));
 const GlobalSettingsModal = defineAsyncComponent(() => import('./components/GlobalSettingsModal.vue'));

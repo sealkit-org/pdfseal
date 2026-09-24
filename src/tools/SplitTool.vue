@@ -393,7 +393,7 @@
             class="flex-1 my-2 overflow-y-auto min-h-[200px] max-h-[calc(100vh-465px)] pr-1 grid content-start items-start grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 2xl:grid-cols-8 gap-3 select-none"
           >
             <div 
-              v-for="p in pages" 
+              v-for="(p, idx) in pages" 
               :key="p.index"
               @click="onCardClick(p.index)"
               :class="[
@@ -441,11 +441,20 @@
               </div>
 
               <!-- Page Canvas Preview -->
-              <div class="overflow-hidden rounded-xl border border-slate-200/60 flex items-center justify-center bg-white w-full h-40 relative">
+              <div class="overflow-hidden rounded-xl border border-slate-200/60 flex items-center justify-center bg-white w-full h-40 relative group">
                 <img 
                   :src="p.dataUrl" 
                   class="max-h-full max-w-full object-contain pointer-events-none"
                 >
+                <!-- Zoom Button -->
+                <button
+                  type="button"
+                  @click.stop="openPreview(idx)"
+                  :title="t('action_preview', 'Preview Full Size')"
+                  class="absolute top-2 right-2 p-1.5 bg-slate-800/75 hover:bg-slate-800 text-white rounded-md opacity-85 md:opacity-0 md:group-hover:opacity-100 transition-opacity z-10 cursor-pointer"
+                >
+                  <ZoomIn class="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -535,7 +544,6 @@
       @close="isVaultPickerOpen = false"
     />
 
-    <!-- Password Unlock Modal -->
     <PasswordModal 
       :is-open="isPasswordOpen"
       :filename="pendingFileName"
@@ -544,11 +552,19 @@
       @submit="handlePasswordSubmit"
       @cancel="handlePasswordCancel"
     />
+
+    <PagePreviewModal
+      :is-open="isPreviewOpen"
+      :is-loading="isPreviewLoading"
+      :img-src="previewImgSrc"
+      :rotation="0"
+      @close="closePreview"
+    />
   </section>
 </template>
 
 <script setup>
-import { ref, computed, watch, inject, onMounted, onActivated } from 'vue';
+import { ref, computed, watch, inject, onMounted, onActivated, onUnmounted } from 'vue';
 import { 
   Scissors, 
   Plus, 
@@ -562,7 +578,8 @@ import {
   Sparkles,
   Package,
   Files,
-  X
+  X,
+  ZoomIn
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
@@ -578,6 +595,7 @@ import { createAndDownloadZip } from '../utils/zipUtils';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
+import PagePreviewModal from '../components/PagePreviewModal.vue';
 
 const emit = defineEmits(['send-to-tool']);
 
@@ -589,6 +607,83 @@ const progressPercent = ref(0);
 const progressMessage = ref('');
 const lastExportedPageCount = ref(0);
 const lastExportedCount = ref(0);
+
+// Page Preview Modal State
+const isPreviewOpen = ref(false);
+const isPreviewLoading = ref(false);
+const previewImgSrc = ref('');
+let splitPdfDoc = null;
+
+async function destroySplitPdfDoc() {
+  if (splitPdfDoc) {
+    try { await splitPdfDoc.destroy(); } catch (e) {}
+    splitPdfDoc = null;
+  }
+}
+
+async function openPreview(idx) {
+  const p = pages.value[idx];
+  if (!p) return;
+  
+  isPreviewOpen.value = true;
+  isPreviewLoading.value = true;
+  
+  try {
+    let targetPdf = splitPdfDoc;
+    let needDestroy = false;
+    
+    if (!targetPdf && docBytes.value) {
+      const loadingTask = pdfjsLib.getDocument({
+        data: new Uint8Array(docBytes.value.slice(0)),
+        password: unlockedPassword || undefined,
+        cMapUrl: '/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: '/standard_fonts/'
+      });
+      targetPdf = await loadingTask.promise;
+      needDestroy = true;
+    }
+    
+    if (!targetPdf) {
+      previewImgSrc.value = p.dataUrl;
+      return;
+    }
+    
+    const page = await targetPdf.getPage(idx + 1);
+    const rotation = page.rotate || 0;
+    const viewport = page.getViewport({ scale: 2.5, rotation });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    await page.render({
+      canvasContext: ctx,
+      viewport,
+      intent: 'display'
+    }).promise;
+    
+    previewImgSrc.value = canvas.toDataURL('image/png');
+    
+    if (needDestroy) {
+      try { await targetPdf.destroy(); } catch (e) {}
+    }
+  } catch (err) {
+    logger.error('PREVIEW', 'Failed to generate high-res preview: ' + err.message);
+    previewImgSrc.value = p.dataUrl; // fallback
+  } finally {
+    isPreviewLoading.value = false;
+  }
+}
+
+function closePreview() {
+  isPreviewOpen.value = false;
+  setTimeout(() => {
+    previewImgSrc.value = '';
+  }, 200);
+}
 let cachedGeneratedOutputs = null;
 let cachedZipBlob = null;
 let cachedZipName = '';
@@ -778,7 +873,9 @@ async function loadFile(file, password = '') {
       standardFontDataUrl: '/standard_fonts/'
     });
     
+    await destroySplitPdfDoc();
     const pdf = await loadingTask.promise;
+    splitPdfDoc = pdf;
     totalPages.value = pdf.numPages;
     pages.value = [];
     unlockedPassword = password;
@@ -809,7 +906,6 @@ async function loadFile(file, password = '') {
       // By default select all pages on load (compatible with E2E tests)
       selectedIndices.value.add(i - 1);
     }
-    try { await pdf.destroy(); } catch (e) {}
   } catch (err) {
     if (err.name === 'PasswordException' || err.message?.toLowerCase().includes('password')) {
       docBytes.value = null;
@@ -973,6 +1069,7 @@ function handleReDownload() {
 }
 
 function reset() {
+  destroySplitPdfDoc();
   docBytes.value = null;
   filename.value = '';
   pages.value = [];
@@ -1303,4 +1400,5 @@ function checkIncomingFile() {
 
 onMounted(checkIncomingFile);
 onActivated(checkIncomingFile);
+onUnmounted(destroySplitPdfDoc);
 </script>
