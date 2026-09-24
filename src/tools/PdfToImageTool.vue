@@ -234,12 +234,22 @@
               </button>
             </div>
 
-            <!-- Page Canvas Preview -->
-            <div class="overflow-hidden rounded-xl border border-slate-200/60 flex items-center justify-center bg-white w-full h-40 relative">
+            <!-- Page Canvas Preview with Floating Zoom Button -->
+            <div class="overflow-hidden rounded-xl border border-slate-200/60 flex items-center justify-center bg-white w-full h-40 relative group/thumb">
               <img
                 :src="p.dataUrl"
-                class="max-h-full max-w-full object-contain transition-transform duration-200"
+                class="max-h-full max-w-full object-contain transition-transform duration-200 pointer-events-none"
               >
+
+              <!-- Floating Zoom Button (Always visible on mobile touch, hover on desktop) -->
+              <button
+                type="button"
+                @click.stop="openPreview(idx)"
+                :title="t('action_preview', 'Preview Full Size')"
+                class="no-drag absolute top-1.5 right-1.5 p-1.5 bg-slate-900/75 hover:bg-slate-900 text-white rounded-md opacity-85 md:opacity-0 md:group-hover:opacity-100 transition-all duration-150 shadow-sm cursor-pointer z-10"
+              >
+                <ZoomIn class="w-3.5 h-3.5" />
+              </button>
             </div>
           </div>
         </div>
@@ -304,6 +314,14 @@
       @submit="handlePasswordSubmit"
       @cancel="handlePasswordCancel"
     />
+
+    <!-- Page Preview Modal -->
+    <PagePreviewModal
+      :is-open="isPreviewOpen"
+      :is-loading="isPreviewLoading"
+      :img-src="previewImgSrc"
+      @close="closePreview"
+    />
   </section>
 </template>
 
@@ -318,7 +336,8 @@ import {
   Loader2,
   FolderLock,
   Unlock,
-  RefreshCw
+  RefreshCw,
+  ZoomIn
 } from 'lucide-vue-next';
 import * as pdfjsLib from 'pdfjs-dist';
 import { t } from '../i18n';
@@ -331,6 +350,7 @@ import { logger } from '../utils/logger';
 import PasswordModal from '../components/PasswordModal.vue';
 import VaultFilePickerModal from '../components/VaultFilePickerModal.vue';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
+import PagePreviewModal from '../components/PagePreviewModal.vue';
 import { saveFile } from '../utils/vaultDb';
 
 const emit = defineEmits(['send-to-tool']);
@@ -366,6 +386,56 @@ const isZipping = ref(false);
 const zipProgress = ref(0);
 const isRenderingPage = ref(null);
 const isVaultPickerOpen = ref(false);
+
+// Page Preview Modal State
+const isPreviewOpen = ref(false);
+const isPreviewLoading = ref(false);
+const previewImgSrc = ref('');
+
+async function openPreview(idx) {
+  const p = pages.value[idx];
+  if (!p) return;
+
+  isPreviewOpen.value = true;
+  isPreviewLoading.value = true;
+
+  try {
+    if (!pdfDoc) {
+      previewImgSrc.value = p.dataUrl;
+      return;
+    }
+
+    const page = await pdfDoc.getPage(idx + 1);
+    const rotation = page.rotate || 0;
+    const viewport = page.getViewport({ scale: 2.5, rotation });
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.floor(viewport.width);
+    canvas.height = Math.floor(viewport.height);
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    await page.render({
+      canvasContext: ctx,
+      viewport,
+      intent: 'display'
+    }).promise;
+
+    previewImgSrc.value = canvas.toDataURL('image/png');
+  } catch (err) {
+    logger.error('PDF_TO_IMAGE', 'Failed to generate high-res preview: ' + err.message);
+    previewImgSrc.value = p.dataUrl;
+  } finally {
+    isPreviewLoading.value = false;
+  }
+}
+
+function closePreview() {
+  isPreviewOpen.value = false;
+  setTimeout(() => {
+    previewImgSrc.value = '';
+  }, 200);
+}
 
 // Output Configuration
 const outputFormat = ref('png');  // 'png' | 'jpg'

@@ -1488,5 +1488,20 @@
   "next_action_cta_image_to_pdf": "Convert to PDF ➔",
   "next_action_badge_general": "Seamless Relay",
   "next_action_desc_general": "File held in browser memory. Seamlessly relay to your next task with zero re-uploading.",
-  "next_action_desc_merge_paginated": "Merged documents often have fragmented page numbering. Re-paginate the combined document sequentially."
+  "next_action_desc_merge_paginated": "Merged documents often have fragmented page numbering. Re-paginate the combined document sequentially.",
+  "loading_file": "Loading file...",
+  "loading_default": "Processing...",
+  "preview_title": "Page HD Preview",
+  "zoom_in": "Zoom In",
+  "zoom_out": "Zoom Out",
+  "zoom_reset": "Reset Zoom",
+  "fit_screen": "Fit Screen",
+  "preview_rendering": "Rendering high-resolution preview...",
+  "close": "Close (Esc)",
+  "compress_target_already_fits": "Original size already meets target limit. Running lossless optimization...",
+  "compress_target_bisection": "Bisection search in progress [iteration {current}/{total}]...",
+  "compress_target_resampling": "Resampling pages at optimal resolution ({current}/{total})...",
+  "compress_target_finetune": "Fine-tuning scale parameters to strictly meet target limit...",
+  "compress_target_boost": "Boosting clarity parameters to maximize visual sharpness...",
+  "compress_target_done": "Target size compression complete"
 }
