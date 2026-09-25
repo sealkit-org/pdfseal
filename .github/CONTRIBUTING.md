@@ -63,12 +63,13 @@ We maintain a comprehensive suite of unit, algorithmic, and end-to-end regressio
 
 ## 🌍 Adding or Improving Translations (i18n)
 
-PDFSeal currently supports 5 languages:
+PDFSeal currently supports 6 languages:
 - `en` (English - default)
-- `zh-CN` (Simplified Chinese)
 - `de` (German)
 - `es` (Spanish)
 - `fr` (French)
+- `ja` (Japanese)
+- `zh` (Simplified Chinese)
 
 To add missing keys or improve wording:
 1. Locate language dictionaries under `src/locales/`.
