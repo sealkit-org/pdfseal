@@ -368,7 +368,8 @@
                     { mb: 1, label: '1 MB', tip: t('compress_preset_1mb') },
                     { mb: 2, label: '2 MB', tip: t('compress_preset_2mb') },
                     { mb: 5, label: '5 MB', tip: t('compress_preset_5mb') },
-                    { mb: 10, label: '10 MB', tip: t('compress_preset_10mb') }
+                    { mb: 10, label: '10 MB', tip: t('compress_preset_10mb') },
+                    { mb: 20, label: '20 MB', tip: t('compress_preset_20mb') }
                   ]" 
                   :key="preset.mb"
                   @click="targetSizeMb = preset.mb"
