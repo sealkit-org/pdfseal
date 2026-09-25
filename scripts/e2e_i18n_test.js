@@ -10,11 +10,12 @@ if (!fs.existsSync(SCREENSHOT_DIR)) {
 }
 
 const LANGUAGES = [
-  { code: 'en', name: 'English', flag: '🇺🇸' },
-  { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-  { code: 'fr', name: 'Français', flag: '🇫🇷' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' },
-  { code: 'zh', name: '简体中文', flag: '🇨🇳' }
+  { code: 'en', name: 'English' },
+  { code: 'de', name: 'Deutsch' },
+  { code: 'es', name: 'Español' },
+  { code: 'fr', name: 'Français' },
+  { code: 'ja', name: '日本語' },
+  { code: 'zh', name: '简体中文' }
 ];
 
 async function runI18nE2ETest() {
@@ -56,7 +57,7 @@ async function runI18nE2ETest() {
 
     for (const lang of LANGUAGES) {
       console.log(`\n------------------------------------------------------------`);
-      console.log(`🔍 [Testing Language: ${lang.flag} ${lang.name} (${lang.code})]`);
+      console.log(`🔍 [Testing Language: ${lang.name} (${lang.code})]`);
       console.log(`------------------------------------------------------------`);
 
       // Switch language using the top selector
