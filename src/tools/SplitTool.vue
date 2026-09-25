@@ -695,10 +695,6 @@ watch(() => Boolean(docBytes.value), (active) => {
   workspaceState?.setActiveFile(active);
 }, { immediate: true });
 
-onActivated(() => {
-  workspaceState?.setActiveFile(Boolean(docBytes.value));
-});
-
 const filename = ref('');
 const pages = ref([]);
 const totalPages = ref(0);
@@ -1399,6 +1395,12 @@ function checkIncomingFile() {
 }
 
 onMounted(checkIncomingFile);
-onActivated(checkIncomingFile);
+onActivated(() => {
+  if (lastExportedFile.value) {
+    reset();
+  }
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+  checkIncomingFile();
+});
 onUnmounted(destroySplitPdfDoc);
 </script>

@@ -679,9 +679,6 @@ watch(() => Boolean(docBytes.value), (active) => {
   workspaceState?.setActiveFile(active);
 }, { immediate: true });
 
-onActivated(() => {
-  workspaceState?.setActiveFile(Boolean(docBytes.value));
-});
 const filename = ref('');
 const pages = ref([]);
 const isDragOver = ref(false);
@@ -1223,6 +1220,17 @@ async function downloadPageAsImage(idx) {
       needDestroy = true;
     }
 
+    if (!targetPdf && docBytes.value) {
+      const loadingTask = pdfjsLib.getDocument({
+        data: new Uint8Array(docBytes.value.slice(0)),
+        cMapUrl: typeof window !== 'undefined' ? (window.location.origin + '/cmaps/') : '/cmaps/',
+        cMapPacked: true,
+        standardFontDataUrl: typeof window !== 'undefined' ? (window.location.origin + '/standard_fonts/') : '/standard_fonts/'
+      });
+      pdfDoc = await loadingTask.promise;
+      targetPdf = pdfDoc;
+    }
+
     if (!targetPdf) return;
 
     const page = await targetPdf.getPage(item.pageIndex + 1);
@@ -1448,8 +1456,17 @@ onMounted(() => {
 });
 
 onActivated(() => {
+  if (lastExportedFile.value) {
+    reset();
+  }
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
   checkIncomingFile();
   window.addEventListener('keydown', handleKeydown);
+  if (gridRef.value && !sortableInstance && pages.value.length > 0) {
+    nextTick(() => {
+      initSortable();
+    });
+  }
 });
 
 onDeactivated(() => {

@@ -671,6 +671,9 @@ watch(() => imageList.value.length > 0, (active) => {
 }, { immediate: true });
 
 onActivated(() => {
+  if (lastExportedFile.value) {
+    clearAll();
+  }
   workspaceState?.setActiveFile(imageList.value.length > 0);
 });
 
