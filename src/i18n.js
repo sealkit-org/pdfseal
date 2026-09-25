@@ -8,9 +8,29 @@ import ja from './locales/ja.json';
 
 const dictionaries = { en, zh, de, es, fr, ja };
 
+export const SUPPORTED_LANGUAGES = ['en', 'de', 'es', 'fr', 'ja', 'zh'];
+
 // Force Vite HMR reload for JSON locales
 // Determine initial language safely for both browser and test/SSR environments
-function getInitialLang() {
+export function getInitialLang() {
+  // 1. Priority: URL query parameter (?lang=ja or ?hl=ja) for direct language sharing & crawler discovery
+  if (typeof window !== 'undefined' && window.location && window.location.search) {
+    try {
+      const searchParams = new URLSearchParams(window.location.search);
+      const paramLang = (searchParams.get('lang') || searchParams.get('hl') || '').toLowerCase().trim();
+      if (paramLang) {
+        if (dictionaries[paramLang]) return paramLang;
+        if (paramLang.startsWith('zh')) return 'zh';
+        if (paramLang.startsWith('ja')) return 'ja';
+        if (paramLang.startsWith('de')) return 'de';
+        if (paramLang.startsWith('es')) return 'es';
+        if (paramLang.startsWith('fr')) return 'fr';
+        if (paramLang.startsWith('en')) return 'en';
+      }
+    } catch (e) {}
+  }
+
+  // 2. Local storage
   if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
     try {
       const saved = localStorage.getItem('pdfseal_lang');
@@ -18,6 +38,7 @@ function getInitialLang() {
     } catch (e) {}
   }
 
+  // 3. Browser system language
   const nav = (typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage || 'en') : 'en').toLowerCase();
   if (nav.startsWith('zh')) return 'zh';
   if (nav.startsWith('ja')) return 'ja';
@@ -34,13 +55,28 @@ export function onLanguageChange(cb) {
   onLanguageChangeCallback = cb;
 }
 
-export function setLanguage(lang) {
+export function setLanguage(lang, syncUrl = true) {
   if (dictionaries[lang]) {
     currentLang.value = lang;
-    if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
-      try {
-        localStorage.setItem('pdfseal_lang', lang);
-      } catch (e) {}
+    if (typeof window !== 'undefined') {
+      if (typeof localStorage !== 'undefined') {
+        try {
+          localStorage.setItem('pdfseal_lang', lang);
+        } catch (e) {}
+      }
+      if (syncUrl && window.history && window.location) {
+        try {
+          const url = new URL(window.location.href);
+          if (lang === 'en') {
+            url.searchParams.delete('lang');
+            url.searchParams.delete('hl');
+          } else {
+            url.searchParams.set('lang', lang);
+          }
+          const newUrl = url.pathname + (url.search ? url.search : '') + (url.hash || '');
+          window.history.replaceState(window.history.state, '', newUrl);
+        } catch (e) {}
+      }
     }
     updateTitle();
     if (onLanguageChangeCallback) {

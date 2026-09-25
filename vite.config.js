@@ -25,12 +25,45 @@ function seoStaticFilesPlugin(siteUrl) {
   }
   const today = new Date().toISOString().slice(0, 10);
   const robotsTxt = `User-agent: *\nAllow: /\n\nSitemap: ${siteUrl}/sitemap.xml\n`;
+  const SITEMAP_LANGS = [
+    { code: 'en', hreflang: 'en', isDefault: true },
+    { code: 'de', hreflang: 'de' },
+    { code: 'es', hreflang: 'es' },
+    { code: 'fr', hreflang: 'fr' },
+    { code: 'ja', hreflang: 'ja' },
+    { code: 'zh', hreflang: 'zh' }
+  ];
+
+  const uniquePaths = Array.from(new Set(['/', ...Object.values(TOOL_ROUTES)]));
+
+  const urlEntries = uniquePaths.flatMap((p) => {
+    const alternateLinks = [
+      ...SITEMAP_LANGS.map(l =>
+        `    <xhtml:link rel="alternate" hreflang="${l.hreflang}" href="${siteUrl}${p}${l.isDefault ? '' : `?lang=${l.code}`}" />`
+      ),
+      `    <xhtml:link rel="alternate" hreflang="zh-Hans" href="${siteUrl}${p}?lang=zh" />`,
+      `    <xhtml:link rel="alternate" hreflang="x-default" href="${siteUrl}${p}" />`
+    ].join('\n');
+
+    return SITEMAP_LANGS.map((l) => {
+      const loc = `${siteUrl}${p}${l.isDefault ? '' : `?lang=${l.code}`}`;
+      const priority = p === '/' ? (l.isDefault ? '1.0' : '0.9') : (l.isDefault ? '0.8' : '0.7');
+      return (
+        `  <url>\n` +
+        `    <loc>${loc}</loc>\n` +
+        `${alternateLinks}\n` +
+        `    <lastmod>${today}</lastmod>\n` +
+        `    <changefreq>weekly</changefreq>\n` +
+        `    <priority>${priority}</priority>\n` +
+        `  </url>`
+      );
+    });
+  });
+
   const sitemapXml =
     `<?xml version="1.0" encoding="UTF-8"?>\n` +
-    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
-    Array.from(new Set(['/', ...Object.values(TOOL_ROUTES)]))
-      .map((p) => `  <url>\n    <loc>${siteUrl}${p}</loc>\n    <lastmod>${today}</lastmod>\n  </url>`)
-      .join('\n') +
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">\n` +
+    urlEntries.join('\n') +
     `\n</urlset>\n`;
 
   return {

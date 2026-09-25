@@ -33,6 +33,33 @@ function setCanonical(href) {
   link.setAttribute('href', href);
 }
 
+export const HREFLANG_LOCALES = [
+  { hreflang: 'en', lang: 'en' },
+  { hreflang: 'de', lang: 'de' },
+  { hreflang: 'es', lang: 'es' },
+  { hreflang: 'fr', lang: 'fr' },
+  { hreflang: 'ja', lang: 'ja' },
+  { hreflang: 'zh', lang: 'zh' },
+  { hreflang: 'zh-Hans', lang: 'zh' },
+  { hreflang: 'x-default', lang: 'en' }
+];
+
+function setHreflangTags(origin, path) {
+  if (typeof document === 'undefined') return;
+  HREFLANG_LOCALES.forEach(({ hreflang, lang }) => {
+    const href = lang === 'en' ? `${origin}${path}` : `${origin}${path}?lang=${lang}`;
+    const selector = `link[rel="alternate"][hreflang="${hreflang}"]`;
+    let link = document.querySelector(selector);
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'alternate');
+      link.setAttribute('hreflang', hreflang);
+      document.head.appendChild(link);
+    }
+    link.setAttribute('href', href);
+  });
+}
+
 /**
  * Updates SEO document title, meta descriptions, canonical link, and Open Graph tags.
  * @param {object|string} routeOrToolId Vue router route object or toolId string
@@ -73,9 +100,12 @@ export function updateSeoMeta(routeOrToolId) {
   setMetaTag('meta[property="og:title"]', 'property', 'og:title', title);
   setMetaTag('meta[property="og:description"]', 'property', 'og:description', description);
   if (typeof window !== 'undefined') {
-    const fullUrl = `${window.location.origin}${path}`;
-    setMetaTag('meta[property="og:url"]', 'property', 'og:url', fullUrl);
-    setCanonical(fullUrl);
+    const origin = window.location.origin;
+    const isDefaultLang = currentLang.value === 'en';
+    const canonicalUrl = isDefaultLang ? `${origin}${path}` : `${origin}${path}?lang=${currentLang.value}`;
+    setMetaTag('meta[property="og:url"]', 'property', 'og:url', canonicalUrl);
+    setCanonical(canonicalUrl);
+    setHreflangTags(origin, path);
   }
 
   // Update Twitter Card
