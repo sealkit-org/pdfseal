@@ -565,6 +565,7 @@
 
 <script setup>
 import { ref, computed, watch, inject, onMounted, onActivated, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { 
   Scissors, 
   Plus, 
@@ -585,6 +586,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { parseSplitQueryParams } from '../utils/toolQueryParams.js';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
@@ -1394,12 +1396,35 @@ function checkIncomingFile() {
   }
 }
 
-onMounted(checkIncomingFile);
+const route = useRoute();
+
+function applyQueryParams() {
+  const parsed = parseSplitQueryParams(route?.query);
+  if (parsed.rangeInput !== undefined) {
+    rangeInput.value = parsed.rangeInput;
+  }
+  if (parsed.intervalCount !== undefined) {
+    intervalCount.value = parsed.intervalCount;
+  }
+  if (parsed.activeMode !== undefined) {
+    activeMode.value = parsed.activeMode;
+  }
+}
+
+watch(() => route?.query, () => {
+  applyQueryParams();
+}, { deep: true });
+
+onMounted(() => {
+  applyQueryParams();
+  checkIncomingFile();
+});
 onActivated(() => {
   if (lastExportedFile.value) {
     reset();
   }
   workspaceState?.setActiveFile(Boolean(docBytes.value));
+  applyQueryParams();
   checkIncomingFile();
 });
 onUnmounted(destroySplitPdfDoc);

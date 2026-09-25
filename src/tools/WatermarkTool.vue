@@ -357,6 +357,7 @@
 
 <script setup>
 import { ref, watch, nextTick, inject, onMounted, onActivated } from 'vue';
+import { useRoute } from 'vue-router';
 import { 
   Stamp, 
   Plus, 
@@ -372,6 +373,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument, rgb, degrees } from 'pdf-lib';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { parseWatermarkQueryParams } from '../utils/toolQueryParams.js';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
@@ -802,12 +804,38 @@ function checkIncomingFile() {
   }
 }
 
-onMounted(checkIncomingFile);
+const route = useRoute();
+
+function applyQueryParams() {
+  const parsed = parseWatermarkQueryParams(route?.query);
+  if (parsed.wmText !== undefined) {
+    wmText.value = parsed.wmText;
+  }
+  if (parsed.wmOpacity !== undefined) {
+    wmOpacity.value = parsed.wmOpacity;
+  }
+  if (parsed.wmColor !== undefined) {
+    wmColor.value = parsed.wmColor;
+  }
+  if (parsed.wmAngle !== undefined) {
+    wmAngle.value = parsed.wmAngle;
+  }
+}
+
+watch(() => route?.query, () => {
+  applyQueryParams();
+}, { deep: true });
+
+onMounted(() => {
+  applyQueryParams();
+  checkIncomingFile();
+});
 onActivated(() => {
   if (lastExportedFile.value) {
     reset();
   }
   workspaceState?.setActiveFile(Boolean(docBytes.value));
+  applyQueryParams();
   checkIncomingFile();
   if (docBytes.value && !lastExportedFile.value) {
     nextTick(() => {

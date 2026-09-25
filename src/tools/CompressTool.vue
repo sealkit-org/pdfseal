@@ -490,6 +490,7 @@
 
 <script setup>
 import { ref, computed, watch, inject, onMounted, onActivated } from 'vue';
+import { useRoute } from 'vue-router';
 import { 
   Minimize2, 
   Plus, 
@@ -519,6 +520,7 @@ import NextActionBanner from '../components/NextActionBanner.vue';
 import DiffPreviewModal from '../components/DiffPreviewModal.vue';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 import { useGlobalLoading } from '../utils/useGlobalLoading';
+import { parseCompressQueryParams } from '../utils/toolQueryParams';
 
 const emit = defineEmits(['send-to-tool']);
 
@@ -819,12 +821,32 @@ function checkIncomingFile() {
   }
 }
 
-onMounted(checkIncomingFile);
+const route = useRoute();
+
+function applyQueryParams() {
+  const parsed = parseCompressQueryParams(route?.query);
+  if (parsed.targetSizeMb !== undefined) {
+    targetSizeMb.value = parsed.targetSizeMb;
+  }
+  if (parsed.selectedLevel !== undefined) {
+    selectedLevel.value = parsed.selectedLevel;
+  }
+}
+
+watch(() => route?.query, () => {
+  applyQueryParams();
+}, { deep: true });
+
+onMounted(() => {
+  applyQueryParams();
+  checkIncomingFile();
+});
 onActivated(() => {
   if (lastExportedFile.value) {
     reset();
   }
   workspaceState?.setActiveFile(Boolean(docBytes.value));
+  applyQueryParams();
   checkIncomingFile();
 });
 </script>

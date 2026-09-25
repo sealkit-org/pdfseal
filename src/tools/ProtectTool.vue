@@ -665,6 +665,7 @@
 
 <script setup>
 import { ref, computed, watch, inject, onMounted, onActivated } from 'vue';
+import { useRoute } from 'vue-router';
 import { 
   Lock, 
   Plus, 
@@ -689,6 +690,7 @@ import confetti from 'canvas-confetti';
 import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { parseProtectQueryParams } from '../utils/toolQueryParams.js';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { saveFile } from '../utils/vaultDb';
 import { userSettings } from '../utils/userSettings';
@@ -1138,12 +1140,32 @@ function checkIncomingFile() {
   }
 }
 
-onMounted(checkIncomingFile);
+const route = useRoute();
+
+function applyQueryParams() {
+  const parsed = parseProtectQueryParams(route?.query);
+  if (parsed.activePreset) {
+    applyPreset(parsed.activePreset);
+  }
+  if (parsed.algorithm) {
+    algorithm.value = parsed.algorithm;
+  }
+}
+
+watch(() => route?.query, () => {
+  applyQueryParams();
+}, { deep: true });
+
+onMounted(() => {
+  applyQueryParams();
+  checkIncomingFile();
+});
 onActivated(() => {
   if (lastExportedFile.value) {
     reset();
   }
   workspaceState?.setActiveFile(Boolean(docBytes.value));
+  applyQueryParams();
   checkIncomingFile();
 });
 </script>
