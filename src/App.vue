@@ -29,14 +29,16 @@
       ]"
     >
       <router-view v-slot="{ Component }">
-        <component 
-          :is="Component" 
-          :share-id="activeShareId" 
-          :key-url-safe="activeShareKey"
-          @send-to-tool="switchTool" 
-          @exit-receive="switchTool('merge')"
-          @open-enterprise="isEnterpriseOpen = true"
-        />
+        <KeepAlive :max="5">
+          <component 
+            :is="Component" 
+            :share-id="activeShareId" 
+            :key-url-safe="activeShareKey"
+            @send-to-tool="switchTool" 
+            @exit-receive="switchTool('merge')"
+            @open-enterprise="isEnterpriseOpen = true"
+          />
+        </KeepAlive>
       </router-view>
     </main>
 

@@ -343,10 +343,6 @@ watch(() => files.value.length > 0, (active) => {
   workspaceState?.setActiveFile(active);
 }, { immediate: true });
 
-onActivated(() => {
-  workspaceState?.setActiveFile(files.value.length > 0);
-});
-
 const customOutputBaseName = ref(`${userSettings.defaultExportPrefix || 'PDFSeal'}_Merged_${new Date().toISOString().slice(0, 10)}`);
 const autoSaveToVault = ref(userSettings.autoSaveToVault !== false);
 
@@ -605,7 +601,13 @@ function checkIncomingFile() {
 }
 
 onMounted(checkIncomingFile);
-onActivated(checkIncomingFile);
+onActivated(() => {
+  if (lastExportedFile.value) {
+    clearAll();
+  }
+  workspaceState?.setActiveFile(files.value.length > 0);
+  checkIncomingFile();
+});
 
 async function handlePasswordSubmit(pwd) {
   if (!pendingFileObj) return;

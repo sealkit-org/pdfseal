@@ -2834,6 +2834,9 @@ onMounted(() => {
 });
 
 onActivated(() => {
+  if (outputResults.value.length > 0) {
+    resetBatchAndResults();
+  }
   workspaceState?.setActiveFile(inputFiles.value.length > 0);
   checkIncomingFile();
 });

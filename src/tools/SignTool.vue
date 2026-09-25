@@ -830,9 +830,6 @@ watch(() => Boolean(docBytes.value), (active) => {
   workspaceState?.setActiveFile(active);
 }, { immediate: true });
 
-onActivated(() => {
-  workspaceState?.setActiveFile(Boolean(docBytes.value));
-});
 const filename = ref('');
 const totalPages = ref(0);
 const currentPage = ref(1);
@@ -1769,5 +1766,16 @@ onUnmounted(() => {
   window.removeEventListener('resize', handleWindowResize);
   reset();
 });
-onActivated(checkIncomingFile);
+onActivated(() => {
+  if (lastExportedFile.value) {
+    reset();
+  }
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+  checkIncomingFile();
+  if (docBytes.value && !lastExportedFile.value) {
+    nextTick(() => {
+      renderCurrentPage();
+    });
+  }
+});
 </script>

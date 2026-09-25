@@ -920,7 +920,7 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, inject, onMounted, onActivated, onUnmounted, nextTick } from 'vue';
+import { ref, computed, watch, inject, onMounted, onActivated, onDeactivated, onUnmounted, nextTick } from 'vue';
 import {
   EyeOff, Plus, Minus, Maximize2, MoveHorizontal, Loader2, FolderLock, RotateCcw, Trash2, Flame, AlertTriangle,
   CheckCircle2, ChevronLeft, ChevronRight, Magnet, ListOrdered, BarChart3, ShieldCheck,
@@ -1139,9 +1139,6 @@ onUnmounted(() => {
 watch(() => Boolean(docBytes.value), (active) => {
   workspaceState?.setActiveFile(active);
 }, { immediate: true });
-onActivated(() => {
-  workspaceState?.setActiveFile(Boolean(docBytes.value));
-});
 
 const isDragOver = ref(false);
 const isLoading = ref(false);
@@ -2113,7 +2110,17 @@ onMounted(() => {
   checkIncomingFile();
   window.addEventListener('keydown', onKeydown);
 });
-onActivated(checkIncomingFile);
+onActivated(() => {
+  if (lastExportedFile.value) {
+    reset();
+  }
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+  checkIncomingFile();
+  window.addEventListener('keydown', onKeydown);
+});
+onDeactivated(() => {
+  window.removeEventListener('keydown', onKeydown);
+});
 onUnmounted(() => {
   stageRO?.disconnect();
   window.removeEventListener('keydown', onKeydown);

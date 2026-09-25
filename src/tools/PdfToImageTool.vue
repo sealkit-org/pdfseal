@@ -375,9 +375,6 @@ watch(() => Boolean(docBytes.value), (active) => {
   workspaceState?.setActiveFile(active);
 }, { immediate: true });
 
-onActivated(() => {
-  workspaceState?.setActiveFile(Boolean(docBytes.value));
-});
 const filename = ref('');
 const pages = ref([]);
 const isDragOver = ref(false);
@@ -462,6 +459,19 @@ async function destroyPdfDoc() {
     } catch (e) {}
     pdfDoc = null;
   }
+}
+
+async function ensurePdfDoc() {
+  if (!pdfDoc && docBytes.value) {
+    const loadingTask = pdfjsLib.getDocument({
+      data: new Uint8Array(docBytes.value.slice(0)),
+      cMapUrl: typeof window !== 'undefined' ? (window.location.origin + '/cmaps/') : '/cmaps/',
+      cMapPacked: true,
+      standardFontDataUrl: typeof window !== 'undefined' ? (window.location.origin + '/standard_fonts/') : '/standard_fonts/'
+    });
+    pdfDoc = await loadingTask.promise;
+  }
+  return pdfDoc;
 }
 
 function onFileSelected(e) {
@@ -598,6 +608,7 @@ function getBaseName() {
  * (JPEG has no alpha channel; PNG gets consistent output too).
  */
 async function renderPageBlob(pageIndex) {
+  await ensurePdfDoc();
   if (!pdfDoc) throw new Error('No PDF document loaded');
   const page = await pdfDoc.getPage(pageIndex + 1);
   const viewport = page.getViewport({ scale: outputDpi.value / 72 });
@@ -643,6 +654,7 @@ async function downloadPage(idx) {
 }
 
 async function downloadAllAsZip() {
+  await ensurePdfDoc();
   if (!pdfDoc || pages.value.length === 0 || isZipping.value || isRenderingPage.value !== null) return;
   isZipping.value = true;
   zipProgress.value = 0;
@@ -750,7 +762,13 @@ function checkIncomingFile() {
 }
 
 onMounted(checkIncomingFile);
-onActivated(checkIncomingFile);
+onActivated(async () => {
+  if (lastExportedFile.value) {
+    await reset();
+  }
+  workspaceState?.setActiveFile(Boolean(docBytes.value));
+  checkIncomingFile();
+});
 onDeactivated(() => {
   // Free the pdf.js worker resources when navigating away (KeepAlive safe)
   destroyPdfDoc();

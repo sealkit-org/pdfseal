@@ -625,9 +625,6 @@ watch(() => Boolean(docBytes.value), (active) => {
   workspaceState?.setActiveFile(active);
 }, { immediate: true });
 
-onActivated(() => {
-  workspaceState?.setActiveFile(Boolean(docBytes.value));
-});
 const filename = ref('');
 const totalPages = ref(0);
 const isDragOver = ref(false);
@@ -1156,6 +1153,9 @@ function checkIncomingFile() {
 
 onMounted(checkIncomingFile);
 onActivated(() => {
+  if (lastExportedFile.value) {
+    reset();
+  }
   workspaceState?.setActiveFile(Boolean(docBytes.value));
   checkIncomingFile();
   if (docBytes.value && !lastExportedFile.value) {
