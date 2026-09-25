@@ -224,16 +224,16 @@ export function resolveNextActions(sourceTool, file, options = {}) {
 
     case 'organize':
       heroId = 'page_number';
-      badgeKey = 'next_action_badge_ready';
-      descKey = 'next_action_desc_merge_paginated';
+      badgeKey = 'next_action_badge_organized';
+      descKey = 'next_action_desc_organize_done';
       ctaKey = 'next_action_cta_page_number';
       secondaryIds = ['compress', 'sign', 'protect'];
       break;
 
     case 'split':
       heroId = 'page_number';
-      badgeKey = 'next_action_badge_ready';
-      descKey = 'next_action_desc_merge_paginated';
+      badgeKey = 'next_action_badge_split';
+      descKey = 'next_action_desc_split_done';
       ctaKey = 'next_action_cta_page_number';
       secondaryIds = ['compress', 'sign', 'organize'];
       break;
@@ -296,18 +296,18 @@ export function resolveNextActions(sourceTool, file, options = {}) {
 
     case 'compress':
       heroId = 'protect';
-      badgeKey = 'next_action_badge_ready';
-      descKey = 'next_action_desc_protect_signed';
+      badgeKey = 'next_action_badge_compressed';
+      descKey = 'next_action_desc_compress_done';
       ctaKey = 'next_action_cta_protect';
       secondaryIds = ['sign', 'watermark', 'pdf_to_image'];
       break;
 
     case 'protect':
-      heroId = 'watermark';
-      badgeKey = 'next_action_badge_ready';
-      descKey = 'next_action_desc_general';
-      ctaKey = 'next_action_cta_watermark';
-      secondaryIds = ['compress', 'sign', 'sanitize'];
+      heroId = 'sign';
+      badgeKey = 'next_action_badge_protected';
+      descKey = 'next_action_desc_protect_done';
+      ctaKey = 'next_action_cta_sign';
+      secondaryIds = ['watermark', 'compress', 'sanitize'];
       break;
 
     default:

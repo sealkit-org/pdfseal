@@ -79,6 +79,45 @@ describe('Workflow Strategy Engine (智能情境推荐引擎)', () => {
     expect(result.heroAction.id).not.toBe('compress');
   });
 
+  it('should recommend Protect with compressed badge and compress_done description after Compress tool', () => {
+    const compressedPdf = {
+      name: 'visa_compressed.pdf',
+      size: 1.8 * 1024 * 1024
+    };
+
+    const result = resolveNextActions('compress', compressedPdf);
+    expect(result.heroAction.id).toBe('protect');
+    expect(result.heroAction.badgeKey).toBe('next_action_badge_compressed');
+    expect(result.heroAction.descKey).toBe('next_action_desc_compress_done');
+    expect(result.heroAction.ctaKey).toBe('next_action_cta_protect');
+    expect(result.secondaryActions.map(a => a.id)).not.toContain('compress');
+  });
+
+  it('should recommend Page Number with organize_done description after Organize tool', () => {
+    const organizedPdf = {
+      name: 'portfolio_reordered.pdf',
+      size: 2.2 * 1024 * 1024
+    };
+
+    const result = resolveNextActions('organize', organizedPdf);
+    expect(result.heroAction.id).toBe('page_number');
+    expect(result.heroAction.badgeKey).toBe('next_action_badge_organized');
+    expect(result.heroAction.descKey).toBe('next_action_desc_organize_done');
+  });
+
+  it('should recommend Page Number with split_done description after Split tool (single PDF extract)', () => {
+    const extractedPdf = {
+      name: 'chapter_1.pdf',
+      size: 1.2 * 1024 * 1024,
+      isZip: false
+    };
+
+    const result = resolveNextActions('split', extractedPdf);
+    expect(result.heroAction.id).toBe('page_number');
+    expect(result.heroAction.badgeKey).toBe('next_action_badge_split');
+    expect(result.heroAction.descKey).toBe('next_action_desc_split_done');
+  });
+
   it('should recommend Page Number as Hero for normal-sized Merge files (<= 10MB) with clean secondary actions', () => {
     const mergedPdf = {
       name: 'agreement_merged.pdf',

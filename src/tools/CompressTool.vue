@@ -154,9 +154,41 @@
           </template>
 
           <template #metrics>
-            <span class="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/80 shadow-2xs">
-              {{ originalSizeMb }} MB ➔ {{ compressedSizeMb }} MB (-{{ savedPercent }}%)
-            </span>
+            <div class="flex flex-col items-center gap-2 w-full">
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <span class="text-xs font-mono font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200/80 shadow-2xs">
+                  {{ originalSizeMb }} MB ➔ {{ compressedSizeMb }} MB (-{{ savedPercent }}%)
+                </span>
+                <span 
+                  v-if="selectedLevel === 'target'" 
+                  :class="[
+                    'text-xs font-medium px-2.5 py-1 rounded-lg border shadow-2xs flex items-center space-x-1',
+                    isTargetOptimalQuality 
+                      ? 'text-indigo-800 bg-indigo-50 border-indigo-200/80' 
+                      : 'text-emerald-800 bg-emerald-50 border-emerald-200/80'
+                  ]"
+                >
+                  <Target class="w-3.5 h-3.5 shrink-0" :class="isTargetOptimalQuality ? 'text-indigo-600' : 'text-emerald-600'" />
+                  <span>
+                    {{ isTargetOptimalQuality 
+                        ? t('compress_target_optimal_quality_hint', { target: Number(targetSizeMb).toFixed(1) }, `≤ ${Number(targetSizeMb).toFixed(1)} MB Satisfied · Max Clarity`) 
+                        : t('compress_target_converged_hint', { target: Number(targetSizeMb).toFixed(1) }, `Capped at ≤ ${Number(targetSizeMb).toFixed(1)} MB`) 
+                    }}
+                  </span>
+                </span>
+              </div>
+              
+              <!-- Reassurance Note for High-Res Documents that Naturally Fit Below Target -->
+              <div 
+                v-if="isTargetOptimalQuality"
+                class="w-full max-w-md p-2.5 rounded-xl bg-indigo-50/70 border border-indigo-100 text-xs text-indigo-900 text-center animate-in fade-in duration-200"
+              >
+                <div class="inline-flex items-center space-x-1.5 font-medium">
+                  <Sparkles class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                  <span>{{ t('compress_target_reassurance_desc', { dpi: maxDpiText }, `Document reached optimal print-grade clarity (${maxDpiText}) without unnecessary file bulk. Fully compliant with your target size limit.`) }}</span>
+                </div>
+              </div>
+            </div>
           </template>
         </ResultDeliveryView>
 
@@ -336,7 +368,8 @@
                     { mb: 1, label: '1 MB', tip: t('compress_preset_1mb') },
                     { mb: 2, label: '2 MB', tip: t('compress_preset_2mb') },
                     { mb: 5, label: '5 MB', tip: t('compress_preset_5mb') },
-                    { mb: 10, label: '10 MB', tip: t('compress_preset_10mb') }
+                    { mb: 10, label: '10 MB', tip: t('compress_preset_10mb') },
+                    { mb: 20, label: '20 MB', tip: t('compress_preset_20mb') }
                   ]" 
                   :key="preset.mb"
                   @click="targetSizeMb = preset.mb"
@@ -511,6 +544,17 @@ const savedPercent = ref(0);
 const detectedType = ref(null); // 'vector' | 'scanned'
 const selectedLevel = ref('balanced'); // 'extreme' | 'balanced' | 'target' | 'lossless'
 const targetSizeMb = ref(2.0);
+
+const isTargetOptimalQuality = computed(() => {
+  if (selectedLevel.value !== 'target' || !lastExportedFile.value) return false;
+  const target = Number(targetSizeMb.value) || 2.0;
+  const compressed = Number(compressedSizeMb.value) || 0;
+  return compressed > 0 && compressed < target * 0.75;
+});
+
+const maxDpiText = computed(() => {
+  return totalPages.value <= 3 ? '300 DPI' : '200 DPI';
+});
 
 // Diff Preview Modal & Thumbnails State
 const isDiffModalOpen = ref(false);
