@@ -185,7 +185,7 @@
               >
                 <div class="inline-flex items-center space-x-1.5 font-medium">
                   <Sparkles class="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                  <span>{{ t('compress_target_reassurance_desc', 'Document reached optimal print-grade clarity without unnecessary file bulk. Fully compliant with your target size limit.') }}</span>
+                  <span>{{ t('compress_target_reassurance_desc', { dpi: maxDpiText }, `Document reached optimal print-grade clarity (${maxDpiText}) without unnecessary file bulk. Fully compliant with your target size limit.`) }}</span>
                 </div>
               </div>
             </div>
@@ -549,6 +549,10 @@ const isTargetOptimalQuality = computed(() => {
   const target = Number(targetSizeMb.value) || 2.0;
   const compressed = Number(compressedSizeMb.value) || 0;
   return compressed > 0 && compressed < target * 0.75;
+});
+
+const maxDpiText = computed(() => {
+  return totalPages.value <= 3 ? '300 DPI' : '200 DPI';
 });
 
 // Diff Preview Modal & Thumbnails State

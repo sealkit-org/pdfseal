@@ -1505,5 +1505,5 @@
   "compress_target_done": "Compresión a tamaño objetivo completada",
   "compress_target_optimal_quality_hint": "≤ {target} MB cumplido · Máxima claridad",
   "compress_target_converged_hint": "Limitado a ≤ {target} MB",
-  "compress_target_reassurance_desc": "El documento alcanzó una calidad óptima de impresión sin exceso de tamaño. Totalmente compatible con su límite objetivo."
+  "compress_target_reassurance_desc": "El documento alcanzó una calidad óptima de impresión ({dpi}) sin exceso de tamaño. Totalmente compatible con su límite objetivo."
 }

@@ -1505,5 +1505,5 @@
   "compress_target_done": "ターゲットサイズの圧縮が完了しました",
   "compress_target_optimal_quality_hint": "≤ {target} MB 達成 · 最高画質",
   "compress_target_converged_hint": "≤ {target} MB に制限完了",
-  "compress_target_reassurance_desc": "ドキュメントは不要なファイル容量を増やすことなく、印刷に適した最適な鮮明度に達しました。設定した目標サイズ制限に完全に適合しています。"
+  "compress_target_reassurance_desc": "ドキュメントは不要なファイル容量を増やすことなく、印刷に適した最適な鮮明度（{dpi}）に達しました。設定した目標サイズ制限に完全に適合しています。"
 }

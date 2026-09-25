@@ -152,18 +152,37 @@ describe('Target Size Compression & Bisection Engine (Sprint 3.2)', () => {
       setLanguage('en');
       const enHint = t('compress_target_optimal_quality_hint', { target: '2.0' });
       expect(enHint).toContain('2.0 MB Satisfied');
-      expect(t('compress_target_reassurance_desc')).toContain('optimal print-grade clarity');
+      expect(t('compress_target_reassurance_desc', { dpi: '300 DPI' })).toContain('300 DPI');
+      expect(t('compress_target_reassurance_desc', { dpi: '200 DPI' })).toContain('200 DPI');
 
       setLanguage('zh');
       const zhHint = t('compress_target_optimal_quality_hint', { target: '2.0' });
       expect(zhHint).toContain('2.0 MB');
       expect(zhHint).toContain('最佳清晰度');
-      expect(t('compress_target_reassurance_desc')).toContain('无需填充多余体积');
+      expect(t('compress_target_reassurance_desc', { dpi: '300 DPI' })).toContain('300 DPI');
+      expect(t('compress_target_reassurance_desc', { dpi: '300 DPI' })).toContain('无需填充多余体积');
 
       setLanguage('ja');
       const jaHint = t('compress_target_optimal_quality_hint', { target: '2.0' });
       expect(jaHint).toContain('2.0 MB');
       expect(jaHint).toContain('最高画質');
+      expect(t('compress_target_reassurance_desc', { dpi: '300 DPI' })).toContain('300 DPI');
+    });
+
+    it('should dynamically switch maximum scale between 300 DPI (<= 3 pages) and 200 DPI (> 3 pages)', () => {
+      // Single page document (e.g. 1-page certificate) -> scale 4.17 (300 DPI)
+      const singlePageMax = paramFromQualityIndex(1, 1);
+      expect(singlePageMax.scale).toBe(4.17);
+      expect(singlePageMax.quality).toBe(0.85);
+
+      // 3 pages document -> scale 4.17 (300 DPI)
+      const threePagesMax = paramFromQualityIndex(1, 3);
+      expect(threePagesMax.scale).toBe(4.17);
+
+      // 4+ pages document -> scale 2.50 (200 DPI safe baseline)
+      const multiPageMax = paramFromQualityIndex(1, 5);
+      expect(multiPageMax.scale).toBe(2.50);
+      expect(multiPageMax.quality).toBe(0.85);
     });
   });
 });

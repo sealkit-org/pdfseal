@@ -247,19 +247,18 @@ export async function compressPdfRaster(arrayBuffer, options = {}, onProgress = 
 /**
  * Maps a normalized quality index t in [0.0, 1.0] monotonically to Canvas scale and JPEG quality.
  * 
- * - t = 1.0 (Maximum quality): scale = 2.50 (~180-200 DPI), quality = 0.85
- * - t = 0.5 (Balanced quality): scale = 1.85 (~130-150 DPI), quality = 0.70
- * - t = 0.0 (Extreme compact): scale = 0.75 (~54-72 DPI), quality = 0.35
- * 
- * Both scale and quality are strictly monotonic increasing with t, guaranteeing mathematical
- * convergence in bisection search.
+ * Dynamic DPI Scaling Heuristic:
+ * - If numPages <= 3 (e.g., single-page certificates, diplomas, IDs): max scale = 4.17 (~300 DPI)
+ * - If numPages > 3 (e.g., multi-page reports, long contracts): max scale = 2.50 (~180-200 DPI)
  * 
  * @param {number} t - Normalized index in [0, 1]
+ * @param {number} [numPages=4] - Total pages in document (defaults to 4 for backward-compatible 200 DPI baseline)
  * @returns {{ scale: number, quality: number }}
  */
-export function paramFromQualityIndex(t) {
+export function paramFromQualityIndex(t, numPages = 4) {
   const clamped = Math.max(0, Math.min(1, Number(t) || 0));
-  const scale = Number((0.75 + 1.75 * Math.pow(clamped, 0.65)).toFixed(2));
+  const maxScale = (Number(numPages) > 0 && Number(numPages) <= 3) ? 4.17 : 2.50;
+  const scale = Number((0.75 + (maxScale - 0.75) * Math.pow(clamped, 0.65)).toFixed(2));
   const quality = Number((0.35 + 0.50 * Math.pow(clamped, 0.5)).toFixed(2));
   return { scale, quality };
 }
@@ -382,7 +381,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
   }
 
   const probeSampleBytes = async (t) => {
-    const { scale, quality } = paramFromQualityIndex(t);
+    const { scale, quality } = paramFromQualityIndex(t, numPages);
     let sampleJpgTotal = 0;
 
     for (const page of loadedSamplePages) {
@@ -446,7 +445,7 @@ export async function compressPdfToTargetSize(arrayBuffer, targetSizeMb = 2.0, o
     const clampedFraction = Math.max(0, Math.min(0.95, fraction)); // 95% safety ceiling inside interval
     optimalT = Math.max(0, Math.min(1, tLow + (tHigh - tLow) * clampedFraction));
   }
-  let currentParams = paramFromQualityIndex(optimalT);
+  let currentParams = paramFromQualityIndex(optimalT, numPages);
   logger.info('COMPRESS_TARGET', `Bisection optimal candidate t=${optimalT.toFixed(3)} (scale=${currentParams.scale}, quality=${currentParams.quality})`);
 
   // Phase 2: Full Document Rendering with Selected Optimal Parameters

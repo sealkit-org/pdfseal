@@ -1505,5 +1505,5 @@
   "compress_target_done": "目标大小压缩完成！",
   "compress_target_optimal_quality_hint": "≤ {target} MB 已达标 · 最佳清晰度",
   "compress_target_converged_hint": "已控制在 ≤ {target} MB 内",
-  "compress_target_reassurance_desc": "文档已达到最佳印刷级清晰度，无需填充多余体积，已完全符合您设定的目标限制。"
+  "compress_target_reassurance_desc": "文档已达到最佳印刷级清晰度（{dpi}），无需填充多余体积，已完全符合您设定的目标限制。"
 }

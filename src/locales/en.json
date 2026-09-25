@@ -1505,5 +1505,5 @@
   "compress_target_done": "Target size compression complete",
   "compress_target_optimal_quality_hint": "≤ {target} MB Satisfied · Max Clarity",
   "compress_target_converged_hint": "Capped at ≤ {target} MB",
-  "compress_target_reassurance_desc": "Document reached optimal print-grade clarity without unnecessary file bulk. Fully compliant with your target size limit."
+  "compress_target_reassurance_desc": "Document reached optimal print-grade clarity ({dpi}) without unnecessary file bulk. Fully compliant with your target size limit."
 }
