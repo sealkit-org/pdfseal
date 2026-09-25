@@ -17,6 +17,10 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
           const key = el.name ? `name="${el.name}"` : `property="${el.property}"`;
           mockMetaTags.set(key, el);
         } else if (el._tag === 'link') {
+          if (el.hreflang) {
+            mockLinks.set(`link[rel="${el.rel}"][hreflang="${el.hreflang}"]`, el);
+          }
+          mockLinks.set(`link[rel="${el.rel}"]`, el);
           mockLinks.set(el.rel, el);
         }
       }
@@ -48,7 +52,10 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
           const key = selector.replace('meta[', '').replace(']', '');
           return mockMetaTags.get(key) || null;
         }
-        if (selector.startsWith('link[rel="')) {
+        if (mockLinks.has(selector)) {
+          return mockLinks.get(selector);
+        }
+        if (selector.startsWith('link[rel="') && !selector.includes('hreflang=')) {
           const rel = selector.match(/rel="([^"]+)"/)?.[1];
           return mockLinks.get(rel) || null;
         }
@@ -59,7 +66,12 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
     globalThis.window = {
       location: {
         origin: 'https://pdfseal.com',
-        pathname: '/merge-pdf'
+        pathname: '/merge-pdf',
+        search: ''
+      },
+      history: {
+        state: null,
+        replaceState: (state, title, url) => {}
       }
     };
   });
@@ -162,5 +174,40 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
     const zhMetaDesc = document.querySelector('meta[name="description"]');
     expect(zhMetaDesc).not.toBeNull();
     expect(zhMetaDesc.getAttribute('content')).toContain('14 合 1');
+  });
+
+  it('should generate language-aware canonical and full hreflang alternate links', () => {
+    setLanguage('ja');
+    updateSeoMeta('merge');
+    const canonical = document.querySelector('link[rel="canonical"]');
+    expect(canonical.getAttribute('href')).toBe('https://pdfseal.com/merge-pdf?lang=ja');
+
+    const jaAlternate = document.querySelector('link[rel="alternate"][hreflang="ja"]');
+    expect(jaAlternate).not.toBeNull();
+    expect(jaAlternate.getAttribute('href')).toBe('https://pdfseal.com/merge-pdf?lang=ja');
+
+    const enAlternate = document.querySelector('link[rel="alternate"][hreflang="en"]');
+    expect(enAlternate).not.toBeNull();
+    expect(enAlternate.getAttribute('href')).toBe('https://pdfseal.com/merge-pdf');
+
+    const xDefault = document.querySelector('link[rel="alternate"][hreflang="x-default"]');
+    expect(xDefault).not.toBeNull();
+    expect(xDefault.getAttribute('href')).toBe('https://pdfseal.com/merge-pdf');
+
+    setLanguage('en');
+  });
+
+  it('should detect language from URL query parameter (?lang=ja and ?hl=de)', async () => {
+    const { getInitialLang } = await import('../src/i18n.js');
+    globalThis.window.location.search = '?lang=ja';
+    expect(getInitialLang()).toBe('ja');
+
+    globalThis.window.location.search = '?hl=de';
+    expect(getInitialLang()).toBe('de');
+
+    globalThis.window.location.search = '?lang=zh-CN';
+    expect(getInitialLang()).toBe('zh');
+
+    globalThis.window.location.search = '';
   });
 });

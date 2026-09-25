@@ -4,7 +4,7 @@ import path from 'path';
 const isWindows = process.platform === 'win32';
 
 const testSuites = [
-  { id: 'unit', name: 'Vitest Unit Test Suite (36 files, 228 tests)', cmd: isWindows ? 'npx.cmd' : 'npx', args: ['vitest', 'run'] },
+  { id: 'unit', name: 'Vitest Unit Test Suite (36 files, 230 tests)', cmd: isWindows ? 'npx.cmd' : 'npx', args: ['vitest', 'run'] },
   { id: 'i18n', name: 'i18n Multi-Language Verification (EN/DE/ES/FR/JA/ZH)', cmd: 'node', args: ['scripts/e2e_i18n_test.js'] },
   { id: 'merge', name: 'E2E Business: PDF Merge (合并多个 PDF)', cmd: 'node', args: ['scripts/e2e_merge_test.js'] },
   { id: 'compress', name: 'E2E Business: PDF Compress (智能模式与压缩率)', cmd: 'node', args: ['scripts/e2e_compress_test.js'] },

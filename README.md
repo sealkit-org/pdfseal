@@ -130,10 +130,10 @@ Quickly return to the 14-in-1 hub anytime by clicking the brand mascot logo 🦭
 - **Styling & UI**: [Tailwind CSS](https://tailwindcss.com/) & [Lucide Icons](https://lucide.dev/)
 - **PDF Engine**: [pdf-lib](https://pdf-lib.js.org/) & [pdfjs-dist](https://mozilla.github.io/pdf.js/)
 - **Security & Cryptography**: Native Web Crypto API (SubtleCrypto AES-GCM-256, SHA-256)
-- **Internationalization**: Custom lightweight reactive i18n architecture with zero runtime bloat (Full native support for English, Deutsch, Español, Français, 日本語, 简体中文). Clean language-based design without geopolitical flag bindings.
+- **Internationalization**: Custom lightweight reactive i18n architecture with zero runtime bloat (Full native support for English, Deutsch, Español, Français, 日本語, 简体中文 with URL parameter query syncing and global hreflang search indexing). Clean language-based design without geopolitical flag bindings.
 - **Local Storage**: IndexedDB with structured transactional stores (Privacy Vault)
 - **Performance & Scheduling**: Active Event Loop Yielding to prevent UI freezing during intensive WASM/canvas computations
-- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**36 unit test suites, 228 unit tests 100% passing**, plus headless browser E2E regression suites)
+- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**36 unit test suites, 230 unit tests 100% passing**, plus headless browser E2E regression suites)
 
 ---
 
