@@ -65,7 +65,7 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
 
     globalThis.window = {
       location: {
-        origin: 'https://pdfseal.com',
+        origin: 'https://pdf.sealkit.org',
         pathname: '/merge-pdf',
         search: ''
       },
@@ -145,7 +145,7 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
     updateSeoMeta({ meta: { toolId: 'split' }, path: '/split-pdf' });
     const canonical = document.querySelector('link[rel="canonical"]');
     expect(canonical).not.toBeNull();
-    expect(canonical.getAttribute('href')).toBe('https://pdfseal.com/split-pdf');
+    expect(canonical.getAttribute('href')).toBe('https://pdf.sealkit.org/split-pdf');
   });
 
   it('should support dedicated 14-tool matrix homepage route and SEO metadata', () => {
@@ -164,7 +164,7 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
     // Canonical link for home
     const canonical = document.querySelector('link[rel="canonical"]');
     expect(canonical).not.toBeNull();
-    expect(canonical.getAttribute('href')).toBe('https://pdfseal.com/');
+    expect(canonical.getAttribute('href')).toBe('https://pdf.sealkit.org/');
 
     // Chinese Home SEO
     setLanguage('zh');
@@ -180,19 +180,19 @@ describe('Vue Router & Dynamic SEO Metadata Engine', () => {
     setLanguage('ja');
     updateSeoMeta('merge');
     const canonical = document.querySelector('link[rel="canonical"]');
-    expect(canonical.getAttribute('href')).toBe('https://pdfseal.com/merge-pdf?lang=ja');
+    expect(canonical.getAttribute('href')).toBe('https://pdf.sealkit.org/merge-pdf?lang=ja');
 
     const jaAlternate = document.querySelector('link[rel="alternate"][hreflang="ja"]');
     expect(jaAlternate).not.toBeNull();
-    expect(jaAlternate.getAttribute('href')).toBe('https://pdfseal.com/merge-pdf?lang=ja');
+    expect(jaAlternate.getAttribute('href')).toBe('https://pdf.sealkit.org/merge-pdf?lang=ja');
 
     const enAlternate = document.querySelector('link[rel="alternate"][hreflang="en"]');
     expect(enAlternate).not.toBeNull();
-    expect(enAlternate.getAttribute('href')).toBe('https://pdfseal.com/merge-pdf');
+    expect(enAlternate.getAttribute('href')).toBe('https://pdf.sealkit.org/merge-pdf');
 
     const xDefault = document.querySelector('link[rel="alternate"][hreflang="x-default"]');
     expect(xDefault).not.toBeNull();
-    expect(xDefault.getAttribute('href')).toBe('https://pdfseal.com/merge-pdf');
+    expect(xDefault.getAttribute('href')).toBe('https://pdf.sealkit.org/merge-pdf');
 
     setLanguage('en');
   });

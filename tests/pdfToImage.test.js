@@ -61,7 +61,7 @@ describe('PDF to Image Engine & Pipeline Node', () => {
 
     globalThis.window = {
       location: {
-        origin: 'https://pdfseal.com',
+        origin: 'https://pdf.sealkit.org',
         pathname: '/pdf-to-image'
       }
     };
