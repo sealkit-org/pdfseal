@@ -130,7 +130,7 @@
 - **样式与 UI**：[Tailwind CSS](https://tailwindcss.com/) & [Lucide Icons](https://lucide.dev/)
 - **PDF 引擎**：[pdf-lib](https://pdf-lib.js.org/) & [pdfjs-dist](https://mozilla.github.io/pdf.js/)
 - **安全与加密**：原生 Web Crypto API（SubtleCrypto AES-GCM-256、SHA-256）
-- **国际化**：轻量级响应式 i18n 架构，零运行时负担（完整原生支持 English、日本語、Deutsch、Español、Français、简体中文）。采用纯粹的语言母语标识，无地缘政治国旗绑定。
+- **国际化**：轻量级响应式 i18n 架构，零运行时负担（完整原生支持 English、Deutsch、Español、Français、日本語、简体中文）。采用纯粹的语言母语标识，无地缘政治国旗绑定。
 - **本地存储**：IndexedDB 结构化事务存储（海豹收纳箱）
 - **调度性能**：Event Loop 宏任务平滑分片（Active Event Loop Yielding，防长耗时计算卡顿）
 - **测试体系**：[Vitest](https://vitest.dev/) + [Puppeteer](https://pptr.dev/)（**36 个算法与单元测试套件，228 项用例 100% 通过**，配合无头浏览器端到端 E2E 回归套件）

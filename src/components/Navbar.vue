@@ -31,10 +31,10 @@
             :title="t('select_language', 'Select Language')"
           >
             <option value="en">English</option>
-            <option value="ja">日本語</option>
             <option value="de">Deutsch</option>
             <option value="es">Español</option>
             <option value="fr">Français</option>
+            <option value="ja">日本語</option>
             <option value="zh">简体中文</option>
           </select>
           <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-slate-400">
@@ -213,10 +213,10 @@
             :title="t('select_language', 'Select Language')"
           >
             <option value="en">English</option>
-            <option value="ja">日本語</option>
             <option value="de">Deutsch</option>
             <option value="es">Español</option>
             <option value="fr">Français</option>
+            <option value="ja">日本語</option>
             <option value="zh">简体中文</option>
           </select>
           <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
