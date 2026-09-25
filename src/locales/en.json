@@ -1502,6 +1502,8 @@
   "compress_target_bisection": "Bisection search in progress [iteration {current}/{total}]...",
   "compress_target_resampling": "Resampling pages at optimal resolution ({current}/{total})...",
   "compress_target_finetune": "Fine-tuning scale parameters to strictly meet target limit...",
-  "compress_target_boost": "Boosting clarity parameters to maximize visual sharpness...",
-  "compress_target_done": "Target size compression complete"
+  "compress_target_done": "Target size compression complete",
+  "compress_target_optimal_quality_hint": "≤ {target} MB Satisfied · Max Clarity",
+  "compress_target_converged_hint": "Capped at ≤ {target} MB",
+  "compress_target_reassurance_desc": "Document reached optimal print-grade clarity without unnecessary file bulk. Fully compliant with your target size limit."
 }

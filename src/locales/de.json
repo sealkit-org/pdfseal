@@ -1502,6 +1502,8 @@
   "compress_target_bisection": "Bisektionssuche läuft [Iteration {current}/{total}]...",
   "compress_target_resampling": "Seiten werden mit optimaler Auflösung neu gerendert ({current}/{total})...",
   "compress_target_finetune": "Feinabstimmung der Skalierungsparameter...",
-  "compress_target_boost": "Schärfeparameter werden optimiert...",
-  "compress_target_done": "Zielgrößen-Komprimierung abgeschlossen"
+  "compress_target_done": "Zielgrößen-Komprimierung abgeschlossen",
+  "compress_target_optimal_quality_hint": "≤ {target} MB erfüllt · Maximale Schärfe",
+  "compress_target_converged_hint": "Begrenzt auf ≤ {target} MB",
+  "compress_target_reassurance_desc": "Dokument hat optimale Druckqualität ohne unnötigen Dateiballast erreicht. Vollständig konform mit Ihrem Zielgrößenlimit."
 }

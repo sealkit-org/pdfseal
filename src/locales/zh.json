@@ -1502,6 +1502,8 @@
   "compress_target_bisection": "正在智能推演最佳压缩率 (轮次 {current}/{total})...",
   "compress_target_resampling": "正在以最优分辨率重采样页面 ({current}/{total})...",
   "compress_target_finetune": "正在微调尺寸参数以严格符合目标大小...",
-  "compress_target_boost": "正在智能提升清晰度参数以最大化画质...",
-  "compress_target_done": "目标大小压缩完成！"
+  "compress_target_done": "目标大小压缩完成！",
+  "compress_target_optimal_quality_hint": "≤ {target} MB 已达标 · 最佳清晰度",
+  "compress_target_converged_hint": "已控制在 ≤ {target} MB 内",
+  "compress_target_reassurance_desc": "文档已达到最佳印刷级清晰度，无需填充多余体积，已完全符合您设定的目标限制。"
 }

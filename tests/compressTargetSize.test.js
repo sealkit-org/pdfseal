@@ -144,4 +144,26 @@ describe('Target Size Compression & Bisection Engine (Sprint 3.2)', () => {
       expect(proCheck.pass).toBe(true);
     });
   });
+
+  describe('Target Size Quality Reassurance Badges & i18n Localization', () => {
+    it('should format reassurance hint and description across English, Chinese and Japanese', async () => {
+      const { t, setLanguage } = await import('../src/i18n.js');
+      
+      setLanguage('en');
+      const enHint = t('compress_target_optimal_quality_hint', { target: '2.0' });
+      expect(enHint).toContain('2.0 MB Satisfied');
+      expect(t('compress_target_reassurance_desc')).toContain('optimal print-grade clarity');
+
+      setLanguage('zh');
+      const zhHint = t('compress_target_optimal_quality_hint', { target: '2.0' });
+      expect(zhHint).toContain('2.0 MB');
+      expect(zhHint).toContain('最佳清晰度');
+      expect(t('compress_target_reassurance_desc')).toContain('无需填充多余体积');
+
+      setLanguage('ja');
+      const jaHint = t('compress_target_optimal_quality_hint', { target: '2.0' });
+      expect(jaHint).toContain('2.0 MB');
+      expect(jaHint).toContain('最高画質');
+    });
+  });
 });

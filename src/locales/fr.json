@@ -1502,6 +1502,8 @@
   "compress_target_bisection": "Recherche par dichotomie en cours [itération {current}/{total}]...",
   "compress_target_resampling": "Rééchantillonnage des pages à la résolution optimale ({current}/{total})...",
   "compress_target_finetune": "Ajustement fin des paramètres de mise à l'échelle...",
-  "compress_target_boost": "Amélioration de la netteté visuelle...",
-  "compress_target_done": "Compression à la taille cible terminée"
+  "compress_target_done": "Compression à la taille cible terminée",
+  "compress_target_optimal_quality_hint": "≤ {target} Mo respecté · Clarté maximale",
+  "compress_target_converged_hint": "Plafonné à ≤ {target} Mo",
+  "compress_target_reassurance_desc": "Le document a atteint une netteté d'impression optimale sans volume superflu, conforme à votre taille cible."
 }
