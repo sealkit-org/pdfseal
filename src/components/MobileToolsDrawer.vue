@@ -197,11 +197,11 @@
               class="text-xs bg-white text-slate-700 font-bold py-1 pl-2 pr-6 rounded-lg border border-slate-200 appearance-none focus:outline-hidden cursor-pointer shadow-2xs"
             >
               <option value="en">English</option>
-              <option value="zh">简体中文</option>
               <option value="ja">日本語</option>
               <option value="de">Deutsch</option>
               <option value="es">Español</option>
               <option value="fr">Français</option>
+              <option value="zh">简体中文</option>
             </select>
             <ChevronDown class="w-3 h-3 text-slate-400 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
