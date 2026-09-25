@@ -4,8 +4,9 @@ import zh from './locales/zh.json';
 import de from './locales/de.json';
 import es from './locales/es.json';
 import fr from './locales/fr.json';
+import ja from './locales/ja.json';
 
-const dictionaries = { en, zh, de, es, fr };
+const dictionaries = { en, zh, de, es, fr, ja };
 
 // Force Vite HMR reload for JSON locales
 // Determine initial language safely for both browser and test/SSR environments
@@ -19,6 +20,7 @@ function getInitialLang() {
 
   const nav = (typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage || 'en') : 'en').toLowerCase();
   if (nav.startsWith('zh')) return 'zh';
+  if (nav.startsWith('ja')) return 'ja';
   if (nav.startsWith('de')) return 'de';
   if (nav.startsWith('es')) return 'es';
   if (nav.startsWith('fr')) return 'fr';

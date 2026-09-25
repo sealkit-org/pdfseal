@@ -65,6 +65,8 @@ Quickly return to the 14-in-1 hub anytime by clicking the brand mascot logo 🦭
 - **Local Privacy Vault**: Secure in-browser document staging and archive powered by IndexedDB with zero network telemetry. Leverages native Web Crypto SHA-256 content hashing for automatic deduplication, toggleable grid/list views, automatic or one-click post-processing storage, and instant reloading into downstream editing tools.
 
 > 💡 **Unified Delivery & Context-Aware Next-Action Workflow Engine**: All core interactive processing tools feature a standardized three-step workflow (« ① Upload File → ② Configure & Process → ③ Delivery & Next Relays »). Features before/after size & ratio metrics, full-screen preview, one-click re-download, « Return to Edit » state preservation, and an intelligent **Next-Action Workflow Engine** that infers the most relevant downstream operation (e.g., auto-recommending compression for files > 10MB, sequential re-pagination after merging, and tamper-proof AES encryption after contract signing) with zero-copy in-memory relay and clean silence on ZIP archives.
+> 
+> 🛡️ **Smart Workspace Draft Preservation & Multi-Tool Navigation**: Powered by bounded `<KeepAlive>` caching with delivery-aware lifecycle management. Seamlessly jump across tools to cross-reference or configure documents without losing your draft, files, or settings. Completed tasks automatically reset upon return for instant next-job readiness.
 
 ---
 
@@ -128,10 +130,10 @@ Quickly return to the 14-in-1 hub anytime by clicking the brand mascot logo 🦭
 - **Styling & UI**: [Tailwind CSS](https://tailwindcss.com/) & [Lucide Icons](https://lucide.dev/)
 - **PDF Engine**: [pdf-lib](https://pdf-lib.js.org/) & [pdfjs-dist](https://mozilla.github.io/pdf.js/)
 - **Security & Cryptography**: Native Web Crypto API (SubtleCrypto AES-GCM-256, SHA-256)
-- **Internationalization**: Vue I18n (Full support for 🇺🇸 English, 🇩🇪 German, 🇪🇸 Spanish, 🇫🇷 French, 🇨🇳 Simplified Chinese)
+- **Internationalization**: Custom lightweight reactive i18n architecture with zero runtime bloat (Full native support for English, 简体中文, 日本語, Deutsch, Español, Français). Clean language-based design without geopolitical flag bindings.
 - **Local Storage**: IndexedDB with structured transactional stores (Privacy Vault)
 - **Performance & Scheduling**: Active Event Loop Yielding to prevent UI freezing during intensive WASM/canvas computations
-- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**32 unit test suites, 198 unit tests 100% passing**, plus headless browser E2E regression suites)
+- **Testing Suite**: [Vitest](https://vitest.dev/) & [Puppeteer](https://pptr.dev/) (**36 unit test suites, 227 unit tests 100% passing**, plus headless browser E2E regression suites)
 
 ---
 

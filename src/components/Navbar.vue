@@ -30,11 +30,12 @@
             class="text-xs bg-slate-100 text-slate-700 font-bold py-1.5 pl-2 pr-5 rounded-xl border border-slate-200/80 focus:outline-hidden transition cursor-pointer appearance-none"
             :title="t('select_language', 'Select Language')"
           >
-            <option value="en">🇺🇸 EN</option>
-            <option value="de">🇩🇪 DE</option>
-            <option value="es">🇪🇸 ES</option>
-            <option value="fr">🇫🇷 FR</option>
-            <option value="zh">🇨🇳 中文</option>
+            <option value="en">English</option>
+            <option value="zh">简体中文</option>
+            <option value="ja">日本語</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
           </select>
           <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1 text-slate-400">
             <ChevronDown class="w-2.5 h-2.5" />
@@ -201,18 +202,22 @@
         </button>
 
         <!-- Language Selector -->
-        <div class="relative shrink-0">
+        <div class="relative shrink-0 flex items-center">
+          <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
+            <Globe class="w-3.5 h-3.5" />
+          </div>
           <select 
             :value="currentLang" 
             @change="setLanguage($event.target.value)"
-            class="text-xs bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold py-1.5 pl-2.5 pr-6 rounded-xl border border-slate-200/80 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition cursor-pointer appearance-none"
+            class="text-xs bg-slate-100 hover:bg-slate-200/80 text-slate-700 font-bold py-1.5 pl-7 pr-6 rounded-xl border border-slate-200/80 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition cursor-pointer appearance-none"
             :title="t('select_language', 'Select Language')"
           >
-            <option value="en">🇺🇸 EN</option>
-            <option value="de">🇩🇪 DE</option>
-            <option value="es">🇪🇸 ES</option>
-            <option value="fr">🇫🇷 FR</option>
-            <option value="zh">🇨🇳 中文</option>
+            <option value="en">English</option>
+            <option value="zh">简体中文</option>
+            <option value="ja">日本語</option>
+            <option value="de">Deutsch</option>
+            <option value="es">Español</option>
+            <option value="fr">Français</option>
           </select>
           <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-1.5 text-slate-400">
             <ChevronDown class="w-3 h-3" />
@@ -401,7 +406,8 @@ import {
   Github,
   MessageSquare,
   Terminal,
-  Coffee
+  Coffee,
+  Globe
 } from 'lucide-vue-next';
 import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { currentLang, setLanguage, t } from '../i18n';

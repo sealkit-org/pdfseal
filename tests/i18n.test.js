@@ -4,6 +4,7 @@ import zh from '../src/locales/zh.json';
 import de from '../src/locales/de.json';
 import es from '../src/locales/es.json';
 import fr from '../src/locales/fr.json';
+import ja from '../src/locales/ja.json';
 
 describe('i18n Multi-Language Dictionary Consistency', () => {
   const masterKeys = Object.keys(en);
@@ -36,6 +37,12 @@ describe('i18n Multi-Language Dictionary Consistency', () => {
     expect(missingInFr).toEqual([]);
   });
 
+  it('ja.json should match 100% of master translation keys', () => {
+    const jaKeys = Object.keys(ja);
+    const missingInJa = masterKeys.filter(k => !jaKeys.includes(k));
+    expect(missingInJa).toEqual([]);
+  });
+
   it('should interpolate {param} variables correctly in t()', async () => {
     const { t, setLanguage } = await import('../src/i18n.js');
     setLanguage('en');
@@ -43,5 +50,7 @@ describe('i18n Multi-Language Dictionary Consistency', () => {
     expect(t('pipeline_slot_free', { count: 2 })).toBe('Flows: 2/3');
     setLanguage('zh');
     expect(t('pipeline_slot_free', { count: 1 })).toBe('自定义流程: 1/3');
+    setLanguage('ja');
+    expect(t('pipeline_slot_free', { count: 1 })).toContain('1/3');
   });
 });

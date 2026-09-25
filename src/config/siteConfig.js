@@ -59,7 +59,7 @@ export const isOfficialMode = ref(checkInitialOfficialMode());
 
 export const siteConfig = reactive({
   // Version Identity
-  version: import.meta.env.VITE_APP_VERSION || '1.2.0',
+  version: import.meta.env.VITE_APP_VERSION || '1.2.1',
 
   // Brand Identity
   brandName: import.meta.env.VITE_BRAND_NAME || 'PDFSeal',
