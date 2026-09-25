@@ -565,6 +565,7 @@
 
 <script setup>
 import { ref, computed, watch, inject, onMounted, onActivated, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { 
   Scissors, 
   Plus, 
@@ -585,6 +586,7 @@ import * as pdfjsLib from 'pdfjs-dist';
 import { PDFDocument } from 'pdf-lib';
 import { t } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { parseSplitQueryParams } from '../utils/toolQueryParams.js';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
@@ -901,6 +903,12 @@ async function loadFile(file, password = '') {
       });
       // By default select all pages on load (compatible with E2E tests)
       selectedIndices.value.add(i - 1);
+    }
+
+    // Re-apply query parameters if set (e.g. ?range=1-5 or ?mode=burst)
+    applyQueryParams();
+    if (rangeInput.value) {
+      applyRange();
     }
   } catch (err) {
     if (err.name === 'PasswordException' || err.message?.toLowerCase().includes('password')) {
@@ -1394,12 +1402,35 @@ function checkIncomingFile() {
   }
 }
 
-onMounted(checkIncomingFile);
+const route = useRoute();
+
+function applyQueryParams() {
+  const parsed = parseSplitQueryParams(route?.query);
+  if (parsed.rangeInput !== undefined) {
+    rangeInput.value = parsed.rangeInput;
+  }
+  if (parsed.intervalCount !== undefined) {
+    intervalCount.value = parsed.intervalCount;
+  }
+  if (parsed.activeMode !== undefined) {
+    activeMode.value = parsed.activeMode;
+  }
+}
+
+watch(() => route?.query, () => {
+  applyQueryParams();
+}, { deep: true });
+
+onMounted(() => {
+  applyQueryParams();
+  checkIncomingFile();
+});
 onActivated(() => {
   if (lastExportedFile.value) {
     reset();
   }
   workspaceState?.setActiveFile(Boolean(docBytes.value));
+  applyQueryParams();
   checkIncomingFile();
 });
 onUnmounted(destroySplitPdfDoc);

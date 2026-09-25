@@ -490,6 +490,7 @@
 
 <script setup>
 import { ref, computed, watch, inject, onMounted, onActivated } from 'vue';
+import { useRoute } from 'vue-router';
 import { 
   Minimize2, 
   Plus, 
@@ -519,6 +520,7 @@ import NextActionBanner from '../components/NextActionBanner.vue';
 import DiffPreviewModal from '../components/DiffPreviewModal.vue';
 import ResultDeliveryView from '../components/ResultDeliveryView.vue';
 import { useGlobalLoading } from '../utils/useGlobalLoading';
+import { parseCompressQueryParams } from '../utils/toolQueryParams';
 
 const emit = defineEmits(['send-to-tool']);
 
@@ -659,15 +661,29 @@ async function loadFile(file, password = '') {
   try {
     const detection = await detectDocumentType(rawBuffer, password);
     detectedType.value = detection.type;
-    // Auto-select mode according to detection
-    if (detection.type === 'vector') {
+    // Auto-select mode according to detection unless overridden by URL query parameters
+    const parsedQuery = parseCompressQueryParams(route?.query);
+    if (parsedQuery.selectedLevel) {
+      selectedLevel.value = parsedQuery.selectedLevel;
+      if (parsedQuery.targetSizeMb !== undefined) {
+        targetSizeMb.value = parsedQuery.targetSizeMb;
+      }
+    } else if (detection.type === 'vector') {
       selectedLevel.value = 'lossless';
     } else {
       selectedLevel.value = 'balanced';
     }
   } catch (e) {
     detectedType.value = 'vector';
-    selectedLevel.value = 'balanced';
+    const parsedQuery = parseCompressQueryParams(route?.query);
+    if (parsedQuery.selectedLevel) {
+      selectedLevel.value = parsedQuery.selectedLevel;
+      if (parsedQuery.targetSizeMb !== undefined) {
+        targetSizeMb.value = parsedQuery.targetSizeMb;
+      }
+    } else {
+      selectedLevel.value = 'balanced';
+    }
   }
 
   // Render high-res thumbnail of Page 1 for Before/After Diff comparison
@@ -819,12 +835,32 @@ function checkIncomingFile() {
   }
 }
 
-onMounted(checkIncomingFile);
+const route = useRoute();
+
+function applyQueryParams() {
+  const parsed = parseCompressQueryParams(route?.query);
+  if (parsed.targetSizeMb !== undefined) {
+    targetSizeMb.value = parsed.targetSizeMb;
+  }
+  if (parsed.selectedLevel !== undefined) {
+    selectedLevel.value = parsed.selectedLevel;
+  }
+}
+
+watch(() => route?.query, () => {
+  applyQueryParams();
+}, { deep: true });
+
+onMounted(() => {
+  applyQueryParams();
+  checkIncomingFile();
+});
 onActivated(() => {
   if (lastExportedFile.value) {
     reset();
   }
   workspaceState?.setActiveFile(Boolean(docBytes.value));
+  applyQueryParams();
   checkIncomingFile();
 });
 </script>

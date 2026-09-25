@@ -554,6 +554,7 @@
 
 <script setup>
 import { ref, computed, watch, nextTick, inject, onMounted, onActivated, onUnmounted } from 'vue';
+import { useRoute } from 'vue-router';
 import { 
   ListOrdered, 
   Plus, 
@@ -569,6 +570,7 @@ import {
 import * as pdfjsLib from 'pdfjs-dist';
 import { t, onLanguageChange } from '../i18n';
 import { triggerDownload } from '../utils/download';
+import { parsePageNumberQueryParams } from '../utils/toolQueryParams.js';
 import { verifyPdfSecurity, loadCleanPdfDocument } from '../utils/pdfSecurity';
 import { consumePendingFile } from '../utils/toolBridge';
 import { saveFile } from '../utils/vaultDb';
@@ -1151,12 +1153,36 @@ function checkIncomingFile() {
   }
 }
 
-onMounted(checkIncomingFile);
+const route = useRoute();
+
+function applyQueryParams() {
+  const parsed = parsePageNumberQueryParams(route?.query);
+  if (parsed.pnPosition !== undefined) {
+    pnPosition.value = parsed.pnPosition;
+  }
+  if (parsed.pnStartNumber !== undefined) {
+    pnStartNumber.value = parsed.pnStartNumber;
+  }
+  if (parsed.pnSkipCover !== undefined) {
+    pnSkipCover.value = parsed.pnSkipCover;
+  }
+}
+
+watch(() => route?.query, () => {
+  applyQueryParams();
+  renderPreview();
+}, { deep: true });
+
+onMounted(() => {
+  applyQueryParams();
+  checkIncomingFile();
+});
 onActivated(() => {
   if (lastExportedFile.value) {
     reset();
   }
   workspaceState?.setActiveFile(Boolean(docBytes.value));
+  applyQueryParams();
   checkIncomingFile();
   if (docBytes.value && !lastExportedFile.value) {
     nextTick(() => {
