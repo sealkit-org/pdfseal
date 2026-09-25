@@ -661,15 +661,29 @@ async function loadFile(file, password = '') {
   try {
     const detection = await detectDocumentType(rawBuffer, password);
     detectedType.value = detection.type;
-    // Auto-select mode according to detection
-    if (detection.type === 'vector') {
+    // Auto-select mode according to detection unless overridden by URL query parameters
+    const parsedQuery = parseCompressQueryParams(route?.query);
+    if (parsedQuery.selectedLevel) {
+      selectedLevel.value = parsedQuery.selectedLevel;
+      if (parsedQuery.targetSizeMb !== undefined) {
+        targetSizeMb.value = parsedQuery.targetSizeMb;
+      }
+    } else if (detection.type === 'vector') {
       selectedLevel.value = 'lossless';
     } else {
       selectedLevel.value = 'balanced';
     }
   } catch (e) {
     detectedType.value = 'vector';
-    selectedLevel.value = 'balanced';
+    const parsedQuery = parseCompressQueryParams(route?.query);
+    if (parsedQuery.selectedLevel) {
+      selectedLevel.value = parsedQuery.selectedLevel;
+      if (parsedQuery.targetSizeMb !== undefined) {
+        targetSizeMb.value = parsedQuery.targetSizeMb;
+      }
+    } else {
+      selectedLevel.value = 'balanced';
+    }
   }
 
   // Render high-res thumbnail of Page 1 for Before/After Diff comparison

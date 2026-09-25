@@ -904,6 +904,12 @@ async function loadFile(file, password = '') {
       // By default select all pages on load (compatible with E2E tests)
       selectedIndices.value.add(i - 1);
     }
+
+    // Re-apply query parameters if set (e.g. ?range=1-5 or ?mode=burst)
+    applyQueryParams();
+    if (rangeInput.value) {
+      applyRange();
+    }
   } catch (err) {
     if (err.name === 'PasswordException' || err.message?.toLowerCase().includes('password')) {
       docBytes.value = null;
