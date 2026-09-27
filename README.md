@@ -11,15 +11,23 @@
 [![Live Demo](https://img.shields.io/badge/Official%20Web%20App-pdf.sealkit.org-6366f1.svg)](https://pdf.sealkit.org)
 [![Ko-fi](https://img.shields.io/badge/Support%20Project-Ko--fi-ff5f5f.svg)](https://ko-fi.com/muffin27)
 
-</div>
+<br/>
 
-<p align="center">
+<a href="https://pdf.sealkit.org">
+  <img src="./.github/assets/demo.gif" alt="PDFSeal 100% Offline Client-Side Proof Demo" width="850">
+</a>
+
+<p><em>⚡ <b>Live Proof</b>: 4.14 MB visa document compressed down to 1.8 MB entirely offline in-browser RAM (DevTools set to Offline, 0 network requests).</em></p>
+
+<p>
   <a href="https://pdf.sealkit.org"><b>🌐 Launch Official Web App (pdf.sealkit.org) →</b></a>
 </p>
 
-<p align="center">
+<p>
   English | <a href="./README.zh-CN.md">简体中文</a>
 </p>
+
+</div>
 
 ---
 

@@ -11,15 +11,23 @@
 [![Live Demo](https://img.shields.io/badge/Official%20Web%20App-pdf.sealkit.org-6366f1.svg)](https://pdf.sealkit.org)
 [![Ko-fi](https://img.shields.io/badge/Support%20Project-Ko--fi-ff5f5f.svg)](https://ko-fi.com/muffin27)
 
-</div>
+<br/>
 
-<p align="center">
+<a href="https://pdf.sealkit.org">
+  <img src="./.github/assets/demo.gif" alt="PDFSeal 100% 离线客户端执行实证 Demo" width="850">
+</a>
+
+<p><em>⚡ <b>真实实证</b>：4.14 MB 真实签证文件在完全断网（DevTools 设定 Offline、0 个网络请求）下，于浏览器内存直接压缩至 1.8 MB。</em></p>
+
+<p>
   <a href="https://pdf.sealkit.org"><b>🌐 打开官方在线版（pdf.sealkit.org）→</b></a>
 </p>
 
-<p align="center">
+<p>
   <a href="./README.md">English</a> | 简体中文
 </p>
+
+</div>
 
 ---
 
