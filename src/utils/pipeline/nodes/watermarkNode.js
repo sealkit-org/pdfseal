@@ -41,7 +41,8 @@ export async function executeWatermarkNode(items, params = {}, onProgress = () =
           sctx.save();
           sctx.scale(scale, scale);
           sctx.translate(width / 2, height / 2);
-          sctx.rotate((rotation * Math.PI) / 180);
+          // Canvas Y 轴向下，取反角度使正角=逆时针，与下方 drawText 分支的 degrees(rotation) 方向一致
+          sctx.rotate((-rotation * Math.PI) / 180);
           sctx.font = `bold 42px "PingFang SC", "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif`;
           sctx.fillStyle = params.color || '#808080';
           sctx.globalAlpha = opacity;
