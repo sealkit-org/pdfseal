@@ -652,7 +652,8 @@ function renderPreview() {
 
   ctx.save();
   ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate((wmAngle.value * Math.PI) / 180);
+  // Canvas Y 轴向下，取反角度使正角=逆时针（与 PDF/行业标准一致）
+  ctx.rotate((-wmAngle.value * Math.PI) / 180);
   ctx.font = `bold ${wmSize.value * 1.2}px "PingFang SC", "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif`;
   ctx.fillStyle = wmColor.value;
   ctx.globalAlpha = wmOpacity.value / 100;
@@ -711,7 +712,8 @@ async function generateWatermarkedBytes() {
       sctx.save();
       sctx.scale(scale, scale);
       sctx.translate(width / 2, height / 2);
-      sctx.rotate((wmAngle.value * Math.PI) / 180);
+      // Canvas Y 轴向下，取反角度使正角=逆时针（与 PDF/行业标准一致）
+      sctx.rotate((-wmAngle.value * Math.PI) / 180);
       sctx.font = `bold ${wmSize.value}px "PingFang SC", "Microsoft YaHei", "SimHei", "Heiti SC", sans-serif`;
       sctx.fillStyle = wmColor.value;
       sctx.globalAlpha = wmOpacity.value / 100;
