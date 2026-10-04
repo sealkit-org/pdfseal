@@ -1081,6 +1081,8 @@
   "result_btn_new_task_compress": "Compress Another PDF",
   "result_btn_new_task_default": "Start New Task",
   "result_btn_back_to_edit": "Back to Edit",
+  "result_sponsor_prompt": "100% private in-browser. Saved you time today?",
+  "result_sponsor_btn": "Buy Sammy a coffee ☕",
   "result_metric_merged": "Combined from {count} individual files",
   "processing_title_merge": "Merging PDF files...",
   "processing_title_compress": "Optimizing & compressing PDF...",

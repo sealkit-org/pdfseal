@@ -522,6 +522,26 @@
                   <span>{{ t('pipeline_btn_new_batch') }}</span>
                 </button>
               </div>
+
+              <!-- Subtle Coffee & Support Strip in Pipeline Completed Bar -->
+              <div 
+                v-if="siteConfig.features.enableDeliverySponsor"
+                data-testid="pipeline-sponsor-strip"
+                class="pt-2 mt-1 border-t border-emerald-200/60 flex flex-wrap items-center justify-center gap-1.5 text-[11px] text-slate-500 w-full"
+              >
+                <span class="text-xs select-none">🦭</span>
+                <span>{{ t('result_sponsor_prompt', '100% private in-browser. Saved you time today?') }}</span>
+                <a 
+                  :href="siteConfig.kofiUrl" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  data-testid="pipeline-sponsor-link"
+                  class="inline-flex items-center space-x-1 font-bold text-amber-700 hover:text-amber-900 bg-amber-50/90 hover:bg-amber-100 border border-amber-200/80 px-2 py-0.5 rounded-lg transition shadow-2xs cursor-pointer ml-1"
+                >
+                  <Coffee class="w-3 h-3 text-amber-600 inline" />
+                  <span>{{ t('result_sponsor_btn', 'Buy Sammy a coffee ☕') }}</span>
+                </a>
+              </div>
             </template>
 
             <!-- Sub-state 2: Normal Ready / Running Control Bar -->
@@ -2716,7 +2736,8 @@ import {
   Calendar,
   Pipette,
   Archive,
-  Files
+  Files,
+  Coffee
 } from 'lucide-vue-next';
 import { PRESET_PIPELINES } from '../utils/pipeline/presetPipelines';
 import { AVAILABLE_NODES } from '../utils/pipeline/pipelineTypes';

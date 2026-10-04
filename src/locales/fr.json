@@ -1081,6 +1081,8 @@
   "result_btn_new_task_compress": "Compresser un autre PDF",
   "result_btn_new_task_default": "Nouvelle tâche",
   "result_btn_back_to_edit": "Retour à l'édition",
+  "result_sponsor_prompt": "100% privé dans le navigateur. Vous avez gagné du temps ?",
+  "result_sponsor_btn": "Offrir un café à Sammy ☕",
   "result_metric_merged": "Fusionné à partir de {count} fichiers individuels",
   "processing_title_merge": "Fusion des fichiers PDF en cours...",
   "processing_title_compress": "Optimisation et compression du PDF...",

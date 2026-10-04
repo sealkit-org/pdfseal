@@ -106,6 +106,13 @@ export const siteConfig = reactive({
       return true;
     },
 
+    // Show polite coffee donation suggestion in Delivery view (only on official website with kofiUrl)
+    get enableDeliverySponsor() {
+      if (!this.enableDonations) return false;
+      return isOfficialMode.value;
+    },
+
+
     // Show built-in feedback modal (requires feedbackUrl configured or explicitly enabled)
     get enableFeedback() {
       if (!siteConfig.feedbackUrl && import.meta.env.VITE_ENABLE_FEEDBACK !== 'true') return false;
