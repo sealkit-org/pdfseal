@@ -100,7 +100,7 @@
           :title="t(`${tool.id}_title`, t(tool.labelKey))"
         >
           <component :is="tool.icon" class="w-3.5 h-3.5 shrink-0" :class="activeTab === tool.id ? 'text-blue-600' : 'text-slate-500'" />
-          <span :class="activeTab === tool.id ? 'inline' : 'hidden 2xl:inline'">{{ t(tool.labelKey) }}</span>
+          <span :class="activeTab === tool.id ? 'inline' : 'hidden xl:inline'">{{ t(tool.labelKey) }}</span>
         </button>
 
         <!-- More Tools Dropdown -->
