@@ -92,7 +92,7 @@
           :key="tool.id"
           @click="selectPrimaryTool(tool.id)"
           :class="[
-            'flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer select-none shrink-0',
+            'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs transition whitespace-nowrap cursor-pointer select-none shrink-0',
             activeTab === tool.id 
               ? 'bg-blue-50 text-blue-700 font-bold shadow-2xs border border-blue-200/60' 
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
@@ -100,7 +100,7 @@
           :title="t(`${tool.id}_title`, t(tool.labelKey))"
         >
           <component :is="tool.icon" class="w-3.5 h-3.5 shrink-0" :class="activeTab === tool.id ? 'text-blue-600' : 'text-slate-500'" />
-          <span :class="activeTab === tool.id ? 'inline' : 'hidden xl:inline'">{{ t(tool.labelKey) }}</span>
+          <span :class="activeTab === tool.id ? 'inline' : 'hidden 2xl:inline'">{{ t(tool.labelKey) }}</span>
         </button>
 
         <!-- More Tools Dropdown -->
@@ -108,7 +108,7 @@
           <button 
             @click.stop="toggleMore"
             :class="[
-              'flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer select-none',
+              'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs transition whitespace-nowrap cursor-pointer select-none',
               isMoreActive
                 ? 'bg-blue-50 text-blue-700 font-bold shadow-2xs border border-blue-200/60' 
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
@@ -116,7 +116,7 @@
             :title="t('more_tools_tooltip', 'More Useful PDF Tools')"
           >
             <component :is="activeMoreIcon || Sparkles" class="w-3.5 h-3.5 shrink-0" :class="isMoreActive ? 'text-blue-600' : 'text-slate-500'" />
-            <span>{{ activeMoreToolName || t('tab_more') }}</span>
+            <span class="max-w-[120px] truncate xl:max-w-none">{{ activeMoreToolName || t('tab_more') }}</span>
             <ChevronDown class="w-3 h-3 transition-transform duration-150" :class="{ 'rotate-180': isMoreOpen }" />
           </button>
 
