@@ -1083,6 +1083,8 @@
   "result_btn_back_to_edit": "Retour à l'édition",
   "result_sponsor_prompt": "100% privé dans le navigateur. Vous avez gagné du temps ?",
   "result_sponsor_btn": "Offrir un café à Sammy ☕",
+  "nav_donate_btn": "Soutenir",
+  "nav_donate_tooltip": "Soutenir PDFSeal sur Ko-fi",
   "result_metric_merged": "Fusionné à partir de {count} fichiers individuels",
   "processing_title_merge": "Fusion des fichiers PDF en cours...",
   "processing_title_compress": "Optimisation et compression du PDF...",

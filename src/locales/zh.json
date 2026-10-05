@@ -1083,6 +1083,8 @@
   "result_btn_back_to_edit": "返回调整",
   "result_sponsor_prompt": "100% 本地处理，零云端上传。如果帮到了你：",
   "result_sponsor_btn": "给小海豹喂条鱼 / 请喝咖啡 ☕",
+  "nav_donate_btn": "赞助",
+  "nav_donate_tooltip": "赞助支持 PDFSeal",
   "result_metric_merged": "由 {count} 份独立文件合并而成",
   "processing_title_merge": "正在合并 PDF 文件...",
   "processing_title_compress": "正在智能压缩 PDF...",

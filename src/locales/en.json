@@ -1083,6 +1083,8 @@
   "result_btn_back_to_edit": "Back to Edit",
   "result_sponsor_prompt": "100% private in-browser. Saved you time today?",
   "result_sponsor_btn": "Buy Sammy a coffee ☕",
+  "nav_donate_btn": "Donate",
+  "nav_donate_tooltip": "Support PDFSeal on Ko-fi",
   "result_metric_merged": "Combined from {count} individual files",
   "processing_title_merge": "Merging PDF files...",
   "processing_title_compress": "Optimizing & compressing PDF...",

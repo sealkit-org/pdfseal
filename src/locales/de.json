@@ -1083,6 +1083,8 @@
   "result_btn_back_to_edit": "Zurück zur Bearbeitung",
   "result_sponsor_prompt": "100% privat im Browser. Hat es Ihnen Zeit gespart?",
   "result_sponsor_btn": "Kaffee für Sammy ausgeben ☕",
+  "nav_donate_btn": "Spenden",
+  "nav_donate_tooltip": "PDFSeal auf Ko-fi unterstützen",
   "result_metric_merged": "Aus {count} einzelnen Dateien zusammengeführt",
   "processing_title_merge": "PDF-Dateien werden zusammengeführt...",
   "processing_title_compress": "PDF wird optimiert und komprimiert...",
