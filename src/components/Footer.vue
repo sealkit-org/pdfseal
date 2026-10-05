@@ -30,15 +30,6 @@
           {{ t('footer_enterprise') || 'Commercial License' }}
         </button>
         <button @click="$emit('open-privacy')" class="text-slate-500 hover:text-slate-900 transition">{{ t('footer_privacy') }}</button>
-        <a v-if="siteConfig.githubRepoUrl" :href="siteConfig.githubRepoUrl" target="_blank" class="text-slate-500 hover:text-slate-900 transition">GitHub</a>
-        <a 
-          v-if="siteConfig.features.enableDonations"
-          :href="siteConfig.kofiUrl" 
-          target="_blank" 
-          class="text-amber-700 hover:text-amber-900 font-medium transition flex items-center space-x-1"
-        >
-          <span>{{ t('footer_feed_seal') }}</span>
-        </a>
         <button 
           v-if="siteConfig.features.enableFeedback"
           @click="$emit('open-feedback')" 

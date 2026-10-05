@@ -166,6 +166,26 @@
             <span>{{ t('result_btn_back_to_edit', 'Back to Edit') }}</span>
           </button>
         </div>
+
+        <!-- Subtle Coffee & Support Strip (Only on official site with donations enabled) -->
+        <div 
+          v-if="siteConfig.features.enableDeliverySponsor"
+          data-testid="delivery-sponsor-strip"
+          class="mt-5 pt-3.5 border-t border-slate-100 flex flex-wrap items-center justify-center gap-1.5 text-xs text-slate-500 w-full animate-in fade-in duration-300"
+        >
+          <span class="text-sm select-none">🦭</span>
+          <span>{{ t('result_sponsor_prompt', '100% private in-browser. Saved you time today?') }}</span>
+          <a 
+            :href="siteConfig.kofiUrl" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            data-testid="delivery-sponsor-link"
+            class="inline-flex items-center space-x-1 font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100/90 border border-amber-200/80 px-2.5 py-1 rounded-lg transition-all duration-150 shadow-2xs hover:shadow-xs group cursor-pointer"
+          >
+            <Coffee class="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform" />
+            <span>{{ t('result_sponsor_btn', 'Buy Sammy a coffee ☕') }}</span>
+          </a>
+        </div>
       </div>
     </div>
 
@@ -188,9 +208,11 @@ import {
   RotateCcw, 
   Pencil,
   Lock,
-  Share2
+  Share2,
+  Coffee
 } from 'lucide-vue-next';
 import { t } from '../i18n';
+import { siteConfig } from '../config/siteConfig';
 import NextActionBanner from './NextActionBanner.vue';
 
 const props = defineProps({

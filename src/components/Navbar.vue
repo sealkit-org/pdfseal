@@ -92,7 +92,7 @@
           :key="tool.id"
           @click="selectPrimaryTool(tool.id)"
           :class="[
-            'flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer select-none shrink-0',
+            'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs transition whitespace-nowrap cursor-pointer select-none shrink-0',
             activeTab === tool.id 
               ? 'bg-blue-50 text-blue-700 font-bold shadow-2xs border border-blue-200/60' 
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
@@ -108,7 +108,7 @@
           <button 
             @click.stop="toggleMore"
             :class="[
-              'flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl text-xs sm:text-sm transition whitespace-nowrap cursor-pointer select-none',
+              'flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs transition whitespace-nowrap cursor-pointer select-none',
               isMoreActive
                 ? 'bg-blue-50 text-blue-700 font-bold shadow-2xs border border-blue-200/60' 
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium'
@@ -116,7 +116,7 @@
             :title="t('more_tools_tooltip', 'More Useful PDF Tools')"
           >
             <component :is="activeMoreIcon || Sparkles" class="w-3.5 h-3.5 shrink-0" :class="isMoreActive ? 'text-blue-600' : 'text-slate-500'" />
-            <span>{{ activeMoreToolName || t('tab_more') }}</span>
+            <span class="max-w-[120px] truncate xl:max-w-none">{{ activeMoreToolName || t('tab_more') }}</span>
             <ChevronDown class="w-3 h-3 transition-transform duration-150" :class="{ 'rotate-180': isMoreOpen }" />
           </button>
 
@@ -146,19 +146,20 @@
         <!-- Divider line -->
         <div class="h-4 w-px bg-slate-200/80 mx-1 shrink-0 hidden md:block"></div>
 
-        <!-- Pipeline shortcut -->
+        <!-- Pipeline shortcut (icon-only; label shown in tooltip) -->
         <button 
           @click="$emit('switch-tab', 'pipeline')"
           :class="[
-            'flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer shrink-0',
+            'flex items-center justify-center px-2 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0',
             activeTab === 'pipeline' 
               ? 'bg-indigo-600 text-white shadow-xs' 
               : 'text-indigo-700 hover:bg-indigo-50 border border-indigo-200/80 bg-indigo-50/40 shadow-2xs'
           ]"
           :title="t('pipeline_title', t('tab_pipeline'))"
+          :aria-label="t('tab_pipeline')"
+          data-testid="navbar-pipeline-btn"
         >
-          <Zap class="w-3.5 h-3.5 shrink-0" :class="activeTab === 'pipeline' ? 'text-white' : 'text-indigo-600'" />
-          <span :class="activeTab === 'pipeline' ? 'inline' : 'hidden 2xl:inline'">{{ t('tab_pipeline') || 'Pipeline' }}</span>
+          <Zap class="w-4 h-4 shrink-0" :class="activeTab === 'pipeline' ? 'text-white' : 'text-indigo-600'" />
         </button>
 
         <!-- Vault shortcut (icon-only; label shown in tooltip) -->
@@ -201,6 +202,34 @@
           <span class="hidden xl:inline">{{ activeTierLabel }}</span>
         </button>
 
+        <!-- ☕ Donate Button (Warm, Eye-Catching, Official Only) -->
+        <a
+          v-if="siteConfig.features.enableNavbarDonate"
+          :href="siteConfig.kofiUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center space-x-1.5 text-xs bg-gradient-to-r from-amber-50 to-orange-50 hover:from-amber-100 hover:to-orange-100 text-amber-900 border border-amber-300/90 hover:border-amber-400 px-2.5 py-1.5 rounded-xl font-bold transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 group"
+          :title="t('nav_donate_tooltip', 'Support PDFSeal on Ko-fi')"
+          data-testid="navbar-donate-btn"
+        >
+          <Coffee class="w-3.5 h-3.5 text-amber-600 group-hover:scale-110 transition-transform shrink-0" />
+          <span>{{ t('nav_donate_btn', 'Donate') }}</span>
+        </a>
+
+        <!-- 🐙 GitHub Button (Sleek & Trustworthy) -->
+        <a
+          v-if="siteConfig.githubRepoUrl"
+          :href="siteConfig.githubRepoUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex items-center space-x-1.5 text-xs bg-slate-100 hover:bg-slate-200/80 text-slate-800 border border-slate-200/80 hover:border-slate-300 px-2.5 py-1.5 rounded-xl font-bold transition cursor-pointer shadow-2xs whitespace-nowrap shrink-0 group"
+          title="GitHub Repository"
+          data-testid="navbar-github-btn"
+        >
+          <Github class="w-3.5 h-3.5 text-slate-700 group-hover:scale-110 transition-transform shrink-0" />
+          <span>GitHub</span>
+        </a>
+
         <!-- Language Selector -->
         <div class="relative shrink-0 flex items-center">
           <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-2.5 text-slate-400">
@@ -224,17 +253,17 @@
           </div>
         </div>
 
-        <!-- About Dropdown Menu -->
+        <!-- About Dropdown Menu (icon-only; label in tooltip) -->
         <div class="relative shrink-0" ref="aboutMenuRef">
           <button 
             @click.stop="toggleAbout" 
-            class="flex items-center space-x-1 sm:space-x-1.5 py-1.5 px-2.5 rounded-xl transition cursor-pointer shrink-0 border border-slate-200/80 shadow-2xs select-none"
+            class="p-2 rounded-xl transition cursor-pointer shrink-0 border border-slate-200/80 shadow-2xs select-none flex items-center justify-center"
             :class="isAboutOpen ? 'bg-blue-50 text-blue-700 border-blue-200/80' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'"
             :title="t('navbar_about_title', 'About & Legal Terms')"
+            :aria-label="t('navbar_about', 'About')"
+            data-testid="navbar-about-btn"
           >
-            <Info class="w-3.5 h-3.5 shrink-0" :class="isAboutOpen ? 'text-blue-600' : 'text-slate-600'" />
-            <span class="hidden sm:inline text-xs font-semibold">{{ t('navbar_about', 'About') }}</span>
-            <ChevronDown class="w-3 h-3 text-slate-400 transition-transform duration-150" :class="{ 'rotate-180': isAboutOpen }" />
+            <Info class="w-4 h-4 shrink-0" :class="isAboutOpen ? 'text-blue-600' : 'text-slate-600'" />
           </button>
 
           <!-- Dropdown Popover (Aligned Right) -->
@@ -303,23 +332,7 @@
               <span class="text-[10px] text-indigo-600 font-bold bg-indigo-50 px-1.5 py-0.5 rounded border border-indigo-200">Pro</span>
             </button>
 
-            <!-- Menu Item 4: GitHub Repo (v-if="siteConfig.githubRepoUrl") -->
-            <a
-              v-if="siteConfig.githubRepoUrl"
-              :href="siteConfig.githubRepoUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              @click="isAboutOpen = false"
-              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-slate-50 hover:text-slate-900 cursor-pointer group"
-            >
-              <div class="flex items-center space-x-2.5 min-w-0">
-                <Github class="w-4 h-4 text-slate-800 shrink-0" />
-                <span class="font-semibold text-slate-700 group-hover:text-slate-900">{{ t('about_github_title', 'Open Source GitHub Repository') }}</span>
-              </div>
-              <span class="text-[10px] text-slate-400 group-hover:text-slate-600">↗</span>
-            </a>
-
-            <!-- Menu Item 5: Feedback (v-if="siteConfig.features.enableFeedback") -->
+            <!-- Menu Item 4: Feedback (v-if="siteConfig.features.enableFeedback") -->
             <button
               v-if="siteConfig.features.enableFeedback"
               type="button"
@@ -333,7 +346,7 @@
               <span class="text-[10px] text-blue-500 font-semibold">Tally ↗</span>
             </button>
 
-            <!-- Menu Item 6: Diagnostic Logs -->
+            <!-- Menu Item 5: Diagnostic Logs -->
             <button
               type="button"
               @click="isAboutOpen = false; $emit('open-logs')"
@@ -345,22 +358,6 @@
               </div>
               <span class="text-[10px] font-mono text-slate-400">LOGS</span>
             </button>
-
-            <!-- Menu Item 7: Ko-fi / Donate (v-if="siteConfig.features.enableDonations") -->
-            <a
-              v-if="siteConfig.features.enableDonations"
-              :href="siteConfig.kofiUrl"
-              target="_blank"
-              rel="noopener noreferrer"
-              @click="isAboutOpen = false"
-              class="w-full text-left px-2.5 py-2 rounded-xl transition flex items-center justify-between hover:bg-amber-50 hover:text-amber-950 cursor-pointer group border-t border-slate-100 pt-2 mt-1"
-            >
-              <div class="flex items-center space-x-2.5 min-w-0">
-                <Coffee class="w-4 h-4 text-amber-600 shrink-0" />
-                <span class="font-semibold text-amber-900">{{ t('about_kofi_title', 'Feed the Seal') }}</span>
-              </div>
-              <span class="text-[10px] text-amber-600 font-bold bg-amber-100/70 px-1.5 py-0.5 rounded">☕ ↗</span>
-            </a>
           </div>
         </div>
 

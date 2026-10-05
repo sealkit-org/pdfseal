@@ -106,6 +106,23 @@ export const siteConfig = reactive({
       return true;
     },
 
+    // Show polite coffee donation / sponsor links (only on official website with kofiUrl)
+    get enableOfficialSponsor() {
+      if (!this.enableDonations) return false;
+      return isOfficialMode.value;
+    },
+
+    // Show polite coffee donation suggestion in Delivery view (only on official website with kofiUrl)
+    get enableDeliverySponsor() {
+      return this.enableOfficialSponsor;
+    },
+
+    // Show prominent warm coffee donation button in Navbar (only on official website with kofiUrl)
+    get enableNavbarDonate() {
+      return this.enableOfficialSponsor;
+    },
+
+
     // Show built-in feedback modal (requires feedbackUrl configured or explicitly enabled)
     get enableFeedback() {
       if (!siteConfig.feedbackUrl && import.meta.env.VITE_ENABLE_FEEDBACK !== 'true') return false;
